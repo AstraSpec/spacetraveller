@@ -1,3 +1,25 @@
-[gd_scene format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=5 format=3 uid="uid://da4617sbpgvwl"]
 
-[node name="Main" type="Node2D"]
+[ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
+[ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
+[ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
+[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
+
+[node name="Main" type="Node2D" node_paths=PackedStringArray("World", "Camera")]
+script = ExtResource("1_14wn1")
+World = NodePath("World")
+Camera = NodePath("Camera")
+
+[node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(2, 2)
+
+[node name="World" type="Node2D" parent="."]
+script = ExtResource("1_0bwn5")
+tilesheet = ExtResource("2_hj8l7")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="DebugInfo" type="Label" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("1_nm0yd")
