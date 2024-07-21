@@ -23,8 +23,10 @@ func init_world_bubble() -> void:
 		if distance < WORLD_BUBBLE_SIZE / 2:
 			init_tile(cell_position)
 
-# Initializes individual tiles
+# Initializes individual tile textures
 func init_tile(cell_pos :Vector2) -> void:
+	var tile_id :int = load_tile(cell_pos)
+	
 	var tile_instance :RID = RenderingServer.canvas_item_create()
 	RenderingServer.canvas_item_set_parent(tile_instance, get_canvas_item())
 	RenderingServer.canvas_item_add_texture_rect_region(
@@ -33,3 +35,11 @@ func init_tile(cell_pos :Vector2) -> void:
 		tilesheet,
 		Rect2(1, 27, TILE_SIZE, TILE_SIZE))
 	tile_RIDs.append(tile_instance)
+
+# Obtains tile data TODO: rename this cell?
+func load_tile(cell_pos :Vector2) -> int:
+	# TODO: first check if tile has been loaded in the past
+	
+	
+	
+	return 0
