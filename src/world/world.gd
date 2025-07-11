@@ -68,11 +68,18 @@ func init_tile(tileOffset :Vector2i, playerPos :Vector2i) -> void:
 
 # Renders tile texture
 func render_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i):
+	var tile_y = get_tile_y(tileOffset, playerPos)
+	var color = Color(1, 1, 1 ,1)
+	
+	if tile_y == TILE_Y_GRASS and is_occluded(playerPos, playerPos + tileOffset):
+		color = Color(0.2, 0.2, 0.2, 1)
+	
 	RenderingServer.canvas_item_add_texture_rect_region(
 		tileRID,
 		Rect2i(tileOffset * TILE_SIZE, Vector2i(TILE_SIZE, TILE_SIZE)),
 		Tilesheet,
-		Rect2i(1, get_tile_y(tileOffset, playerPos), TILE_SIZE, TILE_SIZE))
+		Rect2i(1, tile_y, TILE_SIZE, TILE_SIZE),
+		color)
 
 # Updates world bubble of tiles around player
 func update_world_bubble(playerPos :Vector2i) -> void:
@@ -85,13 +92,7 @@ func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> voi
 	render_tile(tileRID, tileOffset, playerPos)
 
 func get_tile_y(tileOffset :Vector2i, playerPos :Vector2i) -> int:
-	var cellPos :Vector2i = playerPos + tileOffset
-	
+	var cellPos :Vector2i = playerPos + tileOffset	
 	var biome :float = BiomeNoise.get_noise_2dv(cellPos)
-	var base_tile_y :int = TILE_Y_STONE if biome > 0.5 else TILE_Y_GRASS
 	
-	# If it's a grass tile and occluded from player's perspective, show as occluded
-	if base_tile_y == TILE_Y_GRASS and is_occluded(playerPos, cellPos):
-		return TILE_Y_OCCLUDED
-	
-	return base_tile_y
+	return TILE_Y_STONE if biome > 0.5 else TILE_Y_GRASS
