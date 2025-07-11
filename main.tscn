@@ -13,14 +13,15 @@ Player = NodePath("Player")
 
 [node name="World" type="Node2D" parent="."]
 script = ExtResource("1_0bwn5")
-tilesheet = ExtResource("2_hj8l7")
+Tilesheet = ExtResource("2_hj8l7")
 
-[node name="Player" type="Sprite2D" parent="."]
+[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World")]
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
 region_rect = Rect2(339, 92, 12, 12)
 script = ExtResource("4_yn2v7")
+World = NodePath("../World")
 
 [node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(6, 6)
