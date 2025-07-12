@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=7 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
 [ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
+[ext_resource type="Material" uid="uid://cuuh0ucv1nkjj" path="res://shaders/occlusion_overlay.tres" id="4_m8t2p"]
 [ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("World", "Player")]
@@ -14,6 +15,10 @@ Player = NodePath("Player")
 [node name="World" type="Node2D" parent="."]
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
+
+[node name="OcclusionOverlay" type="TextureRect" parent="World"]
+z_index = 1
+material = ExtResource("4_m8t2p")
 
 [node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World")]
 texture = ExtResource("2_hj8l7")

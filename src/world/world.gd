@@ -3,6 +3,10 @@ extends Node2D
 @export var Tilesheet :Texture2D
 
 @onready var BiomeNoise :FastNoiseLite = preload("res://noise/biome_noise.tres")
+@onready var OcclusionOverlay :TextureRect = $OcclusionOverlay
+@onready var ShaderMat :ShaderMaterial = OcclusionOverlay.material as ShaderMaterial
+var tile_info_img :Image = Image.create(WORLD_BUBBLE_SIZE, WORLD_BUBBLE_SIZE, false, Image.FORMAT_RF)
+var tile_info_tex :ImageTexture = ImageTexture.create_from_image(tile_info_img)
 
 var seed_ :int = 0
 
@@ -14,37 +18,38 @@ const TILE_Y_STONE :int = 53
 const TILE_Y_OCCLUDED :int = 66
 
 var tile_RIDs :Dictionary
+var tile_data :Dictionary
+var seen_cells :Dictionary
 
 func _ready() -> void:
 	BiomeNoise.seed = seed_
+	
+	init_visibility_rect()
 
-# Check if a tile is occluded from player's perspective
-func is_occluded(playerPos :Vector2i, cellPos :Vector2i) -> bool:
-	if cellPos == playerPos:
-		return false
+func init_visibility_rect() -> void:
+	ShaderMat.set_shader_parameter("tile_info", tile_info_tex)
+	ShaderMat.set_shader_parameter("map_size", Vector2i(WORLD_BUBBLE_SIZE, WORLD_BUBBLE_SIZE))
+	ShaderMat.set_shader_parameter("tile_size", Vector2i(TILE_SIZE, TILE_SIZE))
 	
-	var dx :int = abs(cellPos.x - playerPos.x)
-	var dy :int = abs(cellPos.y - playerPos.y)
-	var sx :int = 1 if playerPos.x < cellPos.x else -1
-	var sy :int = 1 if playerPos.y < cellPos.y else -1
-	var err :int = dx - dy
+	OcclusionOverlay.texture = tile_info_tex
+	OcclusionOverlay.scale = Vector2i(TILE_SIZE, TILE_SIZE)
 	
-	var currentPos :Vector2i = playerPos
+	OcclusionOverlay.position = -(Vector2(WORLD_BUBBLE_SIZE, WORLD_BUBBLE_SIZE) * TILE_SIZE) / 2
+
+func update_occlusion(playerPos: Vector2i):
+	for i in WORLD_BUBBLE_SIZE * WORLD_BUBBLE_SIZE:
+		var tileOffset = Vector2i(i / WORLD_BUBBLE_SIZE, i % WORLD_BUBBLE_SIZE) - Vector2i(WORLD_BUBBLE_RADIUS, WORLD_BUBBLE_RADIUS)
+		var cellPos = playerPos + tileOffset
+		var world_index = tileOffset + Vector2i(WORLD_BUBBLE_RADIUS, WORLD_BUBBLE_RADIUS)
+
+		var tile_y = tile_data.get(cellPos, TILE_Y_GRASS)
+		var value :float = 1.0 if tile_y == TILE_Y_GRASS else 0.0
+		tile_info_img.set_pixelv(world_index, Color(value, 0, 0))
+		seen_cells[cellPos] = value > 0.0
 	
-	while currentPos != cellPos:
-		var biome :float = BiomeNoise.get_noise_2dv(currentPos)
-		if biome > 0.5:  # Stone tile (wall)
-			return true
-		
-		var e2 :int = 2 * err
-		if e2 > -dy:
-			err -= dy
-			currentPos.x += sx
-		if e2 < dx:
-			err += dx
-			currentPos.y += sy
-	
-	return false
+	tile_info_tex.update(tile_info_img)
+
+	ShaderMat.set_shader_parameter("player_tile_pos", Vector2(WORLD_BUBBLE_RADIUS, WORLD_BUBBLE_RADIUS))
 
 # Initializes world bubble of tiles around player
 func init_world_bubble(playerPos :Vector2i) -> void:
@@ -57,6 +62,8 @@ func init_world_bubble(playerPos :Vector2i) -> void:
 		# Calculate the distance from the center the current tile
 		if tileOffset.length() < WORLD_BUBBLE_RADIUS:
 			init_tile(tileOffset, playerPos)
+	
+	update_world_bubble(playerPos)
 
 # Initializes individual tile textures
 func init_tile(tileOffset :Vector2i, playerPos :Vector2i) -> void:
@@ -68,31 +75,28 @@ func init_tile(tileOffset :Vector2i, playerPos :Vector2i) -> void:
 
 # Renders tile texture
 func render_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i):
-	var tile_y = get_tile_y(tileOffset, playerPos)
-	var color = Color(1, 1, 1 ,1)
-	
-	if tile_y == TILE_Y_GRASS and is_occluded(playerPos, playerPos + tileOffset):
-		color = Color(0.2, 0.2, 0.2, 1)
+	var cellPos :Vector2i = tileOffset + playerPos
+	var tile_y = get_tile_y(cellPos)
+	tile_data[cellPos] = tile_y
 	
 	RenderingServer.canvas_item_add_texture_rect_region(
 		tileRID,
 		Rect2i(tileOffset * TILE_SIZE, Vector2i(TILE_SIZE, TILE_SIZE)),
 		Tilesheet,
-		Rect2i(1, tile_y, TILE_SIZE, TILE_SIZE),
-		color)
+		Rect2i(1, tile_y, TILE_SIZE, TILE_SIZE))
 
 # Updates world bubble of tiles around player
 func update_world_bubble(playerPos :Vector2i) -> void:
 	for tileOffset in tile_RIDs:
 		update_tile(tile_RIDs[tileOffset], tileOffset, playerPos)
+	
+	update_occlusion(playerPos)
 
 # Updates individual tile textures
 func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> void:
 	RenderingServer.canvas_item_clear(tileRID)
 	render_tile(tileRID, tileOffset, playerPos)
 
-func get_tile_y(tileOffset :Vector2i, playerPos :Vector2i) -> int:
-	var cellPos :Vector2i = playerPos + tileOffset	
+func get_tile_y(cellPos :Vector2i) -> int:
 	var biome :float = BiomeNoise.get_noise_2dv(cellPos)
-	
-	return TILE_Y_STONE if biome > 0.5 else TILE_Y_GRASS
+	return TILE_Y_STONE if biome > 0.3 else TILE_Y_GRASS
