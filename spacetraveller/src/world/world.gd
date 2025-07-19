@@ -3,36 +3,20 @@ extends WorldGeneration
 @export var Tilesheet :Texture2D
 
 @onready var BiomeNoise :FastNoiseLite = preload("res://noise/biome_noise.tres")
-@onready var OcclusionOverlay :TextureRect = $OcclusionOverlay
-@onready var ShaderMat :ShaderMaterial = OcclusionOverlay.material as ShaderMaterial
-var tile_info_img :Image = Image.create(WORLD_BUBBLE_SIZE, WORLD_BUBBLE_SIZE, false, Image.FORMAT_RF)
-var tile_info_tex :ImageTexture = ImageTexture.create_from_image(tile_info_img)
 
 var seed_ :int = 0
 
 const TILE_SIZE :int = 12
 const WORLD_BUBBLE_SIZE :int = 64 # DIAMETER
 const WORLD_BUBBLE_RADIUS: int = WORLD_BUBBLE_SIZE / 2
-const TILE_Y_WOOD :int = 27
-const TILE_Y_STONE :int = 53
-const TILE_Y_OCCLUDED :int = 66
+const TILE_Y_GROUND :int = 27
+const TILE_Y_WALL :int = 53
 
 var tileRIDs :Dictionary
 var tileData :Dictionary
 
 func _ready() -> void:
 	BiomeNoise.seed = seed_
-	
-	init_visibility_rect()
-
-func init_visibility_rect() -> void:
-	ShaderMat.set_shader_parameter("tile_info", tile_info_tex)
-	ShaderMat.set_shader_parameter("map_size", Vector2i(WORLD_BUBBLE_SIZE, WORLD_BUBBLE_SIZE))
-	ShaderMat.set_shader_parameter("tile_size", Vector2i(TILE_SIZE, TILE_SIZE))
-	
-	OcclusionOverlay.texture = tile_info_tex
-	OcclusionOverlay.scale = Vector2(TILE_SIZE, TILE_SIZE)
-	OcclusionOverlay.position = Vector2(-TILE_SIZE * WORLD_BUBBLE_RADIUS, -TILE_SIZE * WORLD_BUBBLE_RADIUS)
 
 # Initializes world bubble of tiles around player
 func init_world_bubble(playerPos :Vector2i) -> void:
@@ -60,18 +44,8 @@ func init_tile(tileOffset :Vector2i, playerPos :Vector2i) -> void:
 func update_world_bubble(playerPos :Vector2i) -> void:
 	for tileOffset in tileRIDs:
 		update_tile(tileRIDs[tileOffset], tileOffset, playerPos)
-	
-	var occlusion_result = update_occlusion(playerPos, tileData, WORLD_BUBBLE_SIZE)
-	var visibilityData :Dictionary = occlusion_result.get("visibility_data", {})
-	
-	# Update the tile info image with visibility data
-	for localPos in visibilityData:
-		var visibility_value :float = visibilityData[localPos]
-		tile_info_img.set_pixelv(localPos, Color(visibility_value, 0, 0, 1))
-	
-	# Update the texture
-	tile_info_tex = ImageTexture.create_from_image(tile_info_img)
-	ShaderMat.set_shader_parameter("tile_info", tile_info_tex)
+	for tileOffset in tileRIDs:
+		update_occlusion(tileRIDs[tileOffset], tileOffset, playerPos)
 
 # Updates individual tile textures
 func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> void:
@@ -79,17 +53,33 @@ func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> voi
 	render_tile(tileRID, tileOffset, playerPos)
 
 # Renders tile texture
-func render_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i):
+func render_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> void:
 	var cellPos :Vector2i = tileOffset + playerPos
 	var tile_y = get_tile_y(cellPos)
-	tileData[cellPos] = {"tile_y": tile_y, "seen": false}
+	if not tileData.has(cellPos):
+		tileData[cellPos] = {"tile_y": tile_y, "seen": false}
 	
 	RenderingServer.canvas_item_add_texture_rect_region(
 		tileRID,
 		Rect2i(tileOffset * TILE_SIZE, Vector2i(TILE_SIZE, TILE_SIZE)),
 		Tilesheet,
-		Rect2i(1, tile_y, TILE_SIZE, TILE_SIZE))
+		Rect2i(1, tile_y, TILE_SIZE, TILE_SIZE)
+		)
 
 func get_tile_y(cellPos :Vector2i) -> int:
 	var biome :float = BiomeNoise.get_noise_2dv(cellPos)
-	return TILE_Y_STONE if biome > 0.3 else TILE_Y_WOOD
+	return TILE_Y_WALL if biome > 0.3 else TILE_Y_GROUND
+
+func update_occlusion(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i):
+	var cellPos :Vector2i = tileOffset + playerPos
+	
+	var color = Color(1, 1, 1, 1)
+	if is_occluded(cellPos, playerPos, tileData): 
+		if tileData[cellPos]["seen"] == true:
+			color = Color(0.4, 0.4, 0.5, 1)
+		else:
+			color = Color(0, 0, 0, 1)
+	else:
+		tileData[cellPos]["seen"] = true
+	
+	RenderingServer.canvas_item_set_modulate(tileRID, color)

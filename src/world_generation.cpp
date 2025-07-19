@@ -3,7 +3,7 @@
 using namespace godot;
 
 void WorldGeneration::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("update_occlusion", "playerPos", "tileData", "worldBubbleSize"), &WorldGeneration::update_occlusion);
+	ClassDB::bind_method(D_METHOD("is_occluded", "cellPos", "playerPos", "tileData"), &WorldGeneration::is_occluded);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -13,50 +13,21 @@ WorldGeneration::~WorldGeneration() {
     
 }
 
-Dictionary WorldGeneration::update_occlusion(const Vector2i& playerPos, const Dictionary& tileData, const int& worldBubbleSize) {
-    Dictionary visibilityData;
-    int radius = worldBubbleSize / 2;
-    
-    // Iterate through a circle of cells with diameter worldBubbleSize
-    for (int y = -radius; y < radius; y++) {
-        for (int x = -radius; x < radius; x++) {
-            // Check if this position is within the circle
-            if (x * x + y * y <= radius * radius) {
-                Vector2i cellPos = playerPos + Vector2i(x, y);
-                Vector2i localPos = Vector2i(x + radius, y + radius); // Convert to local coordinates
-                
-                // Check if this cell exists in tileData
-                if (tileData.has(cellPos)) {
-                    Dictionary cellData = tileData[cellPos];
-                    int tileY = cellData["tile_y"];
-                    
-                    // Only check wood tiles (tileY == 27) for occlusion
-                    if (tileY == 27) {
-                        // Check if this wood tile is occluded from player's perspective
-                        if (is_cell_occluded(cellPos, playerPos, tileData)) {
-                            visibilityData[localPos] = 0.25; // Occluded
-                        } else {
-                            visibilityData[localPos] = 1.0; // Visible
-                        }
-                    } else {
-                        visibilityData[localPos] = 1.0; // Stone tiles are always visible
-                    }
-                } else {
-                    visibilityData[localPos] = 0.0; // Never seen
-                }
-            }
-        }
-    }
-    
-    Dictionary result;
-    result["visibility_data"] = visibilityData;
-    
-    return result;
-}
-
-bool WorldGeneration::is_cell_occluded(const Vector2i& cellPos, const Vector2i& playerPos, const Dictionary& tileData) {
+bool WorldGeneration::is_occluded(const Vector2i& cellPos, const Vector2i& playerPos, const Dictionary& tileData) {
     // If the cell is at the same position as player, it's not occluded
     if (cellPos == playerPos) {
+        return false;
+    }
+    
+    // Check if the cell exists in tileData
+    if (!tileData.has(cellPos)) {
+        return false;
+    }
+    
+    Dictionary cellData = tileData[cellPos];
+    int tileY = cellData["tile_y"];
+    
+    if (tileY != 27 && tileY != 53) {
         return false;
     }
     
@@ -80,13 +51,13 @@ bool WorldGeneration::is_cell_occluded(const Vector2i& cellPos, const Vector2i& 
                 break;
             }
             
-            // Check if current position has a stone tile
+            // Check if current position has a wall tile
             Vector2i currentPos(x, y);
             if (tileData.has(currentPos)) {
                 Dictionary currentData = tileData[currentPos];
                 int currentTileY = currentData["tile_y"];
                 
-                // If we encounter a stone tile before reaching the target, the target is occluded
+                // If we encounter a wall tile before reaching the target, the target is occluded
                 if (currentTileY == 53) {
                     return true;
                 }

@@ -12,8 +12,7 @@ class WorldGeneration: public Node2D{
     GDCLASS(WorldGeneration, Node2D)
 
 private:
-    Dictionary update_occlusion(const Vector2i& playerPos, const Dictionary& tileData, const int& worldBubbleSize);
-    bool is_cell_occluded(const Vector2i& cellPos, const Vector2i& playerPos, const Dictionary& tileData);
+    bool is_occluded(const Vector2i& cellPos, const Vector2i& playerPos, const Dictionary& tileData);
 
 protected:
 	static void _bind_methods();
