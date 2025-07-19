@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://cuuh0ucv1nkjj"]
+
+[ext_resource type="Shader" path="res://shaders/occlusion_overlay.gdshader" id="1_dcnsp"]
+
+[resource]
+shader = ExtResource("1_dcnsp")
+shader_parameter/map_size = null
+shader_parameter/tile_size = null
+shader_parameter/player_tile_pos = null
