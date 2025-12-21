@@ -4,8 +4,7 @@ extends Node2D
 @export var Player :Sprite2D
 
 func _ready() -> void:
-	Player.cellPos = Vector2(
-		World.WORLD_BUBBLE_RADIUS, 
-		World.WORLD_BUBBLE_RADIUS)
+	var bubble_radius = WorldGeneration.get_bubble_radius()
+	Player.cellPos = Vector2(bubble_radius, bubble_radius)
 	
-	World.init_world_bubble(Player.cellPos)
+	World.init_world_bubble(Vector2i(Player.cellPos))
