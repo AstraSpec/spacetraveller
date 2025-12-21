@@ -14,4 +14,20 @@ export_presets.cfg
 data_*/
 mono_crash.*.json
 
+# GDExtension build artifacts (platform-specific, regenerated from source)
+*.dll
+*.lib
+*.exp
+*.obj
+*.a
+*.so
+*.dylib
+~*
+
+# SCons build cache
+.sconsign.dblite
+
+# Keep .gdextension config files (they're needed)
+!*.gdextension
+
 /godot-cpp
