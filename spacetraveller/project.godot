@@ -23,6 +23,10 @@ gdscript/warnings/integer_division=0
 
 window/vsync/vsync_mode=0
 
+[dotnet]
+
+project/assembly_name="spacetraveller"
+
 [input]
 
 w={

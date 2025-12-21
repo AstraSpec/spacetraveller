@@ -3,7 +3,7 @@
 using namespace godot;
 
 void WorldGeneration::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("is_occluded", "cellPos", "playerPos", "tileData"), &WorldGeneration::is_occluded);
+	ClassDB::bind_method(D_METHOD("compute_occlusion_batch", "tileOffsets", "playerPos", "tileData"), &WorldGeneration::compute_occlusion_batch);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -13,20 +13,48 @@ WorldGeneration::~WorldGeneration() {
     
 }
 
-bool WorldGeneration::is_occluded(const Vector2i& cellPos, const Vector2i& playerPos, const Dictionary& tileData) {
+Dictionary WorldGeneration::compute_occlusion_batch(const Array& tileOffsets, const Vector2i& playerPos, const Dictionary& tileData) {
+    // Build internal tile map from dictionary once
+    std::unordered_map<uint64_t, int> tileMap;
+    tileMap.reserve(tileData.size());
+    
+    Array keys = tileData.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Vector2i cellPos = keys[i];
+        Dictionary cellData = tileData[cellPos];
+        int tileY = cellData["tile_y"];
+        tileMap[pack_coords(cellPos.x, cellPos.y)] = tileY;
+    }
+    
+    // Process all tiles and build results
+    Dictionary results;
+    for (int i = 0; i < tileOffsets.size(); i++) {
+        Vector2i tileOffset = tileOffsets[i];
+        Vector2i cellPos = tileOffset + playerPos;
+        bool occluded = is_occluded_internal(cellPos, playerPos, tileMap);
+        results[tileOffset] = occluded;
+    }
+    
+    return results;
+}
+
+bool WorldGeneration::is_occluded_internal(const Vector2i& cellPos, const Vector2i& playerPos, 
+                                           const std::unordered_map<uint64_t, int>& tileMap) {
     // If the cell is at the same position as player, it's not occluded
     if (cellPos == playerPos) {
         return false;
     }
     
-    // Check if the cell exists in tileData
-    if (!tileData.has(cellPos)) {
+    // Check if the cell exists in tileMap
+    uint64_t cellKey = pack_coords(cellPos.x, cellPos.y);
+    auto cellIt = tileMap.find(cellKey);
+    if (cellIt == tileMap.end()) {
         return false;
     }
     
-    Dictionary cellData = tileData[cellPos];
-    int tileY = cellData["tile_y"];
+    int tileY = cellIt->second;
     
+    // Only process wall (53) or ground (27) tiles for occlusion
     if (tileY != 27 && tileY != 53) {
         return false;
     }
@@ -51,14 +79,11 @@ bool WorldGeneration::is_occluded(const Vector2i& cellPos, const Vector2i& playe
                 break;
             }
             
-            // Check if current position has a wall tile
-            Vector2i currentPos(x, y);
-            if (tileData.has(currentPos)) {
-                Dictionary currentData = tileData[currentPos];
-                int currentTileY = currentData["tile_y"];
-                
+            // Check if current position has a wall tile (fast lookup)
+            auto it = tileMap.find(pack_coords(x, y));
+            if (it != tileMap.end()) {
                 // If we encounter a wall tile before reaching the target, the target is occluded
-                if (currentTileY == 53) {
+                if (it->second == 53) {
                     return true;
                 }
             }

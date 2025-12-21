@@ -24,10 +24,16 @@ script = ExtResource("4_yn2v7")
 World = NodePath("../World")
 
 [node name="Camera" type="Camera2D" parent="Player"]
-position = Vector2(6, 6)
+position = Vector2(7, 7)
 zoom = Vector2(2, 2)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Dummy" type="Label" parent="CanvasLayer"]
+modulate = Color(1, 1, 1, 0.0156863)
+offset_right = 512.0
+offset_bottom = 512.0
+text = "a"
 
 [node name="DebugInfo" type="Label" parent="CanvasLayer"]
 offset_right = 40.0

@@ -44,8 +44,11 @@ func init_tile(tileOffset :Vector2i, playerPos :Vector2i) -> void:
 func update_world_bubble(playerPos :Vector2i) -> void:
 	for tileOffset in tileRIDs:
 		update_tile(tileRIDs[tileOffset], tileOffset, playerPos)
-	for tileOffset in tileRIDs:
-		update_occlusion(tileRIDs[tileOffset], tileOffset, playerPos)
+	
+	# Batch compute occlusion for all tiles
+	var occlusion_results = compute_occlusion_batch(tileRIDs.keys(), playerPos, tileData)
+	for tileOffset in occlusion_results:
+		apply_occlusion(tileRIDs[tileOffset], tileOffset, playerPos, occlusion_results[tileOffset])
 
 # Updates individual tile textures
 func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> void:
@@ -70,11 +73,12 @@ func get_tile_y(cellPos :Vector2i) -> int:
 	var biome :float = BiomeNoise.get_noise_2dv(cellPos)
 	return TILE_Y_WALL if biome > 0.3 else TILE_Y_GROUND
 
-func update_occlusion(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i):
+# Applies precomputed occlusion result to a tile
+func apply_occlusion(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i, is_occluded :bool):
 	var cellPos :Vector2i = tileOffset + playerPos
 	
 	var color = Color(1, 1, 1, 1)
-	if is_occluded(cellPos, playerPos, tileData): 
+	if is_occluded: 
 		if tileData[cellPos]["seen"] == true:
 			color = Color(0.4, 0.4, 0.5, 1)
 		else:
