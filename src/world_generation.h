@@ -14,7 +14,8 @@ class WorldGeneration: public Node2D{
 
 private:
     bool is_occluded_internal(const Vector2i& cellPos, const Vector2i& playerPos, 
-                              const std::unordered_map<uint64_t, int>& tileMap);
+                              const std::unordered_map<uint64_t, int>& tileMap,
+                              const Dictionary& tileData);
     
     static inline uint64_t pack_coords(int x, int y) {
         return (static_cast<uint64_t>(static_cast<uint32_t>(x)) << 32) | 

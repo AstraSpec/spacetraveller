@@ -45,7 +45,7 @@ func update_world_bubble(playerPos :Vector2i) -> void:
 	for tileOffset in tileRIDs:
 		update_tile(tileRIDs[tileOffset], tileOffset, playerPos)
 	
-	# Batch compute occlusion for all tiles
+	# Batch compute occlusion
 	var occlusion_results = compute_occlusion_batch(tileRIDs.keys(), playerPos, tileData)
 	for tileOffset in occlusion_results:
 		apply_occlusion(tileRIDs[tileOffset], tileOffset, playerPos, occlusion_results[tileOffset])
@@ -58,8 +58,12 @@ func update_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> voi
 # Renders tile texture
 func render_tile(tileRID :RID, tileOffset :Vector2i, playerPos :Vector2i) -> void:
 	var cellPos :Vector2i = tileOffset + playerPos
-	var tile_y = get_tile_y(cellPos)
-	if not tileData.has(cellPos):
+	
+	var tile_y :int
+	if tileData.has(cellPos):
+		tile_y = tileData[cellPos]["tile_y"]
+	else:
+		tile_y = get_tile_y(cellPos)
 		tileData[cellPos] = {"tile_y": tile_y, "seen": false}
 	
 	RenderingServer.canvas_item_add_texture_rect_region(

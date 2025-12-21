@@ -14,16 +14,22 @@ WorldGeneration::~WorldGeneration() {
 }
 
 Dictionary WorldGeneration::compute_occlusion_batch(const Array& tileOffsets, const Vector2i& playerPos, const Dictionary& tileData) {
-    // Build internal tile map from dictionary once
+    // Build internal tile map directly from tileOffsets
     std::unordered_map<uint64_t, int> tileMap;
-    tileMap.reserve(tileData.size());
+    tileMap.reserve(tileOffsets.size() * 2);  // Reserve extra for Bresenham path tiles
     
-    Array keys = tileData.keys();
-    for (int i = 0; i < keys.size(); i++) {
-        Vector2i cellPos = keys[i];
-        Dictionary cellData = tileData[cellPos];
-        int tileY = cellData["tile_y"];
-        tileMap[pack_coords(cellPos.x, cellPos.y)] = tileY;
+    // First, add all tiles in the bubble
+    for (int i = 0; i < tileOffsets.size(); i++) {
+        Vector2i tileOffset = tileOffsets[i];
+        Vector2i cellPos = tileOffset + playerPos;
+        uint64_t cellKey = pack_coords(cellPos.x, cellPos.y);
+        
+        // Look up tile_y from tileData (if exists)
+        if (tileData.has(cellPos)) {
+            Dictionary cellData = tileData[cellPos];
+            int tileY = cellData["tile_y"];
+            tileMap[cellKey] = tileY;
+        }
     }
     
     // Process all tiles and build results
@@ -31,7 +37,7 @@ Dictionary WorldGeneration::compute_occlusion_batch(const Array& tileOffsets, co
     for (int i = 0; i < tileOffsets.size(); i++) {
         Vector2i tileOffset = tileOffsets[i];
         Vector2i cellPos = tileOffset + playerPos;
-        bool occluded = is_occluded_internal(cellPos, playerPos, tileMap);
+        bool occluded = is_occluded_internal(cellPos, playerPos, tileMap, tileData);
         results[tileOffset] = occluded;
     }
     
@@ -39,7 +45,8 @@ Dictionary WorldGeneration::compute_occlusion_batch(const Array& tileOffsets, co
 }
 
 bool WorldGeneration::is_occluded_internal(const Vector2i& cellPos, const Vector2i& playerPos, 
-                                           const std::unordered_map<uint64_t, int>& tileMap) {
+                                           const std::unordered_map<uint64_t, int>& tileMap,
+                                           const Dictionary& tileData) {
     // If the cell is at the same position as player, it's not occluded
     if (cellPos == playerPos) {
         return false;
@@ -79,8 +86,9 @@ bool WorldGeneration::is_occluded_internal(const Vector2i& cellPos, const Vector
                 break;
             }
             
-            // Check if current position has a wall tile (fast lookup)
-            auto it = tileMap.find(pack_coords(x, y));
+            // Check if current position has a wall tile
+            uint64_t pathKey = pack_coords(x, y);
+            auto it = tileMap.find(pathKey);
             if (it != tileMap.end()) {
                 // If we encounter a wall tile before reaching the target, the target is occluded
                 if (it->second == 53) {
