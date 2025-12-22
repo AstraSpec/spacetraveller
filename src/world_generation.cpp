@@ -97,7 +97,7 @@ void WorldGeneration::init_world_bubble(const Vector2i& playerPos) {
         // Check if within radius
         float dist = sqrtf(static_cast<float>(ox * ox + oy * oy));
         if (dist < static_cast<float>(WORLD_BUBBLE_RADIUS)) {
-            uint64_t offsetKey = pack_coords(ox, oy);
+            uint64_t offsetKey = Occlusion::pack_coords(ox, oy);
             
             // Create canvas item for this tile
             RID tile_rid = rs->canvas_item_create();
@@ -135,16 +135,16 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         // Calculate cell position
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
-        uint64_t cellKey = pack_coords(cx, cy);
+        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
         // Get or compute tile_y
         int tile_y;
-        auto it = tile_y_cache.find(cellKey);
+        auto it = tile_y_cache.find(Occlusion::pack_coords(cx, cy));
         if (it != tile_y_cache.end()) {
             tile_y = it->second;
         } else {
             tile_y = get_tile_y(cx, cy);
-            tile_y_cache[cellKey] = tile_y;
+            tile_y_cache[Occlusion::pack_coords(cx, cy)] = tile_y;
         }
         
         // Store in bubble map for occlusion
@@ -161,21 +161,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     }
     
     // Check if all 8 surrounding tiles are walls - if so, skip occlusion computation
-    bool all_surrounded = true;
-    static const int neighbors[8][2] = {
-        {-1, -1}, {0, -1}, {1, -1},
-        {-1,  0},          {1,  0},
-        {-1,  1}, {0,  1}, {1,  1}
-    };
-    
-    for (int i = 0; i < 8 && all_surrounded; i++) {
-        int nx = playerPos.x + neighbors[i][0];
-        int ny = playerPos.y + neighbors[i][1];
-        auto it = tile_y_cache.find(pack_coords(nx, ny));
-        if (it == tile_y_cache.end() || it->second != TILE_Y_WALL) {
-            all_surrounded = false;
-        }
-    }
+    bool all_surrounded = Occlusion::is_surrounded_by_walls(playerPos, tile_y_cache, TILE_Y_WALL);
     
     // Second pass: compute occlusion and apply modulation
     for (auto& pair : tile_rids) {
@@ -189,7 +175,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         // Calculate cell position
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
-        uint64_t cellKey = pack_coords(cx, cy);
+        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
         // Fast path: if surrounded by walls, everything except player tile and adjacent walls is occluded
         bool occluded;
@@ -200,7 +186,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
             occluded = !is_player_tile && !is_adjacent;
         } else {
             Vector2i cellPos(cx, cy);
-            occluded = is_occluded_internal(cellPos, playerPos);
+            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_y_cache, TILE_Y_WALL);
         }
         
         Color color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -216,63 +202,4 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         
         rs->canvas_item_set_modulate(tile_rid, color);
     }
-}
-
-// Occlusion check using internal tile_y_cache
-bool WorldGeneration::is_occluded_internal(const Vector2i& cellPos, const Vector2i& playerPos) {
-    if (cellPos == playerPos) {
-        return false;
-    }
-    
-    uint64_t cellKey = pack_coords(cellPos.x, cellPos.y);
-    auto cellIt = tile_y_cache.find(cellKey);
-    if (cellIt == tile_y_cache.end()) {
-        return false;
-    }
-    
-    int tileY = cellIt->second;
-    if (tileY != TILE_Y_GROUND && tileY != TILE_Y_WALL) {
-        return false;
-    }
-    
-    // Bresenham's line algorithm
-    int x0 = playerPos.x, y0 = playerPos.y;
-    int x1 = cellPos.x, y1 = cellPos.y;
-    
-    int dx = abs(x1 - x0);
-    int dy = abs(y1 - y0);
-    int sx = (x0 < x1) ? 1 : -1;
-    int sy = (y0 < y1) ? 1 : -1;
-    int err = dx - dy;
-    
-    int x = x0, y = y0;
-    
-    while (true) {
-        if (x != x0 || y != y0) {
-            if (x == x1 && y == y1) {
-                break;
-            }
-            
-            auto it = tile_y_cache.find(pack_coords(x, y));
-            if (it != tile_y_cache.end() && it->second == TILE_Y_WALL) {
-                return true;
-            }
-        }
-        
-        if (x == x1 && y == y1) {
-            break;
-        }
-        
-        int e2 = 2 * err;
-        if (e2 > -dy) {
-            err -= dy;
-            x += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y += sy;
-        }
-    }
-    
-    return false;
 }

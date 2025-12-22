@@ -12,7 +12,6 @@ var shiftMode :bool = false
 
 var cellPos :Vector2 = Vector2.ZERO
 
-# Track previous frame's key states to detect new key presses
 var prevUp :bool = false
 var prevDown :bool = false
 var prevLeft :bool = false

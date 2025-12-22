@@ -13,6 +13,7 @@
 #include <godot_cpp/variant/rect2i.hpp>
 #include <unordered_map>
 #include <unordered_set>
+#include "occlusion.h"
 
 namespace godot {
 
@@ -27,10 +28,9 @@ private:
     static const int TILE_Y_GROUND = 27;
     static const int TILE_Y_WALL = 53;
 
-    // Internal data - stored as C++ containers for speed
-    std::unordered_map<uint64_t, RID> tile_rids;           // tileOffset -> RID
-    std::unordered_map<uint64_t, int> tile_y_cache;        // cellPos -> tile_y
-    std::unordered_set<uint64_t> seen_cells;               // cells that have been seen
+    std::unordered_map<uint64_t, RID> tile_rids;
+    std::unordered_map<uint64_t, int> tile_y_cache;
+    std::unordered_set<uint64_t> seen_cells;
     
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
@@ -38,13 +38,7 @@ private:
     int world_seed = 0;
     
     // Helpers
-    static inline uint64_t pack_coords(int x, int y) {
-        return (static_cast<uint64_t>(static_cast<uint32_t>(x)) << 32) | 
-               static_cast<uint64_t>(static_cast<uint32_t>(y));
-    }
-    
     int get_tile_y(int x, int y);
-    bool is_occluded_internal(const Vector2i& cellPos, const Vector2i& playerPos);
 
 protected:
     static void _bind_methods();
@@ -53,10 +47,8 @@ public:
     WorldGeneration();
     ~WorldGeneration();
     
-    // Expose constants to GDScript
     static int get_bubble_radius() { return WORLD_BUBBLE_RADIUS; }
     
-    // Called from GDScript to set up resources
     void set_biome_noise(const Ref<FastNoiseLite>& noise);
     Ref<FastNoiseLite> get_biome_noise() const;
     void set_tilesheet(const Ref<Texture2D>& texture);
@@ -64,7 +56,6 @@ public:
     void set_world_seed(int seed);
     int get_world_seed() const;
     
-    // Main functions called from GDScript
     void init_world_bubble(const Vector2i& playerPos);
     void update_world_bubble(const Vector2i& playerPos);
 };
