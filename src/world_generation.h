@@ -13,7 +13,12 @@
 #include <godot_cpp/variant/rect2i.hpp>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+#include <cmath>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include "occlusion.h"
+#include "city_generation.h"
+#include "data/tile_db.h"
 
 namespace godot {
 
@@ -25,11 +30,9 @@ private:
     static const int TILE_SIZE = 12;
     static const int WORLD_BUBBLE_SIZE = 64;
     static const int WORLD_BUBBLE_RADIUS = WORLD_BUBBLE_SIZE / 2;
-    static const int TILE_Y_GROUND = 27;
-    static const int TILE_Y_WALL = 53;
-
+    
     std::unordered_map<uint64_t, RID> tile_rids;
-    std::unordered_map<uint64_t, int> tile_y_cache;
+    std::unordered_map<uint64_t, String> tile_id_cache;
     std::unordered_set<uint64_t> seen_cells;
     
     // References set from GDScript
@@ -38,7 +41,7 @@ private:
     int world_seed = 0;
     
     // Helpers
-    int get_tile_y(int x, int y);
+    String get_tile(int x, int y);
 
 protected:
     static void _bind_methods();

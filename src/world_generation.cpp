@@ -72,8 +72,8 @@ int WorldGeneration::get_tile_y(int x, int y) {
     if (!biome_noise.is_valid()) {
         return TILE_Y_GROUND;
     }
-    float biome = biome_noise->get_noise_2d(static_cast<float>(x), static_cast<float>(y));
-    return (biome > 0.3f) ? TILE_Y_WALL : TILE_Y_GROUND;
+
+    return "void";
 }
 
 // Initialize world bubble
@@ -86,7 +86,7 @@ void WorldGeneration::init_world_bubble(const Vector2i& playerPos) {
         rs->free_rid(pair.second);
     }
     tile_rids.clear();
-    tile_y_cache.clear();
+    tile_id_cache.clear();
     seen_cells.clear();
     
     // Create tiles in circular bubble
@@ -118,10 +118,8 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
-    
-    // Build tile map for current bubble (for occlusion)
-    std::unordered_map<uint64_t, int> bubble_tile_map;
-    bubble_tile_map.reserve(tile_rids.size());
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
     
     // First pass: render tiles and build tile map
     for (auto& pair : tile_rids) {
@@ -137,18 +135,22 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
-        // Get or compute tile_y
-        int tile_y;
-        auto it = tile_y_cache.find(Occlusion::pack_coords(cx, cy));
-        if (it != tile_y_cache.end()) {
-            tile_y = it->second;
+        // Get or compute tile ID
+        String tile_id;
+        auto it = tile_id_cache.find(cellKey);
+        if (it != tile_id_cache.end()) {
+            tile_id = it->second;
         } else {
-            tile_y = get_tile_y(cx, cy);
-            tile_y_cache[Occlusion::pack_coords(cx, cy)] = tile_y;
+            tile_id = get_tile(cx, cy);
+            tile_id_cache[cellKey] = tile_id;
         }
         
-        // Store in bubble map for occlusion
-        bubble_tile_map[cellKey] = tile_y;
+        Vector2i atlas_pos(1, 1);
+        const TileInfo* info = tile_db->get_tile_info(tile_id);
+        if (info) {
+            atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
+            atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
+        }
         
         // Clear and render tile
         rs->canvas_item_clear(tile_rid);
@@ -156,12 +158,12 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
             tile_rid,
             Rect2(ox * TILE_SIZE, oy * TILE_SIZE, TILE_SIZE, TILE_SIZE),
             texture_rid,
-            Rect2(1, tile_y, TILE_SIZE, TILE_SIZE)
+            Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
         );
     }
     
     // Check if all 8 surrounding tiles are walls - if so, skip occlusion computation
-    bool all_surrounded = Occlusion::is_surrounded_by_walls(playerPos, tile_y_cache, TILE_Y_WALL);
+    bool all_surrounded = Occlusion::is_surrounded_by_walls(playerPos, tile_id_cache);
     
     // Second pass: compute occlusion and apply modulation
     for (auto& pair : tile_rids) {
@@ -186,7 +188,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
             occluded = !is_player_tile && !is_adjacent;
         } else {
             Vector2i cellPos(cx, cy);
-            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_y_cache, TILE_Y_WALL);
+            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
         }
         
         Color color(1.0f, 1.0f, 1.0f, 1.0f);

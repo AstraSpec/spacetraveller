@@ -1,0 +1,47 @@
+[
+  {
+    "id": "void",
+    "atlas": [ 0, 7 ],
+    "solid": false
+  },
+  {
+    "id": "tree",
+    "atlas": [ 0, 8 ],
+    "solid": true
+  },
+  {
+    "id": "grass",
+    "atlas": [ 3, 9 ],
+    "solid": false
+  },
+  {
+    "id": "palace_floor",
+    "atlas": [ 0, 0 ],
+    "solid": false
+  },
+  {
+    "id": "stone_bricks",
+    "atlas": [ 53, 0 ],
+    "solid": false
+  },
+  {
+    "id": "alley_bricks",
+    "atlas": [ 54, 1 ],
+    "solid": false
+  },
+  {
+    "id": "wooden_floor",
+    "atlas": [ 0, 4 ],
+    "solid": false
+  },
+  {
+    "id": "gate_floor",
+    "atlas": [ 52, 0 ],
+    "solid": false
+  },
+  {
+    "id": "plaza_floor",
+    "atlas": [ 59, 1 ],
+    "solid": false
+  }
+]

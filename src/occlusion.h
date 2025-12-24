@@ -2,10 +2,13 @@
 #define SPACETRAVELLER_OCCLUSION_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/string.hpp>
 #include <unordered_map>
 #include <cstdint>
 
 namespace godot {
+
+class TileDb;
 
 class Occlusion {
 public:
@@ -19,15 +22,13 @@ public:
     static bool is_occluded(
         const Vector2i& cellPos,
         const Vector2i& playerPos,
-        const std::unordered_map<uint64_t, int>& tile_cache,
-        int wall_tile_y
+        const std::unordered_map<uint64_t, String>& tile_cache
     );
     
     // Check if player is surrounded by walls on all 8 sides
     static bool is_surrounded_by_walls(
         const Vector2i& playerPos,
-        const std::unordered_map<uint64_t, int>& tile_cache,
-        int wall_tile_y
+        const std::unordered_map<uint64_t, String>& tile_cache
     );
 };
 

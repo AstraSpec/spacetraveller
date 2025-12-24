@@ -1,10 +1,12 @@
 #include "register_types.h"
 
 #include "world_generation.h"
+#include "data/tile_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
+#include <godot_cpp/classes/engine.hpp>
 
 using namespace godot;
 
@@ -14,12 +16,19 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	}
 
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
+	GDREGISTER_CLASS(TileDb);
+
+	TileDb::create_singleton();
+	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+
+	Engine::get_singleton()->unregister_singleton("TileDb");
+	TileDb::delete_singleton();
 }
 
 extern "C" {
