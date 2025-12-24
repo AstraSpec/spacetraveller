@@ -19,6 +19,7 @@
 #include "occlusion.h"
 #include "city_generation.h"
 #include "data/tile_db.h"
+#include "data/chunk_db.h"
 
 namespace godot {
 
@@ -30,7 +31,10 @@ private:
     static const int TILE_SIZE = 12;
     static const int WORLD_BUBBLE_SIZE = 64;
     static const int WORLD_BUBBLE_RADIUS = WORLD_BUBBLE_SIZE / 2;
+    static const int REGION_SIZE = 256;
+    static const int CHUNK_SIZE = 32;
     
+    std::unordered_map<uint64_t, String> region_chunks;
     std::unordered_map<uint64_t, RID> tile_rids;
     std::unordered_map<uint64_t, String> tile_id_cache;
     std::unordered_set<uint64_t> seen_cells;
@@ -61,6 +65,7 @@ public:
     
     void init_world_bubble(const Vector2i& playerPos);
     void update_world_bubble(const Vector2i& playerPos);
+    Dictionary init_region(const Vector2i& regionPos);
 };
 
 }

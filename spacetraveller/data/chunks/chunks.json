@@ -1,0 +1,34 @@
+[
+  {
+    "id": "forest",
+    "atlas": [ 0, 8 ]
+  },
+  {
+    "id": "plains",
+    "atlas": [ 0, 7 ]
+  },
+  {
+    "id": "road",
+    "atlas": [ 53, 0 ]
+  },
+  {
+    "id": "building",
+    "atlas": [ 58, 8 ]
+  },
+  {
+    "id": "palace",
+    "atlas": [ 32, 22 ]
+  },
+  {
+    "id": "alley",
+    "atlas": [ 53, 1 ]
+  },
+  {
+    "id": "gate",
+    "atlas": [ 3, 40 ]
+  },
+  {
+    "id": "plaza",
+    "atlas": [ 69, 5 ]
+  }
+]

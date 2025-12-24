@@ -2,6 +2,7 @@
 
 #include "world_generation.h"
 #include "data/tile_db.h"
+#include "data/chunk_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -17,9 +18,13 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
 	GDREGISTER_CLASS(TileDb);
+	GDREGISTER_CLASS(ChunkDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
+
+	ChunkDb::create_singleton();
+	Engine::get_singleton()->register_singleton("ChunkDb", ChunkDb::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
@@ -29,6 +34,9 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("TileDb");
 	TileDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("ChunkDb");
+	ChunkDb::delete_singleton();
 }
 
 extern "C" {

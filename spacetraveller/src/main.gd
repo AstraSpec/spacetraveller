@@ -4,8 +4,10 @@ extends Node2D
 @export var Player :Sprite2D
 
 func _ready() -> void:
-	TileDb.initialize_data()
 	var bubble_radius = WorldGeneration.get_bubble_radius()
 	Player.cellPos = Vector2(bubble_radius, bubble_radius)
 	
-	World.init_world_bubble(Vector2i(Player.cellPos))
+	TileDb.initialize_data()
+	ChunkDb.initialize_data()
+	
+	World.generate_world(Player.cellPos)

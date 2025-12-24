@@ -22,6 +22,7 @@ void WorldGeneration::_bind_methods() {
     // Method bindings
     ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos"), &WorldGeneration::init_world_bubble);
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
+    ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -68,9 +69,53 @@ int WorldGeneration::get_world_seed() const {
 }
 
 // Get tile type from noise
-int WorldGeneration::get_tile_y(int x, int y) {
-    if (!biome_noise.is_valid()) {
-        return TILE_Y_GROUND;
+String WorldGeneration::get_tile(int x, int y) {
+    // divide x and y by chunk size then floor to find chunk
+    int cx = static_cast<int>(std::floor(static_cast<float>(x) / CHUNK_SIZE));
+    int cy = static_cast<int>(std::floor(static_cast<float>(y) / CHUNK_SIZE));
+
+    // get the chunk type from region_chunks
+    auto it = region_chunks.find(Occlusion::pack_coords(cx, cy));
+    
+    // if chunk out of bounds
+    if (it == region_chunks.end()) {
+        return "void";
+    }
+
+    const String& chunk_id = it->second;
+
+    // Mapping chunk types to tile IDs
+    if (chunk_id == "forest") {
+        // Use a deterministic pseudo-random check based on position and seed
+        uint32_t hash = static_cast<uint32_t>(x) * 73856093 ^ 
+                        static_cast<uint32_t>(y) * 19349663 ^ 
+                        static_cast<uint32_t>(world_seed) * 83492791;
+        
+        if ((hash % 100) < 30) {
+            return "tree";
+        }
+        return "grass";
+    }
+    else if (chunk_id == "plains") {
+        return "grass";
+    }
+    else if (chunk_id == "road") {
+        return "stone_bricks";
+    }
+    else if (chunk_id == "alley") {
+        return "alley_bricks";
+    }
+    else if (chunk_id == "building") {
+        return "wooden_floor";
+    }
+    else if (chunk_id == "plaza") {
+        return "plaza_floor";
+    }
+    else if (chunk_id == "gate") {
+        return "gate_floor";
+    }
+    else if (chunk_id == "palace") {
+        return "palace_floor";
     }
 
     return "void";
@@ -204,4 +249,13 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         
         rs->canvas_item_set_modulate(tile_rid, color);
     }
+}
+
+// Initialize world bubble
+Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
+    region_chunks.clear();
+
+    // Create a 256x256 city canvas (one city tile per chunk)
+    Dictionary result;
+    return result;
 }
