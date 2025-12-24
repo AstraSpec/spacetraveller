@@ -256,6 +256,32 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     region_chunks.clear();
 
     // Create a 256x256 city canvas (one city tile per chunk)
+    Canvas cityCanvas(REGION_SIZE);
+    CityGeneration cityGen(cityCanvas, world_seed + regionPos.x * 31 + regionPos.y * 7);
+    
+    cityGen.generateCity(
+        48, 8, 3,       // radius, spokes, rings
+        45, 4, 5,       // reach, outerDensity, innerDensity
+        true, false,    // showInner, showTwin
+        30, 4, 6, 2,    // twinRadius, twinDensity, twinSpokes, twinRings
+        false, true, true // useRiver, useJitter, useSpecial
+    );
+
     Dictionary result;
+    for (int y = 0; y < REGION_SIZE; y++) {
+        for (int x = 0; x < REGION_SIZE; x++) {
+            String cityTile = cityCanvas.getPixel(x, y);
+            String chunk_id = CityGeneration::get_chunk_id(cityTile);
+            
+            // Store the chunk type using packed coordinates relative to regionPos
+            int gx = regionPos.x * REGION_SIZE + x;
+            int gy = regionPos.y * REGION_SIZE + y;
+            uint64_t key = Occlusion::pack_coords(gx, gy);
+            region_chunks[key] = chunk_id;
+            result[key] = chunk_id;
+        }
+    }
+
+    UtilityFunctions::print("Region initialized with city center at (", regionPos.x, ", ", regionPos.y, ")");
     return result;
 }
