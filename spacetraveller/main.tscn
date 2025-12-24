@@ -1,15 +1,52 @@
-[gd_scene load_steps=6 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=11 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
 [ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
 [ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
+[ext_resource type="Script" path="res://src/ui/canvas_layer.gd" id="5_hti4h"]
+[ext_resource type="Script" path="res://src/ui/map.gd" id="7_ghimp"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_b4ob3"]
+texture = ExtResource("2_hj8l7")
+margins = Vector2i(1, 1)
+separation = Vector2i(1, 1)
+texture_region_size = Vector2i(12, 12)
+0:7/0 = 0
+0:8/0 = 0
+3:40/0 = 0
+53:0/0 = 0
+53:1/0 = 0
+69:5/0 = 0
+58:8/0 = 0
+48:21/0 = 0
+32:22/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_3mine"]
+tile_size = Vector2i(12, 12)
+uv_clipping = true
+sources/2 = SubResource("TileSetAtlasSource_b4ob3")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
+viewport_path = NodePath("MapView")
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("World", "Player")]
 script = ExtResource("1_14wn1")
 World = NodePath("World")
 Player = NodePath("Player")
+
+[node name="MapView" type="SubViewport" parent="."]
+size = Vector2i(1412, 512)
+render_target_update_mode = 0
+
+[node name="TileMap" type="TileMapLayer" parent="MapView"]
+z_index = 4096
+z_as_relative = false
+tile_set = SubResource("TileSet_3mine")
+
+[node name="Camera" type="Camera2D" parent="MapView"]
+anchor_mode = 0
 
 [node name="World" type="WorldGeneration" parent="."]
 script = ExtResource("1_0bwn5")
@@ -27,7 +64,9 @@ World = NodePath("../World")
 position = Vector2(7, 7)
 zoom = Vector2(2, 2)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." node_paths=PackedStringArray("MapMenu")]
+script = ExtResource("5_hti4h")
+MapMenu = NodePath("Map")
 
 [node name="Dummy" type="Label" parent="CanvasLayer"]
 modulate = Color(1, 1, 1, 0.0156863)
@@ -35,7 +74,39 @@ offset_right = 512.0
 offset_bottom = 512.0
 text = "a"
 
+[node name="Map" type="Control" parent="CanvasLayer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("7_ghimp")
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Map"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="ViewportRect" type="TextureRect" parent="CanvasLayer/Map/MarginContainer"]
+layout_mode = 2
+texture = SubResource("ViewportTexture_kjl2a")
+expand_mode = 1
+stretch_mode = 2
+
 [node name="DebugInfo" type="Label" parent="CanvasLayer"]
 offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
+
+[connection signal="generated" from="World" to="CanvasLayer/Map" method="_on_world_generated"]
