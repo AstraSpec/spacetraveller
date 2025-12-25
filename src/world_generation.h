@@ -33,6 +33,7 @@ private:
     static const int WORLD_BUBBLE_RADIUS = WORLD_BUBBLE_SIZE / 2;
     static const int REGION_SIZE = 256;
     static const int CHUNK_SIZE = 32;
+    static const int CHUNK_SHIFT = 4;
     
     std::unordered_map<uint64_t, String> region_chunks;
     std::unordered_map<uint64_t, RID> tile_rids;

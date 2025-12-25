@@ -135,7 +135,7 @@ void CityGeneration::drawEmptyMarketSquare(double cx, double cy, double angle, i
             if (std::abs(localX) <= halfW && std::abs(localY) <= halfH) {
                 String current = canvas.getPixel(x, y);
                 if (current != "water" && current != "palace") {
-                    canvas.setPixel(x, y, "void");
+                    canvas.setPixel(x, y, "plains");
                 }
             }
         }
@@ -160,7 +160,7 @@ void CityGeneration::drawEmptyGrandPlaza(double cx, double cy, double r) {
             double dist = std::hypot(x - cx, y - cy);
             String current = canvas.getPixel(x, y);
             if (dist <= r + 0.5 && current != "water" && current != "palace") {
-                canvas.setPixel(x, y, "void");
+                canvas.setPixel(x, y, "plaza");
             }
         }
     }
@@ -398,7 +398,7 @@ String CityGeneration::get_chunk_id(const String &p_tile) {
     if (p_tile == "palace") return "palace";
     if (p_tile == "alley") return "alley";
     if (p_tile == "gate") return "gate";
-    if (p_tile == "plaza" || p_tile == "void") return "plaza";
+    if (p_tile == "plaza") return "plaza";
     if (p_tile == "water") return "plains";
     if (p_tile == "") return (UtilityFunctions::randi() % 2 == 0) ? "forest" : "plains";
     return "plains";

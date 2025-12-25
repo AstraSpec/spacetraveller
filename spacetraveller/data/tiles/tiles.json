@@ -5,12 +5,27 @@
     "solid": false
   },
   {
+    "id": "dirt",
+    "atlas": [ 9, 5 ],
+    "solid": false
+  },
+  {
     "id": "tree",
     "atlas": [ 0, 8 ],
     "solid": true
   },
   {
-    "id": "grass",
+    "id": "grass1",
+    "atlas": [ 6, 9 ],
+    "solid": false
+  },
+  {
+    "id": "grass2",
+    "atlas": [ 7, 9 ],
+    "solid": false
+  },
+  {
+    "id": "grass3",
     "atlas": [ 3, 9 ],
     "solid": false
   },
