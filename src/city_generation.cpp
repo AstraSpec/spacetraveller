@@ -232,13 +232,6 @@ void CityGeneration::generateCity(
     double centerX = gridSize / 2.0;
     double centerY = gridSize / 2.0;
 
-    // Central Palace
-    if (!showInner) {
-        canvas.fillRect(static_cast<int>(centerX - 2), static_cast<int>(centerY - 2), 5, 5, "palace");
-    } else {
-        canvas.fillRect(static_cast<int>(std::round(centerX - 3)), static_cast<int>(std::round(centerY - 3)), 7, 7, "palace");
-    }
-
     int gateCount = showInner ? spokes : 6;
     double gateRadius = showInner ? static_cast<double>(radius) : 2.5;
     std::vector<CityNode> gateCoords;
@@ -278,6 +271,13 @@ void CityGeneration::generateCity(
         for (const auto& gate : gateCoords) {
             canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, "road");
         }
+    }
+
+    // Central Palace
+    if (!showInner) {
+        canvas.fillRect(static_cast<int>(centerX - 2), static_cast<int>(centerY - 2), 5, 5, "palace");
+    } else {
+        canvas.fillRect(static_cast<int>(std::round(centerX - 3)), static_cast<int>(std::round(centerY - 3)), 7, 7, "palace");
     }
 
     generateOuterDistricts(centerX, centerY, gateCoords, outerReach, outerComp);
