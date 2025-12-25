@@ -42,6 +42,16 @@ void Canvas::drawLine(int x0, int y0, int x1, int y1, const String &val) {
         setPixel(x0, y0, val);
         if (x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
+
+        // If we're about to move diagonally, we add a cardinal step to ensure 4-connectivity.
+        if (e2 >= dy && e2 <= dx) {
+            if (dx > -dy) {
+                setPixel(x0 + sx, y0, val);
+            } else {
+                setPixel(x0, y0 + sy, val);
+            }
+        }
+
         if (e2 >= dy) { err += dy; x0 += sx; }
         if (e2 <= dx) { err += dx; y0 += sy; }
     }
@@ -49,16 +59,28 @@ void Canvas::drawLine(int x0, int y0, int x1, int y1, const String &val) {
 
 void Canvas::drawCircle(double xm, double ym, double r, const String &val) {
     if (r <= 0) return;
-    int x = -static_cast<int>(r), y = 0, err = 2 - 2 * static_cast<int>(r);
-    do {
-        setPixel(std::round(xm - x), std::round(ym + y), val);
-        setPixel(std::round(xm - y), std::round(ym - x), val);
-        setPixel(std::round(xm + x), std::round(ym - y), val);
-        setPixel(std::round(xm + y), std::round(ym + x), val);
-        int prevErr = err;
-        if (prevErr <= y) err += ++y * 2 + 1;
-        if (prevErr > x || err > y) err += ++x * 2 + 1;
-    } while (x < 0);
+    int x = std::round(r), y = 0, err = 1 - x;
+
+    while (x >= y) {
+        // Draw the 8 symmetric points
+        for (int sx : {-1, 1}) for (int sy : {-1, 1}) {
+            setPixel(std::round(xm + sx * x), std::round(ym + sy * y), val);
+            setPixel(std::round(xm + sx * y), std::round(ym + sy * x), val);
+        }
+
+        y++;
+        if (err < 0) {
+            err += 2 * y + 1;
+        } else {
+            // Bridge the gap for 4-connectivity before moving x
+            for (int sx : {-1, 1}) for (int sy : {-1, 1}) {
+                setPixel(std::round(xm + sx * x), std::round(ym + sy * y), val);
+                setPixel(std::round(xm + sx * y), std::round(ym + sy * x), val);
+            }
+            x--;
+            err += 2 * (y - x) + 1;
+        }
+    }
 }
 
 void Canvas::saveAsPPM(const std::string& filename) const {

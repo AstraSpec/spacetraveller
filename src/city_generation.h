@@ -27,6 +27,7 @@ private:
     void randomize();
     
     bool isInSector(int px, int py, double cx, double cy, double a1, double a2, double r1, double r2);
+    bool canPlacePixel(int x, int y, const String &val);
     void drawRestrictedLine(int x0, int y0, int x1, int y1, const String &val, double cx, double cy, double a1, double a2, double r1, double r2);
     void splitSector(int x, int y, int w, int h, int depth, double cx, double cy, double a1, double a2, double r1, double r2);
     void subdivideSector(double cx, double cy, double a1, double a2, double r1, double r2, int depth);

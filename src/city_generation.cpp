@@ -43,28 +43,42 @@ bool CityGeneration::isInSector(int px, int py, double cx, double cy, double a1,
     return s > e ? (angle >= s || angle <= e) : (angle >= s && angle <= e);
 }
 
+bool CityGeneration::canPlacePixel(int x, int y, const String &val) {
+    String current = canvas.getPixel(x, y);
+    if (val == "road") {
+        return (current != "water" && current != "palace" && current != "gate");
+    } else {
+        return (!(current == "void" && (val == "alley" || val == "building")) &&
+                current != "water" && current != "palace" && current != "gate" &&
+                !(current == "road" && (val == "alley" || val == "building")) &&
+                !(current == "alley" && val == "building"));
+    }
+}
+
 void CityGeneration::drawRestrictedLine(int x0, int y0, int x1, int y1, const String &val, double cx, double cy, double a1, double a2, double r1, double r2) {
     int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int err = dx + dy, e2;
     while (true) {
         if (isInSector(x0, y0, cx, cy, a1, a2, r1, r2)) {
-            String current = canvas.getPixel(x0, y0);
-            if (val == "road") {
-                if (current != "water" && current != "palace" && current != "gate") {
-                    canvas.setPixel(x0, y0, val);
-                }
-            } else {
-                if (!(current == "void" && (val == "alley" || val == "building")) &&
-                    current != "water" && current != "palace" && current != "gate" &&
-                    !(current == "road" && (val == "alley" || val == "building")) &&
-                    !(current == "alley" && val == "building")) {
-                    canvas.setPixel(x0, y0, val);
-                }
+            if (canPlacePixel(x0, y0, val)) {
+                canvas.setPixel(x0, y0, val);
             }
         }
         if (x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
+
+        // Cardinal connectivity fix
+        if (e2 >= dy && e2 <= dx) {
+            int cx0 = x0, cy0 = y0;
+            if (dx > -dy) cx0 += sx; else cy0 += sy;
+            if (isInSector(cx0, cy0, cx, cy, a1, a2, r1, r2)) {
+                if (canPlacePixel(cx0, cy0, val)) {
+                    canvas.setPixel(cx0, cy0, val);
+                }
+            }
+        }
+
         if (e2 >= dy) { err += dy; x0 += sx; }
         if (e2 <= dx) { err += dx; y0 += sy; }
     }
@@ -148,11 +162,9 @@ void CityGeneration::drawEmptyGrandPlaza(double cx, double cy, double r) {
             if (dist <= r + 0.5 && current != "water" && current != "palace") {
                 canvas.setPixel(x, y, "void");
             }
-            if (dist >= r - 0.5 && dist < r + 0.5) {
-                canvas.setPixel(x, y, "road");
-            }
         }
     }
+    canvas.drawCircle(cx, cy, r, "road");
 }
 
 void CityGeneration::generateOuterDistricts(double cx, double cy, const std::vector<CityNode>& startNodes, int reach, int density) {
