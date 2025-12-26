@@ -35,7 +35,8 @@ void TileDb::initialize_data() {
     
     // Populate the fast C++ cache
     cache.clear();
-    for (const auto& pair : db_helper.get_all_rows()) {
+    auto rows = db_helper.get_all_rows();
+    for (const auto& pair : rows) {
         const String& id = pair.first;
         const Dictionary& d = pair.second;
         
@@ -44,6 +45,7 @@ void TileDb::initialize_data() {
         info.solid = d.get("solid", false);
         cache[id] = info;
     }
+    UtilityFunctions::print("TileDb initialized with ", cache.size(), " tiles.");
 }
 
 const TileInfo* TileDb::get_tile_info(const String &p_id) const {

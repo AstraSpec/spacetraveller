@@ -31,9 +31,9 @@ sources/2 = SubResource("TileSetAtlasSource_b4ob3")
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("World", "Player")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("WorldGen", "Player")]
 script = ExtResource("1_14wn1")
-World = NodePath("World")
+WorldGen = NodePath("WorldGen")
 Player = NodePath("Player")
 
 [node name="MapView" type="SubViewport" parent="."]
@@ -48,7 +48,7 @@ tile_set = SubResource("TileSet_3mine")
 [node name="Camera" type="Camera2D" parent="MapView"]
 anchor_mode = 0
 
-[node name="World" type="WorldGeneration" parent="."]
+[node name="WorldGen" type="WorldGeneration" parent="."]
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 
@@ -58,7 +58,7 @@ centered = false
 region_enabled = true
 region_rect = Rect2(339, 92, 12, 12)
 script = ExtResource("4_yn2v7")
-World = NodePath("../World")
+World = NodePath("../WorldGen")
 
 [node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(7, 7)
@@ -109,4 +109,4 @@ offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
 
-[connection signal="generated" from="World" to="CanvasLayer/Map" method="_on_world_generated"]
+[connection signal="generated" from="WorldGen" to="CanvasLayer/Map" method="_on_world_generated"]

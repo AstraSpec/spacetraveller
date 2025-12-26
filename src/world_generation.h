@@ -42,6 +42,7 @@ private:
     
     // Helpers
     String get_tile(int x, int y);
+    String get_plains_tile(uint32_t roll);
 
 protected:
     static void _bind_methods();

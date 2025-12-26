@@ -1,8 +1,11 @@
 #include "register_types.h"
 
 #include "world_generation.h"
+#include "fast_tilemap.h"
+#include "structure_editor.h"
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
+#include "data/structure_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -16,15 +19,21 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
+	GDREGISTER_RUNTIME_CLASS(FastTileMap);
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
+	GDREGISTER_RUNTIME_CLASS(StructureEditor);
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
+	GDREGISTER_CLASS(StructureDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
 
 	ChunkDb::create_singleton();
 	Engine::get_singleton()->register_singleton("ChunkDb", ChunkDb::get_singleton());
+
+	StructureDb::create_singleton();
+	Engine::get_singleton()->register_singleton("StructureDb", StructureDb::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
@@ -37,6 +46,9 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("ChunkDb");
 	ChunkDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("StructureDb");
+	StructureDb::delete_singleton();
 }
 
 extern "C" {

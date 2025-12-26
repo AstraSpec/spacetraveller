@@ -1,4 +1,5 @@
 #include "world_generation.h"
+#include "data/structure_db.h"
 
 using namespace godot;
 
@@ -51,6 +52,13 @@ int WorldGeneration::get_world_seed() const {
     return world_seed;
 }
 
+String WorldGeneration::get_plains_tile(uint32_t roll) {
+    if (roll < 35) return "grass1";
+    if (roll < 70) return "grass2";
+    if (roll < 90) return "dirt";
+    return "grass3";
+}
+
 // Get tile type from noise
 String WorldGeneration::get_tile(int x, int y) {
     int cx = x >> CHUNK_SHIFT;
@@ -70,33 +78,33 @@ String WorldGeneration::get_tile(int x, int y) {
 
     if (chunk_id == "forest") {
         if (roll < 30) return "tree";
-        if (roll < 54) return "grass1";
-        if (roll < 79) return "grass2";
-        if (roll < 93) return "dirt";
-        return "grass3";
+        return get_plains_tile((roll - 30) * 100 / 70);
     }
     
     if (chunk_id == "plains") {
-        if (roll < 35) return "grass1";
-        if (roll < 70) return "grass2";
-        if (roll < 90) return "dirt";
-        return "grass3";
+        return get_plains_tile(roll);
     }
 
     if (chunk_id == "road")     return "stone_bricks";
     if (chunk_id == "alley")    return "alley_bricks";
-    if (chunk_id == "building") return "wooden_floor";
-    if (chunk_id == "plaza")    return "plaza_floor";
+    
+    if (chunk_id == "building") {
+        int lx = x & (CHUNK_SIZE - 1);
+        int ly = y & (CHUNK_SIZE - 1);
+        
+        StructureDb* s_db = StructureDb::get_singleton();
+        if (s_db) {
+            String tile = s_db->get_tile_at("house01", lx, ly);
+            if (tile != "void" && tile != "") return tile;
+        }
+        return get_plains_tile(roll);
+    }
+
+    if (chunk_id == "plaza")    return "w_floor";
     if (chunk_id == "gate")     return "gate_floor";
     if (chunk_id == "palace")   return "palace_floor";
 
     return "void";
-}
-
-    
-        
-        }
-    }
 }
 
 // Update world bubble - main loop
