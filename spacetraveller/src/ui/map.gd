@@ -32,7 +32,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():
 		return
 		
-	var region_size = 256
+	var region_size = WorldGeneration.get_region_size()
 	
 	# Determine bounds from any key in the dictionary
 	var first_key = regionChunks.keys()[0]
@@ -65,9 +65,10 @@ func _unhandled_input(event :InputEvent) -> void:
 		pos -= event.relative * DRAG_SPEED
 		
 		var innerSize :Vector2 = get_inner_size()
+		var map_pixel_size = WorldGeneration.get_region_size() * FastTileMap.get_tile_size()
 		
-		pos.x = clamp(pos.x, 0, 256*12 - innerSize.x)
-		pos.y = clamp(pos.y, 0, 256*12 - innerSize.y)
+		pos.x = clamp(pos.x, 0, map_pixel_size - innerSize.x)
+		pos.y = clamp(pos.y, 0, map_pixel_size - innerSize.y)
 		
 		pos.x = floor(pos.x)
 		pos.y = floor(pos.y)

@@ -1,0 +1,33 @@
+extends GridContainer
+
+signal tile_selected(id: String)
+
+func _ready() -> void:
+	if TileDb.get_full_data().is_empty():
+		TileDb.initialize_data()
+		
+	var tiles = TileDb.get_full_data()
+	for id in tiles.keys():
+		add_tile_button(id)
+
+func add_tile_button(id: String) -> void:
+	var button = preload("res://src/structure_editor/tile_button.tscn").instantiate()
+	
+	var atlas = TileDb.get_atlas_coords(id)
+	var new_atlas = button.texture_normal
+	
+	# Structure tile and spacing
+	var tile_size = FastTileMap.get_tile_size()
+	var spacing = 1
+	new_atlas.region = Rect2(
+		spacing + atlas.x * (tile_size + spacing), 
+		spacing + atlas.y * (tile_size + spacing), 
+		tile_size, 
+		tile_size
+	)
+	
+	button.texture_normal = new_atlas
+	button.tooltip_text = id
+	
+	add_child(button)
+	button.pressed.connect(func(): tile_selected.emit(id))

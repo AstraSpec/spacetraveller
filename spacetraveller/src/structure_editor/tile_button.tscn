@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://b4i3a0q1nsg67"]
+
+[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_o34mv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u3n0j"]
+resource_local_to_scene = true
+atlas = ExtResource("1_o34mv")
+region = Rect2(1, 1, 12, 12)
+
+[node name="TileButton" type="TextureButton"]
+custom_minimum_size = Vector2(24, 24)
+offset_right = 24.0
+offset_bottom = 24.0
+scale = Vector2(2, 2)
+texture_normal = SubResource("AtlasTexture_u3n0j")
+stretch_mode = 0

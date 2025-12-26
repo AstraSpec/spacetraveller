@@ -30,6 +30,16 @@
     "solid": false
   },
   {
+    "id": "w_wall",
+    "atlas": [ 0, 4 ],
+    "solid": true
+  },
+  {
+    "id": "w_floor",
+    "atlas": [ 59, 1 ],
+    "solid": false
+  },
+  {
     "id": "palace_floor",
     "atlas": [ 0, 0 ],
     "solid": false
@@ -45,18 +55,8 @@
     "solid": false
   },
   {
-    "id": "wooden_floor",
-    "atlas": [ 0, 4 ],
-    "solid": false
-  },
-  {
     "id": "gate_floor",
     "atlas": [ 52, 0 ],
-    "solid": false
-  },
-  {
-    "id": "plaza_floor",
-    "atlas": [ 59, 1 ],
     "solid": false
   }
 ]

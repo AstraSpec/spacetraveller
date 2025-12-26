@@ -1,0 +1,83 @@
+[gd_scene load_steps=5 format=3 uid="uid://c7bpkfyb6qvuq"]
+
+[ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
+[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
+[ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
+[ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
+
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "InputID")]
+script = ExtResource("1_urqvf")
+StructureEditor_ = NodePath("StructureEditor")
+Background = NodePath("Background")
+TileIDLabel = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel")
+InputID = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureID")
+
+[node name="Background" type="TextureRect" parent="."]
+texture_repeat = 2
+offset_right = 13.0
+offset_bottom = 13.0
+texture = ExtResource("2_0s7nb")
+stretch_mode = 1
+
+[node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(2, 2)
+
+[node name="StructureEditor" type="StructureEditor" parent="."]
+tilesheet = ExtResource("1_fl4b5")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Dummy" type="Label" parent="CanvasLayer"]
+offset_left = 807.0
+offset_top = 514.0
+offset_right = 1935.0
+offset_bottom = 537.0
+text = "."
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="CanvasLayer/MarginContainer"]
+layout_mode = 2
+ratio = 0.25
+alignment_horizontal = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer/AspectRatioContainer"]
+layout_mode = 2
+
+[node name="TileIDLabel" type="Label" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tile chosen: "
+
+[node name="ClearButton" type="Button" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+text = "Clear"
+
+[node name="TileGrid" type="GridContainer" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 8
+script = ExtResource("1_7cscp")
+
+[node name="StructureID" type="TextEdit" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+placeholder_text = "Structure Name"
+scroll_past_end_of_file = true
+
+[node name="DownloadButton" type="Button" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+text = "Download"
+
+[connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
+[connection signal="tile_selected" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
+[connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/DownloadButton" to="." method="_on_download_button_pressed"]
