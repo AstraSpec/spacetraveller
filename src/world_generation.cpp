@@ -64,8 +64,6 @@ String WorldGeneration::get_tile(int x, int y) {
     int cx = x >> CHUNK_SHIFT;
     int cy = y >> CHUNK_SHIFT;
 
-    auto it = region_chunks.find(Occlusion::pack_coords(cx, cy));
-    if (it == region_chunks.end()) return "void";
 
     const String& chunk_id = it->second;
 
@@ -83,12 +81,23 @@ String WorldGeneration::get_tile(int x, int y) {
     
     if (chunk_id == "plains") {
         return get_plains_tile(roll);
+    uint64_t chunk_key = Occlusion::pack_coords(cx, cy);
+    if (!last_chunk_valid || last_chunk_key != chunk_key) {
+        auto it = region_chunks.find(chunk_key);
+        if (it == region_chunks.end()) {
+            last_chunk_valid = false;
+            return id_void;
+        }
+        last_chunk_key = chunk_key;
+        last_chunk_id = it->second;
+        last_chunk_valid = true;
     }
 
     if (chunk_id == "road")     return "stone_bricks";
     if (chunk_id == "alley")    return "alley_bricks";
     
     if (chunk_id == "building") {
+    const uint16_t chunk_id = last_chunk_id;
         int lx = x & (CHUNK_SIZE - 1);
         int ly = y & (CHUNK_SIZE - 1);
         
@@ -191,6 +200,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
 // Initialize world bubble
 Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     region_chunks.clear();
+    last_chunk_valid = false;
 
     // Create a 256x256 city canvas (one city tile per chunk)
     Canvas cityCanvas(REGION_SIZE);

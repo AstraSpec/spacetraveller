@@ -36,6 +36,11 @@ private:
     
     std::unordered_map<uint64_t, String> region_chunks;
     
+    // Performance Cache: Last Chunk
+    uint64_t last_chunk_key = 0;
+    String last_chunk_id = "";
+    bool last_chunk_valid = false;
+    
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
