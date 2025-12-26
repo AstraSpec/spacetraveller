@@ -8,19 +8,16 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_biome_noise"), &WorldGeneration::get_biome_noise);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "biome_noise", PROPERTY_HINT_RESOURCE_TYPE, "FastNoiseLite"), "set_biome_noise", "get_biome_noise");
     
-    ClassDB::bind_method(D_METHOD("set_tilesheet", "texture"), &WorldGeneration::set_tilesheet);
-    ClassDB::bind_method(D_METHOD("get_tilesheet"), &WorldGeneration::get_tilesheet);
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilesheet", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_tilesheet", "get_tilesheet");
-    
     ClassDB::bind_method(D_METHOD("set_world_seed", "seed"), &WorldGeneration::set_world_seed);
     ClassDB::bind_method(D_METHOD("get_world_seed"), &WorldGeneration::get_world_seed);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "world_seed"), "set_world_seed", "get_world_seed");
     
     // Expose constants
-    ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_bubble_radius"), &WorldGeneration::get_bubble_radius);
+    ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_region_size"), &WorldGeneration::get_region_size);
+    ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_size"), &WorldGeneration::get_chunk_size);
+    ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_shift"), &WorldGeneration::get_chunk_shift);
     
     // Method bindings
-    ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos"), &WorldGeneration::init_world_bubble);
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
 }
@@ -29,12 +26,6 @@ WorldGeneration::WorldGeneration() {
 }
 
 WorldGeneration::~WorldGeneration() {
-    // Clean up RIDs
-    RenderingServer* rs = RenderingServer::get_singleton();
-    for (auto& pair : tile_rids) {
-        rs->free_rid(pair.second);
-    }
-    tile_rids.clear();
 }
 
 // Property setters/getters
@@ -47,14 +38,6 @@ void WorldGeneration::set_biome_noise(const Ref<FastNoiseLite>& noise) {
 
 Ref<FastNoiseLite> WorldGeneration::get_biome_noise() const {
     return biome_noise;
-}
-
-void WorldGeneration::set_tilesheet(const Ref<Texture2D>& texture) {
-    tilesheet = texture;
-}
-
-Ref<Texture2D> WorldGeneration::get_tilesheet() const {
-    return tilesheet;
 }
 
 void WorldGeneration::set_world_seed(int seed) {
@@ -110,41 +93,13 @@ String WorldGeneration::get_tile(int x, int y) {
     return "void";
 }
 
-// Initialize world bubble
-void WorldGeneration::init_world_bubble(const Vector2i& playerPos) {
-    RenderingServer* rs = RenderingServer::get_singleton();
-    RID parent_rid = get_canvas_item();
     
-    // Clear any existing tiles
-    for (auto& pair : tile_rids) {
-        rs->free_rid(pair.second);
-    }
-    tile_rids.clear();
-    tile_id_cache.clear();
-    seen_cells.clear();
-    
-    // Create tiles in circular bubble
-    for (int i = 0; i < WORLD_BUBBLE_SIZE * WORLD_BUBBLE_SIZE; i++) {
-        int ox = (i / WORLD_BUBBLE_SIZE) - WORLD_BUBBLE_RADIUS;
-        int oy = (i % WORLD_BUBBLE_SIZE) - WORLD_BUBBLE_RADIUS;
         
-        // Check if within radius
-        float dist = sqrtf(static_cast<float>(ox * ox + oy * oy));
-        if (dist < static_cast<float>(WORLD_BUBBLE_RADIUS)) {
-            uint64_t offsetKey = Occlusion::pack_coords(ox, oy);
-            
-            // Create canvas item for this tile
-            RID tile_rid = rs->canvas_item_create();
-            rs->canvas_item_set_parent(tile_rid, parent_rid);
-            tile_rids[offsetKey] = tile_rid;
         }
     }
-    
-    // Initial render
-    update_world_bubble(playerPos);
 }
 
-// Update world bubble - main loop, all in C++
+// Update world bubble - main loop
 void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     if (!tilesheet.is_valid()) {
         return;
@@ -158,7 +113,6 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     // First pass: render tiles and build tile map
     for (auto& pair : tile_rids) {
         uint64_t offsetKey = pair.first;
-        RID tile_rid = pair.second;
         
         // Unpack offset
         int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
@@ -179,21 +133,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
             tile_id_cache[cellKey] = tile_id;
         }
         
-        Vector2i atlas_pos(1, 1);
-        const TileInfo* info = tile_db->get_tile_info(tile_id);
-        if (info) {
-            atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
-            atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
-        }
-        
-        // Clear and render tile
-        rs->canvas_item_clear(tile_rid);
-        rs->canvas_item_add_texture_rect_region(
-            tile_rid,
-            Rect2(ox * TILE_SIZE, oy * TILE_SIZE, TILE_SIZE, TILE_SIZE),
-            texture_rid,
-            Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
-        );
+        update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db);
     }
     
     // Check if all 8 surrounding tiles are walls - if so, skip occlusion computation
