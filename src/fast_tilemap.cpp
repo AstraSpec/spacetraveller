@@ -1,4 +1,5 @@
 #include "fast_tilemap.h"
+#include "data/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/engine.hpp>
@@ -78,7 +79,7 @@ void FastTileMap::init_world_bubble(const Vector2i& playerPos, bool is_square) {
     }
 }
 
-void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, const String& tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db) {
+void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db) {
     uint64_t offsetKey = Occlusion::pack_coords(ox, oy);
     auto it_rid = tile_rids.find(offsetKey);
     if (it_rid == tile_rids.end()) return;
@@ -104,7 +105,10 @@ void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, cons
 
 void FastTileMap::place_tile(int x, int y, const String& tile_id) {
     uint64_t cellKey = Occlusion::pack_coords(x, y);
-    tile_id_cache[cellKey] = tile_id;
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (id_reg) {
+        tile_id_cache[cellKey] = id_reg->get_id(tile_id);
+    }
 }
 
 void FastTileMap::clear_cache() {

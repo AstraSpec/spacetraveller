@@ -1,4 +1,5 @@
 #include "structure_db.h"
+#include "id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -27,6 +28,7 @@ StructureDb::StructureDb() {}
 StructureDb::~StructureDb() {}
 
 void StructureDb::initialize_data() {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
     db_helper.load_directory("res://data/structures");
     
     cache.clear();
@@ -34,6 +36,8 @@ void StructureDb::initialize_data() {
         const String& id = pair.first;
         const Dictionary& d = pair.second;
         
+        if (id_reg) id_reg->register_string(id);
+
         StructureInfo info;
         
         // Setup palette cache

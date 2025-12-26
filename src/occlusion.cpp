@@ -7,7 +7,7 @@ namespace godot {
 bool Occlusion::is_occluded(
     const Vector2i& cellPos,
     const Vector2i& playerPos,
-    const std::unordered_map<uint64_t, String>& tile_cache
+    const std::unordered_map<uint64_t, uint16_t>& tile_cache
 ) {
     TileDb* p_tile_db = TileDb::get_singleton();
     if (!p_tile_db) return false;
@@ -73,7 +73,7 @@ bool Occlusion::is_occluded(
 
 bool Occlusion::is_surrounded_by_walls(
     const Vector2i& playerPos,
-    const std::unordered_map<uint64_t, String>& tile_cache
+    const std::unordered_map<uint64_t, uint16_t>& tile_cache
 ) {
     TileDb* p_tile_db = TileDb::get_singleton();
     if (!p_tile_db) return false;

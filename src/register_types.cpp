@@ -6,6 +6,7 @@
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
 #include "data/structure_db.h"
+#include "data/id_registry.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -25,6 +26,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
 	GDREGISTER_CLASS(StructureDb);
+	GDREGISTER_CLASS(IdRegistry);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -34,6 +36,9 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	StructureDb::create_singleton();
 	Engine::get_singleton()->register_singleton("StructureDb", StructureDb::get_singleton());
+
+	IdRegistry::create_singleton();
+	Engine::get_singleton()->register_singleton("IdRegistry", IdRegistry::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
@@ -49,6 +54,9 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("StructureDb");
 	StructureDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("IdRegistry");
+	IdRegistry::delete_singleton();
 }
 
 extern "C" {

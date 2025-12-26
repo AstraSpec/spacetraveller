@@ -1,4 +1,5 @@
 #include "tile_db.h"
+#include "id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -31,6 +32,7 @@ TileDb::~TileDb() {
 }
 
 void TileDb::initialize_data() {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
     db_helper.load_directory("res://data/tiles");
     
     // Populate the fast C++ cache
@@ -40,6 +42,8 @@ void TileDb::initialize_data() {
         const String& id = pair.first;
         const Dictionary& d = pair.second;
         
+        if (id_reg) id_reg->register_string(id);
+
         TileInfo info;
         info.atlas = db_helper.variant_to_vector2i(d.get("atlas", Array()));
         info.solid = d.get("solid", false);
@@ -52,6 +56,14 @@ const TileInfo* TileDb::get_tile_info(const String &p_id) const {
     auto it = cache.find(p_id);
     if (it != cache.end()) {
         return &it->second;
+    }
+    return nullptr;
+}
+
+const TileInfo* TileDb::get_tile_info(uint16_t p_id) const {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (id_reg) {
+        return get_tile_info(id_reg->get_string(p_id));
     }
     return nullptr;
 }

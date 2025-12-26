@@ -22,13 +22,13 @@ public:
     static bool is_occluded(
         const Vector2i& cellPos,
         const Vector2i& playerPos,
-        const std::unordered_map<uint64_t, String>& tile_cache
+        const std::unordered_map<uint64_t, uint16_t>& tile_cache
     );
     
     // Check if player is surrounded by walls on all 8 sides
     static bool is_surrounded_by_walls(
         const Vector2i& playerPos,
-        const std::unordered_map<uint64_t, String>& tile_cache
+        const std::unordered_map<uint64_t, uint16_t>& tile_cache
     );
 };
 

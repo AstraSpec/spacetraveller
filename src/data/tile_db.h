@@ -36,6 +36,7 @@ public:
 
     // Fast C++ access
     const TileInfo* get_tile_info(const String &p_id) const;
+    const TileInfo* get_tile_info(uint16_t p_id) const;
 
     // GDScript/Standard access
     Vector2i get_atlas_coords(const String &p_id) const;

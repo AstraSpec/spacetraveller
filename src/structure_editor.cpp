@@ -2,6 +2,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
+#include "data/id_registry.h"
 
 using namespace godot;
 
@@ -34,13 +35,13 @@ void StructureEditor::update_visuals(const Vector2i& centerPos) {
         int cy = oy + centerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
-        String tile_id = "";
+        uint16_t tile_id = 0; // void
         auto it = tile_id_cache.find(cellKey);
         if (it != tile_id_cache.end()) {
             tile_id = it->second;
         }
 
-        if (tile_id != "") {
+        if (tile_id != 0) {
             update_tile_at(ox, oy, centerPos, tile_id, rs, texture_rid, tile_db);
             rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
         } else {
@@ -76,13 +77,14 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
     };
 
     // Iterate through the full grid
+    IdRegistry* id_reg = IdRegistry::get_singleton();
     for (int y = -size/2; y < size/2; y++) {
         for (int x = -size/2; x < size/2; x++) {
             uint64_t key = Occlusion::pack_coords(x, y);
             String tile_id = "void";
             auto it = tile_id_cache.find(key);
             if (it != tile_id_cache.end()) {
-                tile_id = it->second;
+                if (id_reg) tile_id = id_reg->get_string(it->second);
             }
 
             if (tile_id == current_id) {

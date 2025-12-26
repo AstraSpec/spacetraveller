@@ -25,6 +25,17 @@
 
 namespace godot {
 
+struct BiomeTile {
+    uint16_t id;
+    int weight;
+};
+
+struct BiomeInfo {
+    std::vector<BiomeTile> ground_tiles;
+    // Map for specific overrides (e.g. chunk_id -> fixed_tile_id)
+    std::unordered_map<uint16_t, uint16_t> fixed_overrides;
+};
+
 class WorldGeneration : public FastTileMap {
     GDCLASS(WorldGeneration, FastTileMap)
 
@@ -34,20 +45,25 @@ private:
     static const int CHUNK_SIZE = 32;
     static const int CHUNK_SHIFT = 5;
     
-    std::unordered_map<uint64_t, String> region_chunks;
+    std::unordered_map<uint64_t, uint16_t> region_chunks;
     
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
-    String last_chunk_id = "";
+    uint16_t last_chunk_id = 0;
     bool last_chunk_valid = false;
     
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
+
+    // Data-Driven Registry
+    uint16_t id_void = 0;
+    std::unordered_map<uint16_t, BiomeInfo> biome_rules;
     
     // Helpers
-    String get_tile(int x, int y);
-    String get_plains_tile(uint32_t roll);
+    uint16_t get_tile(int x, int y);
+    uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);
+    void setup_biome_rules();
 
 protected:
     static void _bind_methods();

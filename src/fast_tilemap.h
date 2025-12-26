@@ -28,7 +28,7 @@ protected:
     int spacing = 0;
 
     std::unordered_map<uint64_t, RID> tile_rids;
-    std::unordered_map<uint64_t, String> tile_id_cache;
+    std::unordered_map<uint64_t, uint16_t> tile_id_cache;
     std::unordered_set<uint64_t> seen_cells;
 
     Ref<Texture2D> tilesheet;
@@ -49,7 +49,7 @@ public:
     int get_world_bubble_radius() const { return world_bubble_radius; }
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
-    void update_tile_at(int ox, int oy, const Vector2i& playerPos, const String& tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
+    void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
     void place_tile(int x, int y, const String& tile_id);
     void clear_cache();
 };

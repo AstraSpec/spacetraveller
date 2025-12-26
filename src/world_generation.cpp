@@ -1,5 +1,6 @@
 #include "world_generation.h"
 #include "data/structure_db.h"
+#include "data/id_registry.h"
 
 using namespace godot;
 
@@ -52,36 +53,71 @@ int WorldGeneration::get_world_seed() const {
     return world_seed;
 }
 
-String WorldGeneration::get_plains_tile(uint32_t roll) {
-    if (roll < 35) return "grass1";
-    if (roll < 70) return "grass2";
-    if (roll < 90) return "dirt";
-    return "grass3";
+uint16_t WorldGeneration::pick_weighted_tile(const BiomeInfo& info, uint32_t roll) {
+    int cumulative = 0;
+    for (const auto& tile : info.ground_tiles) {
+        cumulative += tile.weight;
+        if (roll < (uint32_t)cumulative) {
+            return tile.id;
+        }
+    }
+    // Fallback to the first tile if roll fails
+    return info.ground_tiles.empty() ? id_void : info.ground_tiles[0].id;
 }
 
-// Get tile type from noise
-String WorldGeneration::get_tile(int x, int y) {
+void WorldGeneration::setup_biome_rules() {
+    if (!biome_rules.empty()) return; // Already setup
+
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return;
+
+    id_void = id_reg->register_string("void");
+
+    // Helper to register a biome
+    auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
+        uint16_t b_id = id_reg->register_string(name);
+        BiomeInfo info;
+        for (const auto& t : tiles) {
+            info.ground_tiles.push_back({id_reg->register_string(t.first), t.second});
+        }
+        biome_rules[b_id] = info;
+    };
+
+    // 1. Plains
+    reg_biome("plains", {
+        {"grass1", 35}, {"grass2", 35}, {"dirt", 20}, {"grass3", 10}
+    });
+
+    // 2. Forest
+    reg_biome("forest", {
+        {"tree", 30}, {"grass1", 24}, {"grass2", 24}, {"dirt", 14}, {"grass3", 8}
+    });
+
+    // 3. Buildings (Default ground)
+    reg_biome("building", {
+        {"grass1", 35}, {"grass2", 35}, {"dirt", 20}, {"grass3", 10}
+    });
+
+    // 4. Roads/Alleys/Floors (Fixed Overrides)
+    auto reg_simple = [&](const String& name, const String& tile) {
+        uint16_t b_id = id_reg->register_string(name);
+        BiomeInfo info;
+        info.ground_tiles.push_back({id_reg->register_string(tile), 100});
+        biome_rules[b_id] = info;
+    };
+
+    reg_simple("road", "stone_bricks");
+    reg_simple("alley", "alley_bricks");
+    reg_simple("plaza", "w_floor");
+    reg_simple("gate", "gate_floor");
+    reg_simple("palace", "palace_floor");
+}
+
+uint16_t WorldGeneration::get_tile(int x, int y) {
     int cx = x >> CHUNK_SHIFT;
     int cy = y >> CHUNK_SHIFT;
-
-
-    const String& chunk_id = it->second;
-
-    uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^ 
-                 (static_cast<uint32_t>(y) * 3812015801U) ^ 
-                 (static_cast<uint32_t>(world_seed));
-    
-    // Normalize hash to 0-99 range once
-    uint32_t roll = h % 100;
-
-    if (chunk_id == "forest") {
-        if (roll < 30) return "tree";
-        return get_plains_tile((roll - 30) * 100 / 70);
-    }
-    
-    if (chunk_id == "plains") {
-        return get_plains_tile(roll);
     uint64_t chunk_key = Occlusion::pack_coords(cx, cy);
+
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
         auto it = region_chunks.find(chunk_key);
         if (it == region_chunks.end()) {
@@ -93,27 +129,35 @@ String WorldGeneration::get_tile(int x, int y) {
         last_chunk_valid = true;
     }
 
-    if (chunk_id == "road")     return "stone_bricks";
-    if (chunk_id == "alley")    return "alley_bricks";
-    
-    if (chunk_id == "building") {
     const uint16_t chunk_id = last_chunk_id;
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+
+    // Handle buildings (Special Case structure lookup)
+    uint16_t id_building = id_reg ? id_reg->get_id("building") : 0;
+    if (chunk_id == id_building) {
         int lx = x & (CHUNK_SIZE - 1);
         int ly = y & (CHUNK_SIZE - 1);
         
         StructureDb* s_db = StructureDb::get_singleton();
         if (s_db) {
             String tile = s_db->get_tile_at("house01", lx, ly);
-            if (tile != "void" && tile != "") return tile;
+            if (tile != "void" && !tile.is_empty()) {
+                if (id_reg) return id_reg->get_id(tile);
+            }
         }
-        return get_plains_tile(roll);
+        // Fall through to biome_rules for building ground
     }
 
-    if (chunk_id == "plaza")    return "w_floor";
-    if (chunk_id == "gate")     return "gate_floor";
-    if (chunk_id == "palace")   return "palace_floor";
+    // Lookup Biome Rule
+    auto it = biome_rules.find(chunk_id);
+    if (it != biome_rules.end()) {
+        uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^ 
+                     (static_cast<uint32_t>(y) * 3812015801U) ^ 
+                     (static_cast<uint32_t>(world_seed));
+        return pick_weighted_tile(it->second, h % 100);
+    }
 
-    return "void";
+    return id_void;
 }
 
 // Update world bubble - main loop
@@ -141,7 +185,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
         // Get or compute tile ID
-        String tile_id;
+        uint16_t tile_id;
         auto it = tile_id_cache.find(cellKey);
         if (it != tile_id_cache.end()) {
             tile_id = it->second;
@@ -199,6 +243,9 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
 
 // Initialize world bubble
 Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
+    setup_biome_rules();
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+
     region_chunks.clear();
     last_chunk_valid = false;
 
@@ -218,14 +265,15 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     for (int y = 0; y < REGION_SIZE; y++) {
         for (int x = 0; x < REGION_SIZE; x++) {
             String cityTile = cityCanvas.getPixel(x, y);
-            String chunk_id = CityGeneration::get_chunk_id(cityTile);
+            String chunk_name = CityGeneration::get_chunk_id(cityTile);
+            uint16_t chunk_id = id_reg ? id_reg->register_string(chunk_name) : 0;
             
             // Store the chunk type using packed coordinates relative to regionPos
             int gx = regionPos.x * REGION_SIZE + x;
             int gy = regionPos.y * REGION_SIZE + y;
             uint64_t key = Occlusion::pack_coords(gx, gy);
             region_chunks[key] = chunk_id;
-            result[key] = chunk_id;
+            result[key] = chunk_name;
         }
     }
 
