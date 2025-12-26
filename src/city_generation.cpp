@@ -393,15 +393,8 @@ int CityGeneration::spawn_city(int x, int y, int seed) {
 }
 
 String CityGeneration::get_chunk_id(const String &p_tile) {
-    if (p_tile == "road") return "road";
-    if (p_tile == "building") return "building";
-    if (p_tile == "palace") return "palace";
-    if (p_tile == "alley") return "alley";
-    if (p_tile == "gate") return "gate";
-    if (p_tile == "plaza") return "plaza";
-    if (p_tile == "water") return "plains";
     if (p_tile == "") return (UtilityFunctions::randi() % 2 == 0) ? "forest" : "plains";
-    return "plains";
+    return p_tile;
 }
 
 }
