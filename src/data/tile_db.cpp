@@ -5,24 +5,14 @@
 
 namespace godot {
 
-TileDb *TileDb::singleton = nullptr;
+template<> TileDb* DataBase<TileInfo, TileDb>::singleton = nullptr;
 
 void TileDb::_bind_methods() {
+    ClassDB::bind_static_method("TileDb", D_METHOD("get_singleton"), &TileDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &TileDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &TileDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("is_solid", "id"), &TileDb::is_solid);
-    ClassDB::bind_method(D_METHOD("get_full_data"), &TileDb::get_full_data);
-}
-
-void TileDb::create_singleton() {
-    singleton = memnew(TileDb);
-}
-
-void TileDb::delete_singleton() {
-    if (singleton) {
-        memdelete(singleton);
-        singleton = nullptr;
-    }
+    ClassDB::bind_method(D_METHOD("get_ids"), &TileDb::get_ids);
 }
 
 TileDb::TileDb() {
@@ -31,39 +21,25 @@ TileDb::TileDb() {
 TileDb::~TileDb() {
 }
 
-void TileDb::initialize_data() {
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    db_helper.load_directory("res://data/tiles");
+TileInfo TileDb::_parse_row(const Dictionary &p_data) {
+    TileInfo info;
+    info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
+    info.solid = p_data.get("solid", false);
     
-    // Populate the fast C++ cache
-    cache.clear();
-    auto rows = db_helper.get_all_rows();
-    for (const auto& pair : rows) {
-        const String& id = pair.first;
-        const Dictionary& d = pair.second;
-        
-        if (id_reg) id_reg->register_string(id);
-
-        TileInfo info;
-        info.atlas = db_helper.variant_to_vector2i(d.get("atlas", Array()));
-        info.solid = d.get("solid", false);
-        cache[id] = info;
+    if (IdRegistry::get_singleton()) {
+        IdRegistry::get_singleton()->register_string(p_data["id"]);
     }
-    UtilityFunctions::print("TileDb initialized with ", cache.size(), " tiles.");
+    return info;
 }
 
 const TileInfo* TileDb::get_tile_info(const String &p_id) const {
-    auto it = cache.find(p_id);
-    if (it != cache.end()) {
-        return &it->second;
-    }
-    return nullptr;
+    return get_info(p_id);
 }
 
 const TileInfo* TileDb::get_tile_info(uint16_t p_id) const {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (id_reg) {
-        return get_tile_info(id_reg->get_string(p_id));
+        return get_info(id_reg->get_string(p_id));
     }
     return nullptr;
 }

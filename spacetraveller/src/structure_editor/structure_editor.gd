@@ -3,6 +3,7 @@ extends Node2D
 @export var StructureEditor_ :StructureEditor
 @export var Background :TextureRect
 @export var TileIDLabel :Label
+@export var TileGrid :GridContainer
 
 @export var InputID   :TextEdit
 @export var InputData :TextEdit
@@ -30,6 +31,8 @@ func _ready() -> void:
 	)
 	
 	select_tile("stone_bricks")
+	
+	TileGrid.start()
 
 func select_tile(id :String):
 	tileID = id

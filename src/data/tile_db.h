@@ -3,8 +3,6 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
-#include <godot_cpp/variant/vector2i.hpp>
-#include <unordered_map>
 
 namespace godot {
 
@@ -13,26 +11,19 @@ struct TileInfo {
     bool solid;
 };
 
-class TileDb : public Object {
+class TileDb : public Object, public DataBase<TileInfo, TileDb> {
     GDCLASS(TileDb, Object)
-
-private:
-    static TileDb *singleton;
-    DataBaseHelper db_helper;
-    std::unordered_map<String, TileInfo, StringHasher> cache;
 
 protected:
     static void _bind_methods();
+    virtual TileInfo _parse_row(const Dictionary &p_data) override;
 
 public:
-    static TileDb *get_singleton() { return singleton; }
-    static void create_singleton();
-    static void delete_singleton();
-
     TileDb();
     ~TileDb();
 
-    void initialize_data();
+    void initialize_data() { DataBase::initialize_data("res://data/tiles"); }
+    Array get_ids() const { return DataBase::get_ids(); }
 
     // Fast C++ access
     const TileInfo* get_tile_info(const String &p_id) const;
@@ -41,7 +32,6 @@ public:
     // GDScript/Standard access
     Vector2i get_atlas_coords(const String &p_id) const;
     bool is_solid(const String &p_id) const;
-    Dictionary get_full_data() const { return db_helper.get_full_data(); }
 };
 
 }

@@ -2,12 +2,9 @@ extends GridContainer
 
 signal tile_selected(id: String)
 
-func _ready() -> void:
-	if TileDb.get_full_data().is_empty():
-		TileDb.initialize_data()
-		
-	var tiles = TileDb.get_full_data()
-	for id in tiles.keys():
+func start() -> void:
+	var ids = TileDb.get_ids()
+	for id in ids:
 		add_tile_button(id)
 
 func add_tile_button(id: String) -> void:

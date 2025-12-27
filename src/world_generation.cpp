@@ -304,6 +304,5 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
         }
     }
 
-    UtilityFunctions::print("Region initialized with city center at (", regionPos.x, ", ", regionPos.y, ")");
     return result;
 }
