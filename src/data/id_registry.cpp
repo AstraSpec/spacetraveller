@@ -26,6 +26,7 @@ IdRegistry::IdRegistry() {}
 IdRegistry::~IdRegistry() {}
 
 uint16_t IdRegistry::register_string(const String &p_string) {
+    std::unique_lock lock(rw_lock);
     auto it = string_to_id.find(p_string);
     if (it != string_to_id.end()) {
         return it->second;
@@ -38,6 +39,7 @@ uint16_t IdRegistry::register_string(const String &p_string) {
 }
 
 uint16_t IdRegistry::get_id(const String &p_string) const {
+    std::shared_lock lock(rw_lock);
     auto it = string_to_id.find(p_string);
     if (it != string_to_id.end()) {
         return it->second;
@@ -46,6 +48,7 @@ uint16_t IdRegistry::get_id(const String &p_string) const {
 }
 
 String IdRegistry::get_string(uint16_t p_id) const {
+    std::shared_lock lock(rw_lock);
     if (p_id < id_to_string.size()) {
         return id_to_string[p_id];
     }
