@@ -45,12 +45,18 @@ private:
     static const int CHUNK_SIZE = 32;
     static const int CHUNK_SHIFT = 5;
     
-    std::unordered_map<uint64_t, uint16_t> region_chunks;
+    std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [16-bit Rot][16-bit ID]
     
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
     uint16_t last_chunk_id = 0;
+    uint8_t last_chunk_rotation = 0;
+    const BiomeInfo* last_biome_ptr = nullptr;
     bool last_chunk_valid = false;
+    
+    // Pre-fetched singletons
+    class StructureDb* s_db = nullptr;
+    class IdRegistry* id_reg = nullptr;
     
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
@@ -58,6 +64,7 @@ private:
 
     // Data-Driven Registry
     uint16_t id_void = 0;
+    uint16_t id_building = 0;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
     
     // Helpers

@@ -54,6 +54,8 @@ int WorldGeneration::get_world_seed() const {
 }
 
 uint16_t WorldGeneration::pick_weighted_tile(const BiomeInfo& info, uint32_t roll) {
+    if (info.ground_tiles.size() == 1) return info.ground_tiles[0].id;
+
     int cumulative = 0;
     for (const auto& tile : info.ground_tiles) {
         cumulative += tile.weight;
@@ -61,17 +63,18 @@ uint16_t WorldGeneration::pick_weighted_tile(const BiomeInfo& info, uint32_t rol
             return tile.id;
         }
     }
-    // Fallback to the first tile if roll fails
     return info.ground_tiles.empty() ? id_void : info.ground_tiles[0].id;
 }
 
 void WorldGeneration::setup_biome_rules() {
     if (!biome_rules.empty()) return; // Already setup
 
-    IdRegistry* id_reg = IdRegistry::get_singleton();
+    id_reg = IdRegistry::get_singleton();
+    s_db = StructureDb::get_singleton();
     if (!id_reg) return;
 
     id_void = id_reg->register_string("void");
+    id_building = id_reg->register_string("building");
 
     // Helper to register a biome
     auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
@@ -124,37 +127,45 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
             last_chunk_valid = false;
             return id_void;
         }
+        
+        uint32_t packed = it->second;
+        last_chunk_id = static_cast<uint16_t>(packed & 0xFFFF);
+        last_chunk_rotation = static_cast<uint8_t>(packed >> 16);
         last_chunk_key = chunk_key;
-        last_chunk_id = it->second;
+        
+        auto it_rule = biome_rules.find(last_chunk_id);
+        last_biome_ptr = (it_rule != biome_rules.end()) ? &it_rule->second : nullptr;
+        
         last_chunk_valid = true;
     }
 
     const uint16_t chunk_id = last_chunk_id;
-    IdRegistry* id_reg = IdRegistry::get_singleton();
 
-    // Handle buildings (Special Case structure lookup)
-    uint16_t id_building = id_reg ? id_reg->get_id("building") : 0;
-    if (chunk_id == id_building) {
+    // 1. Structure Lookup Path (Hot Path)
+    if (chunk_id == id_building && s_db) {
         int lx = x & (CHUNK_SIZE - 1);
         int ly = y & (CHUNK_SIZE - 1);
         
-        StructureDb* s_db = StructureDb::get_singleton();
-        if (s_db) {
-            String tile = s_db->get_tile_at("house01", lx, ly);
-            if (tile != "void" && !tile.is_empty()) {
-                if (id_reg) return id_reg->get_id(tile);
-            }
+        int rx = lx, ry = ly;
+        switch (last_chunk_rotation) {
+            case 1: rx = ly; ry = 31 - lx; break; // West
+            case 2: rx = 31 - lx; ry = 31 - ly; break; // North
+            case 3: rx = 31 - ly; ry = lx; break; // East
         }
-        // Fall through to biome_rules for building ground
+
+        // Optimized StructureDb call
+        uint16_t tile_id = s_db->get_tile_at("house01", rx, ry);
+        if (tile_id != id_void) return tile_id;
     }
 
-    // Lookup Biome Rule
-    auto it = biome_rules.find(chunk_id);
-    if (it != biome_rules.end()) {
+    // 2. Biome Logic Path (Using cached pointer)
+    if (last_biome_ptr) {
+        const BiomeInfo& info = *last_biome_ptr;
+        
         uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^ 
                      (static_cast<uint32_t>(y) * 3812015801U) ^ 
                      (static_cast<uint32_t>(world_seed));
-        return pick_weighted_tile(it->second, h % 100);
+        return pick_weighted_tile(info, h % 100);
     }
 
     return id_void;
@@ -244,8 +255,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
 // Initialize world bubble
 Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     setup_biome_rules();
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-
+    
     region_chunks.clear();
     last_chunk_valid = false;
 
@@ -272,7 +282,24 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
             int gx = regionPos.x * REGION_SIZE + x;
             int gy = regionPos.y * REGION_SIZE + y;
             uint64_t key = Occlusion::pack_coords(gx, gy);
-            region_chunks[key] = chunk_id;
+
+            uint8_t rot = 0;
+            // Calculate rotation for buildings
+            if (chunk_name == "building") {
+                auto is_road = [&](int nx, int ny) {
+                    if (nx < 0 || nx >= REGION_SIZE || ny < 0 || ny >= REGION_SIZE) return false;
+                    String nt = CityGeneration::get_chunk_id(cityCanvas.getPixel(nx, ny));
+                    return nt == "road" || nt == "alley";
+                };
+
+                if (is_road(x, y + 1)) rot = 0;      // South
+                else if (is_road(x, y - 1)) rot = 2; // North
+                else if (is_road(x - 1, y)) rot = 1; // West
+                else if (is_road(x + 1, y)) rot = 3; // East
+            }
+
+            // Pack rotation (8-bit) and chunk_id (16-bit) into 32-bit map value
+            region_chunks[key] = (static_cast<uint32_t>(rot) << 16) | chunk_id;
             result[key] = chunk_name;
         }
     }

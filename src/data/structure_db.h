@@ -12,8 +12,7 @@
 namespace godot {
 
 struct StructureInfo {
-    std::vector<uint8_t> data;
-    std::vector<String> palette;
+    std::vector<uint16_t> data;
 };
 
 class StructureDb : public Object {
@@ -38,7 +37,7 @@ public:
     void initialize_data();
 
     // Fast C++ access
-    String get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
+    uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
 
     // GDScript access
     Dictionary get_full_data() const { return db_helper.get_full_data(); }

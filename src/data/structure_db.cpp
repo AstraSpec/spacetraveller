@@ -40,10 +40,15 @@ void StructureDb::initialize_data() {
 
         StructureInfo info;
         
-        // Setup palette cache
+        // Resolve palette strings to Integer IDs
+        std::vector<uint16_t> palette_ids;
         Array p_array = d.get("palette", Array());
         for (int i = 0; i < p_array.size(); i++) {
-            info.palette.push_back(p_array[i]);
+            if (id_reg) {
+                palette_ids.push_back(id_reg->register_string(p_array[i]));
+            } else {
+                palette_ids.push_back(0);
+            }
         }
 
         // Decompress RLE blueprint (Implicit 32x32 = 1024)
@@ -65,13 +70,13 @@ void StructureDb::initialize_data() {
             int count = sub[0].to_int();
             int palette_idx = sub[1].to_int();
 
-            // Safety bounds check
-            if (palette_idx >= info.palette.size()) {
-                palette_idx = 0; // Fallback to void
+            uint16_t tile_id = 0; // Default to void
+            if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
+                tile_id = palette_ids[palette_idx];
             }
 
             for (int j = 0; j < count && current_pos < total_tiles; j++) {
-                info.data[current_pos++] = static_cast<uint8_t>(palette_idx);
+                info.data[current_pos++] = tile_id;
             }
         }
         
@@ -80,21 +85,16 @@ void StructureDb::initialize_data() {
     UtilityFunctions::print("StructureDb initialized with ", cache.size(), " structures.");
 }
 
-String StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {
+uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {
     auto it = cache.find(p_structure_id);
-    if (it == cache.end()) return "void";
+    if (it == cache.end()) return 0; // void
 
     const StructureInfo& info = it->second;
     // Hardcoded 32 width for index calculation
     int idx = p_y * 32 + p_x;
-    if (idx < 0 || idx >= (int)info.data.size()) return "void";
+    if (idx < 0 || idx >= (int)info.data.size()) return 0; // void
 
-    uint8_t palette_idx = info.data[idx];
-    if (palette_idx < info.palette.size()) {
-        return info.palette[palette_idx];
-    }
-
-    return "void";
+    return info.data[idx];
 }
 
 }
