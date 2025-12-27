@@ -9,6 +9,7 @@ using namespace godot;
 void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_visuals", "centerPos"), &StructureEditor::update_visuals);
     ClassDB::bind_method(D_METHOD("export_to_rle", "id"), &StructureEditor::export_to_rle);
+    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette"), &StructureEditor::import_from_rle);
 }
 
 StructureEditor::StructureEditor() {
@@ -105,4 +106,52 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
     result["blueprint"] = blueprint_str;
 
     return result;
+}
+
+void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette) {
+    tile_id_cache.clear();
+    
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return;
+
+    // Resolve Palette to IDs
+    std::vector<uint16_t> palette_ids;
+    for (int i = 0; i < p_palette.size(); i++) {
+        palette_ids.push_back(id_reg->register_string(p_palette[i]));
+    }
+
+    // Clean and Parse Blueprint
+    String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
+    PackedStringArray parts = rle.split(",");
+
+    int size = world_bubble_size;
+    int current_pos = 0;
+    int total_expected = size * size;
+
+    for (int i = 0; i < parts.size(); i++) {
+        String part = parts[i].strip_edges();
+        if (part.is_empty()) continue;
+
+        PackedStringArray sub = part.split("x");
+        if (sub.size() != 2) continue;
+
+        int count = sub[0].to_int();
+        int palette_idx = sub[1].to_int();
+
+        uint16_t tile_id = 0; // Default to void
+        if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
+            tile_id = palette_ids[palette_idx];
+        }
+
+        for (int j = 0; j < count && current_pos < total_expected; j++) {
+            int x = (current_pos % size) - size/2;
+            int y = (current_pos / size) - size/2;
+            
+            if (tile_id != 0) {
+                uint64_t key = Occlusion::pack_coords(x, y);
+                tile_id_cache[key] = tile_id;
+            }
+            current_pos++;
+        }
+    }
 }

@@ -4,7 +4,8 @@ extends Node2D
 @export var Background :TextureRect
 @export var TileIDLabel :Label
 
-@export var InputID     :TextEdit
+@export var InputID   :TextEdit
+@export var InputData :TextEdit
 
 const BUBBLE_SIZE :int = 32
 
@@ -57,7 +58,27 @@ func _on_tile_grid_tile_selected(id: String) -> void:
 func _on_download_button_pressed() -> void:
 	var RLE :Dictionary = StructureEditor_.export_to_rle(InputID.text)
 	print(RLE)
+	InputData.text = JSON.stringify(RLE)
 
 func _on_clear_button_pressed() -> void:
 	StructureEditor_.clear_cache()
+	StructureEditor_.update_visuals(Vector2i(0, 0))
+
+func _on_load_button_pressed() -> void:
+	var json_data = InputData.text.strip_edges()
+	if json_data.is_empty(): return
+	
+	var json = JSON.new()
+	if json.parse(json_data) != OK:
+		printerr("JSON Parse Error: ", json.get_error_message(), " at line ", json.get_error_line())
+		return
+	
+	var data = json.get_data()
+	if typeof(data) != TYPE_DICTIONARY or !data.has("blueprint") or !data.has("palette"):
+		printerr("JSON Error: Invalid format or missing required keys")
+		return
+	
+	if data.has("id"): InputID.text = data["id"]
+	
+	StructureEditor_.import_from_rle(data["blueprint"], data["palette"])
 	StructureEditor_.update_visuals(Vector2i(0, 0))

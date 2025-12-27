@@ -17,6 +17,7 @@ public:
 
     void update_visuals(const Vector2i& centerPos);
     Dictionary export_to_rle(const String &p_id) const;
+    void import_from_rle(const String &p_blueprint, const Array &p_palette);
 };
 
 }

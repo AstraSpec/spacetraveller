@@ -5,12 +5,13 @@
 [ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "InputID")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "InputID", "InputData")]
 script = ExtResource("1_urqvf")
 StructureEditor_ = NodePath("StructureEditor")
 Background = NodePath("Background")
 TileIDLabel = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel")
 InputID = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureID")
+InputData = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureData")
 
 [node name="Background" type="TextureRect" parent="."]
 texture_repeat = 2
@@ -28,6 +29,7 @@ tilesheet = ExtResource("1_fl4b5")
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Dummy" type="Label" parent="CanvasLayer"]
+modulate = Color(1, 1, 1, 0.0117647)
 offset_left = 807.0
 offset_top = 514.0
 offset_right = 1935.0
@@ -78,6 +80,20 @@ scroll_past_end_of_file = true
 layout_mode = 2
 text = "Download"
 
+[node name="StructureData" type="TextEdit" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 168)
+layout_mode = 2
+placeholder_text = "{
+    \"id\": \"house01\",
+    \"palette\": [\"void\", \"w_wall\", \"w_floor\"],
+    \"blueprint\": \"[66x0, 28x1, 4x0, 1x1, 10x2, ...]\"
+}"
+
+[node name="LoadButton" type="Button" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+text = "Load"
+
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="tile_selected" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/DownloadButton" to="." method="_on_download_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
