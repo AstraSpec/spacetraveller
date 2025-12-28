@@ -3,6 +3,7 @@ extends Control
 @onready var MapView :SubViewport = get_node("/root/Main/MapView")
 @onready var Camera :Camera2D = get_node("/root/Main/MapView/Camera")
 @onready var Tilemap :TileMapLayer = get_node("/root/Main/MapView/TileMap")
+@onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
 @onready var container :MarginContainer = $MarginContainer
 
 const SOURCE :int = 2
@@ -103,3 +104,10 @@ func _update_camera_pos(newPos: Vector2) -> void:
 
 	Camera.position = newPos.floor()
 	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+func _on_player_moved_chunk(chunkPos: Vector2) -> void:
+	var newChunkPos = Vector2(
+		chunkPos.x * TILE_SIZE,
+		chunkPos.y * TILE_SIZE
+	)
+	playerChunk.position = newChunkPos

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=12 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
 [ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Script" path="res://src/ui/canvas_layer.gd" id="5_hti4h"]
+[ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" path="res://src/ui/map.gd" id="7_ghimp"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_b4ob3"]
@@ -40,13 +41,20 @@ Player = NodePath("Player")
 size = Vector2i(1412, 512)
 render_target_update_mode = 0
 
-[node name="TileMap" type="TileMapLayer" parent="MapView"]
-z_index = 4096
+[node name="PlayerChunk" type="TextureRect" parent="MapView"]
+z_index = 101
 z_as_relative = false
+offset_right = 12.0
+offset_bottom = 12.0
+texture = ExtResource("7_143wy")
+
+[node name="TileMap" type="TileMapLayer" parent="MapView"]
+z_index = 100
+z_as_relative = false
+texture_filter = 1
 tile_set = SubResource("TileSet_3mine")
 
 [node name="Camera" type="Camera2D" parent="MapView"]
-anchor_mode = 0
 
 [node name="WorldGen" type="WorldGeneration" parent="."]
 script = ExtResource("1_0bwn5")
@@ -99,6 +107,7 @@ theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 40
 
 [node name="ViewportRect" type="TextureRect" parent="CanvasLayer/Map/MarginContainer"]
+texture_filter = 1
 layout_mode = 2
 texture = SubResource("ViewportTexture_kjl2a")
 expand_mode = 1
@@ -110,3 +119,4 @@ offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
 
 [connection signal="generated" from="WorldGen" to="CanvasLayer/Map" method="_on_world_generated"]
+[connection signal="movedChunk" from="Player" to="CanvasLayer/Map" method="_on_player_moved_chunk"]
