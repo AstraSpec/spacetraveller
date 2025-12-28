@@ -19,7 +19,7 @@ ChunkDb::~ChunkDb() {
 }
 
 ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
-    ChunkInfo info;
+        ChunkInfo info;
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     return info;
 }

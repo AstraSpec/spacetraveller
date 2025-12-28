@@ -1,4 +1,6 @@
 #include "city_generation.h"
+#include "world_generation.h"
+#include "data/id_registry.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -7,7 +9,20 @@
 
 namespace godot {
 
-CityGeneration::CityGeneration(Canvas& p_canvas, uint32_t seed) : canvas(p_canvas), rng(seed) {
+CityGeneration::CityGeneration(Canvas& p_canvas, uint32_t seed, IdRegistry* p_registry) 
+    : canvas(p_canvas), rng(seed), registry(p_registry) {
+    
+    id_road = registry->register_string("road");
+    id_alley = registry->register_string("alley");
+    id_building = registry->register_string("building");
+    id_palace = registry->register_string("palace");
+    id_water = registry->register_string("water");
+    id_gate = registry->register_string("gate");
+    id_plaza = registry->register_string("plaza");
+    id_forest = registry->register_string("forest");
+    id_plains = registry->register_string("plains");
+    id_void = registry->register_string("void");
+
     randomize();
 }
 
@@ -43,26 +58,26 @@ bool CityGeneration::isInSector(int px, int py, double cx, double cy, double a1,
     return s > e ? (angle >= s || angle <= e) : (angle >= s && angle <= e);
 }
 
-bool CityGeneration::canPlacePixel(int x, int y, const String &val) {
-    String current = canvas.getPixel(x, y);
-    if (val == "road") {
-        return (current != "water" && current != "palace" && current != "gate");
+bool CityGeneration::canPlacePixel(int x, int y, uint16_t val_id) {
+    CityPixel current = canvas.getPixel(x, y);
+    if (val_id == id_road) {
+        return (current.id != id_water && current.id != id_palace && current.id != id_gate);
     } else {
-        return (!(current == "void" && (val == "alley" || val == "building")) &&
-                current != "water" && current != "palace" && current != "gate" &&
-                !(current == "road" && (val == "alley" || val == "building")) &&
-                !(current == "alley" && val == "building"));
+        return ((current.id == id_void && (val_id == id_alley || val_id == id_building)) &&
+                current.id != id_water && current.id != id_palace && current.id != id_gate &&
+                !(current.id == id_road && (val_id == id_alley || val_id == id_building)) &&
+                !(current.id == id_alley && val_id == id_building));
     }
 }
 
-void CityGeneration::drawRestrictedLine(int x0, int y0, int x1, int y1, const String &val, double cx, double cy, double a1, double a2, double r1, double r2) {
+void CityGeneration::drawRestrictedLine(int x0, int y0, int x1, int y1, uint16_t val_id, double cx, double cy, double a1, double a2, double r1, double r2, uint8_t p_meta) {
     int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int err = dx + dy, e2;
     while (true) {
         if (isInSector(x0, y0, cx, cy, a1, a2, r1, r2)) {
-            if (canPlacePixel(x0, y0, val)) {
-                canvas.setPixel(x0, y0, val);
+            if (canPlacePixel(x0, y0, val_id)) {
+                canvas.setPixel(x0, y0, val_id, p_meta);
             }
         }
         if (x0 == x1 && y0 == y1) break;
@@ -73,8 +88,8 @@ void CityGeneration::drawRestrictedLine(int x0, int y0, int x1, int y1, const St
             int cx0 = x0, cy0 = y0;
             if (dx > -dy) cx0 += sx; else cy0 += sy;
             if (isInSector(cx0, cy0, cx, cy, a1, a2, r1, r2)) {
-                if (canPlacePixel(cx0, cy0, val)) {
-                    canvas.setPixel(cx0, cy0, val);
+                if (canPlacePixel(cx0, cy0, val_id)) {
+                    canvas.setPixel(cx0, cy0, val_id, p_meta);
                 }
             }
         }
@@ -88,12 +103,12 @@ void CityGeneration::splitSector(int x, int y, int w, int h, int depth, double c
     if (depth <= 0 || w < 5 || h < 5) return;
     if (w > h) {
         int sx = x + static_cast<int>(w * (0.35 + randomDouble() * 0.3));
-        drawRestrictedLine(sx, y, sx, y + h, "alley", cx, cy, a1, a2, r1, r2);
+        drawRestrictedLine(sx, y, sx, y + h, id_alley, cx, cy, a1, a2, r1, r2);
         splitSector(x, y, sx - x, h, depth - 1, cx, cy, a1, a2, r1, r2);
         splitSector(sx + 1, y, x + w - sx - 1, h, depth - 1, cx, cy, a1, a2, r1, r2);
     } else {
         int sy = y + static_cast<int>(h * (0.35 + randomDouble() * 0.3));
-        drawRestrictedLine(x, sy, x + w, sy, "alley", cx, cy, a1, a2, r1, r2);
+        drawRestrictedLine(x, sy, x + w, sy, id_alley, cx, cy, a1, a2, r1, r2);
         splitSector(x, y, w, sy - y, depth - 1, cx, cy, a1, a2, r1, r2);
         splitSector(x, sy + 1, w, y + h - sy - 1, depth - 1, cx, cy, a1, a2, r1, r2);
     }
@@ -133,22 +148,27 @@ void CityGeneration::drawEmptyMarketSquare(double cx, double cy, double angle, i
             double localX = dx * cosA - dy * sinA;
             double localY = dx * sinA + dy * cosA;
             if (std::abs(localX) <= halfW && std::abs(localY) <= halfH) {
-                String current = canvas.getPixel(x, y);
-                if (current != "water" && current != "palace") {
-                    canvas.setPixel(x, y, "plains");
+                CityPixel current = canvas.getPixel(x, y);
+                if (current.id != id_water && current.id != id_palace) {
+                    canvas.setPixel(x, y, id_plains);
                 }
             }
         }
     }
     double rCos = std::cos(angle), rSin = std::sin(angle);
-    Point corners[4] = {{-w/2, -h/2}, {w/2, -h/2}, {w/2, h/2}, {-w/2, h/2}};
+    Point corners[4] = {
+        {static_cast<int>(-w/2), static_cast<int>(-h/2)}, 
+        {static_cast<int>(w/2), static_cast<int>(-h/2)}, 
+        {static_cast<int>(w/2), static_cast<int>(h/2)}, 
+        {static_cast<int>(-w/2), static_cast<int>(h/2)}
+    };
     for (int i = 0; i < 4; ++i) {
         int px1 = std::round(cx + corners[i].x * rCos - corners[i].y * rSin);
         int py1 = std::round(cy + corners[i].x * rSin + corners[i].y * rCos);
         int next = (i + 1) % 4;
         int px2 = std::round(cx + corners[next].x * rCos - corners[next].y * rSin);
         int py2 = std::round(cy + corners[next].x * rSin + corners[next].y * rCos);
-        canvas.drawLine(px1, py1, px2, py2, "road");
+        canvas.drawLine(px1, py1, px2, py2, id_road);
     }
 }
 
@@ -158,13 +178,13 @@ void CityGeneration::drawEmptyGrandPlaza(double cx, double cy, double r) {
         for (int x = std::floor(cx - r - 1); x <= std::ceil(cx + r + 1); ++x) {
             if (y < 0 || y >= gridSize || x < 0 || x >= gridSize) continue;
             double dist = std::hypot(x - cx, y - cy);
-            String current = canvas.getPixel(x, y);
-            if (dist <= r + 0.5 && current != "water" && current != "palace") {
-                canvas.setPixel(x, y, "plaza");
+            CityPixel current = canvas.getPixel(x, y);
+            if (dist <= r + 0.5 && current.id != id_water && current.id != id_palace) {
+                canvas.setPixel(x, y, id_plaza);
             }
         }
     }
-    canvas.drawCircle(cx, cy, r, "road");
+    canvas.drawCircle(cx, cy, r, id_road);
 }
 
 void CityGeneration::generateOuterDistricts(double cx, double cy, const std::vector<CityNode>& startNodes, int reach, int density) {
@@ -180,7 +200,7 @@ void CityGeneration::generateOuterDistricts(double cx, double cy, const std::vec
         for (size_t i = 0; i < startNodes.size(); ++i) {
             int tx = std::round(cx + std::cos(startNodes[i].angle) * currentRadius);
             int ty = std::round(cy + std::sin(startNodes[i].angle) * currentRadius);
-            canvas.drawLine(previousLayer[i].x, previousLayer[i].y, tx, ty, "road");
+            canvas.drawLine(previousLayer[i].x, previousLayer[i].y, tx, ty, id_road);
             currentLayer.push_back({tx, ty, startNodes[i].angle});
         }
 
@@ -188,14 +208,13 @@ void CityGeneration::generateOuterDistricts(double cx, double cy, const std::vec
             const CityNode& p1 = currentLayer[i];
             const CityNode& p2 = currentLayer[(i + 1) % currentLayer.size()];
             
-            // Re-implementing drawOrganicArc using midpoints
             int mx = (p1.x + p2.x) / 2;
             int my = (p1.y + p2.y) / 2;
             std::uniform_int_distribution<int> dist(-1, 1);
             mx += dist(rng);
             my += dist(rng);
-            canvas.drawLine(p1.x, p1.y, mx, my, "road");
-            canvas.drawLine(mx, my, p2.x, p2.y, "road");
+            canvas.drawLine(p1.x, p1.y, mx, my, id_road);
+            canvas.drawLine(mx, my, p2.x, p2.y, id_road);
 
             double rIn = std::hypot(previousLayer[i].x - cx, previousLayer[i].y - cy);
             subdivideSector(cx, cy, p1.angle, p2.angle, rIn, currentRadius, density);
@@ -206,12 +225,16 @@ void CityGeneration::generateOuterDistricts(double cx, double cy, const std::vec
 
 bool CityGeneration::isNearAnyRoad(int x, int y, int range) {
     int gridSize = canvas.get_grid_size();
-    for (int iy = -range; iy <= range; ++iy) {
-        for (int ix = -range; ix <= range; ++ix) {
-            int ny = y + iy, nx = x + ix;
+    int dirs[4][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+    
+    for (int i = 1; i <= range; ++i) {
+        for (auto& d : dirs) {
+            int nx = x + d[0] * i;
+            int ny = y + d[1] * i;
+            
             if (ny >= 0 && ny < gridSize && nx >= 0 && nx < gridSize) {
-                String t = canvas.getPixel(nx, ny);
-                if (t == "road" || t == "alley" || t == "plaza") return true;
+                CityPixel p = canvas.getPixel(nx, ny);
+                if (p.id == id_road || p.id == id_alley || p.id == id_plaza) return true;
             }
         }
     }
@@ -228,7 +251,7 @@ void CityGeneration::generateCity(
         ) 
     {
     
-    canvas.clear("");
+    canvas.clear(id_void);
     int gridSize = canvas.get_grid_size();
 
     int gateCount = showInner ? spokes : 6;
@@ -250,12 +273,12 @@ void CityGeneration::generateCity(
             computedRingRadii.push_back(std::round(radius * std::pow(static_cast<double>(r) / rings, 0.8)));
         }
         for (const auto& gate : gateCoords) {
-            canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, "road");
+            canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, id_road);
         }
         for (size_t rIdx = 0; rIdx < computedRingRadii.size(); ++rIdx) {
-            canvas.drawCircle(centerX, centerY, computedRingRadii[rIdx], "road");
+            canvas.drawCircle(centerX, centerY, computedRingRadii[rIdx], id_road);
             if (rIdx == computedRingRadii.size() - 1) {
-                for (const auto& g : gateCoords) canvas.fillRect(g.x - 1, g.y - 1, 3, 3, "gate");
+                for (const auto& g : gateCoords) canvas.fillRect(g.x - 1, g.y - 1, 3, 3, id_gate);
             }
         }
         for (int i = 0; i < gateCount; ++i) {
@@ -268,69 +291,17 @@ void CityGeneration::generateCity(
         }
     } else {
         for (const auto& gate : gateCoords) {
-            canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, "road");
+            canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, id_road);
         }
-    }
-
-    // Central Palace
-    if (!showInner) {
-        canvas.fillRect(static_cast<int>(centerX - 2), static_cast<int>(centerY - 2), 5, 5, "palace");
-    } else {
-        canvas.fillRect(static_cast<int>(std::round(centerX - 3)), static_cast<int>(std::round(centerY - 3)), 7, 7, "palace");
     }
 
     generateOuterDistricts(centerX, centerY, gateCoords, outerReach, outerComp);
 
-    // Twin City
-    if (showTwin) {
-        double twinAngle = spawnRands[8] * Math_PI * 2.0;
-        double twinDist = radius * 0.9 + 15.0;
-        double tx = centerX + std::cos(twinAngle) * twinDist;
-        double ty = centerY + std::sin(twinAngle) * twinDist;
-
-        // 1. Clearance
-        for (int y = std::floor(ty - tRadius - 8); y <= std::ceil(ty + tRadius + 8); ++y) {
-            for (int x = std::floor(tx - tRadius - 8); x <= std::ceil(tx + tRadius + 8); ++x) {
-                if (y < 0 || y >= gridSize || x < 0 || x >= gridSize) continue;
-                double d = std::hypot(x - tx, y - ty);
-                if (d <= tRadius + 2.0) {
-                    String current = canvas.getPixel(x, y);
-                    if (current != "water" && current != "palace") {
-                        canvas.setPixel(x, y, "");
-                    }
-                }
-            }
-        }
-
-        // 2. Twin Palace
-        canvas.fillRect(std::round(tx - 2), std::round(ty - 2), 5, 5, "palace");
-
-        // 3. Ring Roads
-        std::vector<int> tRingRadii;
-        for (int r = 1; r <= tRings; ++r) {
-            int rDist = std::round(tRadius * (static_cast<double>(r) / tRings));
-            tRingRadii.push_back(rDist);
-            canvas.drawCircle(tx, ty, rDist, "road");
-        }
-
-        // 4. Boulevards
-        std::vector<double> tAngles;
-        for (int i = 0; i < tSpokes; ++i) {
-            double a = (i * Math_PI * 2.0) / tSpokes;
-            tAngles.push_back(a);
-            int endX = std::round(tx + std::cos(a) * tRadius);
-            int endY = std::round(ty + std::sin(a) * tRadius);
-            canvas.drawLine(std::round(tx), std::round(ty), endX, endY, "road");
-        }
-
-        for (int i = 0; i < tSpokes; ++i) {
-            double a1 = tAngles[i], a2 = tAngles[(i + 1) % tSpokes];
-            for (int r = 0; r < tRings; ++r) {
-                double r1 = (r == 0 ? 5.0 : tRingRadii[r - 1]);
-                double r2 = tRingRadii[r];
-                subdivideSector(tx, ty, a1, a2, r1, r2, tDensity);
-            }
-        }
+    // Central Palace
+    if (!showInner) {
+        canvas.fillRect(static_cast<int>(centerX - 2), static_cast<int>(centerY - 2), 5, 5, id_palace);
+    } else {
+        canvas.fillRect(static_cast<int>(std::round(centerX - 3)), static_cast<int>(std::round(centerY - 3)), 7, 7, id_palace);
     }
 
     // Special Districts
@@ -355,12 +326,25 @@ void CityGeneration::generateCity(
     // Final Building Pass
     for (int y = 0; y < gridSize; ++y) {
         for (int x = 0; x < gridSize; ++x) {
-            String current = canvas.getPixel(x, y);
-            if (current == "") {
+            CityPixel current = canvas.getPixel(x, y);
+            if (current.id == id_void) { // Only place on void
                 double dist = std::hypot(x - centerX, y - centerY);
                 if (dist > 2.0 && dist < gridSize * 0.49) {
                     if (isNearAnyRoad(x, y, 1)) {
-                        if (randomDouble() > 0.2) canvas.setPixel(x, y, "building");
+                        // Calculate rotation based on adjacent roads/alleys
+                        uint8_t rotation = WorldGeneration::ROT_SOUTH;
+                        auto is_road = [&](int nx, int ny) {
+                            if (nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return false;
+                            CityPixel p = canvas.getPixel(nx, ny);
+                            return p.id == id_road || p.id == id_alley;
+                        };
+
+                        if (is_road(x, y + 1)) rotation = WorldGeneration::ROT_SOUTH;
+                        else if (is_road(x, y - 1)) rotation = WorldGeneration::ROT_NORTH;
+                        else if (is_road(x - 1, y)) rotation = WorldGeneration::ROT_WEST;
+                        else if (is_road(x + 1, y)) rotation = WorldGeneration::ROT_EAST;
+
+                        canvas.setPixel(x, y, id_building, rotation);
                     }
                 }
             }
@@ -381,27 +365,24 @@ namespace {
     constexpr int RADIUS_JITTER = 2;
     constexpr int SPOKE_JITTER = 1;
 
-    constexpr int DEFAULT_DENSITY = 5; // Alley density
+    constexpr int DEFAULT_DENSITY = 6; // Alley density
 
-    constexpr int SHOW_TWIN = false;
-    // TODO: Twin city generation
-    
-    constexpr int USE_RIVER = false;
-    constexpr int USE_JITTER = true;
-    constexpr int USE_SPECIAL = true;
+    constexpr bool SHOW_TWIN = false; // TODO: Twin city generation
+    constexpr bool USE_RIVER = false;
+    constexpr bool USE_JITTER = true;
+    constexpr bool USE_SPECIAL = true;
 }
 
 void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) {
-    // Deterministic city seed using prime-based hashing
+    IdRegistry* registry = IdRegistry::get_singleton();
+    if (!registry) return;
+
     const uint32_t city_seed = static_cast<uint32_t>(world_seed) + (x * 31) + (y * 7);
-    
     std::mt19937 city_rng(city_seed);
     
-    // Determine base city size
     std::uniform_int_distribution<int> size_dist(MIN_CITY_SIZE, MAX_CITY_SIZE);
     const int city_size = size_dist(city_rng);
 
-    // Calculate phased growth parameters
     int reach, radius, spokes, rings;
     bool show_inner;
 
@@ -415,7 +396,6 @@ void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) 
     } else {
     // Cities over a certain size contain inner city area
         show_inner = true;
-        
         const int size_overflow = city_size - PHASE_TRANSITION_SIZE;
         const float growth_progress = static_cast<float>(size_overflow) / (MAX_CITY_SIZE - PHASE_TRANSITION_SIZE);
         
@@ -425,7 +405,6 @@ void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) 
         rings = MIN_RINGS + static_cast<int>(std::round(growth_progress * (MAX_RINGS - MIN_RINGS)));
     }
     
-    // Apply deterministic jitter for individual variety
     std::uniform_int_distribution<int> radius_jitter_dist(-RADIUS_JITTER, RADIUS_JITTER);
     std::uniform_int_distribution<int> spokes_jitter_dist(-SPOKE_JITTER, SPOKE_JITTER);
     
@@ -433,8 +412,7 @@ void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) 
     spokes = std::clamp(spokes + spokes_jitter_dist(city_rng), MIN_SPOKES, MAX_SPOKES);
     rings = std::clamp(rings, MIN_RINGS, MAX_RINGS);
 
-    // Initialize and generate the city
-    CityGeneration gen(p_canvas, city_seed);
+    CityGeneration gen(p_canvas, city_seed, registry);
     gen.generateCity(
         static_cast<double>(x), static_cast<double>(y),
         radius, spokes, rings, 
@@ -445,11 +423,6 @@ void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) 
     );
     
     UtilityFunctions::print("City generated at (", x, ", ", y, ") | Size: ", city_size, " | Type: ", show_inner ? "Metropolis" : "Outpost");
-}
-
-String CityGeneration::get_chunk_id(const String &p_tile) {
-    if (p_tile == "") return (UtilityFunctions::randi() % 2 == 0) ? "forest" : "plains";
-    return p_tile;
 }
 
 }

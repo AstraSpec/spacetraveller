@@ -5,7 +5,7 @@ extends WorldGeneration
 
 signal generated(regionChunks)
 
-var seed_ :int = 0
+var seed_ :int = randi()
 
 func _ready() -> void:
 	biome_noise = BiomeNoise

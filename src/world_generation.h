@@ -39,13 +39,25 @@ struct BiomeInfo {
 class WorldGeneration : public FastTileMap {
     GDCLASS(WorldGeneration, FastTileMap)
 
+public:
+    static constexpr uint32_t ROTATION_MASK = 0x03;
+    static constexpr uint32_t ORIENTATION_SHIFT = 16;
+    static constexpr uint32_t ID_MASK = 0xFFFF;
+
+    enum {
+        ROT_SOUTH = 0,
+        ROT_WEST = 1,
+        ROT_NORTH = 2,
+        ROT_EAST = 3
+    };
+
 private:
     // Constants
     static const int REGION_SIZE = 256;
     static const int CHUNK_SIZE = 32;
     static const int CHUNK_SHIFT = 5;
-    
-    std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [16-bit Rot][16-bit ID]
+
+    std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [Rot][ID]
     
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
@@ -61,13 +73,20 @@ private:
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
-
+    
     // Data-Driven Registry
     uint16_t id_void = 0;
     uint16_t id_building = 0;
+    uint16_t id_forest = 0;
+    uint16_t id_plains = 0;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
     
     // Helpers
+    uint32_t get_hash(int x, int y, uint32_t seed) const {
+        return (static_cast<uint32_t>(x) * 1597334677U) ^ 
+               (static_cast<uint32_t>(y) * 3812015801U) ^ 
+               (seed);
+    }
     uint16_t get_tile(int x, int y);
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);
     void setup_biome_rules();
@@ -82,6 +101,14 @@ public:
     static int get_region_size() { return REGION_SIZE; }
     static int get_chunk_size() { return CHUNK_SIZE; }
     static int get_chunk_shift() { return CHUNK_SHIFT; }
+
+    static uint64_t pack_coords(int x, int y) { return Occlusion::pack_coords(x, y); }
+    static Vector2i unpack_coords(uint64_t key) {
+        return Vector2i(
+            static_cast<int>(static_cast<int32_t>(key >> 32)),
+            static_cast<int>(static_cast<int32_t>(key & 0xFFFFFFFF))
+        );
+    }
     
     void set_biome_noise(const Ref<FastNoiseLite>& noise);
     Ref<FastNoiseLite> get_biome_noise() const;

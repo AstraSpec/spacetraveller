@@ -23,12 +23,25 @@ private:
     
     std::mt19937 rng;
 
+    uint16_t id_road;
+    uint16_t id_alley;
+    uint16_t id_building;
+    uint16_t id_palace;
+    uint16_t id_water;
+    uint16_t id_gate;
+    uint16_t id_plaza;
+    uint16_t id_forest;
+    uint16_t id_plains;
+    uint16_t id_void;
+
+    class IdRegistry* registry;
+
     double randomDouble();
     void randomize();
     
     bool isInSector(int px, int py, double cx, double cy, double a1, double a2, double r1, double r2);
-    bool canPlacePixel(int x, int y, const String &val);
-    void drawRestrictedLine(int x0, int y0, int x1, int y1, const String &val, double cx, double cy, double a1, double a2, double r1, double r2);
+    bool canPlacePixel(int x, int y, uint16_t val_id);
+    void drawRestrictedLine(int x0, int y0, int x1, int y1, uint16_t val_id, double cx, double cy, double a1, double a2, double r1, double r2, uint8_t p_meta = 0);
     void splitSector(int x, int y, int w, int h, int depth, double cx, double cy, double a1, double a2, double r1, double r2);
     void subdivideSector(double cx, double cy, double a1, double a2, double r1, double r2, int depth);
     void drawEmptyMarketSquare(double cx, double cy, double angle, int w, int h);
@@ -37,9 +50,7 @@ private:
     bool isNearAnyRoad(int x, int y, int range);
 
 public:
-    CityGeneration(Canvas& p_canvas, uint32_t seed);
-    
-    static String get_chunk_id(const String &p_tile);
+    CityGeneration(Canvas& p_canvas, uint32_t seed, class IdRegistry* p_registry);
     
     void generateCity(
         double centerX, double centerY,

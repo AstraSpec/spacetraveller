@@ -19,6 +19,18 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_size"), &WorldGeneration::get_chunk_size);
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_shift"), &WorldGeneration::get_chunk_shift);
     
+    ClassDB::bind_static_method("WorldGeneration", D_METHOD("pack_coords", "x", "y"), &WorldGeneration::pack_coords);
+    ClassDB::bind_static_method("WorldGeneration", D_METHOD("unpack_coords", "key"), &WorldGeneration::unpack_coords);
+
+    BIND_CONSTANT(ROTATION_MASK);
+    BIND_CONSTANT(ORIENTATION_SHIFT);
+    BIND_CONSTANT(ID_MASK);
+
+    BIND_CONSTANT(ROT_SOUTH);
+    BIND_CONSTANT(ROT_WEST);
+    BIND_CONSTANT(ROT_NORTH);
+    BIND_CONSTANT(ROT_EAST);
+
     // Method bindings
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
@@ -75,6 +87,8 @@ void WorldGeneration::setup_biome_rules() {
 
     id_void = id_reg->register_string("void");
     id_building = id_reg->register_string("building");
+    id_forest = id_reg->register_string("forest");
+    id_plains = id_reg->register_string("plains");
 
     // Helper to register a biome
     auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
@@ -129,8 +143,8 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
         }
         
         uint32_t packed = it->second;
-        last_chunk_id = static_cast<uint16_t>(packed & 0xFFFF);
-        last_chunk_rotation = static_cast<uint8_t>(packed >> 16);
+        last_chunk_id = static_cast<uint16_t>(packed & ID_MASK);
+        last_chunk_rotation = static_cast<uint8_t>(packed >> ORIENTATION_SHIFT);
         last_chunk_key = chunk_key;
         
         auto it_rule = biome_rules.find(last_chunk_id);
@@ -148,9 +162,9 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
         
         int rx = lx, ry = ly;
         switch (last_chunk_rotation) {
-            case 1: rx = ly; ry = 31 - lx; break; // West
-            case 2: rx = 31 - lx; ry = 31 - ly; break; // North
-            case 3: rx = 31 - ly; ry = lx; break; // East
+            case ROT_WEST: rx = ly; ry = 31 - lx; break; // 1
+            case ROT_NORTH: rx = 31 - lx; ry = 31 - ly; break; // 2
+            case ROT_EAST: rx = 31 - ly; ry = lx; break; // 3
         }
 
         // Optimized StructureDb call
@@ -160,12 +174,8 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
 
     // 2. Biome Logic Path (Using cached pointer)
     if (last_biome_ptr) {
-        const BiomeInfo& info = *last_biome_ptr;
-        
-        uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^ 
-                     (static_cast<uint32_t>(y) * 3812015801U) ^ 
-                     (static_cast<uint32_t>(world_seed));
-        return pick_weighted_tile(info, h % 100);
+        uint32_t h = get_hash(x, y, static_cast<uint32_t>(world_seed));
+        return pick_weighted_tile(*last_biome_ptr, h % 100);
     }
 
     return id_void;
@@ -254,33 +264,27 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     Dictionary result;
     for (int y = 0; y < REGION_SIZE; y++) {
         for (int x = 0; x < REGION_SIZE; x++) {
-            String cityTile = cityCanvas.getPixel(x, y);
-            String chunk_name = CityGeneration::get_chunk_id(cityTile);
-            uint16_t chunk_id = id_reg ? id_reg->register_string(chunk_name) : 0;
+            CityPixel pixel = cityCanvas.getPixel(x, y);
+            uint16_t chunk_id = pixel.id;
             
+            // Fallback to biome
+            if (chunk_id == id_void) {
+                int gx = regionPos.x * REGION_SIZE + x;
+                int gy = regionPos.y * REGION_SIZE + y;
+                uint32_t h = get_hash(gx, gy, static_cast<uint32_t>(world_seed));
+                chunk_id = (h % 100 < 50) ? id_forest : id_plains;
+            }
+
+            uint8_t rot = pixel.meta & ROTATION_MASK;
+
             // Store the chunk type using packed coordinates relative to regionPos
             int gx = regionPos.x * REGION_SIZE + x;
             int gy = regionPos.y * REGION_SIZE + y;
             uint64_t key = Occlusion::pack_coords(gx, gy);
 
-            uint8_t rot = 0;
-            // Calculate rotation for buildings
-            if (chunk_name == "building") {
-                auto is_road = [&](int nx, int ny) {
-                    if (nx < 0 || nx >= REGION_SIZE || ny < 0 || ny >= REGION_SIZE) return false;
-                    String nt = CityGeneration::get_chunk_id(cityCanvas.getPixel(nx, ny));
-                    return nt == "road" || nt == "alley";
-                };
-
-                if (is_road(x, y + 1)) rot = 0;      // South
-                else if (is_road(x, y - 1)) rot = 2; // North
-                else if (is_road(x - 1, y)) rot = 1; // West
-                else if (is_road(x + 1, y)) rot = 3; // East
-            }
-
             // Pack rotation (8-bit) and chunk_id (16-bit) into 32-bit map value
-            region_chunks[key] = (static_cast<uint32_t>(rot) << 16) | chunk_id;
-            result[key] = chunk_name;
+            region_chunks[key] = (static_cast<uint32_t>(rot) << ORIENTATION_SHIFT) | chunk_id;
+            result[key] = id_reg->get_string(chunk_id);
         }
     }
 

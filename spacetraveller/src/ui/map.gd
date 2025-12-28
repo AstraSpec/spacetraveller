@@ -45,17 +45,16 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	# Determine bounds from any key in the dictionary
 	var firstKey = regionChunks.keys()[0]
-	var coordX = int(firstKey) >> 32
-	var coordY = int(firstKey) & 0xFFFFFFFF
-	if coordY & 0x80000000:
-		coordY |= -0x100000000
+	var coords = WorldGeneration.unpack_coords(firstKey)
+	var coordX = coords.x
+	var coordY = coords.y
 	
 	var startX = floor(float(coordX) / REGION_SIZE) * REGION_SIZE
 	var startY = floor(float(coordY) / REGION_SIZE) * REGION_SIZE
 	
 	for y in range(startY, startY + REGION_SIZE):
 		for x in range(startX, startX + REGION_SIZE):
-			var key = (int(x) << 32) | (int(y) & 0xFFFFFFFF)
+			var key = WorldGeneration.pack_coords(x, y)
 			var chunkID = regionChunks.get(key, "")
 			
 			if chunkID == "":
