@@ -71,32 +71,4 @@ bool Occlusion::is_occluded(
     return false;
 }
 
-bool Occlusion::is_surrounded_by_walls(
-    const Vector2i& playerPos,
-    const std::unordered_map<uint64_t, uint16_t>& tile_cache
-) {
-    TileDb* p_tile_db = TileDb::get_singleton();
-    if (!p_tile_db) return false;
-
-    static const int neighbors[8][2] = {
-        {-1, -1}, {0, -1}, {1, -1},
-        {-1,  0},          {1,  0},
-        {-1,  1}, {0,  1}, {1,  1}
-    };
-    
-    for (int i = 0; i < 8; i++) {
-        int nx = playerPos.x + neighbors[i][0];
-        int ny = playerPos.y + neighbors[i][1];
-        auto it = tile_cache.find(pack_coords(nx, ny));
-        if (it != tile_cache.end()) {
-            const TileInfo* info = p_tile_db->get_tile_info(it->second);
-            if (!info || !info->solid) return false;
-        } else {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
 }

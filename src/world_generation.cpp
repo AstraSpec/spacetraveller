@@ -208,9 +208,6 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db);
     }
     
-    // Check if all 8 surrounding tiles are walls - if so, skip occlusion computation
-    bool all_surrounded = Occlusion::is_surrounded_by_walls(playerPos, tile_id_cache);
-    
     // Second pass: compute occlusion and apply modulation
     for (auto& pair : tile_rids) {
         uint64_t offsetKey = pair.first;
@@ -225,17 +222,9 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
-        // Fast path: if surrounded by walls, everything except player tile and adjacent walls is occluded
         bool occluded;
-        if (all_surrounded) {
-            // Player tile is visible, adjacent walls are visible, everything else occluded
-            bool is_player_tile = (ox == 0 && oy == 0);
-            bool is_adjacent = (abs(ox) <= 1 && abs(oy) <= 1);
-            occluded = !is_player_tile && !is_adjacent;
-        } else {
-            Vector2i cellPos(cx, cy);
-            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
-        }
+        Vector2i cellPos(cx, cy);
+        occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
         
         Color color(1.0f, 1.0f, 1.0f, 1.0f);
         if (occluded) {
@@ -258,7 +247,7 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     
     region_chunks.clear();
     last_chunk_valid = false;
-    
+
     Canvas cityCanvas(REGION_SIZE);
     CityGeneration::spawn_city(cityCanvas, 127, 128, world_seed);
 
