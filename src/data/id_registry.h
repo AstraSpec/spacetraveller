@@ -3,7 +3,6 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/string.hpp>
-#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 #include "database.h"
@@ -17,7 +16,6 @@ private:
     static IdRegistry *singleton;
     std::unordered_map<String, uint16_t, StringHasher> string_to_id;
     std::vector<String> id_to_string;
-    mutable std::shared_mutex rw_lock;
 
 protected:
     static void _bind_methods();
