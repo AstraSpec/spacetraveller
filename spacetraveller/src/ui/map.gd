@@ -20,24 +20,11 @@ func _ready():
 	resized.connect(resize_viewport)
 	call_deferred("resize_viewport")
 	_update_camera_pos(Vector2.ZERO)
-
-func change_visibility() -> void:
-	visible = !visible
-	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
-	_update_camera_pos(playerChunk.position)
-
-func resize_viewport():
-	MapView.size = _get_inner_size()
-	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
-
-func _get_inner_size() -> Vector2:
-	return Vector2(
-		container.size.x 
-			- container.get_theme_constant("margin_left")
-			- container.get_theme_constant("margin_right"),
-		container.size.y 
-			- container.get_theme_constant("margin_top")
-			- container.get_theme_constant("margin_bottom"))
+	
+	InputManager.map_toggled.connect(_map_toggled)
+	InputManager.map_panned.connect(_map_panned)
+	InputManager.map_zoomed.connect(_map_zoomed)
+	InputManager.map_centered.connect(_map_centered)
 
 func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():
@@ -65,22 +52,24 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	MapView.size = container.get_size()
 
-func _unhandled_input(event: InputEvent) -> void:
-	if !visible: return
+func _map_toggled(is_open :bool) -> void:
+	visible = is_open
+	_map_centered()
+
+func _map_panned(relative: Vector2):
+	_update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
+
+func _map_zoomed(z :int):
+	var oldZoom = zoom
+	zoom = clamp(zoom + z, 0, ZOOM_LVL.size() - 1)
 	
-	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
-		_update_camera_pos(Camera.position - event.relative * DRAG_SPEED / ZOOM_LVL[zoom])
-	
-	elif event is InputEventMouseButton and event.pressed:
-		var oldZoom = zoom
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			zoom = clamp(zoom + 1, 0, ZOOM_LVL.size() - 1)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			zoom = clamp(zoom - 1, 0, ZOOM_LVL.size() - 1)
-		
-		if oldZoom != zoom:
-			Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
-			_update_camera_pos(Camera.position)
+	if oldZoom != zoom:
+		Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
+		_update_camera_pos(Camera.position)
+
+func _map_centered():
+	_update_camera_pos(playerChunk.position)
+	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 func _update_camera_pos(newPos: Vector2) -> void:
 	var innerSize: Vector2 = _get_inner_size()
@@ -110,3 +99,16 @@ func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 		chunkPos.y * TILE_SIZE
 	)
 	playerChunk.position = newChunkPos
+
+func resize_viewport():
+	MapView.size = _get_inner_size()
+	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+func _get_inner_size() -> Vector2:
+	return Vector2(
+		container.size.x 
+			- container.get_theme_constant("margin_left")
+			- container.get_theme_constant("margin_right"),
+		container.size.y 
+			- container.get_theme_constant("margin_top")
+			- container.get_theme_constant("margin_bottom"))

@@ -1,11 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=11 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
 [ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
 [ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
-[ext_resource type="Script" path="res://src/ui/canvas_layer.gd" id="5_hti4h"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" path="res://src/ui/map.gd" id="7_ghimp"]
 
@@ -72,9 +71,7 @@ World = NodePath("../WorldGen")
 position = Vector2(7, 7)
 zoom = Vector2(2, 2)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." node_paths=PackedStringArray("MapMenu")]
-script = ExtResource("5_hti4h")
-MapMenu = NodePath("Map")
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Dummy" type="Label" parent="CanvasLayer"]
 modulate = Color(1, 1, 1, 0.0156863)

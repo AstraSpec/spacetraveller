@@ -1,7 +1,11 @@
 extends Label
 
+func _ready() -> void:
+	InputManager.debug_toggled.connect(_debug_toggled)
+
+func _debug_toggled() -> void:
+	visible = !visible
+
 func _process(_delta: float) -> void:
-	text = str(Engine.get_frames_per_second())
-	
-	if Input.is_action_just_pressed("f3"):
-		visible = !visible
+	if visible:
+		text = str(Engine.get_frames_per_second())
