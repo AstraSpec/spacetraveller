@@ -258,18 +258,9 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     
     region_chunks.clear();
     last_chunk_valid = false;
-
-    // Create a 256x256 city canvas (one city tile per chunk)
-    Canvas cityCanvas(REGION_SIZE);
-    CityGeneration cityGen(cityCanvas, world_seed + regionPos.x * 31 + regionPos.y * 7);
     
-    cityGen.generateCity(
-        48, 8, 3,       // radius, spokes, rings
-        45, 4, 5,       // reach, outerDensity, innerDensity
-        true, false,    // showInner, showTwin
-        30, 4, 6, 2,    // twinRadius, twinDensity, twinSpokes, twinRings
-        false, true, true // useRiver, useJitter, useSpecial
-    );
+    Canvas cityCanvas(REGION_SIZE);
+    CityGeneration::spawn_city(cityCanvas, 127, 128, world_seed);
 
     Dictionary result;
     for (int y = 0; y < REGION_SIZE; y++) {

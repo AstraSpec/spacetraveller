@@ -5,7 +5,7 @@ extends Node2D
 
 func _ready() -> void:
 	var bubble_radius = WorldGen.get_world_bubble_radius()
-	Player.cellPos = Vector2(3900, 3900)
+	Player.interact_cell(Vector2(3900, 3900))
 	
 	TileDb.initialize_data()
 	ChunkDb.initialize_data()

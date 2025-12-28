@@ -42,6 +42,7 @@ public:
     static String get_chunk_id(const String &p_tile);
     
     void generateCity(
+        double centerX, double centerY,
         int radius, int spokes, int rings, 
         int outerReach, int outerComp, int innerComp,
         bool showInner, bool showTwin,
@@ -49,7 +50,7 @@ public:
         bool useRiver, bool useJitter, bool useSpecial
     );
 
-    static int spawn_city(int x, int y, int seed);
+    static void spawn_city(Canvas& p_canvas, int x, int y, int world_seed);
 };
 
 }

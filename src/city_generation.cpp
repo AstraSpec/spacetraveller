@@ -219,6 +219,7 @@ bool CityGeneration::isNearAnyRoad(int x, int y, int range) {
 }
 
 void CityGeneration::generateCity(
+        double centerX, double centerY,
         int radius, int spokes, int rings, 
         int outerReach, int outerComp, int innerComp,
         bool showInner, bool showTwin,
@@ -229,8 +230,6 @@ void CityGeneration::generateCity(
     
     canvas.clear("");
     int gridSize = canvas.get_grid_size();
-    double centerX = gridSize / 2.0;
-    double centerY = gridSize / 2.0;
 
     int gateCount = showInner ? spokes : 6;
     double gateRadius = showInner ? static_cast<double>(radius) : 2.5;
@@ -369,27 +368,83 @@ void CityGeneration::generateCity(
     }
 }
 
-int CityGeneration::spawn_city(int x, int y, int seed) {
-    const int SIZE = 256;
-    Canvas canvas(SIZE);
-    CityGeneration gen(canvas, seed);
-    
-    // Generate city with default settings
-    gen.generateCity(
-        48, 8, 3,       // radius, spokes, rings
-        45, 4, 5,       // reach, outerDensity, innerDensity
-        true, false,    // showInner, showTwin
-        30, 4, 6, 2,    // twinRadius, twinDensity, twinSpokes, twinRings
-        false, true, true // useRiver, useJitter, useSpecial
-    );
+namespace {
+    constexpr int MIN_CITY_SIZE = 24;
+    constexpr int MAX_CITY_SIZE = 48;
+    constexpr int PHASE_TRANSITION_SIZE = 32;
 
-    // Save as PPM image
-    String filename = "city_" + String::num_int64(x) + "_" + String::num_int64(y) + ".ppm";
-    canvas.saveAsPPM(filename.utf8().get_data());
+    constexpr int MIN_SPOKES = 4; // Road boulevards connecting from palace to outer city
+    constexpr int MAX_SPOKES = 8;
+    constexpr int MIN_RINGS = 1; // Road rings circling the palace
+    constexpr int MAX_RINGS = 3;
+
+    constexpr int RADIUS_JITTER = 2;
+    constexpr int SPOKE_JITTER = 1;
+
+    constexpr int DEFAULT_DENSITY = 5; // Alley density
+
+    constexpr int SHOW_TWIN = false;
+    // TODO: Twin city generation
     
-    UtilityFunctions::print("City generated at (", x, ", ", y, ") - Saved as: ", filename);
+    constexpr int USE_RIVER = false;
+    constexpr int USE_JITTER = true;
+    constexpr int USE_SPECIAL = true;
+}
+
+void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) {
+    // Deterministic city seed using prime-based hashing
+    const uint32_t city_seed = static_cast<uint32_t>(world_seed) + (x * 31) + (y * 7);
     
-    return 0;
+    std::mt19937 city_rng(city_seed);
+    
+    // Determine base city size
+    std::uniform_int_distribution<int> size_dist(MIN_CITY_SIZE, MAX_CITY_SIZE);
+    const int city_size = size_dist(city_rng);
+
+    // Calculate phased growth parameters
+    int reach, radius, spokes, rings;
+    bool show_inner;
+
+    // Cities always contain outer city area
+    if (city_size <= PHASE_TRANSITION_SIZE) {
+        show_inner = false;
+        reach = city_size;
+        radius = MIN_CITY_SIZE;
+        spokes = MIN_SPOKES;
+        rings = MIN_RINGS;
+    } else {
+    // Cities over a certain size contain inner city area
+        show_inner = true;
+        
+        const int size_overflow = city_size - PHASE_TRANSITION_SIZE;
+        const float growth_progress = static_cast<float>(size_overflow) / (MAX_CITY_SIZE - PHASE_TRANSITION_SIZE);
+        
+        reach = MIN_CITY_SIZE + size_overflow; // Scales 24 -> 40
+        radius = MIN_CITY_SIZE + static_cast<int>(std::round(growth_progress * (MAX_CITY_SIZE - MIN_CITY_SIZE)));
+        spokes = MIN_SPOKES + static_cast<int>(std::round(growth_progress * (MAX_SPOKES - MIN_SPOKES)));
+        rings = MIN_RINGS + static_cast<int>(std::round(growth_progress * (MAX_RINGS - MIN_RINGS)));
+    }
+    
+    // Apply deterministic jitter for individual variety
+    std::uniform_int_distribution<int> radius_jitter_dist(-RADIUS_JITTER, RADIUS_JITTER);
+    std::uniform_int_distribution<int> spokes_jitter_dist(-SPOKE_JITTER, SPOKE_JITTER);
+    
+    radius = std::clamp(radius + radius_jitter_dist(city_rng), MIN_CITY_SIZE, MAX_CITY_SIZE);
+    spokes = std::clamp(spokes + spokes_jitter_dist(city_rng), MIN_SPOKES, MAX_SPOKES);
+    rings = std::clamp(rings, MIN_RINGS, MAX_RINGS);
+
+    // Initialize and generate the city
+    CityGeneration gen(p_canvas, city_seed);
+    gen.generateCity(
+        static_cast<double>(x), static_cast<double>(y),
+        radius, spokes, rings, 
+        reach, DEFAULT_DENSITY, DEFAULT_DENSITY, 
+        show_inner, SHOW_TWIN,
+        30, 4, 6, 2, // twinRadius, twinDensity, twinSpokes, twinRings
+        USE_RIVER, USE_JITTER, USE_SPECIAL
+    );
+    
+    UtilityFunctions::print("City generated at (", x, ", ", y, ") | Size: ", city_size, " | Type: ", show_inner ? "Metropolis" : "Outpost");
 }
 
 String CityGeneration::get_chunk_id(const String &p_tile) {
