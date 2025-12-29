@@ -22,9 +22,9 @@ func _ready():
 	_update_camera_pos(Vector2.ZERO)
 	
 	InputManager.map_toggled.connect(_map_toggled)
-	InputManager.map_panned.connect(_map_panned)
-	InputManager.map_zoomed.connect(_map_zoomed)
-	InputManager.map_centered.connect(_map_centered)
+	InputManager.view_panned.connect(_view_panned)
+	InputManager.view_zoomed.connect(_view_zoomed)
+	InputManager.view_centered.connect(_view_centered)
 
 func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():
@@ -54,12 +54,12 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 
 func _map_toggled(is_open :bool) -> void:
 	visible = is_open
-	_map_centered()
+	_view_centered()
 
-func _map_panned(relative: Vector2):
+func _view_panned(relative: Vector2):
 	_update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
 
-func _map_zoomed(z :int):
+func _view_zoomed(z :int):
 	var oldZoom = zoom
 	zoom = clamp(zoom + z, 0, ZOOM_LVL.size() - 1)
 	
@@ -67,7 +67,7 @@ func _map_zoomed(z :int):
 		Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
 		_update_camera_pos(Camera.position)
 
-func _map_centered():
+func _view_centered():
 	_update_camera_pos(playerChunk.position)
 	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
 

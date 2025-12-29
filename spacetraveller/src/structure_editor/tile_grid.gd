@@ -2,7 +2,11 @@ extends GridContainer
 
 signal tile_selected(id: String)
 
-func start() -> void:
+var spacing = 0
+
+func start(s :int) -> void:
+	spacing = s
+	
 	var ids = TileDb.get_ids()
 	for id in ids:
 		add_tile_button(id)
@@ -15,7 +19,6 @@ func add_tile_button(id: String) -> void:
 	
 	# Structure tile and spacing
 	var tile_size = FastTileMap.get_tile_size()
-	var spacing = 1
 	new_atlas.region = Rect2(
 		spacing + atlas.x * (tile_size + spacing), 
 		spacing + atlas.y * (tile_size + spacing), 

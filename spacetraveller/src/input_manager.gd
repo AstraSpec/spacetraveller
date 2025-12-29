@@ -1,9 +1,9 @@
 extends Node
 
 signal map_toggled(is_open: bool)
-signal map_zoomed(zoom: int)
-signal map_panned(relative: Vector2)
-signal map_centered
+signal view_panned(relative: Vector2)
+signal view_zoomed(zoom: int)
+signal view_centered
 
 signal debug_toggled
 signal directional_input(direction: Vector2)
@@ -37,7 +37,7 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action("shift"):
 		is_shift_pressed = event.is_pressed()
 
-	if current_mode == InputMode.MAP:
+	if current_mode == InputMode.MAP or current_mode == InputMode.STRUCTURE:
 		_handle_map_input(event)
 	
 	elif current_mode == InputMode.STRUCTURE:
@@ -45,16 +45,16 @@ func _unhandled_input(event: InputEvent):
 
 func _handle_map_input(event: InputEvent):
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			map_zoomed.emit(1)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			map_zoomed.emit(-1)
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			view_zoomed.emit(1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			view_zoomed.emit(-1)
 	
 	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
-		map_panned.emit(event.relative)
+		view_panned.emit(event.relative)
 		
 	if event.is_action_pressed("center_player"):
-		map_centered.emit()
+		view_centered.emit()
 
 func _handle_structure_input(event: InputEvent):
 	if event.is_action_pressed("structure_pencil"): 
@@ -118,7 +118,7 @@ func _trigger_direction(dir: Vector2):
 	if current_mode == InputMode.GAMEPLAY:
 		directional_input.emit(dir)
 	else:
-		map_panned.emit(-dir * FastTileMap.get_tile_size())
+		view_panned.emit(-dir * FastTileMap.get_tile_size())
 
 func _toggle_map():
 	current_mode = InputMode.MAP if current_mode == InputMode.GAMEPLAY else InputMode.GAMEPLAY

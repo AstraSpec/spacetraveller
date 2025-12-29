@@ -5,12 +5,13 @@
 [ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "TileGrid", "InputID", "InputData")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "TileGrid", "Camera", "InputID", "InputData")]
 script = ExtResource("1_urqvf")
 StructureEditor_ = NodePath("StructureEditor")
 Background = NodePath("Background")
 TileIDLabel = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel")
 TileGrid = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
+Camera = NodePath("Camera")
 InputID = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureID")
 InputData = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureData")
 
@@ -22,7 +23,6 @@ texture = ExtResource("2_0s7nb")
 stretch_mode = 1
 
 [node name="Camera" type="Camera2D" parent="."]
-zoom = Vector2(2, 2)
 
 [node name="StructureEditor" type="StructureEditor" parent="."]
 tilesheet = ExtResource("1_fl4b5")
