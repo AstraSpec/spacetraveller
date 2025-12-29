@@ -2,7 +2,8 @@ extends Node2D
 
 @export var StructureEditor_ :StructureEditor
 @export var Background :TextureRect
-@export var TileIDLabel :Label
+@export var TileIDLabel1 :Label
+@export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
 @export var Camera :Camera2D
 
@@ -21,12 +22,14 @@ var zoom :int = 1
 enum mode { PENCIL, LINE, EYEDROPPER, FILL }
 var currentMode = mode.PENCIL
 
-var tileID :String
+var tileID1 :String
+var tileID2 :String
 var lastMousePos :Vector2i
 var mousePos :Vector2i
 
 var isDrawingLine :bool = false
 var lineStart :Vector2i
+var lineButton :String = "left"
 
 func _ready() -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
@@ -56,6 +59,7 @@ func _ready() -> void:
 	InputManager.current_mode = InputManager.InputMode.STRUCTURE
 	
 	select_tile("stone_bricks")
+	select_tile("void", false)
 	
 	TileGrid.start(StructureEditor_.get_spacing())
 
@@ -80,14 +84,21 @@ func _process(_delta: float) -> void:
 	mousePos = get_mouse_tile_pos()
 	
 	if currentMode == mode.LINE and isDrawingLine:
-		if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		var btn = MOUSE_BUTTON_LEFT if lineButton == "left" else MOUSE_BUTTON_RIGHT
+		if !Input.is_mouse_button_pressed(btn):
 			# Commit line
 			var points = get_line_points(lineStart, mousePos)
+			var tid = tileID1 if lineButton == "left" else tileID2
 			for p in points:
-				StructureEditor_.place_tile(p.x, p.y, tileID)
+				StructureEditor_.place_tile(p.x, p.y, tid)
 			StructureEditor_.update_visuals(Vector2i(0, 0))
 			isDrawingLine = false
 			_on_tile_changed(mousePos)
+		else:
+			# Update preview
+			var points = get_line_points(lineStart, mousePos)
+			var tid = tileID1 if lineButton == "left" else tileID2
+			StructureEditor_.update_preview_tiles(points, tid)
 	
 	if mousePos != lastMousePos:
 		_on_tile_changed(mousePos)
@@ -99,45 +110,56 @@ func _on_mode_changed(m :String):
 	elif m == "eyedropper": currentMode = mode.EYEDROPPER
 	elif m == "fill": currentMode = mode.FILL
 
-func _on_mouse_input(_button :String):
+func _on_mouse_input(button :String):
 	if currentMode == mode.PENCIL:
-		place_tile()
+		if button == "left":
+			place_tile(tileID1)
+		else:
+			place_tile(tileID2)
 	
 	elif currentMode == mode.LINE:
 		if !isDrawingLine:
 			isDrawingLine = true
 			lineStart = mousePos
+			lineButton = button
 			_on_tile_changed(mousePos)
 	
 	elif currentMode == mode.EYEDROPPER:
 		var id = StructureEditor_.get_tile_at(mousePos.x, mousePos.y)
-		select_tile(id)
+		select_tile(id, button == "left")
 	
 	elif currentMode == mode.FILL:
-		StructureEditor_.fill_tiles(mousePos.x, mousePos.y, tileID)
+		var tid = tileID1 if button == "left" else tileID2
+		StructureEditor_.fill_tiles(mousePos.x, mousePos.y, tid)
 		StructureEditor_.update_visuals(Vector2i(0, 0))
 
-func select_tile(id :String):
-	tileID = id
-	TileIDLabel.text = "ID: " + id
+func select_tile(id :String, is_primary :bool = true):
+	if is_primary:
+		tileID1 = id
+	else:
+		tileID2 = id
+	
+	TileIDLabel1.text = "ID1: " + tileID1
+	TileIDLabel2.text = "ID2: " + tileID2
 
 func _on_tile_changed(_pos: Vector2i):
 	if currentMode == mode.FILL or currentMode == mode.EYEDROPPER:
 		StructureEditor_.clear_preview_tiles()
 	elif currentMode == mode.LINE and isDrawingLine:
 		var points = get_line_points(lineStart, _pos)
-		StructureEditor_.update_preview_tiles(points, tileID)
+		var tid = tileID1 if lineButton == "left" else tileID2
+		StructureEditor_.update_preview_tiles(points, tid)
 	else:
-		StructureEditor_.update_preview_tiles([_pos], tileID)
+		StructureEditor_.update_preview_tiles([_pos], tileID1)
 
-func place_tile(id: String = tileID):
+func place_tile(id: String):
 	if !id: return
 	
 	StructureEditor_.place_tile(mousePos.x, mousePos.y, id)
 	StructureEditor_.update_visuals(Vector2i(0, 0))
 
-func _on_tile_grid_tile_selected(id: String) -> void:
-	select_tile(id)
+func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
+	select_tile(id, is_primary)
 
 func _on_download_button_pressed() -> void:
 	var RLE :Dictionary = StructureEditor_.export_to_rle(InputID.text)

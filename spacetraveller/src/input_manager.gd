@@ -37,10 +37,11 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action("shift"):
 		is_shift_pressed = event.is_pressed()
 
-	if current_mode == InputMode.MAP or current_mode == InputMode.STRUCTURE:
+	if current_mode == InputMode.MAP:
 		_handle_map_input(event)
 	
 	elif current_mode == InputMode.STRUCTURE:
+		_handle_map_input(event)
 		_handle_structure_input(event)
 
 func _handle_map_input(event: InputEvent):
@@ -110,7 +111,7 @@ func _process(delta):
 	if current_mode == InputMode.STRUCTURE:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			structure_mouse_input.emit("left")
-		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 			structure_mouse_input.emit("right")
 
 func _trigger_direction(dir: Vector2):

@@ -5,11 +5,12 @@
 [ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel", "TileGrid", "Camera", "InputID", "InputData")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "InputID", "InputData")]
 script = ExtResource("1_urqvf")
 StructureEditor_ = NodePath("StructureEditor")
 Background = NodePath("Background")
-TileIDLabel = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel")
+TileIDLabel1 = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
+TileIDLabel2 = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
 TileGrid = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
 Camera = NodePath("Camera")
 InputID = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/StructureID")
@@ -56,7 +57,11 @@ alignment_horizontal = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer/AspectRatioContainer"]
 layout_mode = 2
 
-[node name="TileIDLabel" type="Label" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+[node name="TileIDLabel1" type="Label" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tile chosen: "
+
+[node name="TileIDLabel2" type="Label" parent="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer"]
 layout_mode = 2
 text = "Tile chosen: "
 

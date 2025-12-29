@@ -1,6 +1,6 @@
 extends GridContainer
 
-signal tile_selected(id: String)
+signal tile_selected(id: String, is_primary: bool)
 
 var spacing = 0
 
@@ -30,4 +30,10 @@ func add_tile_button(id: String) -> void:
 	button.tooltip_text = id
 	
 	add_child(button)
-	button.pressed.connect(func(): tile_selected.emit(id))
+	button.gui_input.connect(func(event):
+		if event is InputEventMouseButton and event.pressed:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				tile_selected.emit(id, true)
+			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				tile_selected.emit(id, false)
+	)
