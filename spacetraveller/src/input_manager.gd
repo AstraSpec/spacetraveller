@@ -8,7 +8,10 @@ signal map_centered
 signal debug_toggled
 signal directional_input(direction: Vector2)
 
-enum InputMode { GAMEPLAY, MAP }
+signal structure_mode_changed(mode :String)
+signal structure_mouse_input(button :String)
+
+enum InputMode { GAMEPLAY, MAP, STRUCTURE }
 var current_mode = InputMode.GAMEPLAY
 var is_shift_pressed = false
 
@@ -36,6 +39,9 @@ func _unhandled_input(event: InputEvent):
 
 	if current_mode == InputMode.MAP:
 		_handle_map_input(event)
+	
+	elif current_mode == InputMode.STRUCTURE:
+		_handle_structure_input(event)
 
 func _handle_map_input(event: InputEvent):
 	if event is InputEventMouseButton:
@@ -49,6 +55,16 @@ func _handle_map_input(event: InputEvent):
 		
 	if event.is_action_pressed("center_player"):
 		map_centered.emit()
+
+func _handle_structure_input(event: InputEvent):
+	if event.is_action_pressed("structure_pencil"): 
+		structure_mode_changed.emit("pencil")
+	if event.is_action_pressed("structure_line"): 
+		structure_mode_changed.emit("line")
+	if event.is_action_pressed("structure_eyedropper"): 
+		structure_mode_changed.emit("eyedropper")
+	if event.is_action_pressed("structure_fill"): 
+		structure_mode_changed.emit("fill")
 
 func _process(delta):
 	time_since_move += delta
@@ -90,6 +106,12 @@ func _process(delta):
 		if time_since_move > threshold:
 			key_held = true
 			_trigger_direction(current_raw_dir)
+
+	if current_mode == InputMode.STRUCTURE:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			structure_mouse_input.emit("left")
+		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+			structure_mouse_input.emit("right")
 
 func _trigger_direction(dir: Vector2):
 	time_since_move = 0.0

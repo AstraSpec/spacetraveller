@@ -10,9 +10,20 @@ extends Node2D
 
 const BUBBLE_SIZE :int = 32
 
+enum mode { PENCIL, LINE, EYEDROPPER, FILL }
+var currentMode = mode.PENCIL
+
 var tileID :String
+var lastMousePos :Vector2i
+var mousePos :Vector2i
+
+var isDrawingLine :bool = false
+var lineStart :Vector2i
 
 func _ready() -> void:
+	InputManager.structure_mode_changed.connect(_on_mode_changed)
+	InputManager.structure_mouse_input.connect(_on_mouse_input)
+	
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
 	
@@ -30,9 +41,48 @@ func _ready() -> void:
 		BUBBLE_SIZE * StructureEditor_.get_cell_size() / 2
 	)
 	
+	InputManager.current_mode = InputManager.InputMode.STRUCTURE
+	
 	select_tile("stone_bricks")
 	
 	TileGrid.start()
+
+func _process(_delta: float) -> void:
+	mousePos = get_mouse_tile_pos()
+	
+	if currentMode == mode.LINE and isDrawingLine:
+		if !Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			# Commit line
+			var points = get_line_points(lineStart, mousePos)
+			for p in points:
+				StructureEditor_.place_tile(p.x, p.y, tileID)
+			StructureEditor_.update_visuals(Vector2i(0, 0))
+			isDrawingLine = false
+	
+	if mousePos != lastMousePos:
+		lastMousePos = mousePos
+
+func _on_mode_changed(m :String):
+	if m == "pencil": currentMode = mode.PENCIL
+	elif m == "line": currentMode = mode.LINE
+	elif m == "eyedropper": currentMode = mode.EYEDROPPER
+	elif m == "fill": currentMode = mode.FILL
+
+func _on_mouse_input(_button :String):
+	if currentMode == mode.PENCIL:
+		place_tile()
+	
+	elif currentMode == mode.LINE:
+		if !isDrawingLine:
+			isDrawingLine = true
+			lineStart = mousePos
+	
+	elif currentMode == mode.EYEDROPPER:
+		var id = StructureEditor_.get_tile_at(mousePos.x, mousePos.y)
+		select_tile(id)
+	
+	elif currentMode == mode.FILL:
+		StructureEditor_.fill_tiles(mousePos.x, mousePos.y, tileID)
 
 func select_tile(id :String):
 	tileID = id
@@ -47,12 +97,7 @@ func _unhandled_input(_event: InputEvent) -> void:
 func place_tile(id: String = tileID):
 	if !id: return
 	
-	var mouse_pos = get_global_mouse_position()
-	var cell_size = StructureEditor_.get_cell_size()
-	var x = floor(mouse_pos.x / cell_size)
-	var y = floor(mouse_pos.y / cell_size)
-	
-	StructureEditor_.place_tile(x, y, id)
+	StructureEditor_.place_tile(mousePos.x, mousePos.y, id)
 	StructureEditor_.update_visuals(Vector2i(0, 0))
 
 func _on_tile_grid_tile_selected(id: String) -> void:
@@ -85,3 +130,33 @@ func _on_load_button_pressed() -> void:
 	
 	StructureEditor_.import_from_rle(data["blueprint"], data["palette"])
 	StructureEditor_.update_visuals(Vector2i(0, 0))
+
+func get_mouse_tile_pos() -> Vector2i:
+	var mouse_pos = get_global_mouse_position()
+	var cell_size = StructureEditor_.get_cell_size()
+	return Vector2i(floor(mouse_pos.x / cell_size), floor(mouse_pos.y / cell_size))
+
+func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
+	var points : Array[Vector2i] = []
+	var x0 = start.x
+	var y0 = start.y
+	var x1 = end.x
+	var y1 = end.y
+	
+	var dx = abs(x1 - x0)
+	var dy = -abs(y1 - y0)
+	var sx = 1 if x0 < x1 else -1
+	var sy = 1 if y0 < y1 else -1
+	var err = dx + dy
+	
+	while true:
+		points.append(Vector2i(x0, y0))
+		if x0 == x1 and y0 == y1: break
+		var e2 = 2 * err
+		if e2 >= dy:
+			err += dy
+			x0 += sx
+		if e2 <= dx:
+			err += dx
+			y0 += sy
+	return points

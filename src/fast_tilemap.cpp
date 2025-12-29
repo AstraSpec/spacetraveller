@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <queue>
 
 using namespace godot;
 
@@ -14,6 +15,8 @@ void FastTileMap::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id"), &FastTileMap::place_tile);
+    ClassDB::bind_method(D_METHOD("get_tile_at", "x", "y"), &FastTileMap::get_tile_at);
+    ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id"), &FastTileMap::fill_tiles);
     ClassDB::bind_method(D_METHOD("clear_cache"), &FastTileMap::clear_cache);
 
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
@@ -108,6 +111,61 @@ void FastTileMap::place_tile(int x, int y, const String& tile_id) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (id_reg) {
         tile_id_cache[cellKey] = id_reg->get_id(tile_id);
+    }
+}
+
+String FastTileMap::get_tile_at(int x, int y) const {
+    uint64_t cellKey = Occlusion::pack_coords(x, y);
+    auto it = tile_id_cache.find(cellKey);
+    if (it != tile_id_cache.end()) {
+        IdRegistry* id_reg = IdRegistry::get_singleton();
+        if (id_reg) {
+            return id_reg->get_string(it->second);
+        }
+    }
+    return "void";
+}
+
+void FastTileMap::fill_tiles(int x, int y, const String& tile_id) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return;
+
+    uint16_t new_id = id_reg->get_id(tile_id);
+    uint16_t target_id = 0;
+
+    uint64_t startKey = Occlusion::pack_coords(x, y);
+    auto it = tile_id_cache.find(startKey);
+    if (it != tile_id_cache.end()) {
+        target_id = it->second;
+    }
+
+    if (new_id == target_id) return;
+
+    std::queue<Vector2i> q;
+    q.push(Vector2i(x, y));
+
+    int radius = world_bubble_radius;
+
+    while (!q.empty()) {
+        Vector2i p = q.front();
+        q.pop();
+
+        if (p.x < -radius || p.x >= radius || p.y < -radius || p.y >= radius) continue;
+
+        uint64_t key = Occlusion::pack_coords(p.x, p.y);
+        uint16_t current_id = 0;
+        auto it_cur = tile_id_cache.find(key);
+        if (it_cur != tile_id_cache.end()) {
+            current_id = it_cur->second;
+        }
+
+        if (current_id == target_id) {
+            tile_id_cache[key] = new_id;
+            q.push(Vector2i(p.x + 1, p.y));
+            q.push(Vector2i(p.x - 1, p.y));
+            q.push(Vector2i(p.x, p.y + 1));
+            q.push(Vector2i(p.x, p.y - 1));
+        }
     }
 }
 

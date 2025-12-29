@@ -51,6 +51,8 @@ public:
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
     void place_tile(int x, int y, const String& tile_id);
+    String get_tile_at(int x, int y) const;
+    void fill_tiles(int x, int y, const String& tile_id);
     void clear_cache();
 };
 

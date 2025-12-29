@@ -12,3 +12,5 @@ func _ready() -> void:
 	
 	WorldGen.generate_world(Player.cellPos)
 	WorldGen.update_world_bubble(Player.cellPos)
+	
+	InputManager.current_mode = InputManager.InputMode.GAMEPLAY
