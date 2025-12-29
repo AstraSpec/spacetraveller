@@ -11,6 +11,8 @@ class StructureEditor : public FastTileMap {
 protected:
     static void _bind_methods();
 
+    std::unordered_map<uint64_t, RID> preview_tile_rids;
+
 public:
     StructureEditor();
     ~StructureEditor();
@@ -18,6 +20,9 @@ public:
     void update_visuals(const Vector2i& centerPos);
     Dictionary export_to_rle(const String &p_id) const;
     void import_from_rle(const String &p_blueprint, const Array &p_palette);
+
+    void update_preview_tiles(const Array &p_positions, const String &p_tile_id);
+    void clear_preview_tiles();
 };
 
 }

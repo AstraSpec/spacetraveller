@@ -58,8 +58,10 @@ func _process(_delta: float) -> void:
 				StructureEditor_.place_tile(p.x, p.y, tileID)
 			StructureEditor_.update_visuals(Vector2i(0, 0))
 			isDrawingLine = false
+			_on_tile_changed(mousePos)
 	
 	if mousePos != lastMousePos:
+		_on_tile_changed(mousePos)
 		lastMousePos = mousePos
 
 func _on_mode_changed(m :String):
@@ -76,6 +78,7 @@ func _on_mouse_input(_button :String):
 		if !isDrawingLine:
 			isDrawingLine = true
 			lineStart = mousePos
+			_on_tile_changed(mousePos)
 	
 	elif currentMode == mode.EYEDROPPER:
 		var id = StructureEditor_.get_tile_at(mousePos.x, mousePos.y)
@@ -83,16 +86,20 @@ func _on_mouse_input(_button :String):
 	
 	elif currentMode == mode.FILL:
 		StructureEditor_.fill_tiles(mousePos.x, mousePos.y, tileID)
+		StructureEditor_.update_visuals(Vector2i(0, 0))
 
 func select_tile(id :String):
 	tileID = id
 	TileIDLabel.text = "ID: " + id
 
-func _unhandled_input(_event: InputEvent) -> void:
-	if Input.is_action_pressed("left_mouse"):
-		place_tile()
-	elif Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		place_tile("void")
+func _on_tile_changed(_pos: Vector2i):
+	if currentMode == mode.FILL or currentMode == mode.EYEDROPPER:
+		StructureEditor_.clear_preview_tiles()
+	elif currentMode == mode.LINE and isDrawingLine:
+		var points = get_line_points(lineStart, _pos)
+		StructureEditor_.update_preview_tiles(points, tileID)
+	else:
+		StructureEditor_.update_preview_tiles([_pos], tileID)
 
 func place_tile(id: String = tileID):
 	if !id: return
