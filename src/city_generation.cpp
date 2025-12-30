@@ -21,6 +21,7 @@ CityGeneration::CityGeneration(Canvas& p_canvas, uint32_t seed, IdRegistry* p_re
     id_plaza = registry->register_string("plaza");
     id_forest = registry->register_string("forest");
     id_plains = registry->register_string("plains");
+    id_wall = registry->register_string("wall");
     id_void = registry->register_string("void");
 
     randomize();
@@ -276,7 +277,8 @@ void CityGeneration::generateCity(
             canvas.drawLine(std::round(centerX), std::round(centerY), gate.x, gate.y, id_road);
         }
         for (size_t rIdx = 0; rIdx < computedRingRadii.size(); ++rIdx) {
-            canvas.drawCircle(centerX, centerY, computedRingRadii[rIdx], id_road);
+            uint16_t ringId = (rIdx == computedRingRadii.size() - 1) ? id_wall : id_road;
+            canvas.drawCircle(centerX, centerY, computedRingRadii[rIdx], ringId);
             if (rIdx == computedRingRadii.size() - 1) {
                 for (const auto& g : gateCoords) canvas.fillRect(g.x - 1, g.y - 1, 3, 3, id_gate);
             }
@@ -357,7 +359,7 @@ namespace {
     constexpr int MAX_CITY_SIZE = 48;
     constexpr int PHASE_TRANSITION_SIZE = 32;
 
-    constexpr int MIN_SPOKES = 4; // Road boulevards connecting from palace to outer city
+    constexpr int MIN_SPOKES = 5; // Road boulevards connecting from palace to outer city
     constexpr int MAX_SPOKES = 8;
     constexpr int MIN_RINGS = 1; // Road rings circling the palace
     constexpr int MAX_RINGS = 3;

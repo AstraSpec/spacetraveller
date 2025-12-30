@@ -32,6 +32,7 @@ private:
     uint16_t id_plaza;
     uint16_t id_forest;
     uint16_t id_plains;
+    uint16_t id_wall;
     uint16_t id_void;
 
     class IdRegistry* registry;

@@ -128,6 +128,7 @@ void WorldGeneration::setup_biome_rules() {
     reg_simple("plaza", "w_floor");
     reg_simple("gate", "gate_floor");
     reg_simple("palace", "palace_floor");
+    reg_simple("wall", "w_wall");
 }
 
 uint16_t WorldGeneration::get_tile(int x, int y) {
