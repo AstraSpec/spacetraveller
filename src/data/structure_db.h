@@ -14,6 +14,9 @@ struct StructureInfo {
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
     GDCLASS(StructureDb, Object)
 
+private:
+    static const int CHUNK_SIZE;
+
 protected:
     static void _bind_methods();
     virtual StructureInfo _parse_row(const Dictionary &p_data) override;

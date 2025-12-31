@@ -54,8 +54,7 @@ public:
 private:
     // Constants
     static const int REGION_SIZE = 256;
-    static const int CHUNK_SIZE = 32;
-    static const int CHUNK_SHIFT = 5;
+    static const int CHUNK_SIZE = 24;
 
     std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [Rot][ID]
     
@@ -100,7 +99,6 @@ public:
     
     static int get_region_size() { return REGION_SIZE; }
     static int get_chunk_size() { return CHUNK_SIZE; }
-    static int get_chunk_shift() { return CHUNK_SHIFT; }
 
     static uint64_t pack_coords(int x, int y) { return Occlusion::pack_coords(x, y); }
     static Vector2i unpack_coords(uint64_t key) {

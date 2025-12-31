@@ -1,11 +1,13 @@
 #include "structure_db.h"
 #include "id_registry.h"
+#include "../world_generation.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
 
 template<> StructureDb* DataBase<StructureInfo, StructureDb>::singleton = nullptr;
+const int StructureDb::CHUNK_SIZE = WorldGeneration::get_chunk_size();
 
 void StructureDb::_bind_methods() {
     ClassDB::bind_static_method("StructureDb", D_METHOD("get_singleton"), &StructureDb::get_singleton);
@@ -35,7 +37,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
             }
         }
 
-        const int total_tiles = 1024;
+        const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
         info.data.assign(total_tiles, 0);
 
     String rle = p_data.get("blueprint", "");
@@ -69,7 +71,7 @@ uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y
     const StructureInfo* info = get_info(p_structure_id);
     if (!info) return 0;
 
-    int idx = p_y * 32 + p_x;
+    int idx = p_y * CHUNK_SIZE + p_x;
     if (idx < 0 || idx >= (int)info->data.size()) return 0;
 
     return info->data[idx];

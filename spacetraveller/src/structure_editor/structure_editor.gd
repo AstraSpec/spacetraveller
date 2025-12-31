@@ -10,7 +10,8 @@ extends Node2D
 @export var InputID   :TextEdit
 @export var InputData :TextEdit
 
-const BUBBLE_SIZE :int = 32
+var CHUNK_SIZE = WorldGeneration.get_chunk_size()
+var BUBBLE_SIZE :int = CHUNK_SIZE
 const DRAG_SPEED :float = 1.75
 const ZOOM_LVL :Array = [0.75, 1.0, 1.5, 2.0]
 
@@ -47,13 +48,13 @@ func _ready() -> void:
 	StructureEditor_.update_visuals(Vector2i(0, 0))
 	
 	Background.size = Vector2(
-		BUBBLE_SIZE * StructureEditor_.get_cell_size(),
-		BUBBLE_SIZE * StructureEditor_.get_cell_size()
+		CHUNK_SIZE * StructureEditor_.get_cell_size(),
+		CHUNK_SIZE * StructureEditor_.get_cell_size()
 	)
 	
 	Background.position -= Vector2(
-		BUBBLE_SIZE * StructureEditor_.get_cell_size() / 2,
-		BUBBLE_SIZE * StructureEditor_.get_cell_size() / 2
+		CHUNK_SIZE * StructureEditor_.get_cell_size() / 2,
+		CHUNK_SIZE * StructureEditor_.get_cell_size() / 2
 	)
 	
 	InputManager.current_mode = InputManager.InputMode.STRUCTURE

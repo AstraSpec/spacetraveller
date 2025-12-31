@@ -17,7 +17,6 @@ void WorldGeneration::_bind_methods() {
     // Expose constants
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_region_size"), &WorldGeneration::get_region_size);
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_size"), &WorldGeneration::get_chunk_size);
-    ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_shift"), &WorldGeneration::get_chunk_shift);
     
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("pack_coords", "x", "y"), &WorldGeneration::pack_coords);
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("unpack_coords", "key"), &WorldGeneration::unpack_coords);
@@ -132,8 +131,8 @@ void WorldGeneration::setup_biome_rules() {
 }
 
 uint16_t WorldGeneration::get_tile(int x, int y) {
-    int cx = x >> CHUNK_SHIFT;
-    int cy = y >> CHUNK_SHIFT;
+    int cx = (x >= 0) ? (x / CHUNK_SIZE) : ((x - (CHUNK_SIZE - 1)) / CHUNK_SIZE);
+    int cy = (y >= 0) ? (y / CHUNK_SIZE) : ((y - (CHUNK_SIZE - 1)) / CHUNK_SIZE);
     uint64_t chunk_key = Occlusion::pack_coords(cx, cy);
 
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
@@ -158,14 +157,15 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
 
     // 1. Structure Lookup Path (Hot Path)
     if (chunk_id == id_building && s_db) {
-        int lx = x & (CHUNK_SIZE - 1);
-        int ly = y & (CHUNK_SIZE - 1);
+        int lx = x % CHUNK_SIZE; if (lx < 0) lx += CHUNK_SIZE;
+        int ly = y % CHUNK_SIZE; if (ly < 0) ly += CHUNK_SIZE;
         
         int rx = lx, ry = ly;
+        int max_coord = CHUNK_SIZE - 1;
         switch (last_chunk_rotation) {
-            case ROT_WEST: rx = ly; ry = 31 - lx; break; // 1
-            case ROT_NORTH: rx = 31 - lx; ry = 31 - ly; break; // 2
-            case ROT_EAST: rx = 31 - ly; ry = lx; break; // 3
+            case ROT_WEST: rx = ly; ry = max_coord - lx; break; // 1
+            case ROT_NORTH: rx = max_coord - lx; ry = max_coord - ly; break; // 2
+            case ROT_EAST: rx = max_coord - ly; ry = lx; break; // 3
         }
 
         // Optimized StructureDb call
