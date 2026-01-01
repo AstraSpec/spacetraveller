@@ -235,7 +235,7 @@ bool CityGeneration::isNearAnyRoad(int x, int y, int range) {
             
             if (ny >= 0 && ny < gridSize && nx >= 0 && nx < gridSize) {
                 CityPixel p = canvas.getPixel(nx, ny);
-                if (p.id == id_road || p.id == id_alley || p.id == id_plaza) return true;
+                if (p.id == id_road || p.id == id_alley || p.id == id_plaza || p.id == id_wall || p.id == id_gate) return true;
             }
         }
     }
@@ -338,7 +338,7 @@ void CityGeneration::generateCity(
                         auto is_road = [&](int nx, int ny) {
                             if (nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return false;
                             CityPixel p = canvas.getPixel(nx, ny);
-                            return p.id == id_road || p.id == id_alley;
+                            return p.id == id_road || p.id == id_alley || p.id == id_wall || p.id == id_gate;
                         };
 
                         if (is_road(x, y + 1)) rotation = WorldGeneration::ROT_SOUTH;
