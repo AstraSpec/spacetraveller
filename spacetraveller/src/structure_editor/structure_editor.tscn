@@ -83,10 +83,12 @@ size_flags_horizontal = 0
 
 [node name="File" type="PopupMenu" parent="CanvasLayer/MenuBar"]
 unresizable = false
-item_count = 2
-item_0/text = "Save"
-item_1/text = "Load"
+item_count = 3
+item_0/text = "New"
+item_1/text = "Save"
 item_1/id = 1
+item_2/text = "Load"
+item_2/id = 2
 
 [node name="Edit" type="PopupMenu" parent="CanvasLayer/MenuBar"]
 auto_translate_mode = 1
