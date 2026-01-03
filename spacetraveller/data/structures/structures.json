@@ -22,5 +22,13 @@
             "void",
             "stone_bricks"
         ]
+    },
+    {
+        "blueprint": "(130x0, 1x1, 22x0, 4x1, 19x0, 6x1, 17x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 17x0, 6x1, 19x0, 4x1, 227x0)",
+        "id": "test02",
+        "palette": [
+            "void",
+            "stone_bricks"
+        ]
     }
 ]

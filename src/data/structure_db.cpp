@@ -14,6 +14,8 @@ void StructureDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &StructureDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_tile_at", "id", "x", "y"), &StructureDb::get_tile_at);
     ClassDB::bind_method(D_METHOD("get_ids"), &StructureDb::get_ids);
+    ClassDB::bind_method(D_METHOD("get_blueprint", "id"), &StructureDb::get_blueprint);
+    ClassDB::bind_method(D_METHOD("get_palette", "id"), &StructureDb::get_palette);
 }
 
 StructureDb::StructureDb() {}
@@ -21,50 +23,63 @@ StructureDb::~StructureDb() {}
 
 StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
-        StructureInfo info;
+    StructureInfo info;
         
     if (id_reg) {
         id_reg->register_string(p_data["id"]);
     }
 
-        std::vector<uint16_t> palette_ids;
-    Array p_array = p_data.get("palette", Array());
-        for (int i = 0; i < p_array.size(); i++) {
-            if (id_reg) {
-                palette_ids.push_back(id_reg->register_string(p_array[i]));
-            } else {
-                palette_ids.push_back(0);
-            }
+    info.blueprint = p_data.get("blueprint", "");
+    info.palette = p_data.get("palette", Array());
+
+    std::vector<uint16_t> palette_ids;
+    Array p_array = info.palette;
+    for (int i = 0; i < p_array.size(); i++) {
+        if (id_reg) {
+            palette_ids.push_back(id_reg->register_string(p_array[i]));
+        } else {
+            palette_ids.push_back(0);
         }
+    }
 
-        const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
-        info.data.assign(total_tiles, 0);
+    const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
+    info.data.assign(total_tiles, 0);
 
-    String rle = p_data.get("blueprint", "");
-        rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
-        PackedStringArray parts = rle.split(",");
+    String rle = info.blueprint;
+    rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
+    PackedStringArray parts = rle.split(",");
 
-        int current_pos = 0;
-        for (int i = 0; i < parts.size(); i++) {
-            String part = parts[i].strip_edges();
-            if (part.is_empty()) continue;
+    int current_pos = 0;
+    for (int i = 0; i < parts.size(); i++) {
+        String part = parts[i].strip_edges();
+        if (part.is_empty()) continue;
 
-            PackedStringArray sub = part.split("x");
-            if (sub.size() != 2) continue;
+        PackedStringArray sub = part.split("x");
+        if (sub.size() != 2) continue;
 
-            int count = sub[0].to_int();
-            int palette_idx = sub[1].to_int();
+        int count = sub[0].to_int();
+        int palette_idx = sub[1].to_int();
 
         uint16_t tile_id = 0;
-            if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
-                tile_id = palette_ids[palette_idx];
-            }
-
-            for (int j = 0; j < count && current_pos < total_tiles; j++) {
-                info.data[current_pos++] = tile_id;
-            }
+        if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
+            tile_id = palette_ids[palette_idx];
         }
+
+        for (int j = 0; j < count && current_pos < total_tiles; j++) {
+            info.data[current_pos++] = tile_id;
+        }
+    }
     return info;
+}
+
+String StructureDb::get_blueprint(const String &p_id) const {
+    const StructureInfo* info = get_info(p_id);
+    return info ? info->blueprint : "";
+}
+
+Array StructureDb::get_palette(const String &p_id) const {
+    const StructureInfo* info = get_info(p_id);
+    return info ? info->palette : Array();
 }
 
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {

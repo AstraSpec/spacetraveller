@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bfmpebkm2x04c"]
+
+[node name="StructureButton" type="Button"]
+offset_right = 8.0
+offset_bottom = 8.0
+size_flags_vertical = 3
+alignment = 0

@@ -1,6 +1,7 @@
 extends Node2D
 
 signal open_save
+signal open_load
 
 @export var Editor :StructureEditor
 @export var Background :TextureRect
@@ -230,3 +231,4 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0: open_save.emit()
+	if index == 1: open_load.emit()
