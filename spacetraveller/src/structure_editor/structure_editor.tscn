@@ -88,6 +88,18 @@ item_0/text = "Save"
 item_1/text = "Load"
 item_1/id = 1
 
+[node name="Edit" type="PopupMenu" parent="CanvasLayer/MenuBar"]
+auto_translate_mode = 1
+unresizable = false
+item_count = 4
+item_0/text = "Pencil"
+item_1/text = "Line"
+item_1/id = 1
+item_2/text = "Eyedropper"
+item_2/id = 2
+item_3/text = "Fill"
+item_3/id = 3
+
 [node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID")]
 title = "Save Structure"
 initial_position = 1
@@ -165,6 +177,7 @@ auto_translate_mode = 1
 title = "Load Structure"
 initial_position = 1
 size = Vector2i(400, 400)
+visible = false
 popup_window = true
 script = ExtResource("6_fdwd8")
 structureEditor = NodePath("..")
@@ -214,6 +227,7 @@ text = "Cancel"
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="tile_selected" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
 [connection signal="index_pressed" from="CanvasLayer/MenuBar/File" to="." method="_on_file_index_pressed"]
+[connection signal="index_pressed" from="CanvasLayer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]

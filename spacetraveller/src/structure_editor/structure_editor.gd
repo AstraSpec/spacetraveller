@@ -232,3 +232,9 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0: open_save.emit()
 	if index == 1: open_load.emit()
+
+func _on_edit_index_pressed(index: int) -> void:
+	if index == 0: currentMode = mode.PENCIL
+	if index == 1: currentMode = mode.LINE
+	if index == 2: currentMode = mode.EYEDROPPER
+	if index == 3: currentMode = mode.FILL
