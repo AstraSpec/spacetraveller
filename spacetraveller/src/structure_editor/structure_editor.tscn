@@ -1,13 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=6 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
 [ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
+[ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("StructureEditor_", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "InputID", "InputData")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "InputID", "InputData")]
 script = ExtResource("1_urqvf")
-StructureEditor_ = NodePath("StructureEditor")
+Editor = NodePath("Editor")
 Background = NodePath("Background")
 TileIDLabel1 = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
@@ -25,7 +26,7 @@ stretch_mode = 1
 
 [node name="Camera" type="Camera2D" parent="."]
 
-[node name="StructureEditor" type="StructureEditor" parent="."]
+[node name="Editor" type="StructureEditor" parent="."]
 tilesheet = ExtResource("1_fl4b5")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
@@ -99,7 +100,95 @@ placeholder_text = "{
 layout_mode = 2
 text = "Load"
 
+[node name="MenuBar" type="MenuBar" parent="CanvasLayer"]
+offset_right = 35.0
+offset_bottom = 31.0
+size_flags_horizontal = 0
+
+[node name="File" type="PopupMenu" parent="CanvasLayer/MenuBar"]
+unresizable = false
+item_count = 2
+item_0/text = "Save"
+item_1/text = "Load"
+item_1/id = 1
+
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID")]
+title = "Save Structure"
+initial_position = 1
+size = Vector2i(400, 400)
+visible = false
+popup_window = true
+script = ExtResource("5_dh32f")
+structureEditor = NodePath("..")
+Editor = NodePath("../Editor")
+StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
+
+[node name="MarginContainer" type="MarginContainer" parent="SaveWindow"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SaveWindow/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StructureIDLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "1. Structure ID"
+
+[node name="StructureIDText" type="TextEdit" parent="SaveWindow/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "ID"
+
+[node name="FPLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "2. Filepath"
+
+[node name="DefaultFP" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DefaultFPSwitch" type="CheckButton" parent="SaveWindow/MarginContainer/VBoxContainer/DefaultFP"]
+layout_mode = 2
+button_pressed = true
+
+[node name="DefaultFPLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/DefaultFP"]
+layout_mode = 2
+text = "Default filepath"
+
+[node name="CustomFPText" type="TextEdit" parent="SaveWindow/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "city/houses"
+editable = false
+
+[node name="Footer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+alignment = 2
+
+[node name="Save" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Save"
+
+[node name="Close" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Cancel"
+
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="tile_selected" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/DownloadButton" to="." method="_on_download_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/AspectRatioContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
+[connection signal="index_pressed" from="CanvasLayer/MenuBar/File" to="." method="_on_file_index_pressed"]
+[connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]

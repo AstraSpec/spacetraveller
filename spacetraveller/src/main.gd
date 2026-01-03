@@ -4,7 +4,7 @@ extends Node2D
 @export var Player :Sprite2D
 
 func _ready() -> void:
-	Player.interact_cell(Vector2(2900, 2900))
+	Player.interact_cell(Vector2(2899, 2899))
 	
 	TileDb.initialize_data()
 	ChunkDb.initialize_data()

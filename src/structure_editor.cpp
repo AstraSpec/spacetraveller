@@ -173,12 +173,17 @@ void StructureEditor::update_preview_tiles(const Array &p_positions, const Strin
     RID texture_rid = tilesheet->get_rid();
     RID parent_rid = get_canvas_item();
 
+    int half = world_bubble_size / 2;
+
     Vector2i atlas_pos;
     atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
     atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
 
     for (int i = 0; i < p_positions.size(); i++) {
         Vector2i pos = p_positions[i];
+
+        if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) continue;
+
         uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
 
         RID preview_rid = rs->canvas_item_create();

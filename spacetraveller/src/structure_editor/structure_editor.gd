@@ -1,6 +1,8 @@
 extends Node2D
 
-@export var StructureEditor_ :StructureEditor
+signal open_save
+
+@export var Editor :StructureEditor
 @export var Background :TextureRect
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
@@ -43,18 +45,18 @@ func _ready() -> void:
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
 	
-	StructureEditor_.set_world_bubble_size(BUBBLE_SIZE)
-	StructureEditor_.init_world_bubble(Vector2i(0, 0), true)
-	StructureEditor_.update_visuals(Vector2i(0, 0))
+	Editor.set_world_bubble_size(BUBBLE_SIZE)
+	Editor.init_world_bubble(Vector2i(0, 0), true)
+	Editor.update_visuals(Vector2i(0, 0))
 	
 	Background.size = Vector2(
-		CHUNK_SIZE * StructureEditor_.get_cell_size(),
-		CHUNK_SIZE * StructureEditor_.get_cell_size()
+		CHUNK_SIZE * Editor.get_cell_size(),
+		CHUNK_SIZE * Editor.get_cell_size()
 	)
 	
 	Background.position -= Vector2(
-		CHUNK_SIZE * StructureEditor_.get_cell_size() / 2,
-		CHUNK_SIZE * StructureEditor_.get_cell_size() / 2
+		CHUNK_SIZE * Editor.get_cell_size() / 2,
+		CHUNK_SIZE * Editor.get_cell_size() / 2
 	)
 	
 	InputManager.current_mode = InputManager.InputMode.STRUCTURE
@@ -62,7 +64,7 @@ func _ready() -> void:
 	select_tile("stone_bricks")
 	select_tile("void", false)
 	
-	TileGrid.start(StructureEditor_.get_spacing())
+	TileGrid.start()
 
 func _view_panned(relative: Vector2):
 	_update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
@@ -84,23 +86,6 @@ func _update_camera_pos(newPos: Vector2) -> void:
 func _process(_delta: float) -> void:
 	mousePos = get_mouse_tile_pos()
 	
-	if currentMode == mode.LINE and isDrawingLine:
-		var btn = MOUSE_BUTTON_LEFT if lineButton == "left" else MOUSE_BUTTON_RIGHT
-		if !Input.is_mouse_button_pressed(btn):
-			# Commit line
-			var points = get_line_points(lineStart, mousePos)
-			var tid = tileID1 if lineButton == "left" else tileID2
-			for p in points:
-				StructureEditor_.place_tile(p.x, p.y, tid)
-			StructureEditor_.update_visuals(Vector2i(0, 0))
-			isDrawingLine = false
-			_on_tile_changed(mousePos)
-		else:
-			# Update preview
-			var points = get_line_points(lineStart, mousePos)
-			var tid = tileID1 if lineButton == "left" else tileID2
-			StructureEditor_.update_preview_tiles(points, tid)
-	
 	if mousePos != lastMousePos:
 		_on_tile_changed(mousePos)
 		lastMousePos = mousePos
@@ -111,7 +96,12 @@ func _on_mode_changed(m :String):
 	elif m == "eyedropper": currentMode = mode.EYEDROPPER
 	elif m == "fill": currentMode = mode.FILL
 
-func _on_mouse_input(button :String):
+func _on_mouse_input(button: String, action: InputManager.MouseAction):
+	if action == InputManager.MouseAction.RELEASE:
+		if currentMode == mode.LINE and isDrawingLine and button == lineButton:
+			_commit_line()
+		return
+
 	if currentMode == mode.PENCIL:
 		if button == "left":
 			place_tile(tileID1)
@@ -119,20 +109,35 @@ func _on_mouse_input(button :String):
 			place_tile(tileID2)
 	
 	elif currentMode == mode.LINE:
-		if !isDrawingLine:
-			isDrawingLine = true
-			lineStart = mousePos
-			lineButton = button
-			_on_tile_changed(mousePos)
+		if action == InputManager.MouseAction.PRESS:
+			if !isDrawingLine:
+				isDrawingLine = true
+				lineStart = mousePos
+				lineButton = button
+				_on_tile_changed(mousePos)
 	
 	elif currentMode == mode.EYEDROPPER:
-		var id = StructureEditor_.get_tile_at(mousePos.x, mousePos.y)
-		select_tile(id, button == "left")
+		if action == InputManager.MouseAction.PRESS:
+			if !is_inside_bubble(mousePos): return
+			var id = Editor.get_tile_at(mousePos.x, mousePos.y)
+			select_tile(id, button == "left")
 	
 	elif currentMode == mode.FILL:
-		var tid = tileID1 if button == "left" else tileID2
-		StructureEditor_.fill_tiles(mousePos.x, mousePos.y, tid)
-		StructureEditor_.update_visuals(Vector2i(0, 0))
+		if action == InputManager.MouseAction.PRESS:
+			if !is_inside_bubble(mousePos): return
+			var tid = tileID1 if button == "left" else tileID2
+			Editor.fill_tiles(mousePos.x, mousePos.y, tid)
+			Editor.update_visuals(Vector2i(0, 0))
+
+func _commit_line():
+	var points = get_line_points(lineStart, mousePos)
+	var tid = tileID1 if lineButton == "left" else tileID2
+	for p in points:
+		if is_inside_bubble(p):
+			Editor.place_tile(p.x, p.y, tid)
+	Editor.update_visuals(Vector2i(0, 0))
+	isDrawingLine = false
+	_on_tile_changed(mousePos)
 
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
@@ -145,31 +150,34 @@ func select_tile(id :String, is_primary :bool = true):
 
 func _on_tile_changed(_pos: Vector2i):
 	if currentMode == mode.FILL or currentMode == mode.EYEDROPPER:
-		StructureEditor_.clear_preview_tiles()
+		Editor.clear_preview_tiles()
 	elif currentMode == mode.LINE and isDrawingLine:
 		var points = get_line_points(lineStart, _pos)
 		var tid = tileID1 if lineButton == "left" else tileID2
-		StructureEditor_.update_preview_tiles(points, tid)
+		Editor.update_preview_tiles(points, tid)
 	else:
-		StructureEditor_.update_preview_tiles([_pos], tileID1)
+		Editor.update_preview_tiles([_pos], tileID1)
 
 func place_tile(id: String):
-	if !id: return
+	if !id or !is_inside_bubble(mousePos): return
 	
-	StructureEditor_.place_tile(mousePos.x, mousePos.y, id)
-	StructureEditor_.update_visuals(Vector2i(0, 0))
+	Editor.place_tile(mousePos.x, mousePos.y, id)
+	Editor.update_visuals(Vector2i(0, 0))
+
+func is_inside_bubble(pos: Vector2i) -> bool:
+	var half = CHUNK_SIZE / 2
+	return pos.x >= -half and pos.x < half and pos.y >= -half and pos.y < half
 
 func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 	select_tile(id, is_primary)
 
 func _on_download_button_pressed() -> void:
-	var RLE :Dictionary = StructureEditor_.export_to_rle(InputID.text)
-	print(RLE)
+	var RLE :Dictionary = Editor.export_to_rle(InputID.text)
 	InputData.text = JSON.stringify(RLE)
 
 func _on_clear_button_pressed() -> void:
-	StructureEditor_.clear_cache()
-	StructureEditor_.update_visuals(Vector2i(0, 0))
+	Editor.clear_cache()
+	Editor.update_visuals(Vector2i(0, 0))
 
 func _on_load_button_pressed() -> void:
 	var json_data = InputData.text.strip_edges()
@@ -187,12 +195,12 @@ func _on_load_button_pressed() -> void:
 	
 	if data.has("id"): InputID.text = data["id"]
 	
-	StructureEditor_.import_from_rle(data["blueprint"], data["palette"])
-	StructureEditor_.update_visuals(Vector2i(0, 0))
+	Editor.import_from_rle(data["blueprint"], data["palette"])
+	Editor.update_visuals(Vector2i(0, 0))
 
 func get_mouse_tile_pos() -> Vector2i:
 	var mouse_pos = get_global_mouse_position()
-	var cell_size = StructureEditor_.get_cell_size()
+	var cell_size = Editor.get_cell_size()
 	return Vector2i(floor(mouse_pos.x / cell_size), floor(mouse_pos.y / cell_size))
 
 func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
@@ -219,3 +227,6 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 			err += dx
 			y0 += sy
 	return points
+
+func _on_file_index_pressed(index: int) -> void:
+	if index == 0: open_save.emit()
