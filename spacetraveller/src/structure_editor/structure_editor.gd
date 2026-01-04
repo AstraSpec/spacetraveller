@@ -23,17 +23,13 @@ var TILE_SIZE = FastTileMap.get_tile_size()
 
 var zoom :int = 1
 
-enum mode { PENCIL, LINE, EYEDROPPER, FILL }
-var currentMode = mode.PENCIL
+var tools = {}
+var active_tool
 
 var tileID1 :String
 var tileID2 :String
 var lastMousePos :Vector2i
 var mousePos :Vector2i
-
-var isDrawingLine :bool = false
-var lineStart :Vector2i
-var lineButton :String = "left"
 
 func _ready() -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
@@ -62,13 +58,24 @@ func _ready() -> void:
 	
 	InputManager.current_mode = InputManager.InputMode.STRUCTURE
 	
+	setup_tools()
+	
 	select_tile("stone_bricks")
 	select_tile("void", false)
 	
 	TileGrid.start()
 
+func setup_tools():
+	tools = {
+		"pencil": EditorTools.PencilTool.new(self),
+		"line": EditorTools.LineTool.new(self),
+		"eyedropper": EditorTools.EyedropperTool.new(self),
+		"fill": EditorTools.FillTool.new(self)
+	}
+	active_tool = tools["pencil"]
+
 func _view_panned(relative: Vector2):
-	_update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
+	update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
 
 func _view_zoomed(z :int):
 	var oldZoom = zoom
@@ -76,69 +83,34 @@ func _view_zoomed(z :int):
 	
 	if oldZoom != zoom:
 		Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
-		_update_camera_pos(Camera.position)
+		update_camera_pos(Camera.position)
 
 func _view_centered():
-	_update_camera_pos(Vector2.ZERO)
+	update_camera_pos(Vector2.ZERO)
 
-func _update_camera_pos(newPos: Vector2) -> void:
+func update_camera_pos(newPos: Vector2) -> void:
 	Camera.position = newPos.floor()
 
 func _process(_delta: float) -> void:
 	mousePos = get_mouse_tile_pos()
 	
 	if mousePos != lastMousePos:
-		_on_tile_changed(mousePos)
+		on_tile_changed(mousePos)
 		lastMousePos = mousePos
 
 func _on_mode_changed(m :String):
-	if m == "pencil": currentMode = mode.PENCIL
-	elif m == "line": currentMode = mode.LINE
-	elif m == "eyedropper": currentMode = mode.EYEDROPPER
-	elif m == "fill": currentMode = mode.FILL
+	if tools.has(m):
+		active_tool = tools[m]
+		active_tool.on_hover(mousePos)
 
 func _on_mouse_input(button: String, action: InputManager.MouseAction):
-	if action == InputManager.MouseAction.RELEASE:
-		if currentMode == mode.LINE and isDrawingLine and button == lineButton:
-			_commit_line()
-		return
-
-	if currentMode == mode.PENCIL:
-		if button == "left":
-			place_tile(tileID1)
-		else:
-			place_tile(tileID2)
-	
-	elif currentMode == mode.LINE:
-		if action == InputManager.MouseAction.PRESS:
-			if !isDrawingLine:
-				isDrawingLine = true
-				lineStart = mousePos
-				lineButton = button
-				_on_tile_changed(mousePos)
-	
-	elif currentMode == mode.EYEDROPPER:
-		if action == InputManager.MouseAction.PRESS:
-			if !is_inside_bubble(mousePos): return
-			var id = Editor.get_tile_at(mousePos.x, mousePos.y)
-			select_tile(id, button == "left")
-	
-	elif currentMode == mode.FILL:
-		if action == InputManager.MouseAction.PRESS:
-			if !is_inside_bubble(mousePos): return
-			var tid = tileID1 if button == "left" else tileID2
-			Editor.fill_tiles(mousePos.x, mousePos.y, tid)
-			Editor.update_visuals(Vector2i(0, 0))
-
-func _commit_line():
-	var points = get_line_points(lineStart, mousePos)
-	var tid = tileID1 if lineButton == "left" else tileID2
-	for p in points:
-		if is_inside_bubble(p):
-			Editor.place_tile(p.x, p.y, tid)
-	Editor.update_visuals(Vector2i(0, 0))
-	isDrawingLine = false
-	_on_tile_changed(mousePos)
+	match action:
+		InputManager.MouseAction.PRESS:
+			active_tool.on_press(button, mousePos)
+		InputManager.MouseAction.RELEASE:
+			active_tool.on_release(button, mousePos)
+		InputManager.MouseAction.DRAG:
+			active_tool.on_drag(button, mousePos)
 
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
@@ -149,20 +121,13 @@ func select_tile(id :String, is_primary :bool = true):
 	TileIDLabel1.text = "ID1: " + tileID1
 	TileIDLabel2.text = "ID2: " + tileID2
 
-func _on_tile_changed(_pos: Vector2i):
-	if currentMode == mode.FILL or currentMode == mode.EYEDROPPER:
-		Editor.clear_preview_tiles()
-	elif currentMode == mode.LINE and isDrawingLine:
-		var points = get_line_points(lineStart, _pos)
-		var tid = tileID1 if lineButton == "left" else tileID2
-		Editor.update_preview_tiles(points, tid)
-	else:
-		Editor.update_preview_tiles([_pos], tileID1)
+func on_tile_changed(_pos: Vector2i):
+	active_tool.on_hover(_pos)
 
-func place_tile(id: String):
-	if !id or !is_inside_bubble(mousePos): return
+func place_tile_at(pos: Vector2i, id: String):
+	if !id or !is_inside_bubble(pos): return
 	
-	Editor.place_tile(mousePos.x, mousePos.y, id)
+	Editor.place_tile(pos.x, pos.y, id)
 	Editor.update_visuals(Vector2i(0, 0))
 
 func is_inside_bubble(pos: Vector2i) -> bool:
@@ -237,7 +202,7 @@ func _on_file_index_pressed(index: int) -> void:
 	elif index == 2: open_load.emit()
 
 func _on_edit_index_pressed(index: int) -> void:
-	if index == 0: currentMode = mode.PENCIL
-	elif index == 1: currentMode = mode.LINE
-	elif index == 2: currentMode = mode.EYEDROPPER
-	elif index == 3: currentMode = mode.FILL
+	if index == 0: _on_mode_changed("pencil")
+	elif index == 1: _on_mode_changed("line")
+	elif index == 2: _on_mode_changed("eyedropper")
+	elif index == 3: _on_mode_changed("fill")

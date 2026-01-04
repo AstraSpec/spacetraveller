@@ -87,15 +87,15 @@ World = NodePath("../WorldGen")
 position = Vector2(7, 7)
 zoom = Vector2(2, 2)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="Canvas" type="CanvasLayer" parent="."]
 
-[node name="Dummy" type="Label" parent="CanvasLayer"]
+[node name="Dummy" type="Label" parent="Canvas"]
 modulate = Color(1, 1, 1, 0.0156863)
 offset_right = 512.0
 offset_bottom = 512.0
 text = "a"
 
-[node name="Map" type="Control" parent="CanvasLayer"]
+[node name="Map" type="Control" parent="Canvas"]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -106,7 +106,7 @@ grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("7_ghimp")
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Map"]
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Map"]
 clip_contents = true
 layout_mode = 1
 anchors_preset = 15
@@ -119,17 +119,17 @@ theme_override_constants/margin_top = 40
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 40
 
-[node name="ViewportRect" type="TextureRect" parent="CanvasLayer/Map/MarginContainer"]
+[node name="ViewportRect" type="TextureRect" parent="Canvas/Map/MarginContainer"]
 texture_filter = 1
 layout_mode = 2
 texture = SubResource("ViewportTexture_kjl2a")
 expand_mode = 1
 stretch_mode = 2
 
-[node name="DebugInfo" type="Label" parent="CanvasLayer"]
+[node name="DebugInfo" type="Label" parent="Canvas"]
 offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
 
-[connection signal="generated" from="WorldGen" to="CanvasLayer/Map" method="_on_world_generated"]
-[connection signal="movedChunk" from="Player" to="CanvasLayer/Map" method="_on_player_moved_chunk"]
+[connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
+[connection signal="movedChunk" from="Player" to="Canvas/Map" method="_on_player_moved_chunk"]
