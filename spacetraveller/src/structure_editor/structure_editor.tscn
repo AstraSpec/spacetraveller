@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 Background = NodePath("BG")
@@ -16,6 +16,7 @@ TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContain
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
 Camera = NodePath("Camera")
+SelectionVisual = NodePath("SelectionVisual")
 
 [node name="BG" type="TextureRect" parent="."]
 texture_repeat = 2
@@ -29,10 +30,14 @@ stretch_mode = 1
 [node name="Editor" type="StructureEditor" parent="."]
 tilesheet = ExtResource("1_fl4b5")
 
-[node name="Access" type="Node2D" parent="."]
+[node name="Access" type="Node" parent="."]
 
-[node name="Tools" type="Node2D" parent="."]
+[node name="Tools" type="Node" parent="."]
 script = ExtResource("4_6l3wk")
+
+[node name="SelectionVisual" type="Line2D" parent="."]
+closed = true
+width = 2.0
 
 [node name="Canvas" type="CanvasLayer" parent="."]
 
@@ -83,7 +88,7 @@ columns = 8
 script = ExtResource("1_7cscp")
 
 [node name="MenuBar" type="MenuBar" parent="Canvas"]
-offset_right = 35.0
+offset_right = 77.0
 offset_bottom = 31.0
 size_flags_horizontal = 0
 
@@ -99,7 +104,7 @@ item_2/id = 2
 [node name="Edit" type="PopupMenu" parent="Canvas/MenuBar"]
 auto_translate_mode = 1
 unresizable = false
-item_count = 4
+item_count = 5
 item_0/text = "Pencil"
 item_1/text = "Line"
 item_1/id = 1
@@ -107,6 +112,8 @@ item_2/text = "Eyedropper"
 item_2/id = 2
 item_3/text = "Fill"
 item_3/id = 3
+item_4/text = "Selection"
+item_4/id = 4
 
 [node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID")]
 title = "Save Structure"

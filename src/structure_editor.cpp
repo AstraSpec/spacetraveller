@@ -11,6 +11,7 @@ void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("export_to_rle", "id"), &StructureEditor::export_to_rle);
     ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette"), &StructureEditor::import_from_rle);
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id"), &StructureEditor::update_preview_tiles);
+    ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data"), &StructureEditor::update_preview_tiles_with_data);
     ClassDB::bind_method(D_METHOD("clear_preview_tiles"), &StructureEditor::clear_preview_tiles);
 }
 
@@ -193,6 +194,54 @@ void StructureEditor::update_preview_tiles(const Array &p_positions, const Strin
         rs->canvas_item_add_texture_rect_region(
             preview_rid,
             Rect2(pos.x * get_cell_size(), pos.y * get_cell_size(), TILE_SIZE, TILE_SIZE),
+            texture_rid,
+            Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
+        );
+
+        rs->canvas_item_set_modulate(preview_rid, Color(1, 1, 1, 0.5));
+        preview_tile_rids[key] = preview_rid;
+    }
+}
+
+void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data) {
+    clear_preview_tiles();
+
+    if (!tilesheet.is_valid()) return;
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    RenderingServer* rs = RenderingServer::get_singleton();
+    RID texture_rid = tilesheet->get_rid();
+    RID parent_rid = get_canvas_item();
+
+    int half = world_bubble_size / 2;
+    int cell_size = get_cell_size();
+
+    Array keys = p_data.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Variant key_v = keys[i];
+        if (key_v.get_type() != Variant::VECTOR2I) continue;
+        Vector2i pos = key_v;
+
+        if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) continue;
+
+        String tile_id = p_data[key_v];
+        const TileInfo* info = tile_db->get_tile_info(tile_id);
+        if (!info) continue;
+
+        uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+
+        Vector2i atlas_pos;
+        atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
+        atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
+
+        RID preview_rid = rs->canvas_item_create();
+        rs->canvas_item_set_parent(preview_rid, parent_rid);
+        rs->canvas_item_set_z_index(preview_rid, 1);
+        
+        rs->canvas_item_add_texture_rect_region(
+            preview_rid,
+            Rect2(pos.x * cell_size, pos.y * cell_size, TILE_SIZE, TILE_SIZE),
             texture_rid,
             Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
         );

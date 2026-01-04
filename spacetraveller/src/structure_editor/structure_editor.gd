@@ -9,9 +9,7 @@ signal open_load
 @export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
 @export var Camera :Camera2D
-
-@export var InputID   :TextEdit
-@export var InputData :TextEdit
+@export var SelectionVisual :Line2D
 
 var CHUNK_SIZE = WorldGeneration.get_chunk_size()
 var BUBBLE_SIZE :int = CHUNK_SIZE
@@ -70,7 +68,8 @@ func setup_tools():
 		"pencil": EditorTools.PencilTool.new(self),
 		"line": EditorTools.LineTool.new(self),
 		"eyedropper": EditorTools.EyedropperTool.new(self),
-		"fill": EditorTools.FillTool.new(self)
+		"fill": EditorTools.FillTool.new(self),
+		"selection": EditorTools.SelectionTool.new(self)
 	}
 	active_tool = tools["pencil"]
 
@@ -100,6 +99,8 @@ func _process(_delta: float) -> void:
 
 func _on_mode_changed(m :String):
 	if tools.has(m):
+		if active_tool:
+			active_tool.on_deactivate()
 		active_tool = tools[m]
 		active_tool.on_hover(mousePos)
 
@@ -137,31 +138,8 @@ func is_inside_bubble(pos: Vector2i) -> bool:
 func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 	select_tile(id, is_primary)
 
-func _on_download_button_pressed() -> void:
-	var RLE :Dictionary = Editor.export_to_rle(InputID.text)
-	InputData.text = JSON.stringify(RLE)
-
 func _on_clear_button_pressed() -> void:
 	Editor.clear_cache()
-	Editor.update_visuals(Vector2i(0, 0))
-
-func _on_load_button_pressed() -> void:
-	var json_data = InputData.text.strip_edges()
-	if json_data.is_empty(): return
-	
-	var json = JSON.new()
-	if json.parse(json_data) != OK:
-		printerr("JSON Parse Error: ", json.get_error_message(), " at line ", json.get_error_line())
-		return
-	
-	var data = json.get_data()
-	if typeof(data) != TYPE_DICTIONARY or !data.has("blueprint") or !data.has("palette"):
-		printerr("JSON Error: Invalid format or missing required keys")
-		return
-	
-	if data.has("id"): InputID.text = data["id"]
-	
-	Editor.import_from_rle(data["blueprint"], data["palette"])
 	Editor.update_visuals(Vector2i(0, 0))
 
 func get_mouse_tile_pos() -> Vector2i:
@@ -206,3 +184,4 @@ func _on_edit_index_pressed(index: int) -> void:
 	elif index == 1: _on_mode_changed("line")
 	elif index == 2: _on_mode_changed("eyedropper")
 	elif index == 3: _on_mode_changed("fill")
+	elif index == 4: _on_mode_changed("selection")

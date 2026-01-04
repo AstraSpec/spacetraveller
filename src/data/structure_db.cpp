@@ -23,7 +23,7 @@ StructureDb::~StructureDb() {}
 
 StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
-    StructureInfo info;
+        StructureInfo info;
         
     if (id_reg) {
         id_reg->register_string(p_data["id"]);
@@ -32,43 +32,43 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     info.blueprint = p_data.get("blueprint", "");
     info.palette = p_data.get("palette", Array());
 
-    std::vector<uint16_t> palette_ids;
+        std::vector<uint16_t> palette_ids;
     Array p_array = info.palette;
-    for (int i = 0; i < p_array.size(); i++) {
-        if (id_reg) {
-            palette_ids.push_back(id_reg->register_string(p_array[i]));
-        } else {
-            palette_ids.push_back(0);
+        for (int i = 0; i < p_array.size(); i++) {
+            if (id_reg) {
+                palette_ids.push_back(id_reg->register_string(p_array[i]));
+            } else {
+                palette_ids.push_back(0);
+            }
         }
-    }
 
-    const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
-    info.data.assign(total_tiles, 0);
+        const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
+        info.data.assign(total_tiles, 0);
 
     String rle = info.blueprint;
-    rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
-    PackedStringArray parts = rle.split(",");
+        rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
+        PackedStringArray parts = rle.split(",");
 
-    int current_pos = 0;
-    for (int i = 0; i < parts.size(); i++) {
-        String part = parts[i].strip_edges();
-        if (part.is_empty()) continue;
+        int current_pos = 0;
+        for (int i = 0; i < parts.size(); i++) {
+            String part = parts[i].strip_edges();
+            if (part.is_empty()) continue;
 
-        PackedStringArray sub = part.split("x");
-        if (sub.size() != 2) continue;
+            PackedStringArray sub = part.split("x");
+            if (sub.size() != 2) continue;
 
-        int count = sub[0].to_int();
-        int palette_idx = sub[1].to_int();
+            int count = sub[0].to_int();
+            int palette_idx = sub[1].to_int();
 
         uint16_t tile_id = 0;
-        if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
-            tile_id = palette_ids[palette_idx];
-        }
+            if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
+                tile_id = palette_ids[palette_idx];
+            }
 
-        for (int j = 0; j < count && current_pos < total_tiles; j++) {
-            info.data[current_pos++] = tile_id;
+            for (int j = 0; j < count && current_pos < total_tiles; j++) {
+                info.data[current_pos++] = tile_id;
+            }
         }
-    }
     return info;
 }
 

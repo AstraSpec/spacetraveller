@@ -22,6 +22,7 @@ public:
     void import_from_rle(const String &p_blueprint, const Array &p_palette);
 
     void update_preview_tiles(const Array &p_positions, const String &p_tile_id);
+    void update_preview_tiles_with_data(const Dictionary &p_data);
     void clear_preview_tiles();
 };
 

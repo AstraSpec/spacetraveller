@@ -29,9 +29,6 @@ var prev_left: bool = false
 var prev_right: bool = false
 
 func _unhandled_input(event: InputEvent):
-	if event.is_action_pressed("open_map"):
-		_toggle_map()
-	
 	if event.is_action_pressed("debug_mode"):
 		debug_toggled.emit()
 
@@ -40,6 +37,9 @@ func _unhandled_input(event: InputEvent):
 
 	if current_mode == InputMode.MAP:
 		_handle_map_input(event)
+		
+		if event.is_action_pressed("open_map"):
+			_toggle_map()
 	
 	elif current_mode == InputMode.STRUCTURE:
 		_handle_map_input(event)
@@ -61,12 +61,14 @@ func _handle_map_input(event: InputEvent):
 func _handle_structure_input(event: InputEvent):
 	if event.is_action_pressed("structure_pencil"): 
 		structure_mode_changed.emit("pencil")
-	if event.is_action_pressed("structure_line"): 
+	elif event.is_action_pressed("structure_line"): 
 		structure_mode_changed.emit("line")
-	if event.is_action_pressed("structure_eyedropper"): 
+	elif event.is_action_pressed("structure_eyedropper"): 
 		structure_mode_changed.emit("eyedropper")
-	if event.is_action_pressed("structure_fill"): 
+	elif event.is_action_pressed("structure_fill"): 
 		structure_mode_changed.emit("fill")
+	elif event.is_action_pressed("structure_selection"): 
+		structure_mode_changed.emit("selection")
 
 	if event is InputEventMouseButton:
 		var button = ""
