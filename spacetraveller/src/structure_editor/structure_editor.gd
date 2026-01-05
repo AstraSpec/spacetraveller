@@ -64,6 +64,8 @@ func _ready() -> void:
 	select_tile("stone_bricks")
 	select_tile("void", false)
 	
+	_on_mode_changed("pencil")
+	
 	TileGrid.start()
 
 func setup_tools():
@@ -107,6 +109,9 @@ func _on_mode_changed(m :String):
 		active_tool = tools[m]
 		active_tool.on_hover(mousePos)
 		_update_tool_options()
+		
+		var cursor = active_tool.get_cursor_config()
+		Input.set_custom_mouse_cursor(cursor.tex, Input.CURSOR_ARROW, cursor.hot)
 
 func _update_tool_options():
 	for child in ToolOptions.get_children():

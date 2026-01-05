@@ -1,6 +1,12 @@
 extends Node
 class_name EditorTools
 
+const CURSORS = {
+	"pencil": { "tex": preload("res://gfx/mouse/pencil.png"), "hot": "centered" },
+	"eyedropper": { "tex": preload("res://gfx/mouse/eyedropper.png"), "hot": "point" },
+	"selection": { "tex": preload("res://gfx/mouse/selection.png"), "hot": "centered" }
+}
+
 class Tool:
 	var editor
 	var options = {}
@@ -19,12 +25,33 @@ class Tool:
 	func get_options_config() -> Array:
 		return []
 	
+	func get_cursor_id() -> String:
+		return ""
+		
+	func get_cursor_config() -> Dictionary:
+		var data = CURSORS.get(get_cursor_id(), { "tex": null })
+		var tex = data.tex
+		if !tex: return { "tex": null, "hot": Vector2.ZERO }
+		
+		var hot = Vector2.ZERO
+		match data.get("hot"):
+			"centered":
+				hot = tex.get_size() / 2.0
+			"point":
+				hot = Vector2(0, tex.get_size().y - 1)
+			"cursor":
+				hot = Vector2.ZERO
+		
+		return { "tex": tex, "hot": hot }
+	
 	func is_pos_valid(pos: Vector2i) -> bool:
 		if editor.active_selection.size == Vector2i.ZERO:
 			return true
 		return editor.active_selection.has_point(pos)
 
 class PencilTool extends Tool:
+	func get_cursor_id(): return "pencil"
+
 	func on_press(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_drag(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_hover(pos: Vector2i):
@@ -38,6 +65,8 @@ class PencilTool extends Tool:
 		editor.place_tile_at(pos, id)
 
 class LineTool extends Tool:
+	func get_cursor_id(): return "pencil"
+
 	var is_drawing = false
 	var start_pos = Vector2i.ZERO
 	var button = ""
@@ -76,6 +105,8 @@ class LineTool extends Tool:
 		on_hover(pos)
 
 class EyedropperTool extends Tool:
+	func get_cursor_id(): return "eyedropper"
+
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var id = editor.Editor.get_tile_at(pos.x, pos.y)
@@ -84,6 +115,8 @@ class EyedropperTool extends Tool:
 		editor.Editor.clear_preview_tiles()
 
 class FillTool extends Tool:
+	func get_cursor_id(): return "pencil"
+
 	func get_options_config() -> Array:
 		return [
 			{ "name": "contiguous", "label": "Contiguous", "default": true }
@@ -104,6 +137,8 @@ class FillTool extends Tool:
 		editor.Editor.clear_preview_tiles()
 
 class SelectionTool extends Tool:
+	func get_cursor_id(): return "selection"
+
 	var selection_rect : Rect2i = Rect2i()
 	var is_selecting = false
 	var is_moving = false
