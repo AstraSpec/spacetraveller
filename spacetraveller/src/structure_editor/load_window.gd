@@ -50,6 +50,7 @@ func _on_load_pressed() -> void:
 		printerr("Failed to load raw data for: ", selected_id)
 		return
 		
+	structureEditor.save_undo_state()
 	Editor.import_from_rle(blueprint, palette)
 	Editor.update_visuals(Vector2i(0, 0))
 	visible = false

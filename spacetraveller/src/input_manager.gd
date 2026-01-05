@@ -9,8 +9,9 @@ signal debug_toggled
 signal directional_input(direction: Vector2)
 
 signal structure_mode_changed(mode :String)
-enum MouseAction { PRESS, RELEASE, DRAG }
+signal structure_key_input(key :String)
 signal structure_mouse_input(button: String, action: MouseAction)
+enum MouseAction { PRESS, RELEASE, DRAG }
 
 enum InputMode { GAMEPLAY, MAP, STRUCTURE }
 var current_mode = InputMode.GAMEPLAY
@@ -59,7 +60,11 @@ func _handle_map_input(event: InputEvent):
 		view_centered.emit()
 
 func _handle_structure_input(event: InputEvent):
-	if event.is_action_pressed("structure_pencil"): 
+	if event.is_action_pressed("structure_undo"): 
+		structure_key_input.emit("undo")
+	elif event.is_action_pressed("structure_redo"): 
+		structure_key_input.emit("redo")
+	elif event.is_action_pressed("structure_pencil"): 
 		structure_mode_changed.emit("pencil")
 	elif event.is_action_pressed("structure_line"): 
 		structure_mode_changed.emit("line")

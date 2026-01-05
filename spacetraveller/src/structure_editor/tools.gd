@@ -52,7 +52,9 @@ class Tool:
 class PencilTool extends Tool:
 	func get_cursor_id(): return "pencil"
 
-	func on_press(btn: String, pos: Vector2i): _paint(btn, pos)
+	func on_press(btn: String, pos: Vector2i): 
+		editor.save_undo_state()
+		_paint(btn, pos)
 	func on_drag(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_hover(pos: Vector2i):
 		if is_pos_valid(pos):
@@ -73,6 +75,7 @@ class LineTool extends Tool:
 	
 	func on_press(btn: String, pos: Vector2i):
 		if !is_drawing:
+			editor.save_undo_state()
 			is_drawing = true
 			start_pos = pos
 			button = btn
@@ -124,6 +127,7 @@ class FillTool extends Tool:
 		
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
+		editor.save_undo_state()
 		var tid = editor.tileID1 if btn == "left" else editor.tileID2
 		
 		if editor.active_selection.size != Vector2i.ZERO:
@@ -214,6 +218,7 @@ class SelectionTool extends Tool:
 		editor.Editor.clear_preview_tiles()
 
 	func _capture_and_cut_tiles():
+		editor.save_undo_state()
 		captured_tiles.clear()
 		for x in range(selection_rect.position.x, selection_rect.end.x):
 			for y in range(selection_rect.position.y, selection_rect.end.y):

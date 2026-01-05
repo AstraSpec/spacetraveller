@@ -54,6 +54,9 @@ public:
     String get_tile_at(int x, int y) const;
     void fill_tiles(int x, int y, const String& tile_id, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool p_contiguous = true);
     void clear_cache();
+
+    Dictionary get_tile_id_cache() const;
+    void set_tile_id_cache(const Dictionary &p_cache);
 };
 
 }

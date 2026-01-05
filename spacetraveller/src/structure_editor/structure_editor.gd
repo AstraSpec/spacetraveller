@@ -32,9 +32,14 @@ var tileID2 :String
 var lastMousePos :Vector2i
 var mousePos :Vector2i
 
+var undo_stack : Array = []
+var redo_stack : Array = []
+const MAX_UNDOS = 100
+
 func _ready() -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
+	InputManager.structure_key_input.connect(_on_key_input)
 	
 	InputManager.view_panned.connect(_view_panned)
 	InputManager.view_zoomed.connect(_view_zoomed)
@@ -140,6 +145,33 @@ func _on_mouse_input(button: String, action: InputManager.MouseAction):
 		InputManager.MouseAction.DRAG:
 			active_tool.on_drag(button, mousePos)
 
+func _on_key_input(key: String):
+	match key:
+		"undo": undo()
+		"redo": redo()
+
+func save_undo_state():
+	undo_stack.push_back(Editor.get_tile_id_cache())
+	if undo_stack.size() > MAX_UNDOS:
+		undo_stack.pop_front()
+	redo_stack.clear()
+
+func undo():
+	if undo_stack.is_empty(): return
+	
+	redo_stack.push_back(Editor.get_tile_id_cache())
+	var state = undo_stack.pop_back()
+	Editor.set_tile_id_cache(state)
+	Editor.update_visuals(Vector2i(0, 0))
+
+func redo():
+	if redo_stack.is_empty(): return
+	
+	undo_stack.push_back(Editor.get_tile_id_cache())
+	var state = redo_stack.pop_back()
+	Editor.set_tile_id_cache(state)
+	Editor.update_visuals(Vector2i(0, 0))
+
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
 		tileID1 = id
@@ -166,6 +198,7 @@ func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 	select_tile(id, is_primary)
 
 func _on_clear_button_pressed() -> void:
+	save_undo_state()
 	Editor.clear_cache()
 	Editor.update_visuals(Vector2i(0, 0))
 

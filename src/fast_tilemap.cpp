@@ -18,6 +18,8 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_tile_at", "x", "y"), &FastTileMap::get_tile_at);
     ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "mask", "invert_mask", "contiguous"), &FastTileMap::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(true));
     ClassDB::bind_method(D_METHOD("clear_cache"), &FastTileMap::clear_cache);
+    ClassDB::bind_method(D_METHOD("get_tile_id_cache"), &FastTileMap::get_tile_id_cache);
+    ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache"), &FastTileMap::set_tile_id_cache);
 
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
     ClassDB::bind_method(D_METHOD("get_cell_size"), &FastTileMap::get_cell_size);
@@ -212,5 +214,22 @@ void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Rect2i& 
 
 void FastTileMap::clear_cache() {
     tile_id_cache.clear();
+}
+
+Dictionary FastTileMap::get_tile_id_cache() const {
+    Dictionary d;
+    for (auto const& [key, val] : tile_id_cache) {
+        d[key] = (int)val;
+    }
+    return d;
+}
+
+void FastTileMap::set_tile_id_cache(const Dictionary &p_cache) {
+    tile_id_cache.clear();
+    Array keys = p_cache.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        uint64_t key = keys[i];
+        tile_id_cache[key] = (uint16_t)((int)p_cache[keys[i]]);
+    }
 }
 
