@@ -23,6 +23,7 @@ var zoom :int = 1
 
 var tools = {}
 var active_tool
+var active_selection : Rect2i = Rect2i()
 
 var tileID1 :String
 var tileID2 :String

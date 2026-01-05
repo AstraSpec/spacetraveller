@@ -9,13 +9,22 @@ class Tool:
 	func on_drag(_btn: String, _pos: Vector2i): pass
 	func on_hover(_pos: Vector2i): pass
 	func on_deactivate(): pass
+	
+	func is_pos_valid(pos: Vector2i) -> bool:
+		if editor.active_selection.size == Vector2i.ZERO:
+			return true
+		return editor.active_selection.has_point(pos)
 
 class PencilTool extends Tool:
 	func on_press(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_drag(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_hover(pos: Vector2i):
-		editor.Editor.update_preview_tiles([pos], editor.tileID1)
+		if is_pos_valid(pos):
+			editor.Editor.update_preview_tiles([pos], editor.tileID1)
+		else:
+			editor.Editor.clear_preview_tiles()
 	func _paint(btn: String, pos: Vector2i):
+		if !is_pos_valid(pos): return
 		var id = editor.tileID1 if btn == "left" else editor.tileID2
 		editor.place_tile_at(pos, id)
 
@@ -38,16 +47,20 @@ class LineTool extends Tool:
 	func on_hover(pos: Vector2i):
 		if is_drawing:
 			var points = editor.get_line_points(start_pos, pos)
+			points = points.filter(func(p): return is_pos_valid(p))
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
 			editor.Editor.update_preview_tiles(points, tid)
 		else:
-			editor.Editor.update_preview_tiles([pos], editor.tileID1)
+			if is_pos_valid(pos):
+				editor.Editor.update_preview_tiles([pos], editor.tileID1)
+			else:
+				editor.Editor.clear_preview_tiles()
 
 	func _commit(pos: Vector2i):
 		var points = editor.get_line_points(start_pos, pos)
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		for p in points:
-			if editor.is_inside_bubble(p):
+			if editor.is_inside_bubble(p) and is_pos_valid(p):
 				editor.Editor.place_tile(p.x, p.y, tid)
 		editor.Editor.update_visuals(Vector2i(0, 0))
 		is_drawing = false
@@ -65,7 +78,13 @@ class FillTool extends Tool:
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var tid = editor.tileID1 if btn == "left" else editor.tileID2
-		editor.Editor.fill_tiles(pos.x, pos.y, tid)
+		
+		if editor.active_selection.size != Vector2i.ZERO:
+			var inside = editor.active_selection.has_point(pos)
+			editor.Editor.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside)
+		else:
+			editor.Editor.fill_tiles(pos.x, pos.y, tid)
+			
 		editor.Editor.update_visuals(Vector2i(0, 0))
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
@@ -157,8 +176,6 @@ class SelectionTool extends Tool:
 		
 		if captured_tiles.is_empty():
 			is_floating = false
-			selection_rect = Rect2i()
-			_update_visuals()
 			return
 
 		editor.Editor.update_visuals(Vector2i(0, 0))
@@ -177,11 +194,13 @@ class SelectionTool extends Tool:
 		
 		if selection_rect.size == Vector2i.ZERO:
 			visual.visible = false
+			editor.active_selection = Rect2i()
 			return
 			
 		visual.visible = true
 		var rect = selection_rect
 		rect.position += move_offset
+		editor.active_selection = rect
 			
 		var cell_size = editor.Editor.get_cell_size()
 		var p1 = Vector2(rect.position) * cell_size
@@ -196,6 +215,8 @@ class SelectionTool extends Tool:
 		visual.points = points
 
 	func _commit_move():
+		if !is_floating: return
+		
 		for rel_p in captured_tiles.keys():
 			var p = selection_rect.position + rel_p
 			if editor.is_inside_bubble(p):
@@ -204,5 +225,4 @@ class SelectionTool extends Tool:
 		editor.Editor.update_visuals(Vector2i(0, 0))
 		captured_tiles.clear()
 		is_floating = false
-		selection_rect = Rect2i()
 		_update_visuals()

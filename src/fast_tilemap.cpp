@@ -16,7 +16,7 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id"), &FastTileMap::place_tile);
     ClassDB::bind_method(D_METHOD("get_tile_at", "x", "y"), &FastTileMap::get_tile_at);
-    ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id"), &FastTileMap::fill_tiles);
+    ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "mask", "invert_mask"), &FastTileMap::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("clear_cache"), &FastTileMap::clear_cache);
 
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
@@ -126,7 +126,7 @@ String FastTileMap::get_tile_at(int x, int y) const {
     return "void";
 }
 
-void FastTileMap::fill_tiles(int x, int y, const String& tile_id) {
+void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Rect2i& mask, bool invert_mask) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
 
@@ -145,12 +145,23 @@ void FastTileMap::fill_tiles(int x, int y, const String& tile_id) {
     q.push(Vector2i(x, y));
 
     int radius = world_bubble_radius;
+    bool has_mask = mask.size.x > 0 && mask.size.y > 0;
 
     while (!q.empty()) {
         Vector2i p = q.front();
         q.pop();
 
         if (p.x < -radius || p.x >= radius || p.y < -radius || p.y >= radius) continue;
+
+        // Mask check
+        if (has_mask) {
+            bool inside = mask.has_point(p);
+            if (invert_mask) {
+                if (inside) continue;
+            } else {
+                if (!inside) continue;
+            }
+        }
 
         uint64_t key = Occlusion::pack_coords(p.x, p.y);
         uint16_t current_id = 0;
