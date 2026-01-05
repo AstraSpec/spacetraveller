@@ -52,7 +52,7 @@ public:
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
     void place_tile(int x, int y, const String& tile_id);
     String get_tile_at(int x, int y) const;
-    void fill_tiles(int x, int y, const String& tile_id, const Rect2i& mask = Rect2i(), bool invert_mask = false);
+    void fill_tiles(int x, int y, const String& tile_id, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool p_contiguous = true);
     void clear_cache();
 };
 

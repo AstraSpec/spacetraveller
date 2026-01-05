@@ -3,12 +3,21 @@ class_name EditorTools
 
 class Tool:
 	var editor
-	func _init(e): editor = e
+	var options = {}
+	
+	func _init(e): 
+		editor = e
+		for opt in get_options_config():
+			options[opt.name] = opt.default
+			
 	func on_press(_btn: String, _pos: Vector2i): pass
 	func on_release(_btn: String, _pos: Vector2i): pass
 	func on_drag(_btn: String, _pos: Vector2i): pass
 	func on_hover(_pos: Vector2i): pass
 	func on_deactivate(): pass
+	
+	func get_options_config() -> Array:
+		return []
 	
 	func is_pos_valid(pos: Vector2i) -> bool:
 		if editor.active_selection.size == Vector2i.ZERO:
@@ -75,15 +84,20 @@ class EyedropperTool extends Tool:
 		editor.Editor.clear_preview_tiles()
 
 class FillTool extends Tool:
+	func get_options_config() -> Array:
+		return [
+			{ "name": "contiguous", "label": "Contiguous", "default": true }
+		]
+		
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var tid = editor.tileID1 if btn == "left" else editor.tileID2
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.Editor.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside)
+			editor.Editor.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside, options.contiguous)
 		else:
-			editor.Editor.fill_tiles(pos.x, pos.y, tid)
+			editor.Editor.fill_tiles(pos.x, pos.y, tid, Rect2i(), false, options.contiguous)
 			
 		editor.Editor.update_visuals(Vector2i(0, 0))
 	func on_hover(_pos: Vector2i):

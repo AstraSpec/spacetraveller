@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "ToolOptions")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 Background = NodePath("BG")
@@ -17,6 +17,7 @@ TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContain
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
 Camera = NodePath("Camera")
 SelectionVisual = NodePath("SelectionVisual")
+ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
 
 [node name="BG" type="TextureRect" parent="."]
 texture_repeat = 2
@@ -87,12 +88,15 @@ theme_override_constants/v_separation = 0
 columns = 8
 script = ExtResource("1_7cscp")
 
-[node name="MenuBar" type="MenuBar" parent="Canvas"]
-offset_right = 77.0
-offset_bottom = 31.0
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MenuBar" type="MenuBar" parent="Canvas/HBoxContainer"]
+layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="File" type="PopupMenu" parent="Canvas/MenuBar"]
+[node name="File" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 unresizable = false
 item_count = 3
 item_0/text = "New"
@@ -101,7 +105,7 @@ item_1/id = 1
 item_2/text = "Load"
 item_2/id = 2
 
-[node name="Edit" type="PopupMenu" parent="Canvas/MenuBar"]
+[node name="Edit" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 auto_translate_mode = 1
 unresizable = false
 item_count = 5
@@ -114,6 +118,9 @@ item_3/text = "Fill"
 item_3/id = 3
 item_4/text = "Selection"
 item_4/id = 4
+
+[node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
+layout_mode = 2
 
 [node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID")]
 title = "Save Structure"
@@ -241,8 +248,8 @@ text = "Cancel"
 
 [connection signal="pressed" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="tile_selected" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
-[connection signal="index_pressed" from="Canvas/MenuBar/File" to="." method="_on_file_index_pressed"]
-[connection signal="index_pressed" from="Canvas/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
+[connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
+[connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]

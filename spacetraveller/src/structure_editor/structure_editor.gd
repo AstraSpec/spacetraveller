@@ -10,6 +10,8 @@ signal open_load
 @export var TileGrid :GridContainer
 @export var Camera :Camera2D
 @export var SelectionVisual :Line2D
+@export var ToolOptions :HBoxContainer
+@onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
 
 var CHUNK_SIZE = WorldGeneration.get_chunk_size()
 var BUBBLE_SIZE :int = CHUNK_SIZE
@@ -104,6 +106,25 @@ func _on_mode_changed(m :String):
 			active_tool.on_deactivate()
 		active_tool = tools[m]
 		active_tool.on_hover(mousePos)
+		_update_tool_options()
+
+func _update_tool_options():
+	for child in ToolOptions.get_children():
+		child.queue_free()
+		
+	for config in active_tool.get_options_config():
+		var opt = ToolOption.instantiate()
+		ToolOptions.add_child(opt)
+		
+		var label = opt.get_node("Name")
+		var button = opt.get_node("Button")
+		
+		label.text = config.label
+		
+		button.button_pressed = active_tool.options[config.name]
+		button.toggled.connect(func(pressed): 
+			active_tool.options[config.name] = pressed
+		)
 
 func _on_mouse_input(button: String, action: InputManager.MouseAction):
 	match action:
