@@ -1,9 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=12 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
 [ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
+[ext_resource type="Script" path="res://src/ui/view_camera.gd" id="4_8p67s"]
 [ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" path="res://src/ui/map.gd" id="7_ghimp"]
@@ -70,6 +71,7 @@ texture_filter = 1
 tile_set = SubResource("TileSet_3mine")
 
 [node name="Camera" type="Camera2D" parent="MapView"]
+script = ExtResource("4_8p67s")
 
 [node name="WorldGen" type="WorldGeneration" parent="."]
 script = ExtResource("1_0bwn5")

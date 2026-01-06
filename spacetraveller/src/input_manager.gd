@@ -36,11 +36,12 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action("shift"):
 		is_shift_pressed = event.is_pressed()
 
-	if current_mode == InputMode.MAP:
-		_handle_map_input(event)
-		
+	if current_mode != InputMode.STRUCTURE:
 		if event.is_action_pressed("open_map"):
 			_toggle_map()
+	
+	if current_mode == InputMode.MAP:
+		_handle_map_input(event)
 	
 	elif current_mode == InputMode.STRUCTURE:
 		_handle_map_input(event)

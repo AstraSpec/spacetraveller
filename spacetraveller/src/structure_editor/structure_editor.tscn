@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=9 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
 [ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
+[ext_resource type="Script" path="res://src/ui/view_camera.gd" id="3_usumf"]
 [ext_resource type="Script" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
 [ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
@@ -27,6 +28,7 @@ texture = ExtResource("2_0s7nb")
 stretch_mode = 1
 
 [node name="Camera" type="Camera2D" parent="."]
+script = ExtResource("3_usumf")
 
 [node name="Editor" type="StructureEditor" parent="."]
 tilesheet = ExtResource("1_fl4b5")

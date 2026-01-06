@@ -1,30 +1,28 @@
 extends Control
 
 @onready var MapView :SubViewport = get_node("/root/Main/MapView")
-@onready var Camera :Camera2D = get_node("/root/Main/MapView/Camera")
+@onready var Camera :ViewCamera = get_node("/root/Main/MapView/Camera")
 @onready var Tilemap :TileMapLayer = get_node("/root/Main/MapView/TileMap")
 @onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
 @onready var container :MarginContainer = $MarginContainer
 
 const SOURCE :int = 2
-const DRAG_SPEED :float = 1.75
-const ZOOM_LVL :Array = [0.75, 1.0, 1.5, 2.0]
-
 var REGION_SIZE = WorldGeneration.get_region_size()
 var TILE_SIZE = FastTileMap.get_tile_size()
-
-var zoom :int = 1
 
 func _ready():
 	get_window().size_changed.connect(resize_viewport)
 	resized.connect(resize_viewport)
 	call_deferred("resize_viewport")
-	_update_camera_pos(Vector2.ZERO)
 	
 	InputManager.map_toggled.connect(_map_toggled)
-	InputManager.view_panned.connect(_view_panned)
-	InputManager.view_zoomed.connect(_view_zoomed)
-	InputManager.view_centered.connect(_view_centered)
+	
+	# Configure Camera
+	Camera.centerNode = playerChunk
+	Camera.margins = container
+	Camera.viewport = MapView
+	Camera.limits = Rect2(0, 0, REGION_SIZE * TILE_SIZE, REGION_SIZE * TILE_SIZE)
+	Camera._view_centered()
 
 func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():
@@ -54,44 +52,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 
 func _map_toggled(is_open :bool) -> void:
 	visible = is_open
-	_view_centered()
-
-func _view_panned(relative: Vector2):
-	_update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
-
-func _view_zoomed(z :int):
-	var oldZoom = zoom
-	zoom = clamp(zoom + z, 0, ZOOM_LVL.size() - 1)
-	
-	if oldZoom != zoom:
-		Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
-		_update_camera_pos(Camera.position)
-
-func _view_centered():
-	_update_camera_pos(playerChunk.position)
-	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
-
-func _update_camera_pos(newPos: Vector2) -> void:
-	var innerSize: Vector2 = _get_inner_size()
-	var pixelSize = REGION_SIZE * TILE_SIZE
-	
-	var halfSize = (innerSize / ZOOM_LVL[zoom]) / 2.0
-	
-	var minPos = halfSize
-	var maxPos = Vector2(pixelSize, pixelSize) - halfSize
-	
-	if maxPos.x < minPos.x:
-		newPos.x = pixelSize / 2.0
-	else:
-		newPos.x = clamp(newPos.x, minPos.x, maxPos.x)
-		
-	if maxPos.y < minPos.y:
-		newPos.y = pixelSize / 2.0
-	else:
-		newPos.y = clamp(newPos.y, minPos.y, maxPos.y)
-
-	Camera.position = newPos.floor()
-	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
+	Camera._view_centered()
 
 func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 	var newChunkPos = Vector2(
@@ -102,7 +63,7 @@ func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 
 func resize_viewport():
 	MapView.size = _get_inner_size()
-	MapView.render_target_update_mode = SubViewport.UPDATE_ONCE
+	Camera._update_camera_pos(Camera.position)
 
 func _get_inner_size() -> Vector2:
 	return Vector2(

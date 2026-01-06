@@ -8,20 +8,15 @@ signal open_load
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
-@export var Camera :Camera2D
+@export var Camera :ViewCamera
 @export var SelectionVisual :Line2D
 @export var ToolOptions :HBoxContainer
 @onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
 
 var CHUNK_SIZE = WorldGeneration.get_chunk_size()
 var BUBBLE_SIZE :int = CHUNK_SIZE
-const DRAG_SPEED :float = 1.75
-const ZOOM_LVL :Array = [0.75, 1.0, 1.5, 2.0]
-
 var REGION_SIZE = WorldGeneration.get_region_size()
 var TILE_SIZE = FastTileMap.get_tile_size()
-
-var zoom :int = 1
 
 var tools = {}
 var active_tool
@@ -40,10 +35,6 @@ func _ready() -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
-	
-	InputManager.view_panned.connect(_view_panned)
-	InputManager.view_zoomed.connect(_view_zoomed)
-	InputManager.view_centered.connect(_view_centered)
 	
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
@@ -72,6 +63,7 @@ func _ready() -> void:
 	_on_mode_changed("pencil")
 	
 	TileGrid.start()
+	Camera._view_centered()
 
 func setup_tools():
 	tools = {
@@ -82,23 +74,6 @@ func setup_tools():
 		"selection": EditorTools.SelectionTool.new(self)
 	}
 	active_tool = tools["pencil"]
-
-func _view_panned(relative: Vector2):
-	update_camera_pos(Camera.position - relative * DRAG_SPEED / ZOOM_LVL[zoom])
-
-func _view_zoomed(z :int):
-	var oldZoom = zoom
-	zoom = clamp(zoom + z, 0, ZOOM_LVL.size() - 1)
-	
-	if oldZoom != zoom:
-		Camera.zoom = Vector2(ZOOM_LVL[zoom], ZOOM_LVL[zoom])
-		update_camera_pos(Camera.position)
-
-func _view_centered():
-	update_camera_pos(Vector2.ZERO)
-
-func update_camera_pos(newPos: Vector2) -> void:
-	Camera.position = newPos.floor()
 
 func _process(_delta: float) -> void:
 	mousePos = get_mouse_tile_pos()
