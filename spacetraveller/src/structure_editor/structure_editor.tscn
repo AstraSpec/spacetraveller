@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=10 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://src/ui/view_camera.gd" id="3_usumf"]
 [ext_resource type="Script" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
 [ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
+[ext_resource type="Script" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 
 [node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "ToolOptions")]
@@ -33,7 +34,8 @@ script = ExtResource("3_usumf")
 [node name="Editor" type="StructureEditor" parent="."]
 tilesheet = ExtResource("1_fl4b5")
 
-[node name="Access" type="Node" parent="."]
+[node name="DbAccess" type="Node" parent="."]
+script = ExtResource("5_uujpl")
 
 [node name="Tools" type="Node" parent="."]
 script = ExtResource("4_6l3wk")
@@ -124,7 +126,7 @@ item_4/id = 4
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "FPButton")]
 title = "Save Structure"
 initial_position = 1
 size = Vector2i(400, 400)
@@ -134,6 +136,7 @@ script = ExtResource("5_dh32f")
 structureEditor = NodePath("..")
 Editor = NodePath("../Editor")
 StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
+FPButton = NodePath("MarginContainer/VBoxContainer/FPButton")
 
 [node name="MarginContainer" type="MarginContainer" parent="SaveWindow"]
 anchors_preset = 15
@@ -165,18 +168,26 @@ modulate = Color(0.67069, 0.67069, 0.67069, 1)
 layout_mode = 2
 text = "2. Filepath"
 
+[node name="FPButton" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 0
+
 [node name="DefaultFP" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 
 [node name="DefaultFPSwitch" type="CheckButton" parent="SaveWindow/MarginContainer/VBoxContainer/DefaultFP"]
+visible = false
 layout_mode = 2
 button_pressed = true
 
 [node name="DefaultFPLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/DefaultFP"]
+visible = false
 layout_mode = 2
 text = "Default filepath"
 
 [node name="CustomFPText" type="TextEdit" parent="SaveWindow/MarginContainer/VBoxContainer"]
+visible = false
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "city/houses"
@@ -253,6 +264,7 @@ text = "Cancel"
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/FPButton" to="SaveWindow" method="_on_fp_button_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]
 [connection signal="close_requested" from="LoadWindow" to="LoadWindow" method="_on_close_requested"]

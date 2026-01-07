@@ -1,7 +1,16 @@
-[gd_scene format=3 uid="uid://bfmpebkm2x04c"]
+[gd_scene load_steps=2 format=3 uid="uid://bfmpebkm2x04c"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wgvcu"]
+bg_color = Color(0.466181, 0.466181, 0.466181, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="StructureButton" type="Button"]
 offset_right = 8.0
 offset_bottom = 8.0
 size_flags_vertical = 3
+theme_override_styles/focus = SubResource("StyleBoxFlat_wgvcu")
+text = "Yeah, I'm a button, so what?"
 alignment = 0

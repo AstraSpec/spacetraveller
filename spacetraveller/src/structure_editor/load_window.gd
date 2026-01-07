@@ -8,7 +8,7 @@ extends Window
 
 @onready var StructureLoad = preload("res://src/structure_editor/structure_button.tscn")
 
-var selected_id : String = ""
+var selectedID : String = ""
 
 func _ready() -> void:
 	structureEditor.open_load.connect(open)
@@ -16,7 +16,7 @@ func _ready() -> void:
 
 func open() -> void:
 	visible = true
-	selected_id = ""
+	selectedID = ""
 	_update_buttons()
 	
 	for child in LoadContainer.get_children():
@@ -28,26 +28,31 @@ func open() -> void:
 		LoadContainer.add_child(instance)
 		
 		instance.text = id
-		
 		instance.pressed.connect(_on_structure_selected.bind(id))
+		
+		instance.gui_input.connect(func(event):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
+				_on_structure_selected(id)
+				_on_load_pressed()
+		)
 
 func _on_structure_selected(id: String) -> void:
-	selected_id = id
+	selectedID = id
 	_update_buttons()
 
 func _update_buttons() -> void:
-	var has_selection = selected_id != ""
-	LoadButton.disabled = !has_selection
-	DeleteButton.disabled = !has_selection
+	var hasSelection = selectedID != ""
+	LoadButton.disabled = !hasSelection
+	DeleteButton.disabled = !hasSelection
 
 func _on_load_pressed() -> void:
-	if selected_id == "": return
+	if selectedID == "": return
 	
-	var blueprint = StructureDb.get_blueprint(selected_id)
-	var palette = StructureDb.get_palette(selected_id)
+	var blueprint = StructureDb.get_blueprint(selectedID)
+	var palette = StructureDb.get_palette(selectedID)
 	
 	if blueprint == "" or palette.is_empty():
-		printerr("Failed to load raw data for: ", selected_id)
+		printerr("Failed to load raw data for: ", selectedID)
 		return
 		
 	structureEditor.save_undo_state()
@@ -56,7 +61,9 @@ func _on_load_pressed() -> void:
 	visible = false
 
 func _on_delete_pressed() -> void:
-	pass
+	if selectedID == "": return
+	DbAccess.delete_structure(selectedID)
+	open()
 
 func _on_close_pressed() -> void:
 	visible = false
