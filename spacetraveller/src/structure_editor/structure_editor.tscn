@@ -10,7 +10,7 @@
 [ext_resource type="Script" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "ToolOptions")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "editMenu", "ToolOptions")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 Background = NodePath("BG")
@@ -19,6 +19,7 @@ TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContain
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
 Camera = NodePath("Camera")
 SelectionVisual = NodePath("SelectionVisual")
+editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
 
 [node name="BG" type="TextureRect" parent="."]
@@ -112,16 +113,6 @@ item_2/id = 2
 [node name="Edit" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 auto_translate_mode = 1
 unresizable = false
-item_count = 5
-item_0/text = "Pencil"
-item_1/text = "Line"
-item_1/id = 1
-item_2/text = "Eyedropper"
-item_2/id = 2
-item_3/text = "Fill"
-item_3/id = 3
-item_4/text = "Selection"
-item_4/id = 4
 
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2

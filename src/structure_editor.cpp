@@ -3,6 +3,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
 #include "data/id_registry.h"
+#include <unordered_set>
+#include <algorithm>
 
 using namespace godot;
 
@@ -12,7 +14,12 @@ void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette"), &StructureEditor::import_from_rle);
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id"), &StructureEditor::update_preview_tiles);
     ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data"), &StructureEditor::update_preview_tiles_with_data);
+    ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::update_preview_shape);
+    ClassDB::bind_method(D_METHOD("commit_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::commit_shape);
     ClassDB::bind_method(D_METHOD("clear_preview_tiles"), &StructureEditor::clear_preview_tiles);
+
+    BIND_ENUM_CONSTANT(SHAPE_RECTANGLE);
+    BIND_ENUM_CONSTANT(SHAPE_ELLIPSIS);
 }
 
 StructureEditor::StructureEditor() {
@@ -187,6 +194,10 @@ void StructureEditor::update_preview_tiles(const Array &p_positions, const Strin
 
         uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
 
+        if (preview_tile_rids.count(key)) {
+            rs->free_rid(preview_tile_rids[key]);
+        }
+
         RID preview_rid = rs->canvas_item_create();
         rs->canvas_item_set_parent(preview_rid, parent_rid);
         rs->canvas_item_set_z_index(preview_rid, 1);
@@ -257,4 +268,120 @@ void StructureEditor::clear_preview_tiles() {
         rs->free_rid(pair.second);
     }
     preview_tile_rids.clear();
+}
+
+std::vector<Vector2i> StructureEditor::_get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect) {
+    std::vector<Vector2i> points;
+    std::unordered_set<uint64_t> unique_points;
+
+    Vector2i p1 = p_p1;
+    Vector2i p2 = p_p2;
+
+    if (p_perfect) {
+        int dx = abs(p2.x - p1.x);
+        int dy = abs(p2.y - p1.y);
+        int size = std::max(dx, dy);
+        p2.x = p1.x + size * (p2.x >= p1.x ? 1 : -1);
+        p2.y = p1.y + size * (p2.y >= p1.y ? 1 : -1);
+    }
+
+    Vector2i min_p(std::min(p1.x, p2.x), std::min(p1.y, p2.y));
+    Vector2i max_p(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
+
+    auto add_point = [&](int x, int y) {
+        uint64_t key = Occlusion::pack_coords(x, y);
+        if (unique_points.find(key) == unique_points.end()) {
+            unique_points.insert(key);
+            points.push_back(Vector2i(x, y));
+        }
+    };
+
+    if (p_type == SHAPE_RECTANGLE) {
+        if (p_filled) {
+            for (int x = min_p.x; x <= max_p.x; x++) {
+                for (int y = min_p.y; y <= max_p.y; y++) {
+                    add_point(x, y);
+                }
+            }
+        } else {
+            for (int x = min_p.x; x <= max_p.x; x++) {
+                add_point(x, min_p.y);
+                add_point(x, max_p.y);
+            }
+            for (int y = min_p.y + 1; y < max_p.y; y++) {
+                add_point(min_p.x, y);
+                add_point(max_p.x, y);
+            }
+        }
+    } else if (p_type == SHAPE_ELLIPSIS) {
+        double rx = (max_p.x - min_p.x + 1) / 2.0;
+        double ry = (max_p.y - min_p.y + 1) / 2.0;
+        double cx = (min_p.x + max_p.x + 1) / 2.0;
+        double cy = (min_p.y + max_p.y + 1) / 2.0;
+
+        if (p_filled) {
+            for (int y = min_p.y; y <= max_p.y; y++) {
+                double py = y + 0.5;
+                double dy = std::abs(py - cy);
+                if (ry > 0) {
+                    double s = 1.0 - (dy * dy) / (ry * ry);
+                    if (s >= 0) {
+                        double dx = rx * std::sqrt(s);
+                        int x_start = std::ceil(cx - dx - 0.5);
+                        int x_end = std::floor(cx + dx - 0.5);
+                        for (int x = x_start; x <= x_end; x++) {
+                            add_point(x, y);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Hollow
+            // Horizontal pass
+            for (int x = min_p.x; x <= max_p.x; x++) {
+                double px = x + 0.5;
+                double dx = std::abs(px - cx);
+                if (rx > 0) {
+                    double s = 1.0 - (dx * dx) / (rx * rx);
+                    if (s >= 0) {
+                        double dy = ry * std::sqrt(s);
+                        add_point(x, std::floor(cy + dy - 0.5));
+                        add_point(x, std::floor(cy - dy + 0.5));
+                    }
+                }
+            }
+            // Vertical pass
+            for (int y = min_p.y; y <= max_p.y; y++) {
+                double py = y + 0.5;
+                double dy = std::abs(py - cy);
+                if (ry > 0) {
+                    double s = 1.0 - (dy * dy) / (ry * ry);
+                    if (s >= 0) {
+                        double dx = rx * std::sqrt(s);
+                        add_point(std::floor(cx + dx - 0.5), y);
+                        add_point(std::floor(cx - dx + 0.5), y);
+                    }
+                }
+            }
+        }
+    }
+
+    return points;
+}
+
+void StructureEditor::update_preview_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id) {
+    std::vector<Vector2i> points = _get_shape_points(p_type, p_p1, p_p2, p_filled, p_perfect);
+    Array positions;
+    for (const Vector2i &p : points) {
+        positions.push_back(p);
+    }
+    update_preview_tiles(positions, p_tile_id);
+}
+
+void StructureEditor::commit_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id) {
+    std::vector<Vector2i> points = _get_shape_points(p_type, p_p1, p_p2, p_filled, p_perfect);
+    for (const Vector2i &p : points) {
+        place_tile(p.x, p.y, p_tile_id);
+    }
+    update_visuals(Vector2i(0, 0));
 }

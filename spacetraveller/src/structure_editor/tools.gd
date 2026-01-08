@@ -74,6 +74,7 @@ class LineTool extends Tool:
 	var button = ""
 	
 	func on_press(btn: String, pos: Vector2i):
+		if !is_pos_valid(pos): return
 		if !is_drawing:
 			editor.save_undo_state()
 			is_drawing = true
@@ -104,6 +105,88 @@ class LineTool extends Tool:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
 				editor.Editor.place_tile(p.x, p.y, tid)
 		editor.Editor.update_visuals(Vector2i(0, 0))
+		is_drawing = false
+		on_hover(pos)
+
+class RectangleTool extends Tool:
+	func get_cursor_id(): return "pencil"
+	func get_options_config() -> Array:
+		return [
+			{ "name": "filled", "label": "Filled", "default": false },
+			{ "name": "perfect", "label": "Perfect", "default": false }
+		]
+
+	var is_drawing = false
+	var start_pos = Vector2i.ZERO
+	var button = ""
+
+	func on_press(btn: String, pos: Vector2i):
+		if !is_pos_valid(pos): return
+		if !is_drawing:
+			editor.save_undo_state()
+			is_drawing = true
+			start_pos = pos
+			button = btn
+			on_hover(pos)
+
+	func on_release(btn: String, pos: Vector2i):
+		if is_drawing and btn == button:
+			_commit(pos)
+
+	func on_hover(pos: Vector2i):
+		if is_drawing:
+			var tid = editor.tileID1 if button == "left" else editor.tileID2
+			editor.Editor.update_preview_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, options.filled, options.perfect, tid)
+		else:
+			if is_pos_valid(pos):
+				editor.Editor.update_preview_tiles([pos], editor.tileID1)
+			else:
+				editor.Editor.clear_preview_tiles()
+
+	func _commit(pos: Vector2i):
+		var tid = editor.tileID1 if button == "left" else editor.tileID2
+		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, options.filled, options.perfect, tid)
+		is_drawing = false
+		on_hover(pos)
+
+class EllipsisTool extends Tool:
+	func get_cursor_id(): return "pencil"
+	func get_options_config() -> Array:
+		return [
+			{ "name": "filled", "label": "Filled", "default": false },
+			{ "name": "perfect", "label": "Perfect", "default": false }
+		]
+
+	var is_drawing = false
+	var start_pos = Vector2i.ZERO
+	var button = ""
+
+	func on_press(btn: String, pos: Vector2i):
+		if !is_pos_valid(pos): return
+		if !is_drawing:
+			editor.save_undo_state()
+			is_drawing = true
+			start_pos = pos
+			button = btn
+			on_hover(pos)
+
+	func on_release(btn: String, pos: Vector2i):
+		if is_drawing and btn == button:
+			_commit(pos)
+
+	func on_hover(pos: Vector2i):
+		if is_drawing:
+			var tid = editor.tileID1 if button == "left" else editor.tileID2
+			editor.Editor.update_preview_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, options.filled, options.perfect, tid)
+		else:
+			if is_pos_valid(pos):
+				editor.Editor.update_preview_tiles([pos], editor.tileID1)
+			else:
+				editor.Editor.clear_preview_tiles()
+
+	func _commit(pos: Vector2i):
+		var tid = editor.tileID1 if button == "left" else editor.tileID2
+		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, options.filled, options.perfect, tid)
 		is_drawing = false
 		on_hover(pos)
 

@@ -10,6 +10,7 @@ signal open_load
 @export var TileGrid :GridContainer
 @export var Camera :ViewCamera
 @export var SelectionVisual :Line2D
+@export var editMenu :PopupMenu
 @export var ToolOptions :HBoxContainer
 @onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
 
@@ -69,11 +70,18 @@ func setup_tools():
 	tools = {
 		"pencil": EditorTools.PencilTool.new(self),
 		"line": EditorTools.LineTool.new(self),
+		"rectangle": EditorTools.RectangleTool.new(self),
+		"ellipsis": EditorTools.EllipsisTool.new(self),
 		"eyedropper": EditorTools.EyedropperTool.new(self),
 		"fill": EditorTools.FillTool.new(self),
 		"selection": EditorTools.SelectionTool.new(self)
 	}
 	active_tool = tools["pencil"]
+	
+	for t in tools.keys():
+		editMenu.add_item(t.capitalize())
+	if !editMenu.index_pressed.is_connected(_on_edit_index_pressed):
+		editMenu.index_pressed.connect(_on_edit_index_pressed)
 
 func _process(_delta: float) -> void:
 	mousePos = get_mouse_tile_pos()
@@ -215,8 +223,6 @@ func _on_file_index_pressed(index: int) -> void:
 	elif index == 2: open_load.emit()
 
 func _on_edit_index_pressed(index: int) -> void:
-	if index == 0: _on_mode_changed("pencil")
-	elif index == 1: _on_mode_changed("line")
-	elif index == 2: _on_mode_changed("eyedropper")
-	elif index == 3: _on_mode_changed("fill")
-	elif index == 4: _on_mode_changed("selection")
+	var names = tools.keys()
+	if index < names.size():
+		_on_mode_changed(names[index])
