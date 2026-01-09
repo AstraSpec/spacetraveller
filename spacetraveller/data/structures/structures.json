@@ -1,27 +1,27 @@
 [
-	{
-		"blueprint": "(74x0, 20x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 50x0)",
-		"id": "house01",
-		"palette": [
-			"void",
-			"w_wall",
-			"w_floor"
-		]
-	},
-	{
-		"blueprint": "(91x0, 1x1, 37x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 348x0)",
-		"id": "house02",
-		"palette": [
-			"void",
-			"stone_bricks"
-		]
-	},
-	{
-		"blueprint": "(130x0, 1x1, 22x0, 4x1, 19x0, 6x1, 17x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 17x0, 6x1, 19x0, 4x1, 227x0)",
-		"id": "test02",
-		"palette": [
-			"void",
-			"stone_bricks"
-		]
-	}
+    {
+        "blueprint": "(74x0, 20x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 50x0)",
+        "id": "house01",
+        "palette": [
+            "void",
+            "w_wall",
+            "w_floor"
+        ]
+    },
+    {
+        "blueprint": "(91x0, 1x1, 37x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 348x0)",
+        "id": "house02",
+        "palette": [
+            "void",
+            "stone_bricks"
+        ]
+    },
+    {
+        "blueprint": "(130x0, 1x1, 22x0, 4x1, 19x0, 6x1, 17x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 16x0, 8x1, 17x0, 6x1, 19x0, 4x1, 227x0)",
+        "id": "test02",
+        "palette": [
+            "void",
+            "stone_bricks"
+        ]
+    }
 ]

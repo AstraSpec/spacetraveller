@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=11 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
+[ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 
 [node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "editMenu", "ToolOptions")]
 script = ExtResource("1_urqvf")
@@ -117,7 +118,7 @@ unresizable = false
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "FPButton")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 title = "Save Structure"
 initial_position = 1
 size = Vector2i(400, 400)
@@ -127,7 +128,10 @@ script = ExtResource("5_dh32f")
 structureEditor = NodePath("..")
 Editor = NodePath("../Editor")
 StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
-FPButton = NodePath("MarginContainer/VBoxContainer/FPButton")
+CreateButton = NodePath("MarginContainer/VBoxContainer/CreateButton")
+ExistingButton = NodePath("MarginContainer/VBoxContainer/ExistingButton")
+CreateFP = NodePath("MarginContainer/VBoxContainer/CreateFP")
+ExistingFP = NodePath("MarginContainer/VBoxContainer/ExistingFP")
 
 [node name="MarginContainer" type="MarginContainer" parent="SaveWindow"]
 anchors_preset = 15
@@ -144,7 +148,7 @@ theme_override_constants/margin_bottom = 8
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="StructureIDLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
+[node name="1" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)
 layout_mode = 2
 text = "1. Structure ID"
@@ -154,13 +158,36 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "ID"
 
-[node name="FPLabel" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
+[node name="2" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)
 layout_mode = 2
-text = "2. Filepath"
+text = "2. File type"
 
-[node name="FPButton" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer"]
+[node name="CreateButton" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer"]
 layout_mode = 2
+button_group = ExtResource("9_2e8hg")
+text = "Create new file"
+
+[node name="ExistingButton" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+button_pressed = true
+button_group = ExtResource("9_2e8hg")
+text = "Use existing file"
+
+[node name="3" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "3. Filepath"
+
+[node name="CreateFP" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Yeah, I'm a button, so what?"
+alignment = 0
+
+[node name="ExistingFP" type="Button" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Yeah, I'm a button, so what?"
 alignment = 0
 
 [node name="DefaultFP" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
@@ -255,7 +282,10 @@ text = "Cancel"
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
-[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/FPButton" to="SaveWindow" method="_on_fp_button_pressed"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/CreateButton" to="SaveWindow" method="_on_create_button_pressed"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/ExistingButton" to="SaveWindow" method="_on_existing_button_pressed"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/CreateFP" to="SaveWindow" method="_on_create_fp_pressed"]
+[connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/ExistingFP" to="SaveWindow" method="_on_existing_fp_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]
 [connection signal="close_requested" from="LoadWindow" to="LoadWindow" method="_on_close_requested"]
