@@ -30,5 +30,3 @@ mono_crash.*.json
 
 # Keep .gdextension config files (they're needed)
 !*.gdextension
-
-/godot-cpp
