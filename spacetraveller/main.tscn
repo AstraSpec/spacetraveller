@@ -1,13 +1,13 @@
 [gd_scene load_steps=12 format=3 uid="uid://da4617sbpgvwl"]
 
-[ext_resource type="Script" path="res://src/world/world.gd" id="1_0bwn5"]
-[ext_resource type="Script" path="res://src/main.gd" id="1_14wn1"]
-[ext_resource type="Script" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
-[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="2_hj8l7"]
-[ext_resource type="Script" path="res://src/ui/view_camera.gd" id="4_8p67s"]
-[ext_resource type="Script" path="res://src/player.gd" id="4_yn2v7"]
+[ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
+[ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
+[ext_resource type="Script" uid="uid://dehm1c7q22sh1" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
+[ext_resource type="Texture2D" uid="uid://bkolny2uqmr3k" path="res://gfx/urizen.png" id="2_hj8l7"]
+[ext_resource type="Script" uid="uid://cuftphjy14qda" path="res://src/ui/view_camera.gd" id="4_8p67s"]
+[ext_resource type="Script" uid="uid://qoo2fyavh2vo" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
-[ext_resource type="Script" path="res://src/ui/map.gd" id="7_ghimp"]
+[ext_resource type="Script" uid="uid://03vwm05kyhir" path="res://src/ui/map.gd" id="7_ghimp"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -15,7 +15,6 @@ margins = Vector2i(1, 1)
 separation = Vector2i(1, 1)
 texture_region_size = Vector2i(12, 12)
 69:5/0 = 0
-50:21/0 = 0
 0:8/0 = 0
 52:0/0 = 0
 53:0/0 = 0
@@ -31,14 +30,13 @@ texture_region_size = Vector2i(12, 12)
 57:1/0 = 0
 3:40/0 = 0
 58:8/0 = 0
-32:22/0 = 0
 3:9/0 = 0
 4:9/0 = 0
 5:9/0 = 0
 6:9/0 = 0
 7:9/0 = 0
-0:7/0 = 0
-0:6/0 = 0
+32:2/0 = 0
+16:0/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_3mine"]
 tile_size = Vector2i(12, 12)
@@ -81,7 +79,7 @@ Tilesheet = ExtResource("2_hj8l7")
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
-region_rect = Rect2(339, 92, 12, 12)
+region_rect = Rect2(1353, 378, 12, 12)
 script = ExtResource("4_yn2v7")
 World = NodePath("../WorldGen")
 

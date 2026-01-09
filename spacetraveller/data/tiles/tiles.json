@@ -1,7 +1,7 @@
 [
   {
     "id": "void",
-    "atlas": [ 0, 7 ],
+    "atlas": [ 16, 0 ],
     "solid": false
   },
   {

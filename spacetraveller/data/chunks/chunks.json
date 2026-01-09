@@ -5,7 +5,7 @@
   },
   {
     "id": "plains",
-    "atlas": [ 0, 7 ]
+    "atlas": [ 16, 0 ]
   },
   {
     "id": "road",
@@ -17,7 +17,7 @@
   },
   {
     "id": "palace",
-    "atlas": [ 32, 22 ]
+    "atlas": [ 32, 2 ]
   },
   {
     "id": "alley",
