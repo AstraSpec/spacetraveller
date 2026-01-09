@@ -35,6 +35,11 @@ func _unhandled_input(event: InputEvent):
 
 	if event.is_action("shift"):
 		is_shift_pressed = event.is_pressed()
+	
+	if current_mode == InputMode.GAMEPLAY:
+		if event.is_action_pressed("ui_end"):
+			current_mode = InputMode.STRUCTURE
+			get_tree().change_scene_to_file("res://src/structure_editor/structure_editor.tscn")
 
 	if current_mode != InputMode.STRUCTURE:
 		if event.is_action_pressed("open_map"):
