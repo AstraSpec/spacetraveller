@@ -27,7 +27,11 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     info.solid = p_data.get("solid", false);
     
     if (IdRegistry::get_singleton()) {
-        IdRegistry::get_singleton()->register_string(p_data["id"]);
+        uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
+        if (id >= fast_cache.size()) {
+            fast_cache.resize(id + 1);
+        }
+        fast_cache[id] = info;
     }
     return info;
 }
@@ -37,9 +41,8 @@ const TileInfo* TileDb::get_tile_info(const String &p_id) const {
 }
 
 const TileInfo* TileDb::get_tile_info(uint16_t p_id) const {
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    if (id_reg) {
-        return get_info(id_reg->get_string(p_id));
+    if (p_id < fast_cache.size()) {
+        return &fast_cache[p_id];
     }
     return nullptr;
 }

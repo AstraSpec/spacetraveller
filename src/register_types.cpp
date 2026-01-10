@@ -5,6 +5,7 @@
 #include "structure_editor.h"
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
+#include "data/item_db.h"
 #include "data/structure_db.h"
 #include "data/id_registry.h"
 
@@ -25,6 +26,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
+	GDREGISTER_CLASS(ItemDb);
 	GDREGISTER_CLASS(StructureDb);
 	GDREGISTER_CLASS(IdRegistry);
 
@@ -33,6 +35,9 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	ChunkDb::create_singleton();
 	Engine::get_singleton()->register_singleton("ChunkDb", ChunkDb::get_singleton());
+
+	ItemDb::create_singleton();
+	Engine::get_singleton()->register_singleton("ItemDb", ItemDb::get_singleton());
 
 	StructureDb::create_singleton();
 	Engine::get_singleton()->register_singleton("StructureDb", StructureDb::get_singleton());
@@ -51,6 +56,9 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("ChunkDb");
 	ChunkDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("ItemDb");
+	ItemDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("StructureDb");
 	StructureDb::delete_singleton();

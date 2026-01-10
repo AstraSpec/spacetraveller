@@ -33,6 +33,7 @@ void WorldGeneration::_bind_methods() {
     // Method bindings
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
+    ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &WorldGeneration::drop_item);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -191,7 +192,9 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
     TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
+    ItemDb* item_db = ItemDb::get_singleton();
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!tile_db || !item_db || !id_reg) return;
     
     // First pass: render tiles and build tile map
     for (auto& pair : tile_rids) {
@@ -206,6 +209,30 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
         
+        // Check for items first
+        auto it_item = dropped_items.find(cellKey);
+        if (it_item != dropped_items.end() && !it_item->second.empty()) {
+            uint16_t item_id_numeric = it_item->second[0].id;
+            const ItemInfo* info = item_db->get_item_info(item_id_numeric);
+            
+            if (info) {
+                Vector2i atlas_pos;
+                atlas_pos.x = 1 + info->atlas.x * (FastTileMap::get_tile_size() + 1);
+                atlas_pos.y = 1 + info->atlas.y * (FastTileMap::get_tile_size() + 1);
+
+                RID tile_rid = pair.second;
+                rs->canvas_item_clear(tile_rid);
+                rs->canvas_item_add_texture_rect_region(
+                    tile_rid,
+                    Rect2(ox * get_cell_size(), oy * get_cell_size(), FastTileMap::get_tile_size(), FastTileMap::get_tile_size()),
+                    texture_rid,
+                    Rect2(atlas_pos.x, atlas_pos.y, FastTileMap::get_tile_size(), FastTileMap::get_tile_size())
+                );
+                // Skip normal tile rendering
+                continue;
+            }
+        }
+
         // Get or compute tile ID
         uint16_t tile_id;
         auto it = tile_id_cache.find(cellKey);
@@ -290,4 +317,14 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     }
 
     return result;
+}
+
+void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int amount) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return;
+
+    uint16_t id = id_reg->get_id(item_id);
+    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    
+    dropped_items[key].push_back({id, amount});
 }

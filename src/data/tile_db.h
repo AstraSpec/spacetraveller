@@ -18,6 +18,8 @@ protected:
     static void _bind_methods();
     virtual TileInfo _parse_row(const Dictionary &p_data) override;
 
+    std::vector<TileInfo> fast_cache;
+
 public:
     TileDb();
     ~TileDb();

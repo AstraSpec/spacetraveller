@@ -8,6 +8,7 @@ func _ready() -> void:
 	
 	TileDb.initialize_data()
 	ChunkDb.initialize_data()
+	ItemDb.initialize_data()
 	StructureDb.initialize_data()
 	
 	WorldGen.generate_world(Player.cellPos)

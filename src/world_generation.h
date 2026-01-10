@@ -20,6 +20,7 @@
 #include "city_generation.h"
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
+#include "data/item_db.h"
 
 #include "fast_tilemap.h"
 
@@ -28,6 +29,11 @@ namespace godot {
 struct BiomeTile {
     uint16_t id;
     int weight;
+};
+
+struct DroppedItem {
+    uint16_t id;
+    int amount;
 };
 
 struct BiomeInfo {
@@ -57,6 +63,7 @@ private:
     static const int CHUNK_SIZE = 24;
 
     std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [Rot][ID]
+    std::unordered_map<uint64_t, std::vector<DroppedItem>> dropped_items;
     
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
@@ -115,6 +122,7 @@ public:
     
     void update_world_bubble(const Vector2i& playerPos);
     Dictionary init_region(const Vector2i& regionPos);
+    void drop_item(const Vector2i& pos, const String& item_id, int amount);
 };
 
 }
