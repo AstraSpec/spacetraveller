@@ -21,6 +21,7 @@
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
 #include "data/item_db.h"
+#include "data/inventory.h"
 
 #include "fast_tilemap.h"
 
@@ -123,6 +124,7 @@ public:
     void update_world_bubble(const Vector2i& playerPos);
     Dictionary init_region(const Vector2i& regionPos);
     void drop_item(const Vector2i& pos, const String& item_id, int amount);
+    bool pickup_item(const Vector2i& pos, Inventory* p_inventory);
 };
 
 }

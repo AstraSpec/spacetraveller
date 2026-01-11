@@ -6,6 +6,7 @@
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
 #include "data/item_db.h"
+#include "data/inventory.h"
 #include "data/structure_db.h"
 #include "data/id_registry.h"
 
@@ -24,6 +25,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_RUNTIME_CLASS(FastTileMap);
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
+	GDREGISTER_RUNTIME_CLASS(Inventory);
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
 	GDREGISTER_CLASS(ItemDb);

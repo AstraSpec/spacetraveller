@@ -75,13 +75,16 @@ script = ExtResource("4_8p67s")
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 
-[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World")]
+[node name="Inventory" type="Inventory" parent="."]
+
+[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World", "inventory")]
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
 region_rect = Rect2(1353, 378, 12, 12)
 script = ExtResource("4_yn2v7")
 World = NodePath("../WorldGen")
+inventory = NodePath("../Inventory")
 
 [node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(7, 7)

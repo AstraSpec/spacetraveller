@@ -1,6 +1,7 @@
 extends Sprite2D
 
 @export var World : WorldGeneration
+@export var inventory :Inventory
 
 signal movedCell(cellPos :Vector2)
 signal movedChunk(chunkPos :Vector2)

@@ -34,6 +34,7 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &WorldGeneration::drop_item);
+    ClassDB::bind_method(D_METHOD("pickup_item", "pos", "inventory"), &WorldGeneration::pickup_item);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -232,7 +233,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
                 continue;
             }
         }
-
+        
         // Get or compute tile ID
         uint16_t tile_id;
         auto it = tile_id_cache.find(cellKey);
@@ -327,4 +328,25 @@ void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int 
     uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
     
     dropped_items[key].push_back({id, amount});
+}
+
+bool WorldGeneration::pickup_item(const Vector2i& pos, Inventory* p_inventory) {
+    if (!p_inventory) return false;
+    
+    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    auto it = dropped_items.find(key);
+    
+    if (it != dropped_items.end() && !it->second.empty()) {
+        DroppedItem& dropped = it->second.back();
+        
+        if (p_inventory->add_item_numeric(dropped.id, dropped.amount)) {
+            it->second.pop_back();
+            if (it->second.empty()) {
+                dropped_items.erase(it);
+            }
+            return true;
+        }
+    }
+    
+    return false;
 }

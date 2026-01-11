@@ -23,6 +23,8 @@ ItemDb::~ItemDb() {
 ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     ItemInfo info;
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
+    info.weight = p_data.get("weight", 0.0f);
+    info.volume = p_data.get("volume", 0.0f);
     
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);

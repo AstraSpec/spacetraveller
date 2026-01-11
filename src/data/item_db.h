@@ -8,6 +8,8 @@ namespace godot {
 
 struct ItemInfo {
     Vector2i atlas;
+    float weight = 0.0f;
+    float volume = 0.0f;
 };
 
 class ItemDb : public Object, public DataBase<ItemInfo, ItemDb> {
