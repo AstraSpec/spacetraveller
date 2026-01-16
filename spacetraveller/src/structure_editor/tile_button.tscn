@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://b4i3a0q1nsg67"]
 
-[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_o34mv"]
+[ext_resource type="Texture2D" uid="uid://co3cd22r88h1k" path="res://gfx/urizen.png" id="1_o34mv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_u3n0j"]
 resource_local_to_scene = true

@@ -3,11 +3,12 @@
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
 [ext_resource type="Script" uid="uid://dehm1c7q22sh1" path="res://src/debug/debug_info.gd" id="1_nm0yd"]
-[ext_resource type="Texture2D" uid="uid://bkolny2uqmr3k" path="res://gfx/urizen.png" id="2_hj8l7"]
+[ext_resource type="Texture2D" uid="uid://co3cd22r88h1k" path="res://gfx/urizen.png" id="2_hj8l7"]
 [ext_resource type="Script" uid="uid://cuftphjy14qda" path="res://src/ui/view_camera.gd" id="4_8p67s"]
 [ext_resource type="Script" uid="uid://qoo2fyavh2vo" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" uid="uid://03vwm05kyhir" path="res://src/ui/map.gd" id="7_ghimp"]
+[ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/strip_container/strip_container.tscn" id="10_4c57u"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -92,12 +93,6 @@ zoom = Vector2(2, 2)
 
 [node name="Canvas" type="CanvasLayer" parent="."]
 
-[node name="Dummy" type="Label" parent="Canvas"]
-modulate = Color(1, 1, 1, 0.0156863)
-offset_right = 512.0
-offset_bottom = 512.0
-text = "a"
-
 [node name="Map" type="Control" parent="Canvas"]
 visible = false
 layout_mode = 3
@@ -134,5 +129,23 @@ offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
 
+script = ExtResource("9_kek77")
+stripContainer = NodePath("MarginContainer/StripContainer")
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="StripContainer" parent="Canvas/Window/InventoryUI/MarginContainer" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
 [connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
 [connection signal="movedChunk" from="Player" to="Canvas/Map" method="_on_player_moved_chunk"]
+[connection signal="close_requested" from="Canvas/Window/InventoryUI" to="Canvas/Window/InventoryUI" method="_on_close_requested"]

@@ -1,14 +1,14 @@
 [gd_scene load_steps=11 format=3 uid="uid://c7bpkfyb6qvuq"]
 
-[ext_resource type="Script" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
-[ext_resource type="Texture2D" uid="uid://bol6seyvcdlfe" path="res://gfx/urizen.png" id="1_fl4b5"]
-[ext_resource type="Script" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
+[ext_resource type="Script" uid="uid://b2paqk26lcf30" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
+[ext_resource type="Texture2D" uid="uid://co3cd22r88h1k" path="res://gfx/urizen.png" id="1_fl4b5"]
+[ext_resource type="Script" uid="uid://cnfmyow707345" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
-[ext_resource type="Script" path="res://src/ui/view_camera.gd" id="3_usumf"]
-[ext_resource type="Script" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
-[ext_resource type="Script" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
-[ext_resource type="Script" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
-[ext_resource type="Script" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
+[ext_resource type="Script" uid="uid://cuftphjy14qda" path="res://src/ui/view_camera.gd" id="3_usumf"]
+[ext_resource type="Script" uid="uid://cus5p87q6jx26" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
+[ext_resource type="Script" uid="uid://62f0dcmhyy1u" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
+[ext_resource type="Script" uid="uid://bql7a6oaypjq4" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
+[ext_resource type="Script" uid="uid://8xqc3qvwdw3v" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 
 [node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "editMenu", "ToolOptions")]
@@ -106,6 +106,7 @@ size_flags_horizontal = 0
 unresizable = false
 item_count = 3
 item_0/text = "New"
+item_0/id = 0
 item_1/text = "Save"
 item_1/id = 1
 item_2/text = "Load"
