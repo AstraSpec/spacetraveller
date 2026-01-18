@@ -23,14 +23,14 @@ class DirectionalProcessor:
 		time_since_move += delta
 		
 		# Get digital vector (rounded to handle potential analog floating precision)
-		var current_raw_dir = Input.get_vector("a", "d", "w", "s").round()
+		var current_raw_dir = Input.get_vector("left", "right", "up", "down").round()
 		
 		# Detect if any relevant action was JUST pressed this frame
 		var just_pressed_dir = Vector2.ZERO
-		if Input.is_action_just_pressed("w"): just_pressed_dir.y -= 1
-		if Input.is_action_just_pressed("s"): just_pressed_dir.y += 1
-		if Input.is_action_just_pressed("a"): just_pressed_dir.x -= 1
-		if Input.is_action_just_pressed("d"): just_pressed_dir.x += 1
+		if Input.is_action_just_pressed("up"): just_pressed_dir.y -= 1
+		if Input.is_action_just_pressed("down"): just_pressed_dir.y += 1
+		if Input.is_action_just_pressed("left"): just_pressed_dir.x -= 1
+		if Input.is_action_just_pressed("right"): just_pressed_dir.x += 1
 		
 		var new_pressed = just_pressed_dir != Vector2.ZERO
 		
