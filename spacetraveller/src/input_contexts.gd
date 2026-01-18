@@ -85,15 +85,6 @@ class ViewProcessor:
 class ExplorationContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
-	func handle_input(event: InputEvent) -> bool:
-		if event.is_action_pressed("open_inventory"):
-			manager.current_mode = manager.InputMode.INVENTORY
-			return true
-		elif event.is_action_pressed("open_map"):
-			manager.current_mode = manager.InputMode.MAP
-			return true
-		return false
-
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
 		if step != Vector2.ZERO:
@@ -110,11 +101,6 @@ class MapContext extends InputContext:
 	func handle_input(event: InputEvent) -> bool:
 		if view_processor.handle_input(event):
 			return true
-		
-		if event.is_action_pressed("open_map"):
-			manager.exit_to_exploration()
-			return true
-		
 		return false
 
 	func process(delta: float) -> void:
@@ -190,9 +176,6 @@ class InventoryContext extends InputContext:
 	func handle_input(event: InputEvent) -> bool:
 		if event.is_action_pressed("ui_accept"):
 			manager.inventory_item_selected.emit()
-			return true
-		elif event.is_action_pressed("open_inventory"):
-			manager.exit_to_exploration()
 			return true
 		elif event.is_action_pressed("drop_item"):
 			manager.inventory_drop_requested.emit(manager.is_shift_pressed)

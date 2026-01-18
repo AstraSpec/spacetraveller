@@ -50,8 +50,8 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	MapView.size = container.get_size()
 
-func _map_toggled(is_open: bool) -> void:
-	visible = is_open
+func _map_toggled() -> void:
+	visible = !visible
 	if visible:
 		Camera._view_centered()
 
