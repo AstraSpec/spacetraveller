@@ -1,7 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://vnhi84in1i6v"]
+[gd_scene load_steps=6 format=3 uid="uid://vnhi84in1i6v"]
 
 [ext_resource type="Script" uid="uid://chchq2mu1sqok" path="res://src/ui/strip_container/strip_button.gd" id="1_1xs7h"]
 [ext_resource type="StyleBox" uid="uid://1bed3vhfgewa" path="res://src/ui/strip_container/style_box_light.tres" id="2_2skd2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_yafcb"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2hwul"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4tagx"]
 
 [node name="StripButton" type="MarginContainer"]
 offset_right = 213.0
@@ -11,6 +17,9 @@ script = ExtResource("1_1xs7h")
 [node name="Button" type="Button" parent="."]
 layout_mode = 2
 theme_override_styles/normal = ExtResource("2_2skd2")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_yafcb")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_2hwul")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4tagx")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=14 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://qoo2fyavh2vo" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" uid="uid://03vwm05kyhir" path="res://src/ui/map.gd" id="7_ghimp"]
+[ext_resource type="Script" uid="uid://ed0sluoej24r" path="res://src/ui/inventory/inventory_ui.gd" id="9_kek77"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/strip_container/strip_container.tscn" id="10_4c57u"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
@@ -72,9 +73,10 @@ tile_set = SubResource("TileSet_3mine")
 [node name="Camera" type="Camera2D" parent="MapView"]
 script = ExtResource("4_8p67s")
 
-[node name="WorldGen" type="WorldGeneration" parent="."]
+[node name="WorldGen" type="WorldGeneration" parent="." node_paths=PackedStringArray("Player")]
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
+Player = NodePath("../Player")
 
 [node name="Inventory" type="Inventory" parent="."]
 
@@ -129,8 +131,17 @@ offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("1_nm0yd")
 
+[node name="Window" type="Node" parent="Canvas"]
+
+[node name="InventoryUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("stripContainer", "inventory")]
+oversampling_override = 1.0
+title = "Inventory"
+initial_position = 1
+size = Vector2i(560, 560)
+unfocusable = true
 script = ExtResource("9_kek77")
 stripContainer = NodePath("MarginContainer/StripContainer")
+inventory = NodePath("../../../Inventory")
 
 [node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI"]
 anchors_preset = 15

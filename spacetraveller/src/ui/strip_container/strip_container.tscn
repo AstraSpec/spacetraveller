@@ -9,3 +9,4 @@ script = ExtResource("1_rhium")
 
 [node name="HBox" type="HBoxContainer" parent="."]
 layout_mode = 2
+alignment = 1

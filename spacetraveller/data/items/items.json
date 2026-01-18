@@ -22,5 +22,17 @@
     "atlas": [ 29, 7 ],
     "weight": 0.1,
     "volume": 0.05
+  },
+  {
+    "id": "debug_item_5",
+    "atlas": [ 26, 8 ],
+    "weight": 0.1,
+    "volume": 0.05
+  },
+  {
+    "id": "debug_item_6",
+    "atlas": [ 27, 8 ],
+    "weight": 0.1,
+    "volume": 0.05
   }
 ]

@@ -3,8 +3,9 @@ extends ScrollContainer
 @onready var stripButton = preload("res://src/ui/strip_container/strip_button.tscn")
 @onready var Hbox : HBoxContainer = $HBox
 
+@export var columns :int = 2
 var data :Array = []
-var columns :int = 1
+var buttons : Array = []
 
 func _ready() -> void:
 	_update_grid_layout()
@@ -15,7 +16,11 @@ func _update_grid_layout():
 	for child in Hbox.get_children():
 		child.queue_free()
 	
+	buttons.clear()
+	
 	var total_items = data.size()
+	if total_items == 0: return
+	
 	var items_per_column = ceil(float(total_items) / columns)
 
 	for c in range(columns):
@@ -31,6 +36,7 @@ func _update_grid_layout():
 				var item = data[actual_index]
 				var strip = stripButton.instantiate()
 				column_vbox.add_child(strip)
+				buttons.append(strip)
 				
 				var left_text = ""
 				var right_text = ""
@@ -43,3 +49,11 @@ func _update_grid_layout():
 				
 				if strip.has_method("setup"):
 					strip.setup(actual_index, left_text, right_text)
+
+func get_button(index: int) -> Control:
+	if index >= 0 and index < buttons.size():
+		return buttons[index]
+	return null
+
+func get_button_count() -> int:
+	return buttons.size()

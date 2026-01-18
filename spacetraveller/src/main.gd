@@ -14,4 +14,12 @@ func _ready() -> void:
 	WorldGen.generate_world(Player.cellPos)
 	WorldGen.update_world_bubble(Player.cellPos)
 	
-	InputManager.current_mode = InputManager.InputMode.GAMEPLAY
+	# Test Inventory UI
+	var inventory = get_node("Inventory")
+	if inventory:
+		inventory.add_item("debug_item_1", 5)
+		inventory.add_item("debug_item_2", 10)
+		inventory.add_item("debug_item_3", 2)
+		inventory.add_item("debug_item_4", 5)
+		inventory.add_item("debug_item_5", 6)
+		inventory.add_item("debug_item_6", 7)
