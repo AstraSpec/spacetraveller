@@ -50,9 +50,10 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	MapView.size = container.get_size()
 
-func _map_toggled(is_open :bool) -> void:
+func _map_toggled(is_open: bool) -> void:
 	visible = is_open
-	Camera._view_centered()
+	if visible:
+		Camera._view_centered()
 
 func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 	var newChunkPos = Vector2(
