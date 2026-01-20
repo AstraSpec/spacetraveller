@@ -125,6 +125,7 @@ public:
     Dictionary init_region(const Vector2i& regionPos);
     void drop_item(const Vector2i& pos, const String& item_id, int amount);
     bool pickup_item(const Vector2i& pos, Inventory* p_inventory);
+    bool has_item(const Vector2i& pos) const;
 };
 
 }

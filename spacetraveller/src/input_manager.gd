@@ -14,6 +14,9 @@ signal inventory_item_dropped(item_id: String, amount: int)
 
 signal inventory_toggled
 
+signal action_smash_requested
+signal action_pickup_requested
+
 signal structure_mode_changed(mode :String)
 signal structure_key_input(key :String)
 signal structure_mouse_input(button: String, action: MouseAction)

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwjarqq6fihlh"]
+
+[ext_resource type="Texture2D" uid="uid://byy510bq1t5kj" path="res://gfx/indicator.png" id="1_lqckk"]
+
+[node name="InteractionCell" type="Sprite2D"]
+texture = ExtResource("1_lqckk")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 12, 12)

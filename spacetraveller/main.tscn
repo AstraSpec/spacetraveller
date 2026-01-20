@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=15 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://03vwm05kyhir" path="res://src/ui/map.gd" id="7_ghimp"]
 [ext_resource type="Script" uid="uid://ed0sluoej24r" path="res://src/ui/inventory/inventory_ui.gd" id="9_kek77"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/strip_container/strip_container.tscn" id="10_4c57u"]
+[ext_resource type="PackedScene" uid="uid://cwjarqq6fihlh" path="res://src/interaction_cell.tscn" id="11_efxa6"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -156,6 +157,13 @@ theme_override_constants/margin_bottom = 16
 
 [node name="StripContainer" parent="Canvas/Window/InventoryUI/MarginContainer" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+
+[node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
+visible = false
+
+[node name="InteractionCell2" parent="." instance=ExtResource("11_efxa6")]
+visible = false
+position = Vector2(-12, 0)
 
 [connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
 [connection signal="movedChunk" from="Player" to="Canvas/Map" method="_on_player_moved_chunk"]

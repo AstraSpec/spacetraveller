@@ -35,6 +35,7 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &WorldGeneration::drop_item);
     ClassDB::bind_method(D_METHOD("pickup_item", "pos", "inventory"), &WorldGeneration::pickup_item);
+    ClassDB::bind_method(D_METHOD("has_item", "pos"), &WorldGeneration::has_item);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -349,4 +350,10 @@ bool WorldGeneration::pickup_item(const Vector2i& pos, Inventory* p_inventory) {
     }
     
     return false;
+}
+
+bool WorldGeneration::has_item(const Vector2i& pos) const {
+    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    auto it = dropped_items.find(key);
+    return it != dropped_items.end() && !it->second.empty();
 }

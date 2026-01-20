@@ -85,6 +85,15 @@ class ViewProcessor:
 class ExplorationContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
+	func handle_input(event: InputEvent) -> bool:
+		if event.is_action_pressed("action_smash"):
+			manager.action_smash_requested.emit()
+			return true
+		elif event.is_action_pressed("action_pickup"):
+			manager.action_pickup_requested.emit()
+			return true
+		return false
+
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
 		if step != Vector2.ZERO:
