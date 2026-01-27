@@ -7,6 +7,8 @@
 namespace godot {
 
 struct ItemInfo {
+    String name;
+    String description;
     Vector2i atlas;
     float weight = 0.0f;
     float volume = 0.0f;
@@ -34,6 +36,9 @@ public:
 
     // GDScript/Standard access
     Vector2i get_atlas_coords(const String &p_id) const;
+    String get_item_name(const String &p_id) const;
+    String get_item_description(const String &p_id) const;
+    Dictionary get_item_modifiers(const String &p_id) const;
 };
 
 }

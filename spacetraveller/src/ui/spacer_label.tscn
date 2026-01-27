@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3c2r6p20mg1h"]
+
+[ext_resource type="Script" uid="uid://c8ncgs0gmajrb" path="res://src/ui/spacer_label.gd" id="1_ba08q"]
+
+[node name="SpacerLabel" type="HBoxContainer" node_paths=PackedStringArray("Label1", "Label2")]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ba08q")
+Label1 = NodePath("Label1")
+Label2 = NodePath("Label2")
+
+[node name="Label1" type="Label" parent="."]
+layout_mode = 2
+text = "This is a spacer label"
+
+[node name="Spacer" type="Control" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label2" type="Label" parent="."]
+layout_mode = 2
+text = "The end"

@@ -1,9 +1,22 @@
 extends Window
 
+@onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
+
 @export var stripContainer :ScrollContainer
 @export var inventory :Inventory
 
+@export var ItemDetails :VBoxContainer
+@export var TitleLabel :Label
+@export var DescriptionLabel :Label
+@export var ModifiersContainer :VBoxContainer
+@export var WeightVolumeLabel :Label
+
 var selected_index : int = 0
+
+const MODIFIER_NAMES = {
+	"weight": "Weight",
+	"volume": "Volume"
+}
 
 func _ready() -> void:
 	visible = false
@@ -48,10 +61,42 @@ func _on_directional_input(direction: Vector2):
 		_update_selection_visuals()
 
 func _update_selection_visuals():
+	var items = inventory.get_items_list()
+	var has_labels = TitleLabel != null and DescriptionLabel != null
+	
 	for i in range(stripContainer.get_button_count()):
 		var btn = stripContainer.get_button(i)
 		if btn:
-			btn.set_selected(i == selected_index)
+			var is_selected = (i == selected_index)
+			btn.set_selected(is_selected)
+			
+			if is_selected:
+				ItemDetails.visible = true
+				if i < items.size():
+					var item_id = items[i]["id"]
+					if has_labels:
+						TitleLabel.text = ItemDb.get_item_name(item_id)
+						DescriptionLabel.text = ItemDb.get_item_description(item_id)
+						_update_modifiers(item_id)
+				elif has_labels:
+					ItemDetails.visible = false
+
+func _update_modifiers(item_id: String) -> void:
+	if not ModifiersContainer: return
+	
+	# Clear existing modifiers
+	for child in ModifiersContainer.get_children():
+		child.queue_free()
+	
+	var modifiers = ItemDb.get_item_modifiers(item_id)
+	for key in modifiers.keys():
+		var display_name = MODIFIER_NAMES.get(key, key.capitalize())
+		var value = modifiers[key]
+		
+		var inst = SpacerLabelScene.instantiate()
+		ModifiersContainer.add_child(inst)
+		inst.Label1.text = display_name
+		inst.Label2.text = "%.1f" % value
 
 func _on_inventory_item_selected() -> void:
 	_on_close_requested()
@@ -80,7 +125,7 @@ func _on_inventory_drop_requested(all: bool) -> void:
 		_update_selection_visuals()
 
 func _on_close_requested() -> void:
-	InputManager.return_context()
+	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
 
 func _update_inventory():
 	var items = inventory.get_items_list()
@@ -94,3 +139,8 @@ func _update_inventory():
 	
 	stripContainer.data = display_data
 	stripContainer._update_grid_layout()
+	
+	if WeightVolumeLabel:
+		var total_weight = inventory.get_total_weight()
+		var total_volume = inventory.get_total_volume()
+		WeightVolumeLabel.text = "Weight: %.1f\nVolume: %.1f" % [total_weight, total_volume]

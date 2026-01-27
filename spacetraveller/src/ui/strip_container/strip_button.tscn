@@ -10,8 +10,10 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4tagx"]
 
 [node name="StripButton" type="MarginContainer"]
-offset_right = 213.0
-offset_bottom = 17.0
+offset_right = 659.0
+offset_bottom = 23.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_1xs7h")
 
 [node name="Button" type="Button" parent="."]
@@ -24,13 +26,16 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_4tagx")
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 109
 
 [node name="Label1" type="Label" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 2
 size_flags_vertical = 1
 text = "Hey its me, name!"
+
+[node name="Control" type="Control" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="Label2" type="Label" parent="HBoxContainer"]
 layout_mode = 2

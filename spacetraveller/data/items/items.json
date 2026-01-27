@@ -1,36 +1,48 @@
 [
   {
     "id": "debug_item_1",
+    "name": "Debug Item 1",
+    "description": "This is debug item 1. On the left side of the door frame.",
     "atlas": [ 26, 7 ],
     "weight": 2.5,
     "volume": 1.0
   },
   {
     "id": "debug_item_2",
+    "name": "Debug Item 2",
+    "description": "This is debug item 2. On the left side of the door frame.",
     "atlas": [ 27, 7 ],
     "weight": 0.2,
     "volume": 0.1
   },
   {
     "id": "debug_item_3",
+    "name": "Debug Item 3",
+    "description": "This is debug item 3. On the left side of the door frame.",
     "atlas": [ 28, 7 ],
     "weight": 0.5,
     "volume": 0.5
   },
   {
     "id": "debug_item_4",
+    "name": "Debug Item 4",
+    "description": "This is debug item 4. On the left side of the door frame.",
     "atlas": [ 29, 7 ],
     "weight": 0.1,
     "volume": 0.05
   },
   {
     "id": "debug_item_5",
+    "name": "Debug Item 5",
+    "description": "This is debug item 5. On the left side of the door frame.",
     "atlas": [ 26, 8 ],
     "weight": 0.1,
     "volume": 0.05
   },
   {
     "id": "debug_item_6",
+    "name": "Debug Item 6",
+    "description": "This is debug item 6. On the left side of the door frame.",
     "atlas": [ 27, 8 ],
     "weight": 0.1,
     "volume": 0.05

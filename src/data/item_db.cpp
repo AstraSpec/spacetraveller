@@ -11,6 +11,9 @@ void ItemDb::_bind_methods() {
     ClassDB::bind_static_method("ItemDb", D_METHOD("get_singleton"), &ItemDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &ItemDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &ItemDb::get_atlas_coords);
+    ClassDB::bind_method(D_METHOD("get_item_name", "id"), &ItemDb::get_item_name);
+    ClassDB::bind_method(D_METHOD("get_item_description", "id"), &ItemDb::get_item_description);
+    ClassDB::bind_method(D_METHOD("get_item_modifiers", "id"), &ItemDb::get_item_modifiers);
     ClassDB::bind_method(D_METHOD("get_ids"), &ItemDb::get_ids);
 }
 
@@ -22,6 +25,8 @@ ItemDb::~ItemDb() {
 
 ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     ItemInfo info;
+    info.name = p_data.get("name", "");
+    info.description = p_data.get("description", "");
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.weight = p_data.get("weight", 0.0f);
     info.volume = p_data.get("volume", 0.0f);
@@ -51,6 +56,28 @@ Vector2i ItemDb::get_atlas_coords(const String &p_id) const {
     const ItemInfo* info = get_item_info(p_id);
     if (info) return info->atlas;
     return Vector2i(-1, -1);
+}
+
+String ItemDb::get_item_name(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    if (info) return info->name;
+    return "";
+}
+
+String ItemDb::get_item_description(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    if (info) return info->description;
+    return "";
+}
+
+Dictionary ItemDb::get_item_modifiers(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    Dictionary d;
+    if (info) {
+        if (info->weight > 0.0f) d["weight"] = info->weight;
+        if (info->volume > 0.0f) d["volume"] = info->volume;
+    }
+    return d;
 }
 
 }

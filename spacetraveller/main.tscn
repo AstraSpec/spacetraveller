@@ -134,29 +134,120 @@ script = ExtResource("1_nm0yd")
 
 [node name="Window" type="Node" parent="Canvas"]
 
-[node name="InventoryUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("stripContainer", "inventory")]
+[node name="InventoryUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("stripContainer", "inventory", "ItemDetails", "TitleLabel", "DescriptionLabel", "ModifiersContainer", "WeightVolumeLabel")]
 oversampling_override = 1.0
 title = "Inventory"
 initial_position = 1
-size = Vector2i(560, 560)
+size = Vector2i(930, 560)
 unfocusable = true
 script = ExtResource("9_kek77")
-stripContainer = NodePath("MarginContainer/StripContainer")
+stripContainer = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 inventory = NodePath("../../../Inventory")
+ItemDetails = NodePath("TabContainer/Inventory/VBoxContainer")
+TitleLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
+DescriptionLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
+ModifiersContainer = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
+WeightVolumeLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightVolumeLabel")
 
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI"]
+[node name="TabContainer" type="TabContainer" parent="Canvas/Window/InventoryUI"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+current_tab = 0
+clip_tabs = false
+tab_focus_mode = 0
+
+[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer"]
+layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
+metadata/_tab_index = 0
 
-[node name="StripContainer" parent="Canvas/Window/InventoryUI/MarginContainer" instance=ExtResource("10_4c57u")]
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory"]
 layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="ItemDetailsLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+text = "ITEM DETAILS"
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "9mm Handgun"
+
+[node name="Description" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "A semi-automatic pistol. Dirty but functional."
+autowrap_mode = 2
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Modifiers" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer"]
+layout_mode = 2
+text = "Modifiers:"
+
+[node name="WeightVolumeLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+text = "Weight:
+Volume:"
+
+[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
 
 [node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
 visible = false
