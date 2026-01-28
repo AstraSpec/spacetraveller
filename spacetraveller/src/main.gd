@@ -9,12 +9,12 @@ func _ready() -> void:
 	TileDb.initialize_data()
 	ChunkDb.initialize_data()
 	ItemDb.initialize_data()
+	RecipeDb.initialize_data()
 	StructureDb.initialize_data()
 	
 	WorldGen.generate_world(Player.cellPos)
 	WorldGen.update_world_bubble(Player.cellPos)
 	
-	# Test Inventory UI
 	var inventory = get_node("Inventory")
 	if inventory:
 		inventory.add_item("debug_item_1", 5)

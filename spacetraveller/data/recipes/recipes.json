@@ -1,0 +1,27 @@
+[
+  {
+    "id": "recipe_debug_1",
+    "name": "Composite Debug Item",
+    "description": "A complex item made from debug items 1 and 2.",
+    "time": 5.0,
+    "requirements": [
+      { "id": "debug_item_1", "amount": 1 },
+      { "id": "debug_item_2", "amount": 2 }
+    ],
+    "results": [
+      { "id": "debug_item_3", "amount": 1 }
+    ]
+  },
+  {
+    "id": "recipe_debug_2",
+    "name": "Debug Bundle",
+    "description": "A bundle of small debug items.",
+    "time": 2.0,
+    "requirements": [
+      { "id": "debug_item_4", "amount": 5 }
+    ],
+    "results": [
+      { "id": "debug_item_5", "amount": 1 }
+    ]
+  }
+]

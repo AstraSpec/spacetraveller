@@ -7,12 +7,13 @@ signal view_centered
 
 signal debug_toggled
 signal directional_input(direction: Vector2)
-signal inventory_directional_input(direction: Vector2)
-signal inventory_item_selected
-signal inventory_drop_requested(all: bool)
+signal ui_directional_input(direction: Vector2)
+signal ui_accept
+signal ui_cancel
+signal ui_drop_requested(all: bool)
 signal inventory_item_dropped(item_id: String, amount: int)
 
-signal inventory_toggled
+signal menu_toggled
 
 signal action_smash_requested
 signal action_pickup_requested
@@ -22,7 +23,7 @@ signal structure_key_input(key :String)
 signal structure_mouse_input(button: String, action: MouseAction)
 enum MouseAction { PRESS, RELEASE, DRAG }
 
-enum InputMode { EXPLORATION, MAP, STRUCTURE, INVENTORY }
+enum InputMode { EXPLORATION, MAP, STRUCTURE, MENU }
 var current_mode: InputMode = InputMode.EXPLORATION
 var is_shift_pressed = false
 
@@ -34,7 +35,7 @@ func _ready() -> void:
 		InputMode.EXPLORATION: InputContext.ExplorationContext.new(self),
 		InputMode.MAP: InputContext.MapContext.new(self),
 		InputMode.STRUCTURE: InputContext.StructureContext.new(self),
-		InputMode.INVENTORY: InputContext.InventoryContext.new(self)
+		InputMode.MENU: InputContext.MenuContext.new(self)
 	}
 	active_context = contexts.get(current_mode)
 
@@ -50,10 +51,10 @@ func _unhandled_input(event: InputEvent):
 	
 	# Transition inputs
 	if event.is_action_pressed("open_inventory"):
-		if current_mode == InputMode.INVENTORY:
+		if current_mode == InputMode.MENU:
 			set_mode(InputMode.EXPLORATION)
 		elif current_mode == InputMode.EXPLORATION:
-			set_mode(InputMode.INVENTORY)
+			set_mode(InputMode.MENU)
 		get_viewport().set_input_as_handled()
 		return
 		
@@ -82,8 +83,8 @@ func set_mode(mode: InputMode):
 	active_context = contexts.get(current_mode)
 	
 	# Handle UI signals
-	if old_mode == InputMode.INVENTORY or current_mode == InputMode.INVENTORY:
-		inventory_toggled.emit()
+	if old_mode == InputMode.MENU or current_mode == InputMode.MENU:
+		menu_toggled.emit()
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()

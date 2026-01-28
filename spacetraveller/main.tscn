@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=17 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://ed0sluoej24r" path="res://src/ui/inventory/inventory_ui.gd" id="9_kek77"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/strip_container/strip_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://cwjarqq6fihlh" path="res://src/interaction_cell.tscn" id="11_efxa6"]
+[ext_resource type="Script" uid="uid://bm58lkag0saye" path="res://src/ui/inventory/inventory_tab.gd" id="12_invt"]
+[ext_resource type="Script" uid="uid://cxcnf6aoi1roj" path="res://src/ui/inventory/crafting_tab.gd" id="13_crft"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -134,20 +136,14 @@ script = ExtResource("1_nm0yd")
 
 [node name="Window" type="Node" parent="Canvas"]
 
-[node name="InventoryUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("stripContainer", "inventory", "ItemDetails", "TitleLabel", "DescriptionLabel", "ModifiersContainer", "WeightVolumeLabel")]
+[node name="InventoryUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("tabs")]
 oversampling_override = 1.0
 title = "Inventory"
 initial_position = 1
 size = Vector2i(930, 560)
 unfocusable = true
 script = ExtResource("9_kek77")
-stripContainer = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
-inventory = NodePath("../../../Inventory")
-ItemDetails = NodePath("TabContainer/Inventory/VBoxContainer")
-TitleLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
-DescriptionLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
-ModifiersContainer = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
-WeightVolumeLabel = NodePath("TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightVolumeLabel")
+tabs = NodePath("TabContainer")
 
 [node name="TabContainer" type="TabContainer" parent="Canvas/Window/InventoryUI"]
 anchors_preset = 15
@@ -159,12 +155,19 @@ current_tab = 0
 clip_tabs = false
 tab_focus_mode = 0
 
-[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer"]
+[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("inventory", "weightVolumeLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
+script = ExtResource("12_invt")
+inventory = NodePath("../../../../../Inventory")
+weightVolumeLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightVolumeLabel")
+stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
+titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
+detailsContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
 metadata/_tab_index = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory"]
@@ -244,10 +247,88 @@ layout_mode = 2
 text = "Weight:
 Volume:"
 
-[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer"]
+[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("inventory", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 visible = false
 layout_mode = 2
+script = ExtResource("13_crft")
+inventory = NodePath("../../../../../Inventory")
+stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
+titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
+detailsContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
 metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="ItemDetailsLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+text = "CRAFTING"
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+text = "Bandage"
+
+[node name="Description" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Requires Cloth"
+autowrap_mode = 2
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Modifiers" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer"]
+layout_mode = 2
+text = "Recipe:"
 
 [node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
 visible = false

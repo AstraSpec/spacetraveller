@@ -179,19 +179,22 @@ class StructureContext extends InputContext:
 		if step != Vector2.ZERO:
 			manager.view_panned.emit(-step * FastTileMap.get_tile_size())
 
-class InventoryContext extends InputContext:
+class MenuContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
 	func handle_input(event: InputEvent) -> bool:
 		if event.is_action_pressed("ui_accept"):
-			manager.inventory_item_selected.emit()
+			manager.ui_accept.emit()
+			return true
+		elif event.is_action_pressed("ui_cancel"):
+			manager.ui_cancel.emit()
 			return true
 		elif event.is_action_pressed("drop_item"):
-			manager.inventory_drop_requested.emit(manager.is_shift_pressed)
+			manager.ui_drop_requested.emit(manager.is_shift_pressed)
 			return true
 		return false
 
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
 		if step != Vector2.ZERO:
-			manager.inventory_directional_input.emit(step)
+			manager.ui_directional_input.emit(step)

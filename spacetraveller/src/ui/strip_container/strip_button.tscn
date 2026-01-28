@@ -10,7 +10,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4tagx"]
 
 [node name="StripButton" type="MarginContainer"]
-offset_right = 659.0
+offset_right = 206.0
 offset_bottom = 23.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -36,6 +36,7 @@ text = "Hey its me, name!"
 [node name="Control" type="Control" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="Label2" type="Label" parent="HBoxContainer"]
 layout_mode = 2
