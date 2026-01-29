@@ -187,7 +187,13 @@ class MenuContext extends InputContext:
 			manager.ui_accept.emit()
 			return true
 		elif event.is_action_pressed("ui_cancel"):
-			manager.ui_cancel.emit()
+			manager.set_mode(manager.InputMode.EXPLORATION)
+			return true
+		elif event.is_action_pressed("ui_focus_next"):
+			if manager.is_shift_pressed:
+				manager.ui_prev_tab.emit()
+			else:
+				manager.ui_next_tab.emit()
 			return true
 		elif event.is_action_pressed("drop_item"):
 			manager.ui_drop_requested.emit(manager.is_shift_pressed)

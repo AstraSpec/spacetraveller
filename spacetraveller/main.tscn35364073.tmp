@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=19 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -8,12 +8,13 @@
 [ext_resource type="Script" uid="uid://qoo2fyavh2vo" path="res://src/player.gd" id="4_yn2v7"]
 [ext_resource type="Texture2D" uid="uid://bqd0epcndcuen" path="res://gfx/playerChunk.png" id="7_143wy"]
 [ext_resource type="Script" uid="uid://03vwm05kyhir" path="res://src/ui/map.gd" id="7_ghimp"]
+[ext_resource type="Script" uid="uid://ed0sluoej24r" path="res://src/ui/inventory/inventory_ui.gd" id="9_kek77"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/strip_container/strip_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://cwjarqq6fihlh" path="res://src/interaction_cell.tscn" id="11_efxa6"]
 [ext_resource type="Script" uid="uid://bm58lkag0saye" path="res://src/ui/inventory/inventory_tab.gd" id="12_invt"]
 [ext_resource type="Script" uid="uid://cxcnf6aoi1roj" path="res://src/ui/inventory/crafting_tab.gd" id="13_crft"]
+[ext_resource type="Script" uid="uid://cl0xnbm4w3n64" path="res://src/ui/action_menu_window.gd" id="14_actw"]
 [ext_resource type="Script" uid="uid://bk3n5p1wjcwpw" path="res://src/ui/action_tab.gd" id="15_actt"]
-[ext_resource type="Script" uid="uid://cgugc1j1sx1tg" path="res://src/ui/menu_window.gd" id="16_menu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -143,8 +144,7 @@ title = "Inventory"
 initial_position = 1
 size = Vector2i(930, 560)
 unfocusable = true
-script = ExtResource("16_menu")
-menu_id = "inventory"
+script = ExtResource("9_kek77")
 tabs = NodePath("TabContainer")
 
 [node name="TabContainer" type="TabContainer" parent="Canvas/Window/InventoryUI"]
@@ -244,24 +244,16 @@ layout_mode = 2
 layout_mode = 2
 text = "Modifiers:"
 
-[node name="WeightVolumeLabel" type="RichTextLabel" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+[node name="WeightVolumeLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
 layout_mode = 2
-bbcode_enabled = true
 text = "Weight:
 Volume:"
-fit_content = true
 
-[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("inventory", "CraftButton", "InsufficientLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("inventory", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 visible = false
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
 script = ExtResource("13_crft")
 inventory = NodePath("../../../../../Inventory")
-CraftButton = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton")
-InsufficientLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/InsufficientLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
 descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
@@ -340,49 +332,64 @@ layout_mode = 2
 layout_mode = 2
 text = "Recipe:"
 
-[node name="InsufficientLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Insufficient Materials"
-
-[node name="CraftButton" type="Button" parent="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
-visible = false
-layout_mode = 2
-text = "Craft Item"
-
-[node name="ActionsUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("single_tab")]
+[node name="ActionMenuUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("tabs")]
 oversampling_override = 1.0
 title = "Actions"
 initial_position = 1
 size = Vector2i(400, 300)
-visible = false
 unfocusable = true
-script = ExtResource("16_menu")
-menu_id = "actions"
-single_tab = NodePath("Actions")
+script = ExtResource("14_actw")
+tabs = NodePath("TabContainer")
 
-[node name="Actions" type="MarginContainer" parent="Canvas/Window/ActionsUI" node_paths=PackedStringArray("player", "stripContainer")]
+[node name="TabContainer" type="TabContainer" parent="Canvas/Window/ActionMenuUI"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("15_actt")
-player = NodePath("../../../../Player")
-stripContainer = NodePath("VBoxContainer/MarginContainer/ItemList/StripContainer")
+current_tab = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ActionsUI/Actions"]
+[node name="Actions" type="MarginContainer" parent="Canvas/Window/ActionMenuUI/TabContainer" node_paths=PackedStringArray("stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+layout_mode = 2
+script = ExtResource("15_actt")
+stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
+titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/Description")
+detailsContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/ModifiersContainer")
+metadata/_tab_index = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions"]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/ActionsUI/Actions/VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemList" type="MarginContainer" parent="Canvas/Window/ActionsUI/Actions/VBoxContainer/MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="StripContainer" parent="Canvas/Window/ActionsUI/Actions/VBoxContainer/MarginContainer/ItemList" instance=ExtResource("10_4c57u")]
+[node name="StripContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/ActionMenuUI/TabContainer/Actions/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
 layout_mode = 2
 
 [node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
@@ -395,4 +402,3 @@ position = Vector2(-12, 0)
 [connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
 [connection signal="movedChunk" from="Player" to="Canvas/Map" method="_on_player_moved_chunk"]
 [connection signal="close_requested" from="Canvas/Window/InventoryUI" to="Canvas/Window/InventoryUI" method="_on_close_requested"]
-[connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]

@@ -17,10 +17,16 @@ var chunkPos : Vector2 = Vector2.ZERO
 var currentAction: PlayerAction = null
 var interactionCells : Array[Node2D] = []
 
+var available_actions: Array[PlayerAction] = []
+
 func _ready():
 	InputManager.directional_input.connect(_on_movement_triggered)
 	InputManager.action_smash_requested.connect(_on_smash_requested)
 	InputManager.action_pickup_requested.connect(_on_pickup_requested)
+	
+	# Register default actions
+	available_actions.append(SmashAction.new(self, World))
+	available_actions.append(PickupAction.new(self, World))
 
 func _on_smash_requested():
 	_try_set_action(SmashAction.new(self, World))

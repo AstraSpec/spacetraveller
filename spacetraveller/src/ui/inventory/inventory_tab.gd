@@ -3,7 +3,7 @@ extends BaseListTab
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
 @export var inventory: Inventory
-@export var weightVolumeLabel: Label
+@export var weightVolumeLabel: RichTextLabel
 
 const MODIFIER_NAMES = {
 	"weight": "Weight",
@@ -53,7 +53,7 @@ func _update_totals() -> void:
 	if weightVolumeLabel and inventory:
 		var total_weight = inventory.get_total_weight()
 		var total_volume = inventory.get_total_volume()
-		weightVolumeLabel.text = "Weight: %.1f\nVolume: %.1f" % [total_weight, total_volume]
+		weightVolumeLabel.text = "Weight: [color=#66ff66]%.1f[/color]\nVolume: [color=#66ff66]%.1f[/color]" % [total_weight, total_volume]
 
 func handle_action(action_name: String, params: Dictionary = {}):
 	if action_name == "drop":

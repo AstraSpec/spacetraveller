@@ -1,6 +1,8 @@
 extends BaseListTab
 
 @export var inventory: Inventory
+@export var CraftButton :Button
+@export var InsufficientLabel :Label
 
 func _get_display_data() -> Array:
 	var ids = RecipeDb.get_ids()
@@ -11,11 +13,10 @@ func _get_display_data() -> Array:
 			"id": id,
 			"display_name": RecipeDb.get_recipe_name(id),
 			"description": RecipeDb.get_recipe_description(id),
-			"quantity_text": "" # Could show time or "Craftable" status
+			"quantity_text": ""
 		})
 	return formatted
 
-# Override: Show requirements and results
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
 	
@@ -40,10 +41,10 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		label.text = "  - %s x%d" % [item_name, req["amount"]]
 		
 		if not has_item:
-			label.modulate = Color(1, 0.4, 0.4) # Reddish for missing
+			label.modulate = Color(0xff6666ff)
 			can_craft = false
 		else:
-			label.modulate = Color(0.4, 1, 0.4) # Greenish for fulfilled
+			label.modulate = Color(0x66ff66ff)
 			
 		detailsContainer.add_child(label)
 	
@@ -58,13 +59,13 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		label.text = "  - %s x%d" % [item_name, res["amount"]]
 		detailsContainer.add_child(label)
 
-	# Add Craft Button logic (for now just a label indicating status)
-	var status_label = Label.new()
-	status_label.text = "\n[ Press Accept to Craft ]" if can_craft else "\n[ Insufficient Materials ]"
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	detailsContainer.add_child(status_label)
+	if can_craft:
+		CraftButton.visible = true
+		InsufficientLabel.visible = false
+	else:
+		CraftButton.visible = false
+		InsufficientLabel.visible = true
 
-# Override: Handle "Craft"
 func _on_item_activated() -> void:
 	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
 		return
@@ -93,3 +94,6 @@ func _craft_recipe(recipe_id: String):
 		
 	# Feedback
 	refresh_view()
+
+func _on_craft_button_pressed() -> void:
+	_on_item_activated()

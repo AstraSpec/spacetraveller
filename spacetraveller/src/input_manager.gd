@@ -10,10 +10,12 @@ signal directional_input(direction: Vector2)
 signal ui_directional_input(direction: Vector2)
 signal ui_accept
 signal ui_cancel
+signal ui_next_tab
+signal ui_prev_tab
 signal ui_drop_requested(all: bool)
 signal inventory_item_dropped(item_id: String, amount: int)
 
-signal menu_toggled
+signal menu_toggled(id: String, is_open: bool)
 
 signal action_smash_requested
 signal action_pickup_requested
@@ -25,6 +27,7 @@ enum MouseAction { PRESS, RELEASE, DRAG }
 
 enum InputMode { EXPLORATION, MAP, STRUCTURE, MENU }
 var current_mode: InputMode = InputMode.EXPLORATION
+var active_menu_id: String = ""
 var is_shift_pressed = false
 
 var contexts = {}
@@ -51,12 +54,16 @@ func _unhandled_input(event: InputEvent):
 	
 	# Transition inputs
 	if event.is_action_pressed("open_inventory"):
-		if current_mode == InputMode.MENU:
-			set_mode(InputMode.EXPLORATION)
-		elif current_mode == InputMode.EXPLORATION:
-			set_mode(InputMode.MENU)
-		get_viewport().set_input_as_handled()
-		return
+		if current_mode == InputMode.EXPLORATION or current_mode == InputMode.MENU:
+			toggle_menu("inventory")
+			get_viewport().set_input_as_handled()
+			return
+
+	if event.is_action_pressed("open_actions") or current_mode == InputMode.MENU:
+		if current_mode == InputMode.EXPLORATION:
+			toggle_menu("actions")
+			get_viewport().set_input_as_handled()
+			return
 		
 	if event.is_action_pressed("open_map"):
 		if current_mode == InputMode.MAP:
@@ -76,15 +83,24 @@ func _process(delta):
 
 # Helper for UI or other components to set mode
 func set_mode(mode: InputMode):
-	if current_mode == mode: return
+	if current_mode == mode and mode != InputMode.MENU: return
 	
 	var old_mode = current_mode
 	current_mode = mode
 	active_context = contexts.get(current_mode)
 	
 	# Handle UI signals
-	if old_mode == InputMode.MENU or current_mode == InputMode.MENU:
-		menu_toggled.emit()
+	if old_mode == InputMode.MENU and current_mode != InputMode.MENU:
+		menu_toggled.emit(active_menu_id, false)
+		active_menu_id = ""
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
+
+func toggle_menu(id: String):
+	if current_mode == InputMode.MENU and active_menu_id == id:
+		set_mode(InputMode.EXPLORATION)
+	else:
+		active_menu_id = id
+		set_mode(InputMode.MENU)
+		menu_toggled.emit(active_menu_id, true)
