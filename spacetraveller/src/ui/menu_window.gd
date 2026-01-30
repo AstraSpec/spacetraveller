@@ -27,14 +27,28 @@ func _on_prev_tab() -> void:
 	if not visible or not tabs: return
 	tabs.current_tab = (tabs.current_tab - 1 + tabs.get_tab_count()) % tabs.get_tab_count()
 
-func _on_menu_toggled(id: String, is_open: bool) -> void:
+func _on_menu_toggled(id: String, is_open: bool, params: Dictionary) -> void:
 	if id == menu_id:
 		visible = is_open
 		if visible:
+			if params.has("tab"):
+				_switch_to_tab_by_name(params["tab"])
+			
 			_update_active_tab()
+			
+			if current_tab and current_tab.has_method("set_params"):
+				current_tab.set_params(params)
 	else:
+		# If another menu is opened, close this one
 		if is_open:
 			visible = false
+
+func _switch_to_tab_by_name(tab_name: String) -> void:
+	if not tabs: return
+	for i in range(tabs.get_tab_count()):
+		if tabs.get_tab_title(i).to_lower() == tab_name.to_lower():
+			tabs.current_tab = i
+			return
 
 func _on_tab_changed(_tab_index: int) -> void:
 	_update_active_tab()

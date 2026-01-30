@@ -9,6 +9,7 @@ func _get_display_data() -> Array:
 	for action in player.available_actions:
 		data.append({
 			"display_name": action.get_action_name(),
+			"description": "Trigger " + action.get_action_name() + " action.",
 			"action_ref": action
 		})
 	return data
@@ -22,4 +23,5 @@ func _on_item_activated() -> void:
 	
 	if player and player.has_method("_try_set_action"):
 		player._try_set_action(action)
+		# Close the menu after selecting an action
 		InputManager.set_mode(InputManager.InputMode.EXPLORATION)

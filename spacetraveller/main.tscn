@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://cxcnf6aoi1roj" path="res://src/ui/inventory/crafting_tab.gd" id="13_crft"]
 [ext_resource type="Script" uid="uid://bk3n5p1wjcwpw" path="res://src/ui/action_tab.gd" id="15_actt"]
 [ext_resource type="Script" uid="uid://cgugc1j1sx1tg" path="res://src/ui/menu_window.gd" id="16_menu"]
+[ext_resource type="Script" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -349,6 +350,88 @@ text = "Insufficient Materials"
 visible = false
 layout_mode = 2
 text = "Craft Item"
+
+[node name="Nearby" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("player", "world", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("17_near")
+player = NodePath("../../../../../Player")
+world = NodePath("../../../../../WorldGen")
+stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
+titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
+detailsContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="ItemDetailsLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+text = "GROUND ITEMS"
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 2
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
 
 [node name="ActionsUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("single_tab")]
 oversampling_override = 1.0

@@ -15,7 +15,7 @@ signal ui_prev_tab
 signal ui_drop_requested(all: bool)
 signal inventory_item_dropped(item_id: String, amount: int)
 
-signal menu_toggled(id: String, is_open: bool)
+signal menu_toggled(id: String, is_open: bool, params: Dictionary)
 
 signal action_smash_requested
 signal action_pickup_requested
@@ -82,7 +82,7 @@ func _process(delta):
 		active_context.process(delta)
 
 # Helper for UI or other components to set mode
-func set_mode(mode: InputMode):
+func set_mode(mode: InputMode, params: Dictionary = {}):
 	if current_mode == mode and mode != InputMode.MENU: return
 	
 	var old_mode = current_mode
@@ -91,16 +91,16 @@ func set_mode(mode: InputMode):
 	
 	# Handle UI signals
 	if old_mode == InputMode.MENU and current_mode != InputMode.MENU:
-		menu_toggled.emit(active_menu_id, false)
+		menu_toggled.emit(active_menu_id, false, {})
 		active_menu_id = ""
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
 
-func toggle_menu(id: String):
-	if current_mode == InputMode.MENU and active_menu_id == id:
+func toggle_menu(id: String, params: Dictionary = {}):
+	if current_mode == InputMode.MENU and active_menu_id == id and params.is_empty():
 		set_mode(InputMode.EXPLORATION)
 	else:
 		active_menu_id = id
-		set_mode(InputMode.MENU)
-		menu_toggled.emit(active_menu_id, true)
+		set_mode(InputMode.MENU, params)
+		menu_toggled.emit(active_menu_id, true, params)

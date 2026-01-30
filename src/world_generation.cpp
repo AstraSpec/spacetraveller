@@ -34,7 +34,8 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &WorldGeneration::drop_item);
-    ClassDB::bind_method(D_METHOD("pickup_item", "pos", "inventory"), &WorldGeneration::pickup_item);
+    ClassDB::bind_method(D_METHOD("get_items_at", "pos"), &WorldGeneration::get_items_at);
+    ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "inventory"), &WorldGeneration::pickup_item_specific);
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &WorldGeneration::has_item);
 }
 
@@ -328,24 +329,61 @@ void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int 
     uint16_t id = id_reg->get_id(item_id);
     uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
     
-    dropped_items[key].push_back({id, amount});
+    // Stack items if they already exist
+    auto& items = dropped_items[key];
+    for (auto& item : items) {
+        if (item.id == id) {
+            item.amount += amount;
+            return;
+        }
+    }
+    
+    items.push_back({id, amount});
 }
 
-bool WorldGeneration::pickup_item(const Vector2i& pos, Inventory* p_inventory) {
-    if (!p_inventory) return false;
-    
+Array WorldGeneration::get_items_at(const Vector2i& pos) const {
+    Array list;
     uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
     auto it = dropped_items.find(key);
     
-    if (it != dropped_items.end() && !it->second.empty()) {
-        DroppedItem& dropped = it->second.back();
-        
-        if (p_inventory->add_item_numeric(dropped.id, dropped.amount)) {
-            it->second.pop_back();
-            if (it->second.empty()) {
-                dropped_items.erase(it);
+    if (it != dropped_items.end()) {
+        IdRegistry* id_reg = IdRegistry::get_singleton();
+        for (const auto& item : it->second) {
+            Dictionary d;
+            d["id"] = id_reg ? id_reg->get_string(item.id) : String::num_int64(item.id);
+            d["amount"] = item.amount;
+            list.push_back(d);
+        }
+    }
+    return list;
+}
+
+bool WorldGeneration::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory) {
+    if (!p_inventory) return false;
+    
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return false;
+    uint16_t numeric_id = id_reg->get_id(item_id);
+
+    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    auto it = dropped_items.find(key);
+    
+    if (it != dropped_items.end()) {
+        for (auto item_it = it->second.begin(); item_it != it->second.end(); ++item_it) {
+            if (item_it->id == numeric_id) {
+                int to_pickup = MIN(amount, item_it->amount);
+                if (p_inventory->add_item_numeric(numeric_id, to_pickup)) {
+                    item_it->amount -= to_pickup;
+                    if (item_it->amount <= 0) {
+                        it->second.erase(item_it);
+                    }
+                    if (it->second.empty()) {
+                        dropped_items.erase(it);
+                    }
+                    return true;
+                }
+                return false;
             }
-            return true;
         }
     }
     

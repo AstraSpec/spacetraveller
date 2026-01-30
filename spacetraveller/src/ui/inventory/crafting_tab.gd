@@ -59,6 +59,7 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		label.text = "  - %s x%d" % [item_name, res["amount"]]
 		detailsContainer.add_child(label)
 
+	# Add Craft Button
 	if can_craft:
 		CraftButton.visible = true
 		InsufficientLabel.visible = false

@@ -5,7 +5,7 @@ func is_valid(cell_pos: Vector2i) -> bool:
 	return world.has_item(cell_pos)
 
 func execute(cell_pos: Vector2i) -> void:
-	world.pickup_item(cell_pos, player.inventory)
+	InputManager.toggle_menu("inventory", {"tab": "nearby", "filter_pos": cell_pos})
 
 func get_action_name() -> String:
 	return "Pickup"
