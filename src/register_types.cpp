@@ -8,9 +8,13 @@
 #include "data/item_db.h"
 #include "data/recipe_db.h"
 #include "data/inventory.h"
+#include "data/clothing.h"
+#include "data/anatomy.h"
 #include "data/structure_db.h"
 #include "data/id_registry.h"
 #include "data/tag_registry.h"
+#include "data/body_part_db.h"
+#include "data/race_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -28,6 +32,8 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
 	GDREGISTER_RUNTIME_CLASS(Inventory);
+	GDREGISTER_RUNTIME_CLASS(Clothing);
+	GDREGISTER_RUNTIME_CLASS(Anatomy);
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
 	GDREGISTER_CLASS(ItemDb);
@@ -35,6 +41,8 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(StructureDb);
 	GDREGISTER_CLASS(IdRegistry);
 	GDREGISTER_CLASS(TagRegistry);
+	GDREGISTER_CLASS(BodyPartDb);
+	GDREGISTER_CLASS(RaceDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -56,6 +64,12 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	TagRegistry::create_singleton();
 	Engine::get_singleton()->register_singleton("TagRegistry", TagRegistry::get_singleton());
+
+	BodyPartDb::create_singleton();
+	Engine::get_singleton()->register_singleton("BodyPartDb", BodyPartDb::get_singleton());
+
+	RaceDb::create_singleton();
+	Engine::get_singleton()->register_singleton("RaceDb", RaceDb::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
@@ -83,6 +97,12 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("TagRegistry");
 	TagRegistry::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("BodyPartDb");
+	BodyPartDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("RaceDb");
+	RaceDb::delete_singleton();
 }
 
 extern "C" {

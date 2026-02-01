@@ -198,6 +198,9 @@ class MenuContext extends InputContext:
 		elif event.is_action_pressed("drop_item"):
 			manager.ui_drop_requested.emit(manager.is_shift_pressed)
 			return true
+		elif event.is_action_pressed("wear_item"):
+			manager.ui_wear_requested.emit()
+			return true
 		return false
 
 	func process(delta: float) -> void:

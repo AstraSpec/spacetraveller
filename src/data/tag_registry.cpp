@@ -6,6 +6,19 @@ namespace godot {
 
 TagRegistry *TagRegistry::singleton = nullptr;
 
+void TagRegistry::create_singleton() {
+    if (!singleton) {
+        singleton = memnew(TagRegistry);
+    }
+}
+
+void TagRegistry::delete_singleton() {
+    if (singleton) {
+        memdelete(singleton);
+        singleton = nullptr;
+    }
+}
+
 void TagRegistry::_bind_methods() {
     ClassDB::bind_static_method("TagRegistry", D_METHOD("get_singleton"), &TagRegistry::get_singleton);
     ClassDB::bind_method(D_METHOD("register_tag", "tag"), &TagRegistry::register_tag);

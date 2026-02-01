@@ -10,18 +10,12 @@
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-#include "id_registry.h"
+#include "string_hasher.h"
 #include "tag_registry.h"
 #include <unordered_map>
 #include <algorithm>
 
 namespace godot {
-
-struct StringHasher {
-    size_t operator()(const String &p_string) const {
-        return p_string.hash();
-    }
-};
 
 template <typename T, typename Derived>
 class DataBase {

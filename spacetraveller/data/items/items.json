@@ -6,7 +6,7 @@
     "atlas": [ 26, 7 ],
     "weight": 2.5,
     "volume": 1.0,
-    "tags": ["WEARABLE", "HEAVY"]
+    "tags": ["HEAVY"]
   },
   {
     "id": "debug_item_2",

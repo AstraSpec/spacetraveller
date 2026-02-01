@@ -5,7 +5,8 @@ signal movedChunk(chunkPos :Vector2)
 
 @onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
 @export var World : WorldGeneration
-@export var inventory :Inventory
+@export var inventory: Inventory
+@export var _Anatomy :Anatomy
 
 const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 

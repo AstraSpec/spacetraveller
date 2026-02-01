@@ -12,6 +12,7 @@ func _ready() -> void:
 	InputManager.ui_directional_input.connect(_on_directional_input)
 	InputManager.ui_accept.connect(_on_accept_input)
 	InputManager.ui_drop_requested.connect(_on_drop_input)
+	InputManager.ui_wear_requested.connect(_on_wear_input)
 	InputManager.ui_cancel.connect(_on_close_requested)
 	InputManager.ui_next_tab.connect(_on_next_tab)
 	InputManager.ui_prev_tab.connect(_on_prev_tab)
@@ -76,6 +77,11 @@ func _on_drop_input(all: bool):
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
 		current_tab.handle_action("drop", {"all": all})
+
+func _on_wear_input():
+	if not visible or not current_tab: return
+	if current_tab.has_method("handle_action"):
+		current_tab.handle_action("wear")
 
 func _on_close_requested() -> void:
 	InputManager.set_mode(InputManager.InputMode.EXPLORATION)

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include "string_hasher.h"
 
 namespace godot {
 
@@ -15,7 +16,7 @@ class TagRegistry : public Object {
 
 private:
     static TagRegistry *singleton;
-    std::unordered_map<String, uint16_t> tag_to_id;
+    std::unordered_map<String, uint16_t, StringHasher> tag_to_id;
     std::vector<String> id_to_tag;
 
 protected:
@@ -23,8 +24,8 @@ protected:
 
 public:
     static TagRegistry *get_singleton() { return singleton; }
-    static void create_singleton() { if (!singleton) singleton = memnew(TagRegistry); }
-    static void delete_singleton() { if (singleton) { memdelete(singleton); singleton = nullptr; } }
+    static void create_singleton();
+    static void delete_singleton();
 
     TagRegistry();
     ~TagRegistry();

@@ -5,7 +5,7 @@
 #include <godot_cpp/variant/string.hpp>
 #include <unordered_map>
 #include <vector>
-#include "database.h"
+#include "string_hasher.h"
 
 namespace godot {
 

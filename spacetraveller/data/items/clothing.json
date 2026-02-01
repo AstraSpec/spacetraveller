@@ -1,0 +1,152 @@
+[
+  {
+    "id": "tunic_wool",
+    "name": "Wool Tunic",
+    "description": "A simple wool tunic. Comfortable and warm.",
+    "atlas": [ 26, 9 ],
+    "weight": 0.5,
+    "volume": 1.0,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "torso",
+      "layer": "middle",
+      "armor": 0.5,
+      "coverage": 0.8
+    }
+  },
+  {
+    "id": "pants_wool",
+    "name": "Wool Pants",
+    "description": "Simple wool pants.",
+    "atlas": [ 27, 9 ],
+    "weight": 0.4,
+    "volume": 0.8,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "leg",
+      "layer": "middle",
+      "armor": 0.5,
+      "coverage": 0.9
+    }
+  },
+  {
+    "id": "iron_chestplate",
+    "name": "Iron Chestplate",
+    "description": "A heavy iron chestplate. Provides excellent protection.",
+    "atlas": [ 28, 9 ],
+    "weight": 10.0,
+    "volume": 5.0,
+    "tags": ["WEARABLE", "ARMOR"],
+    "clothing": {
+      "part": "torso",
+      "layer": "armor",
+      "armor": 10.0,
+      "coverage": 0.9
+    }
+  },
+  {
+    "id": "leather_cap",
+    "name": "Leather Cap",
+    "description": "A simple leather cap.",
+    "atlas": [ 29, 9 ],
+    "weight": 0.2,
+    "volume": 0.5,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "head",
+      "layer": "outer",
+      "armor": 1.0,
+      "coverage": 0.5
+    }
+  },
+  {
+    "id": "bra_wool",
+    "name": "Wool Bra",
+    "description": "Simple wool undergarment for the torso.",
+    "atlas": [ 26, 10 ],
+    "weight": 0.1,
+    "volume": 0.1,
+    "tags": ["WEARABLE", "UNDERWEAR"],
+    "clothing": {
+      "part": "torso",
+      "layer": "under",
+      "armor": 0.0,
+      "coverage": 0.2
+    }
+  },
+  {
+    "id": "panties_wool",
+    "name": "Wool Panties",
+    "description": "Simple wool undergarment for the lower body.",
+    "atlas": [ 27, 10 ],
+    "weight": 0.1,
+    "volume": 0.1,
+    "tags": ["WEARABLE", "UNDERWEAR"],
+    "clothing": {
+      "part": "torso",
+      "layer": "under",
+      "armor": 0.0,
+      "coverage": 0.1
+    }
+  },
+  {
+    "id": "linen_shirt",
+    "name": "Linen Shirt",
+    "description": "A light linen shirt.",
+    "atlas": [ 28, 10 ],
+    "weight": 0.3,
+    "volume": 0.5,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "torso",
+      "layer": "middle",
+      "armor": 0.1,
+      "coverage": 0.7
+    }
+  },
+  {
+    "id": "linen_trousers",
+    "name": "Linen Trousers",
+    "description": "Light linen trousers.",
+    "atlas": [ 29, 10 ],
+    "weight": 0.4,
+    "volume": 0.6,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "leg",
+      "layer": "middle",
+      "armor": 0.1,
+      "coverage": 0.8
+    }
+  },
+  {
+    "id": "silver_earrings",
+    "name": "Silver Earrings",
+    "description": "A pair of silver earrings.",
+    "atlas": [ 30, 10 ],
+    "weight": 0.02,
+    "volume": 0.01,
+    "tags": ["WEARABLE", "JEWELRY"],
+    "clothing": {
+      "part": "ear",
+      "layer": "outer",
+      "armor": 0.0,
+      "coverage": 0.01
+    }
+  },
+  {
+    "id": "gold_ring",
+    "name": "Gold Ring",
+    "description": "A shiny gold ring.",
+    "atlas": [ 29, 8 ],
+    "weight": 0.01,
+    "volume": 0.01,
+    "tags": ["WEARABLE", "JEWELRY"],
+    "clothing": {
+      "part": "finger",
+      "layer": "outer",
+      "armor": 0.0,
+      "coverage": 0.05
+    }
+  }
+]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=24 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://d3c2r6p20mg1h" path="res://src/ui/spacer_label.tscn" id="17_074og"]
 [ext_resource type="Script" uid="uid://bwtfnra3owd3s" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
 [ext_resource type="Script" uid="uid://b6lmx7browyyg" path="res://src/ui/world_camera.gd" id="18_cam"]
+[ext_resource type="Script" uid="uid://dk0ty1jdmq7i0" path="res://src/ui/inventory/clothing_tab.gd" id="19_clot"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -89,7 +90,7 @@ Player = NodePath("../Player")
 
 [node name="Inventory" type="Inventory" parent="."]
 
-[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World", "inventory")]
+[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World", "inventory", "_Anatomy")]
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
@@ -97,6 +98,11 @@ region_rect = Rect2(1353, 378, 12, 12)
 script = ExtResource("4_yn2v7")
 World = NodePath("../WorldGen")
 inventory = NodePath("../Inventory")
+_Anatomy = NodePath("Anatomy")
+
+[node name="Clothing" type="Clothing" parent="Player"]
+
+[node name="Anatomy" type="Anatomy" parent="Player"]
 
 [node name="Camera" type="Camera2D" parent="Player" node_paths=PackedStringArray("side_panel")]
 position = Vector2(7, 7)
@@ -410,6 +416,94 @@ autowrap_mode = 2
 [node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Nearby/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
+[node name="Clothing" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("clothing", "armorLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("19_clot")
+clothing = NodePath("../../../../../Player/Clothing")
+armorLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/ArmorLabel")
+stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
+titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
+detailsContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/ModifiersContainer")
+metadata/_tab_index = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="ItemDetailsLabel" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+text = "EQUIPPED ITEMS"
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 2
+
+[node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ArmorLabel" type="RichTextLabel" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+layout_mode = 2
+bbcode_enabled = true
+text = "Total Armor: "
+fit_content = true
+
 [node name="ActionsUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("single_tab")]
 oversampling_override = 1.0
 title = "Actions"
@@ -546,6 +640,5 @@ visible = false
 position = Vector2(-12, 0)
 
 [connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
-[connection signal="movedChunk" from="Player" to="Canvas/Map" method="_on_player_moved_chunk"]
 [connection signal="close_requested" from="Canvas/Window/InventoryUI" to="Canvas/Window/InventoryUI" method="_on_close_requested"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]

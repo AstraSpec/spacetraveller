@@ -13,6 +13,7 @@ struct ItemInfo {
     float weight = 0.0f;
     float volume = 0.0f;
     std::vector<uint16_t> tags;
+    Dictionary clothing_data;
 };
 
 class ItemDb : public Object, public DataBase<ItemInfo, ItemDb> {
@@ -41,6 +42,7 @@ public:
     String get_item_description(const String &p_id) const;
     Dictionary get_item_modifiers(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
+    Dictionary get_clothing_data(const String &p_id) const;
 };
 
 }
