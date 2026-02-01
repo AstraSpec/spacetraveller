@@ -82,7 +82,7 @@ func _process(delta):
 		active_context.process(delta)
 
 # Helper for UI or other components to set mode
-func set_mode(mode: InputMode, params: Dictionary = {}):
+func set_mode(mode: InputMode, _params: Dictionary = {}):
 	if current_mode == mode and mode != InputMode.MENU: return
 	
 	var old_mode = current_mode

@@ -66,12 +66,14 @@ func _on_movement_triggered(dir: Vector2):
 		if currentAction.is_valid(target_cell):
 			currentAction.execute(target_cell)
 			World.update_world_bubble(cellPos)
+			TimeManager.advance_turn()
 		
 		currentAction = null
 		_clear_interaction_cells()
 		# Returns to move mode
 	else:
 		interact_cell(dir)
+		TimeManager.advance_turn()
 
 func interact_cell(displacement: Vector2) -> void:
 	cellPos += displacement

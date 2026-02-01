@@ -11,7 +11,9 @@ Label2 = NodePath("Label2")
 
 [node name="Label1" type="Label" parent="."]
 layout_mode = 2
-text = "This is a spacer label"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "This is a label"
 
 [node name="Spacer" type="Control" parent="."]
 layout_mode = 2
@@ -19,4 +21,6 @@ size_flags_horizontal = 3
 
 [node name="Label2" type="Label" parent="."]
 layout_mode = 2
-text = "The end"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Wow!"

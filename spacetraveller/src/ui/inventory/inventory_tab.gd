@@ -69,4 +69,5 @@ func _drop_selected_item(all: bool):
 	
 	if inventory.remove_item(item_id, amount_to_remove):
 		InputManager.inventory_item_dropped.emit(item_id, amount_to_remove)
+		TimeManager.advance_turn()
 		refresh_view()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=23 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -12,9 +12,13 @@
 [ext_resource type="PackedScene" uid="uid://cwjarqq6fihlh" path="res://src/interaction_cell.tscn" id="11_efxa6"]
 [ext_resource type="Script" uid="uid://bm58lkag0saye" path="res://src/ui/inventory/inventory_tab.gd" id="12_invt"]
 [ext_resource type="Script" uid="uid://cxcnf6aoi1roj" path="res://src/ui/inventory/crafting_tab.gd" id="13_crft"]
+[ext_resource type="Script" uid="uid://cgbnoaw0jsx1q" path="res://src/ui/screen_ui.gd" id="15_2cqfq"]
 [ext_resource type="Script" uid="uid://bk3n5p1wjcwpw" path="res://src/ui/action_tab.gd" id="15_actt"]
+[ext_resource type="StyleBox" uid="uid://cl5k3aow0gvn" path="res://src/ui/theme/panel.tres" id="15_yaehf"]
 [ext_resource type="Script" uid="uid://cgugc1j1sx1tg" path="res://src/ui/menu_window.gd" id="16_menu"]
-[ext_resource type="Script" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
+[ext_resource type="PackedScene" uid="uid://d3c2r6p20mg1h" path="res://src/ui/spacer_label.tscn" id="17_074og"]
+[ext_resource type="Script" uid="uid://bwtfnra3owd3s" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
+[ext_resource type="Script" uid="uid://b6lmx7browyyg" path="res://src/ui/world_camera.gd" id="18_cam"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -94,42 +98,13 @@ script = ExtResource("4_yn2v7")
 World = NodePath("../WorldGen")
 inventory = NodePath("../Inventory")
 
-[node name="Camera" type="Camera2D" parent="Player"]
+[node name="Camera" type="Camera2D" parent="Player" node_paths=PackedStringArray("side_panel")]
 position = Vector2(7, 7)
 zoom = Vector2(2, 2)
+script = ExtResource("18_cam")
+side_panel = NodePath("../../Canvas/ScreenUI/ScreenUI")
 
 [node name="Canvas" type="CanvasLayer" parent="."]
-
-[node name="Map" type="Control" parent="Canvas"]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-script = ExtResource("7_ghimp")
-
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Map"]
-clip_contents = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 40
-
-[node name="ViewportRect" type="TextureRect" parent="Canvas/Map/MarginContainer"]
-texture_filter = 1
-layout_mode = 2
-texture = SubResource("ViewportTexture_kjl2a")
-expand_mode = 1
-stretch_mode = 2
 
 [node name="DebugInfo" type="Label" parent="Canvas"]
 offset_right = 40.0
@@ -143,6 +118,7 @@ oversampling_override = 1.0
 title = "Inventory"
 initial_position = 1
 size = Vector2i(930, 560)
+visible = false
 unfocusable = true
 script = ExtResource("16_menu")
 menu_id = "inventory"
@@ -154,6 +130,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = ExtResource("15_yaehf")
 current_tab = 0
 clip_tabs = false
 tab_focus_mode = 0
@@ -467,6 +444,99 @@ size_flags_horizontal = 3
 
 [node name="StripContainer" parent="Canvas/Window/ActionsUI/Actions/VBoxContainer/MarginContainer/ItemList" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+
+[node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+
+[node name="Control" type="Control" parent="Canvas/ScreenUI"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+
+[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI" node_paths=PackedStringArray("DayLabel", "TimeLabel", "SunLabel")]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/side_margin = 0
+theme_override_styles/panel = ExtResource("15_yaehf")
+current_tab = 0
+script = ExtResource("15_2cqfq")
+DayLabel = NodePath("Vitals/VBoxContainer/DayLabel")
+TimeLabel = NodePath("Vitals/VBoxContainer/TimeLabel")
+SunLabel = NodePath("Vitals/VBoxContainer/SunLabel")
+
+[node name="Vitals" type="MarginContainer" parent="Canvas/ScreenUI/ScreenUI"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/ScreenUI/ScreenUI/Vitals"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DayLabel" parent="Canvas/ScreenUI/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+layout_mode = 2
+label1_color = Color(0.62352943, 0.62352943, 0.62352943, 1)
+label1_font_size = 12
+label1_text = "Day:"
+label2_font_size = 12
+
+[node name="TimeLabel" parent="Canvas/ScreenUI/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+layout_mode = 2
+label1_color = Color(0.625, 0.625, 0.625, 1)
+label1_font_size = 12
+label1_text = "Time:"
+label2_font_size = 12
+
+[node name="SunLabel" parent="Canvas/ScreenUI/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+layout_mode = 2
+label1_color = Color(0.625, 0.625, 0.625, 1)
+label1_font_size = 12
+label1_text = "Sun:"
+label2_font_size = 12
+
+[node name="Log" type="Control" parent="Canvas/ScreenUI/ScreenUI"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Map" type="Control" parent="Canvas"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("7_ghimp")
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Map"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="ViewportRect" type="TextureRect" parent="Canvas/Map/MarginContainer"]
+texture_filter = 1
+layout_mode = 2
+texture = SubResource("ViewportTexture_kjl2a")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
 visible = false

@@ -1,6 +1,8 @@
 extends Camera2D
 class_name ViewCamera
 
+# Panning camera for the map, structure editor, etc.
+
 @export var ZOOM_LVL : Array[float] = [0.75, 1.0, 1.5, 2.0]
 @export var DRAG_SPEED : float = 1.75
 @export var limits : Rect2 = Rect2(-1e8, -1e8, 2e8, 2e8)

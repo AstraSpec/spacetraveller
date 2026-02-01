@@ -4,6 +4,7 @@ extends Node2D
 @export var Player :Sprite2D
 
 func _ready() -> void:
+	RenderingServer.set_default_clear_color(Color.BLACK)
 	Player.interact_cell(Vector2(2899, 2899))
 	
 	TileDb.initialize_data()

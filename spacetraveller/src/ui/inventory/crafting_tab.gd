@@ -79,6 +79,7 @@ func _craft_recipe(recipe_id: String):
 	
 	var reqs = RecipeDb.get_recipe_requirements(recipe_id)
 	var results = RecipeDb.get_recipe_results(recipe_id)
+	var craft_time = RecipeDb.get_recipe_time(recipe_id)
 	
 	# Final check
 	for req in reqs:
@@ -93,6 +94,10 @@ func _craft_recipe(recipe_id: String):
 	for res in results:
 		inventory.add_item(res["id"], res["amount"])
 		
+	# Advance time
+	var turns_to_advance = max(1, int(craft_time))
+	TimeManager.advance_turn(turns_to_advance)
+	
 	# Feedback
 	refresh_view()
 

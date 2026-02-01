@@ -71,9 +71,10 @@ func _pickup_selected_item(all: bool):
 		var to_get = min(total_to_pickup - picked_up_so_far, source["amount"])
 		if world.pickup_item_specific(source["pos"], item_id, to_get, player.inventory):
 			picked_up_so_far += to_get
-		
-		if picked_up_so_far >= total_to_pickup:
-			break
+			TimeManager.advance_turn()
+
+			if picked_up_so_far >= total_to_pickup:
+				break
 			
 	if picked_up_so_far > 0:
 		world.update_world_bubble(player.cellPos)
