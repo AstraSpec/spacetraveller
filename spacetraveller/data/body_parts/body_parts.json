@@ -1,0 +1,15 @@
+[
+  { "id": "torso", "name": "Torso", "tags": ["CORE"] },
+  { "id": "head", "name": "Head", "tags": ["VITAL"] },
+  { "id": "neck", "name": "Neck", "tags": ["VITAL"] },
+  { "id": "arm", "name": "Arm", "tags": ["LIMB"] },
+  { "id": "leg", "name": "Leg", "tags": ["LIMB"] },
+  { "id": "hand", "name": "Hand", "tags": ["GRASP"] },
+  { "id": "foot", "name": "Foot", "tags": ["STANCE"] },
+  { "id": "finger", "name": "Finger", "tags": ["DIGIT"] },
+  { "id": "toe", "name": "Toe", "tags": ["DIGIT"] },
+  { "id": "eye", "name": "Eye", "tags": ["SENSE", "SIGHT"] },
+  { "id": "nose", "name": "Nose", "tags": ["SENSE", "SMELL"] },
+  { "id": "mouth", "name": "Mouth", "tags": ["SENSE", "TASTE", "EAT"] },
+  { "id": "ear", "name": "Ear", "tags": ["SENSE", "HEARING"] }
+]
