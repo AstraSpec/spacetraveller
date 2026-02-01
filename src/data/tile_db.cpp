@@ -12,6 +12,7 @@ void TileDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &TileDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &TileDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("is_solid", "id"), &TileDb::is_solid);
+    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &TileDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_ids"), &TileDb::get_ids);
 }
 
@@ -25,6 +26,7 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     TileInfo info;
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.solid = p_data.get("solid", false);
+    info.tags = _parse_tags(p_data.get("tags", Array()));
     
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
@@ -57,6 +59,17 @@ bool TileDb::is_solid(const String &p_id) const {
     const TileInfo* info = get_tile_info(p_id);
     if (info) return info->solid;
     return false;
+}
+
+bool TileDb::has_tag(const String &p_id, const String &p_tag) const {
+    const TileInfo* info = get_tile_info(p_id);
+    if (!info) return false;
+    
+    TagRegistry *reg = TagRegistry::get_singleton();
+    if (!reg) return false;
+    
+    uint16_t tag_id = reg->get_tag_id(p_tag);
+    return TagRegistry::has_tag(tag_id, info->tags);
 }
 
 }

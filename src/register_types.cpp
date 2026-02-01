@@ -10,6 +10,7 @@
 #include "data/inventory.h"
 #include "data/structure_db.h"
 #include "data/id_registry.h"
+#include "data/tag_registry.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -33,6 +34,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(RecipeDb);
 	GDREGISTER_CLASS(StructureDb);
 	GDREGISTER_CLASS(IdRegistry);
+	GDREGISTER_CLASS(TagRegistry);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -51,6 +53,9 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	IdRegistry::create_singleton();
 	Engine::get_singleton()->register_singleton("IdRegistry", IdRegistry::get_singleton());
+
+	TagRegistry::create_singleton();
+	Engine::get_singleton()->register_singleton("TagRegistry", TagRegistry::get_singleton());
 }
 
 void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
@@ -75,6 +80,9 @@ void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("IdRegistry");
 	IdRegistry::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("TagRegistry");
+	TagRegistry::delete_singleton();
 }
 
 extern "C" {

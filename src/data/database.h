@@ -10,7 +10,10 @@
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include "id_registry.h"
+#include "tag_registry.h"
 #include <unordered_map>
+#include <algorithm>
 
 namespace godot {
 
@@ -114,6 +117,24 @@ public:
         return ids;
     }
     
+    std::vector<uint16_t> _parse_tags(const Variant &p_tags) {
+        std::vector<uint16_t> tag_ids;
+        if (p_tags.get_type() != Variant::ARRAY) return tag_ids;
+
+        Array arr = p_tags;
+        TagRegistry *reg = TagRegistry::get_singleton();
+        if (!reg) return tag_ids;
+
+        for (int i = 0; i < arr.size(); i++) {
+            String tag_name = arr[i];
+            uint16_t id = reg->register_tag(tag_name);
+            tag_ids.push_back(id);
+        }
+
+        std::sort(tag_ids.begin(), tag_ids.end());
+        return tag_ids;
+    }
+
     Vector2i variant_to_vector2i(const Variant &p_var, const Vector2i &p_default = Vector2i(-1, -1)) const {
         if (p_var.get_type() == Variant::ARRAY) {
             Array arr = p_var;

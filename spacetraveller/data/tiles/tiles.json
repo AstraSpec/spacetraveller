@@ -2,61 +2,73 @@
   {
     "id": "void",
     "atlas": [ 16, 0 ],
-    "solid": false
+    "solid": false,
+    "tags": []
   },
   {
     "id": "dirt",
     "atlas": [ 9, 5 ],
-    "solid": false
+    "solid": false,
+    "tags": ["GROUND"]
   },
   {
     "id": "tree",
     "atlas": [ 0, 8 ],
-    "solid": true
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"]
   },
   {
     "id": "grass1",
     "atlas": [ 6, 9 ],
-    "solid": false
+    "solid": false,
+    "tags": ["GROUND", "VEGETATION"]
   },
   {
     "id": "grass2",
     "atlas": [ 7, 9 ],
-    "solid": false
+    "solid": false,
+    "tags": ["GROUND", "VEGETATION"]
   },
   {
     "id": "grass3",
     "atlas": [ 3, 9 ],
-    "solid": false
+    "solid": false,
+    "tags": ["GROUND", "VEGETATION"]
   },
   {
     "id": "w_wall",
     "atlas": [ 0, 4 ],
-    "solid": true
+    "solid": true,
+    "tags": ["SMASHABLE", "WALL"]
   },
   {
     "id": "w_floor",
     "atlas": [ 59, 1 ],
-    "solid": false
+    "solid": false,
+    "tags": ["FLOOR"]
   },
   {
     "id": "palace_floor",
     "atlas": [ 0, 0 ],
-    "solid": false
+    "solid": false,
+    "tags": ["FLOOR"]
   },
   {
     "id": "stone_bricks",
     "atlas": [ 53, 0 ],
-    "solid": false
+    "solid": false,
+    "tags": ["FLOOR", "ROAD"]
   },
   {
     "id": "alley_bricks",
     "atlas": [ 54, 1 ],
-    "solid": false
+    "solid": false,
+    "tags": ["FLOOR", "ROAD"]
   },
   {
     "id": "gate_floor",
     "atlas": [ 52, 0 ],
-    "solid": false
+    "solid": false,
+    "tags": ["FLOOR"]
   }
 ]

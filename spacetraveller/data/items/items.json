@@ -5,7 +5,8 @@
     "description": "This is debug item 1. On the left side of the door frame.",
     "atlas": [ 26, 7 ],
     "weight": 2.5,
-    "volume": 1.0
+    "volume": 1.0,
+    "tags": ["WEARABLE", "HEAVY"]
   },
   {
     "id": "debug_item_2",
@@ -13,7 +14,8 @@
     "description": "This is debug item 2. On the left side of the door frame.",
     "atlas": [ 27, 7 ],
     "weight": 0.2,
-    "volume": 0.1
+    "volume": 0.1,
+    "tags": ["SMALL", "COMMON"]
   },
   {
     "id": "debug_item_3",
@@ -21,7 +23,8 @@
     "description": "This is debug item 3. On the left side of the door frame.",
     "atlas": [ 28, 7 ],
     "weight": 0.5,
-    "volume": 0.5
+    "volume": 0.5,
+    "tags": ["UTILITY"]
   },
   {
     "id": "debug_item_4",
@@ -29,7 +32,8 @@
     "description": "This is debug item 4. On the left side of the door frame.",
     "atlas": [ 29, 7 ],
     "weight": 0.1,
-    "volume": 0.05
+    "volume": 0.05,
+    "tags": ["SMALL"]
   },
   {
     "id": "debug_item_5",
@@ -37,7 +41,8 @@
     "description": "This is debug item 5. On the left side of the door frame.",
     "atlas": [ 26, 8 ],
     "weight": 0.1,
-    "volume": 0.05
+    "volume": 0.05,
+    "tags": ["SMALL"]
   },
   {
     "id": "debug_item_6",
@@ -45,6 +50,7 @@
     "description": "This is debug item 6. On the left side of the door frame.",
     "atlas": [ 27, 8 ],
     "weight": 0.1,
-    "volume": 0.05
+    "volume": 0.05,
+    "tags": ["SMALL"]
   }
 ]
