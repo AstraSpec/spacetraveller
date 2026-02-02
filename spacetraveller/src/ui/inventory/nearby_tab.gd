@@ -2,9 +2,15 @@ extends BaseListTab
 
 @export var player: Sprite2D
 @export var world: WorldGeneration
+@export var itemDetailsLabel: Label
 
 var filter_pos: Vector2i = Vector2i(-1, -1)
 var use_filter: bool = false
+
+func refresh_view() -> void:
+	super.refresh_view()
+	if itemDetailsLabel:
+		itemDetailsLabel.visible = !_items_cache.is_empty()
 
 func set_params(params: Dictionary) -> void:
 	if params.has("filter_pos"):
