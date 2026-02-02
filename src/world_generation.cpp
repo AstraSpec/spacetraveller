@@ -81,6 +81,86 @@ uint16_t WorldGeneration::pick_weighted_tile(const BiomeInfo& info, uint32_t rol
     return info.ground_tiles.empty() ? id_void : info.ground_tiles[0].id;
 }
 
+void WorldGeneration::apply_auto_tiling(const Vector2i& p_region_pos) {
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    uint16_t road_tag_id = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
+
+    // Use a grid for O(1) lookups during this pass
+    std::vector<uint16_t> grid(REGION_SIZE * REGION_SIZE, 0);
+    std::vector<uint64_t> chunk_keys;
+    chunk_keys.reserve(region_chunks.size());
+
+    for (auto& pair : region_chunks) {
+        chunk_keys.push_back(pair.first);
+        Vector2i pos = unpack_coords(pair.first);
+        
+        // Only interested in chunks within the current region for the grid
+        int rel_x = pos.x - p_region_pos.x * REGION_SIZE;
+        int rel_y = pos.y - p_region_pos.y * REGION_SIZE;
+        
+        if (rel_x >= 0 && rel_x < REGION_SIZE && rel_y >= 0 && rel_y < REGION_SIZE) {
+            grid[rel_y * REGION_SIZE + rel_x] = static_cast<uint16_t>(pair.second & ID_MASK);
+        }
+    }
+
+    for (uint64_t key : chunk_keys) {
+        uint32_t packed = region_chunks[key];
+        uint16_t chunk_id = static_cast<uint16_t>(packed & ID_MASK);
+
+        auto it_rule = biome_rules.find(chunk_id);
+        if (it_rule == biome_rules.end() || !it_rule->second.auto_tiled) {
+            continue;
+        }
+
+        Vector2i pos = unpack_coords(key);
+        int rel_x = pos.x - p_region_pos.x * REGION_SIZE;
+        int rel_y = pos.y - p_region_pos.y * REGION_SIZE;
+
+        uint32_t mask = 0;
+        bool current_is_road = (chunk_db && road_tag_id != 0) ? chunk_db->has_tag(chunk_id, road_tag_id) : false;
+
+        auto get_grid_id = [&](int nx, int ny) -> uint16_t {
+            if (nx < 0 || nx >= REGION_SIZE || ny < 0 || ny >= REGION_SIZE) {
+                // Fallback to region_chunks for out-of-bounds
+                int gx = p_region_pos.x * REGION_SIZE + nx;
+                int gy = p_region_pos.y * REGION_SIZE + ny;
+                uint64_t n_key = pack_coords(gx, gy);
+                auto n_it = region_chunks.find(n_key);
+                return (n_it != region_chunks.end()) ? static_cast<uint16_t>(n_it->second & ID_MASK) : 0;
+            }
+            return grid[ny * REGION_SIZE + nx];
+        };
+
+        auto check_neighbor = [&](int dx, int dy, NeighborBits bit) {
+            uint16_t n_id = get_grid_id(rel_x + dx, rel_y + dy);
+            if (n_id != 0) {
+                bool neighbor_connects = false;
+                if (current_is_road && chunk_db && road_tag_id != 0) {
+                    if (chunk_db->has_tag(n_id, road_tag_id)) {
+                        neighbor_connects = true;
+                    }
+                }
+                
+                if (!neighbor_connects && n_id == chunk_id) {
+                    neighbor_connects = true;
+                }
+
+                if (neighbor_connects) {
+                    mask |= bit;
+                }
+            }
+        };
+
+        check_neighbor(0, -1, NEIGH_NORTH);
+        check_neighbor(1, 0, NEIGH_EAST);
+        check_neighbor(0, 1, NEIGH_SOUTH);
+        check_neighbor(-1, 0, NEIGH_WEST);
+
+        region_chunks[key] = (packed & ~(NEIGHBOR_MASK << NEIGHBOR_SHIFT)) | (mask << NEIGHBOR_SHIFT);
+    }
+}
+
 void WorldGeneration::setup_biome_rules() {
     if (!biome_rules.empty()) return; // Already setup
 
@@ -126,8 +206,17 @@ void WorldGeneration::setup_biome_rules() {
         biome_rules[b_id] = info;
     };
 
-    reg_simple("road", "stone_bricks");
-    reg_simple("alley", "alley_bricks");
+    auto reg_tiled = [&](const String& name, const String& tile, const String& border) {
+        uint16_t b_id = id_reg->register_string(name);
+        BiomeInfo info;
+        info.ground_tiles.push_back({id_reg->register_string(tile), 100});
+        info.auto_tiled = true;
+        info.border_tile_id = id_reg->register_string(border);
+        biome_rules[b_id] = info;
+    };
+
+    reg_tiled("road", "road_bricks", "road_flagstone");
+    reg_tiled("alley", "alley_bricks", "alley_flagstone");
     reg_simple("plaza", "w_floor");
     reg_simple("gate", "gate_floor");
     reg_simple("palace", "palace_floor");
@@ -149,6 +238,7 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
         uint32_t packed = it->second;
         last_chunk_id = static_cast<uint16_t>(packed & ID_MASK);
         last_chunk_rotation = static_cast<uint8_t>(packed >> ORIENTATION_SHIFT);
+        last_chunk_neighbors = static_cast<uint8_t>((packed >> NEIGHBOR_SHIFT) & NEIGHBOR_MASK);
         last_chunk_key = chunk_key;
         
         auto it_rule = biome_rules.find(last_chunk_id);
@@ -158,6 +248,30 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
     }
 
     const uint16_t chunk_id = last_chunk_id;
+
+    // 0. Auto-Tiling Path (Fast Border Check)
+    if (last_biome_ptr && last_biome_ptr->auto_tiled) {
+        int lx = x % CHUNK_SIZE; if (lx < 0) lx += CHUNK_SIZE;
+        int ly = y % CHUNK_SIZE; if (ly < 0) ly += CHUNK_SIZE;
+
+        bool west = lx < 3;
+        bool east = lx >= CHUNK_SIZE - 3;
+        bool north = ly < 3;
+        bool south = ly >= CHUNK_SIZE - 3;
+
+        // Corners (3x3) are always borders for road/alley chunks
+        if ((west || east) && (north || south)) {
+            return last_biome_ptr->border_tile_id;
+        }
+
+        // Edges are borders if the corresponding cardinal neighbor is missing
+        if ((west && !(last_chunk_neighbors & NEIGH_WEST)) ||
+            (east && !(last_chunk_neighbors & NEIGH_EAST)) ||
+            (north && !(last_chunk_neighbors & NEIGH_NORTH)) ||
+            (south && !(last_chunk_neighbors & NEIGH_SOUTH))) {
+            return last_biome_ptr->border_tile_id;
+        }
+    }
 
     // 1. Structure Lookup Path (Hot Path)
     if (chunk_id == id_building && s_db) {
@@ -318,6 +432,8 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
             result[key] = id_reg->get_string(chunk_id);
         }
     }
+
+    apply_auto_tiling(regionPos);
 
     return result;
 }

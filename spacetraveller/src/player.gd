@@ -1,7 +1,7 @@
 extends Sprite2D
 
-signal movedCell(cellPos :Vector2)
-signal movedChunk(chunkPos :Vector2)
+signal moved_cell(cellPos :Vector2)
+signal moved_chunk(chunkPos :Vector2)
 
 @onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
 @export var World : WorldGeneration
@@ -78,12 +78,12 @@ func _on_movement_triggered(dir: Vector2):
 
 func interact_cell(displacement: Vector2) -> void:
 	cellPos += displacement
-	movedCell.emit(cellPos)
+	moved_cell.emit(cellPos)
 	
 	var newChunkPos = Vector2(floor(cellPos.x / CHUNK_SIZE), floor(cellPos.y / CHUNK_SIZE))
 	
 	if chunkPos != newChunkPos:
 		chunkPos = newChunkPos
-		movedChunk.emit(chunkPos)
+		moved_chunk.emit(chunkPos)
 	
 	World.update_world_bubble(cellPos)

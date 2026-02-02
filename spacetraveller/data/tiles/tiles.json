@@ -54,14 +54,26 @@
     "tags": ["FLOOR"]
   },
   {
-    "id": "stone_bricks",
-    "atlas": [ 53, 0 ],
+    "id": "road_flagstone",
+    "atlas": [ 5, 2 ],
+    "solid": false,
+    "tags": ["FLOOR", "ROAD"]
+  },
+  {
+    "id": "road_bricks",
+    "atlas": [ 0, 2 ],
+    "solid": false,
+    "tags": ["FLOOR", "ROAD"]
+  },
+  {
+    "id": "alley_flagstone",
+    "atlas": [ 5, 2 ],
     "solid": false,
     "tags": ["FLOOR", "ROAD"]
   },
   {
     "id": "alley_bricks",
-    "atlas": [ 54, 1 ],
+    "atlas": [ 23, 3 ],
     "solid": false,
     "tags": ["FLOOR", "ROAD"]
   },

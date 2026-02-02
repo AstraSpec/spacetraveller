@@ -1,4 +1,5 @@
 #include "chunk_db.h"
+#include "id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace godot {
@@ -9,6 +10,7 @@ void ChunkDb::_bind_methods() {
     ClassDB::bind_static_method("ChunkDb", D_METHOD("get_singleton"), &ChunkDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &ChunkDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &ChunkDb::get_atlas_coords);
+    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &ChunkDb::has_tag_gd);
     ClassDB::bind_method(D_METHOD("get_ids"), &ChunkDb::get_ids);
 }
 
@@ -19,13 +21,46 @@ ChunkDb::~ChunkDb() {
 }
 
 ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
-        ChunkInfo info;
+    ChunkInfo info;
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
+    info.tags = _parse_tags(p_data.get("tags", Array()));
+
+    if (IdRegistry::get_singleton()) {
+        uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
+        if (id >= fast_cache.size()) {
+            fast_cache.resize(id + 1);
+        }
+        fast_cache[id] = info;
+    }
     return info;
 }
 
 const ChunkInfo* ChunkDb::get_chunk_info(const String &p_id) const {
     return get_info(p_id);
+}
+
+const ChunkInfo* ChunkDb::get_chunk_info(uint16_t p_id) const {
+    if (p_id < fast_cache.size()) {
+        return &fast_cache[p_id];
+    }
+    return nullptr;
+}
+
+bool ChunkDb::has_tag(const String &p_id, const String &p_tag) const {
+    const ChunkInfo* info = get_chunk_info(p_id);
+    if (!info) return false;
+
+    TagRegistry *reg = TagRegistry::get_singleton();
+    if (!reg) return false;
+
+    uint16_t tag_id = reg->get_tag_id(p_tag);
+    return TagRegistry::has_tag(tag_id, info->tags);
+}
+
+bool ChunkDb::has_tag(uint16_t p_id, uint16_t p_tag_id) const {
+    const ChunkInfo* info = get_chunk_info(p_id);
+    if (!info) return false;
+    return TagRegistry::has_tag(p_tag_id, info->tags);
 }
 
 Vector2i ChunkDb::get_atlas_coords(const String &p_id) const {

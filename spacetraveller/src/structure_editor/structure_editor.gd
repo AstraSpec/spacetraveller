@@ -58,7 +58,7 @@ func _ready() -> void:
 	
 	setup_tools()
 	
-	select_tile("stone_bricks")
+	select_tile("road_bricks")
 	select_tile("void", false)
 	
 	_on_mode_changed("pencil")

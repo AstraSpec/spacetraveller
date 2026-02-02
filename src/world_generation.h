@@ -41,6 +41,9 @@ struct BiomeInfo {
     std::vector<BiomeTile> ground_tiles;
     // Map for specific overrides (e.g. chunk_id -> fixed_tile_id)
     std::unordered_map<uint16_t, uint16_t> fixed_overrides;
+
+    bool auto_tiled = false;
+    uint16_t border_tile_id = 0;
 };
 
 class WorldGeneration : public FastTileMap {
@@ -50,12 +53,21 @@ public:
     static constexpr uint32_t ROTATION_MASK = 0x03;
     static constexpr uint32_t ORIENTATION_SHIFT = 16;
     static constexpr uint32_t ID_MASK = 0xFFFF;
+    static constexpr uint32_t NEIGHBOR_SHIFT = 20;
+    static constexpr uint32_t NEIGHBOR_MASK = 0x0F;
 
     enum {
         ROT_SOUTH = 0,
         ROT_WEST = 1,
         ROT_NORTH = 2,
         ROT_EAST = 3
+    };
+
+    enum NeighborBits {
+        NEIGH_NORTH = 1 << 0,
+        NEIGH_EAST = 1 << 1,
+        NEIGH_SOUTH = 1 << 2,
+        NEIGH_WEST = 1 << 3
     };
 
 private:
@@ -70,6 +82,7 @@ private:
     uint64_t last_chunk_key = 0;
     uint16_t last_chunk_id = 0;
     uint8_t last_chunk_rotation = 0;
+    uint8_t last_chunk_neighbors = 0;
     const BiomeInfo* last_biome_ptr = nullptr;
     bool last_chunk_valid = false;
     
@@ -97,6 +110,7 @@ private:
     uint16_t get_tile(int x, int y);
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);
     void setup_biome_rules();
+    void apply_auto_tiling(const Vector2i& p_region_pos);
 
 protected:
     static void _bind_methods();

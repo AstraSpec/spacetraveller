@@ -9,7 +9,8 @@
   },
   {
     "id": "road",
-    "atlas": [ 53, 0 ]
+    "atlas": [ 53, 0 ],
+    "tags": ["ROAD"]
   },
   {
     "id": "building",
@@ -21,7 +22,8 @@
   },
   {
     "id": "alley",
-    "atlas": [ 53, 1 ]
+    "atlas": [ 53, 1 ],
+    "tags": ["ROAD"]
   },
   {
     "id": "gate",

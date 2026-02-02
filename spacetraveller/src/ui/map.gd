@@ -5,6 +5,7 @@ extends Control
 @onready var Tilemap :TileMapLayer = get_node("/root/Main/MapView/TileMap")
 @onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
 @onready var container :MarginContainer = $MarginContainer
+@onready var Player :Sprite2D = get_node("/root/Main/Player")
 
 const SOURCE :int = 2
 var REGION_SIZE = WorldGeneration.get_region_size()
@@ -16,6 +17,7 @@ func _ready():
 	call_deferred("resize_viewport")
 	
 	InputManager.map_toggled.connect(_map_toggled)
+	Player.moved_chunk.connect(_on_player_moved_chunk)
 	
 	# Configure Camera
 	Camera.centerNode = playerChunk

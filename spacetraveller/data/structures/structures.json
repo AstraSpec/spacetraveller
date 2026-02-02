@@ -13,7 +13,7 @@
         "id": "house02",
         "palette": [
             "void",
-            "stone_bricks"
+            "road_bricks"
         ]
     },
     {
@@ -21,7 +21,7 @@
         "id": "test02",
         "palette": [
             "void",
-            "stone_bricks"
+            "road_bricks"
         ]
     }
 ]
