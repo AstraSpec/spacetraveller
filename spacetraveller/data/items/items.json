@@ -1,56 +1,92 @@
 [
   {
-    "id": "debug_item_1",
-    "name": "Debug Item 1",
-    "description": "This is debug item 1. On the left side of the door frame.",
+    "id": "stick",
+    "name": "Stick",
+    "description": "A dry branch, useful for torches or a rough blade.",
     "atlas": [ 26, 7 ],
-    "weight": 2.5,
-    "volume": 1.0,
-    "tags": ["HEAVY"]
-  },
-  {
-    "id": "debug_item_2",
-    "name": "Debug Item 2",
-    "description": "This is debug item 2. On the left side of the door frame.",
-    "atlas": [ 27, 7 ],
     "weight": 0.2,
     "volume": 0.1,
-    "tags": ["SMALL", "COMMON"]
+    "tags": []
   },
   {
-    "id": "debug_item_3",
-    "name": "Debug Item 3",
-    "description": "This is debug item 3. On the left side of the door frame.",
-    "atlas": [ 28, 7 ],
+    "id": "rope",
+    "name": "Rope",
+    "description": "Coiled cord. Good for binding or climbing.",
+    "atlas": [ 27, 7 ],
     "weight": 0.5,
-    "volume": 0.5,
-    "tags": ["UTILITY"]
+    "volume": 0.3,
+    "tags": []
   },
   {
-    "id": "debug_item_4",
-    "name": "Debug Item 4",
-    "description": "This is debug item 4. On the left side of the door frame.",
+    "id": "flint",
+    "name": "Flint",
+    "description": "A sharp stone for striking sparks.",
+    "atlas": [ 28, 7 ],
+    "weight": 0.1,
+    "volume": 0.05,
+    "tags": []
+  },
+  {
+    "id": "bone",
+    "name": "Bone",
+    "description": "A small bone, hard and useful for tools or needles.",
     "atlas": [ 29, 7 ],
-    "weight": 0.1,
-    "volume": 0.05,
-    "tags": ["SMALL"]
+    "weight": 0.3,
+    "volume": 0.15,
+    "tags": []
   },
   {
-    "id": "debug_item_5",
-    "name": "Debug Item 5",
-    "description": "This is debug item 5. On the left side of the door frame.",
+    "id": "spider_silk",
+    "name": "Spider Silk",
+    "description": "Sticky strands from dungeon spiders. Burns slowly; good for wicks and wraps.",
     "atlas": [ 26, 8 ],
-    "weight": 0.1,
-    "volume": 0.05,
-    "tags": ["SMALL"]
+    "weight": 0.05,
+    "volume": 0.02,
+    "tags": []
   },
   {
-    "id": "debug_item_6",
-    "name": "Debug Item 6",
-    "description": "This is debug item 6. On the left side of the door frame.",
+    "id": "iron_shard",
+    "name": "Iron Shard",
+    "description": "A jagged scrap of metal, perhaps from a broken weapon or trap.",
     "atlas": [ 27, 8 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "wooden_sword",
+    "name": "Wooden Sword",
+    "description": "A crude blade of bound sticks. Better than bare hands.",
+    "atlas": [ 28, 8 ],
+    "weight": 0.8,
+    "volume": 0.4,
+    "tags": []
+  },
+  {
+    "id": "torch",
+    "name": "Torch",
+    "description": "A stick wrapped in spider silk, ready to light.",
+    "atlas": [ 29, 8 ],
+    "weight": 0.3,
+    "volume": 0.15,
+    "tags": []
+  },
+  {
+    "id": "fire_starter",
+    "name": "Fire Starter",
+    "description": "Flint, stick, and silk — everything needed to make fire.",
+    "atlas": [ 26, 9 ],
+    "weight": 0.35,
+    "volume": 0.2,
+    "tags": []
+  },
+  {
+    "id": "bone_needle",
+    "name": "Bone Needle",
+    "description": "A sharpened bone with an eye of spider silk.",
+    "atlas": [ 27, 9 ],
     "weight": 0.1,
     "volume": 0.05,
-    "tags": ["SMALL"]
+    "tags": []
   }
 ]

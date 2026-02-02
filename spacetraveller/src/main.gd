@@ -22,13 +22,13 @@ func _ready() -> void:
 	
 	var inventory = get_node("Inventory")
 	if inventory:
-		# Initial Debug items
-		inventory.add_item("debug_item_1", 5)
-		inventory.add_item("debug_item_2", 10)
-		inventory.add_item("debug_item_3", 2)
-		inventory.add_item("debug_item_4", 5)
-		inventory.add_item("debug_item_5", 6)
-		inventory.add_item("debug_item_6", 7)
+		# Starter materials (medieval fantasy roguelike)
+		inventory.add_item("stick", 5)
+		inventory.add_item("rope", 2)
+		inventory.add_item("flint", 1)
+		inventory.add_item("spider_silk", 4)
+		inventory.add_item("bone", 1)
+		inventory.add_item("iron_shard", 1)
 		
 		# Female Starter Set
 		inventory.add_item("bra_wool", 1)

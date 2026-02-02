@@ -1,27 +1,55 @@
 [
   {
-    "id": "recipe_debug_1",
-    "name": "Composite Debug Item",
-    "description": "A complex item made from debug items 1 and 2.",
-    "time": 500.0,
+    "id": "wooden_sword",
+    "name": "Wooden Sword",
+    "description": "Bind sticks with rope into a crude blade.",
+    "time": 400.0,
     "requirements": [
-      { "id": "debug_item_1", "amount": 1 },
-      { "id": "debug_item_2", "amount": 2 }
+      { "id": "stick", "amount": 3 },
+      { "id": "rope", "amount": 1 }
     ],
     "results": [
-      { "id": "debug_item_3", "amount": 1 }
+      { "id": "wooden_sword", "amount": 1 }
     ]
   },
   {
-    "id": "recipe_debug_2",
-    "name": "Debug Bundle",
-    "description": "A bundle of small debug items.",
-    "time": 200.0,
+    "id": "torch",
+    "name": "Torch",
+    "description": "Wrap spider silk around a stick for a makeshift torch.",
+    "time": 300.0,
     "requirements": [
-      { "id": "debug_item_4", "amount": 5 }
+      { "id": "stick", "amount": 1 },
+      { "id": "spider_silk", "amount": 2 }
     ],
     "results": [
-      { "id": "debug_item_5", "amount": 1 }
+      { "id": "torch", "amount": 1 }
+    ]
+  },
+  {
+    "id": "fire_starter",
+    "name": "Fire Starter",
+    "description": "Combine flint, stick, and silk into a fire-starting kit.",
+    "time": 200.0,
+    "requirements": [
+      { "id": "flint", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "spider_silk", "amount": 1 }
+    ],
+    "results": [
+      { "id": "fire_starter", "amount": 1 }
+    ]
+  },
+  {
+    "id": "bone_needle",
+    "name": "Bone Needle",
+    "description": "Carve a bone and thread it with spider silk.",
+    "time": 250.0,
+    "requirements": [
+      { "id": "bone", "amount": 1 },
+      { "id": "spider_silk", "amount": 1 }
+    ],
+    "results": [
+      { "id": "bone_needle", "amount": 1 }
     ]
   }
 ]
