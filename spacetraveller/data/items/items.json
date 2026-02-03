@@ -4,7 +4,7 @@
     "name": "Stick",
     "description": "A dry branch, useful for torches or a rough blade.",
     "type": "material",
-    "atlas": [ 26, 7 ],
+    "atlas": [ 8, 23 ],
     "weight": 0.2,
     "volume": 0.1,
     "tags": []
@@ -14,7 +14,7 @@
     "name": "Rope",
     "description": "Coiled cord. Good for binding or climbing.",
     "type": "material",
-    "atlas": [ 27, 7 ],
+    "atlas": [ 8, 48 ],
     "weight": 0.5,
     "volume": 0.3,
     "tags": []
@@ -24,7 +24,7 @@
     "name": "Flint",
     "description": "A sharp stone for striking sparks.",
     "type": "material",
-    "atlas": [ 28, 7 ],
+    "atlas": [ 14, 31 ],
     "weight": 0.1,
     "volume": 0.05,
     "tags": []
@@ -34,7 +34,7 @@
     "name": "Bone",
     "description": "A small bone, hard and useful for tools or needles.",
     "type": "material",
-    "atlas": [ 29, 7 ],
+    "atlas": [ 9, 38 ],
     "weight": 0.3,
     "volume": 0.15,
     "tags": []
@@ -44,7 +44,7 @@
     "name": "Spider Silk",
     "description": "Sticky strands from dungeon spiders. Burns slowly; good for wicks and wraps.",
     "type": "material",
-    "atlas": [ 26, 8 ],
+    "atlas": [ 4, 39 ],
     "weight": 0.05,
     "volume": 0.02,
     "tags": []
@@ -54,7 +54,7 @@
     "name": "Iron Shard",
     "description": "A jagged scrap of metal, perhaps from a broken weapon or trap.",
     "type": "material",
-    "atlas": [ 27, 8 ],
+    "atlas": [ 7, 21 ],
     "weight": 0.4,
     "volume": 0.1,
     "tags": []
@@ -64,7 +64,7 @@
     "name": "Wooden Sword",
     "description": "A crude blade of bound sticks. Better than bare hands.",
     "type": "weapon",
-    "atlas": [ 28, 8 ],
+    "atlas": [ 26, 6 ],
     "weight": 0.8,
     "volume": 0.4,
     "tags": []
@@ -74,7 +74,7 @@
     "name": "Torch",
     "description": "A stick wrapped in spider silk, ready to light.",
     "type": "consumable",
-    "atlas": [ 29, 8 ],
+    "atlas": [ 8, 45 ],
     "weight": 0.3,
     "volume": 0.15,
     "tags": []
@@ -84,7 +84,7 @@
     "name": "Fire Starter",
     "description": "Flint, stick, and silk — everything needed to make fire.",
     "type": "tool",
-    "atlas": [ 26, 9 ],
+    "atlas": [ 6, 45 ],
     "weight": 0.35,
     "volume": 0.2,
     "tags": []
@@ -94,7 +94,7 @@
     "name": "Bone Needle",
     "description": "A sharpened bone with an eye of spider silk.",
     "type": "tool",
-    "atlas": [ 27, 9 ],
+    "atlas": [ 10, 38 ],
     "weight": 0.1,
     "volume": 0.05,
     "tags": []

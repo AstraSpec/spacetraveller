@@ -22,7 +22,6 @@ func _ready() -> void:
 	
 	var inventory = get_node("Inventory")
 	if inventory:
-		# Starter materials (medieval fantasy roguelike)
 		inventory.add_item("stick", 5)
 		inventory.add_item("rope", 2)
 		inventory.add_item("flint", 1)
@@ -34,7 +33,6 @@ func _ready() -> void:
 		inventory.add_item("fire_starter", 1)
 		inventory.add_item("bone_needle", 1)
 		
-		# Female Starter Set
 		inventory.add_item("bra_wool", 1)
 		inventory.add_item("panties_wool", 1)
 		inventory.add_item("linen_shirt", 1)
@@ -42,7 +40,6 @@ func _ready() -> void:
 		inventory.add_item("silver_earrings", 2)
 		inventory.add_item("gold_ring", 1)
 		
-		# Equip Starter Set
 		var torso_idx = anatomy.find_part_of_type("torso")
 		if torso_idx != -1:
 			if clothing.equip_item("bra_wool", torso_idx): inventory.remove_item("bra_wool", 1)
