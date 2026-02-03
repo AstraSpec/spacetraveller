@@ -179,6 +179,7 @@ theme_override_constants/margin_bottom = 8
 
 [node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+button_left_margin = 12
 
 [node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2
@@ -373,6 +374,7 @@ theme_override_constants/margin_bottom = 8
 
 [node name="StripContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemList" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+button_left_margin = 12
 
 [node name="ItemDetails" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2

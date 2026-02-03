@@ -13,13 +13,17 @@ func _get_display_data() -> Array:
 	
 	for entry in items:
 		var item_id = entry["id"]
+		var data = ItemDb.get_clothing_data(item_id)
+		var part_key = data.get("part", "other")
 		formatted.append({
 			"id": item_id,
 			"display_name": ItemDb.get_item_name(item_id),
 			"description": ItemDb.get_item_description(item_id),
 			"part_name": entry["part_name"],
 			"layer": entry["layer"],
-			"quantity_text": entry["part_name"]
+			"quantity_text": "",
+			"type": ItemDb.get_item_type(item_id),
+			"separator_key": part_key
 		})
 	return formatted
 

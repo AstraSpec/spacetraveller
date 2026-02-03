@@ -17,12 +17,14 @@ func _get_display_data() -> Array:
 	var formatted = []
 	
 	for item in items:
+		var item_id = item["id"]
 		formatted.append({
-			"id": item["id"],
+			"id": item_id,
 			"amount": item["amount"],
-			"display_name": ItemDb.get_item_name(item["id"]),
-			"description": ItemDb.get_item_description(item["id"]),
-			"quantity_text": "x" + str(item["amount"])
+			"display_name": ItemDb.get_item_name(item_id),
+			"description": ItemDb.get_item_description(item_id),
+			"quantity_text": "x" + str(item["amount"]),
+			"type": ItemDb.get_item_type(item_id)
 		})
 	return formatted
 

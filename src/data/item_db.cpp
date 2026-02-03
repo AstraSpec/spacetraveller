@@ -16,6 +16,7 @@ void ItemDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_item_modifiers", "id"), &ItemDb::get_item_modifiers);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &ItemDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_clothing_data", "id"), &ItemDb::get_clothing_data);
+    ClassDB::bind_method(D_METHOD("get_item_type", "id"), &ItemDb::get_item_type);
     ClassDB::bind_method(D_METHOD("get_ids"), &ItemDb::get_ids);
 }
 
@@ -34,6 +35,7 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     info.volume = p_data.get("volume", 0.0f);
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.clothing_data = p_data.get("clothing", Dictionary());
+    info.type = p_data.get("type", "misc");
     
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
@@ -99,6 +101,12 @@ Dictionary ItemDb::get_clothing_data(const String &p_id) const {
     const ItemInfo* info = get_item_info(p_id);
     if (info) return info->clothing_data;
     return Dictionary();
+}
+
+String ItemDb::get_item_type(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    if (info && !info->type.is_empty()) return info->type;
+    return "misc";
 }
 
 }

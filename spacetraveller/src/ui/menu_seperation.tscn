@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbpj2j3qpyb7c"]
+
+[ext_resource type="Script" uid="uid://c4oihuhluohuc" path="res://src/ui/menu_seperation.gd" id="1_ahoap"]
+
+[node name="MenuSeperation" type="MarginContainer" node_paths=PackedStringArray("SeperationLabel")]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ahoap")
+SeperationLabel = NodePath("SeperationLabel")
+
+[node name="SeperationLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6975, 0.73424995, 0.75, 1)
+text = "Seperation"

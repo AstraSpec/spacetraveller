@@ -1,5 +1,8 @@
 class_name BaseListTab extends Control
 
+const TYPE_ORDER = ["weapon", "consumable", "material", "tool", "clothing", "misc"]
+const BODY_PART_ORDER = ["head", "torso", "leg", "arm", "hand", "finger", "foot", "ear", "other"]
+
 @export var stripContainer: ScrollContainer
 @export var titleLabel: Label
 @export var descriptionLabel: Label
@@ -10,6 +13,39 @@ var _items_cache: Array = []
 
 func _get_display_data() -> Array:
 	return []
+
+func _type_sort_key(type_str: String) -> int:
+	var idx = TYPE_ORDER.find(type_str.to_lower())
+	return idx if idx >= 0 else TYPE_ORDER.size()
+
+func _body_part_sort_key(part_str: String) -> int:
+	var idx = BODY_PART_ORDER.find(part_str.to_lower())
+	return idx if idx >= 0 else BODY_PART_ORDER.size()
+
+func _build_strip_data_with_separators(items: Array, group_key: String, _sort_key_func: Callable) -> Array:
+	if items.is_empty(): return []
+	var strip_data: Array = []
+	var last_key: String = ""
+	for item in items:
+		var key = str(item.get(group_key, "other")).to_lower()
+		if key != last_key:
+			last_key = key
+			var label = key.capitalize() if key.length() > 0 else "Other"
+			strip_data.append({ "separator": label })
+		strip_data.append({
+			"left": item.get("display_name", "???"),
+			"right": item.get("quantity_text", "")
+		})
+	return strip_data
+
+func _items_have_key(key_name: String) -> bool:
+	for item in _items_cache:
+		if not item is Dictionary or not item.has(key_name):
+			return false
+	return _items_cache.size() > 0
+
+func _items_have_type() -> bool:
+	return _items_have_key("type")
 
 func _update_details_ui(_item_data: Dictionary) -> void:
 	pass
@@ -39,13 +75,20 @@ func handle_directional_input(direction: Vector2) -> void:
 func refresh_view() -> void:
 	_items_cache = _get_display_data()
 	
-	# Map data to the format StripContainer expects
-	var strip_data = []
-	for item in _items_cache:
-		strip_data.append({
-			"left": item.get("display_name", "???"),
-			"right": item.get("quantity_text", "")
-		})
+	var strip_data: Array
+	if _items_have_key("separator_key"):
+		_items_cache.sort_custom(func(a, b): return _body_part_sort_key(a.get("separator_key", "other")) < _body_part_sort_key(b.get("separator_key", "other")))
+		strip_data = _build_strip_data_with_separators(_items_cache, "separator_key", _body_part_sort_key)
+	elif _items_have_type():
+		_items_cache.sort_custom(func(a, b): return _type_sort_key(a.get("type", "misc")) < _type_sort_key(b.get("type", "misc")))
+		strip_data = _build_strip_data_with_separators(_items_cache, "type", _type_sort_key)
+	else:
+		strip_data = []
+		for item in _items_cache:
+			strip_data.append({
+				"left": item.get("display_name", "???"),
+				"right": item.get("quantity_text", "")
+			})
 	
 	stripContainer.data = strip_data
 	stripContainer._update_grid_layout()

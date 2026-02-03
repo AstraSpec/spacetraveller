@@ -29,6 +29,10 @@ func _ready() -> void:
 		inventory.add_item("spider_silk", 4)
 		inventory.add_item("bone", 1)
 		inventory.add_item("iron_shard", 1)
+		inventory.add_item("wooden_sword", 1)
+		inventory.add_item("torch", 2)
+		inventory.add_item("fire_starter", 1)
+		inventory.add_item("bone_needle", 1)
 		
 		# Female Starter Set
 		inventory.add_item("bra_wool", 1)
