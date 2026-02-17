@@ -54,7 +54,7 @@ func _ready() -> void:
 		CHUNK_SIZE * Editor.get_cell_size() / 2
 	)
 	
-	InputManager.current_mode = InputManager.InputMode.STRUCTURE
+	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
 	
 	setup_tools()
 	

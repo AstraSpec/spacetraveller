@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=24 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -18,7 +18,6 @@
 [ext_resource type="Script" uid="uid://cgugc1j1sx1tg" path="res://src/ui/menu_window.gd" id="16_menu"]
 [ext_resource type="PackedScene" uid="uid://d3c2r6p20mg1h" path="res://src/ui/spacer_label.tscn" id="17_074og"]
 [ext_resource type="Script" uid="uid://bwtfnra3owd3s" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
-[ext_resource type="Script" uid="uid://b6lmx7browyyg" path="res://src/ui/world_camera.gd" id="18_cam"]
 [ext_resource type="Script" uid="uid://dk0ty1jdmq7i0" path="res://src/ui/inventory/clothing_tab.gd" id="19_clot"]
 [ext_resource type="Script" uid="uid://bmgye7kyg0mjc" path="res://src/ui/inventory/stats_tab.gd" id="20_stats"]
 
@@ -105,11 +104,12 @@ _Anatomy = NodePath("Anatomy")
 
 [node name="Anatomy" type="Anatomy" parent="Player"]
 
-[node name="Camera" type="Camera2D" parent="Player" node_paths=PackedStringArray("side_panel")]
+[node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(7, 7)
 zoom = Vector2(2, 2)
-script = ExtResource("18_cam")
-side_panel = NodePath("../../Canvas/ScreenUI/ScreenUI")
+script = ExtResource("4_8p67s")
+zoomID = 3
+locked = true
 
 [node name="Canvas" type="CanvasLayer" parent="."]
 

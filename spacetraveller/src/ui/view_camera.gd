@@ -8,9 +8,9 @@ class_name ViewCamera
 @export var limits : Rect2 = Rect2(-1e8, -1e8, 2e8, 2e8)
 @export var margins : MarginContainer
 @export var viewport : SubViewport
+@export var zoomID : int = 1
+@export var locked :bool = false
 var centerNode
-
-var zoomID : int = 1
 
 func _ready() -> void:
 	InputManager.view_panned.connect(_view_panned)
@@ -20,9 +20,12 @@ func _ready() -> void:
 	zoom = Vector2(ZOOM_LVL[zoomID], ZOOM_LVL[zoomID])
 
 func _view_panned(relative: Vector2):
+	if locked: return
 	_update_camera_pos(position - relative * DRAG_SPEED / zoom.x)
 
 func _view_zoomed(z: int):
+	if locked: return
+	
 	var oldZoomID = zoomID
 	zoomID = clamp(zoomID + z, 0, ZOOM_LVL.size() - 1)
 	
@@ -35,6 +38,8 @@ func _view_centered():
 	_update_camera_pos(target)
 
 func _update_camera_pos(newPos: Vector2):
+	if locked: return
+	
 	if margins:
 		var viewSize = margins.size
 		if margins is MarginContainer:
