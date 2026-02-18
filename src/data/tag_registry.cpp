@@ -59,7 +59,6 @@ String TagRegistry::get_tag_name(uint16_t p_id) const {
 
 bool TagRegistry::has_tag(uint16_t p_id, const std::vector<uint16_t> &p_tags) {
     if (p_id == 0) return false;
-    // p_tags is expected to be sorted for binary search
     return std::binary_search(p_tags.begin(), p_tags.end(), p_id);
 }
 

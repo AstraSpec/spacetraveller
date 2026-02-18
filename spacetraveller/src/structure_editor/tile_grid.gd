@@ -2,12 +2,10 @@ extends GridContainer
 
 signal tile_selected(id: String, is_primary: bool)
 
-@onready var structureEditor :Node2D = get_node("/root/StructureEditor")
-
 var spacing = 0
 
-func start() -> void:
-	spacing = structureEditor.Editor.get_spacing()
+func start(_spacing :int) -> void:
+	spacing = _spacing
 	
 	var ids = TileDb.get_ids()
 	for id in ids:

@@ -5,6 +5,7 @@ extends Window
 @export var LoadContainer :VBoxContainer
 @export var LoadButton :Button
 @export var DeleteButton :Button
+var FastTilemap :FastTileMap
 
 @onready var StructureLoad = preload("res://src/structure_editor/structure_button.tscn")
 
@@ -57,7 +58,7 @@ func _on_load_pressed() -> void:
 		
 	structureEditor.save_undo_state()
 	Editor.import_from_rle(blueprint, palette)
-	Editor.update_visuals(Vector2i(0, 0))
+	FastTilemap.update_visuals(Vector2i(0, 0))
 	visible = false
 
 func _on_delete_pressed() -> void:

@@ -103,8 +103,8 @@ class LineTool extends Tool:
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
-				editor.Editor.place_tile(p.x, p.y, tid)
-		editor.Editor.update_visuals(Vector2i(0, 0))
+				editor.FastTilemap.place_tile(p.x, p.y, tid)
+		editor.FastTilemap.update_visuals(Vector2i(0, 0))
 		is_drawing = false
 		on_hover(pos)
 
@@ -195,7 +195,7 @@ class EyedropperTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		var id = editor.Editor.get_tile_at(pos.x, pos.y)
+		var id = editor.FastTilemap.get_tile_at(pos.x, pos.y)
 		editor.select_tile(id, btn == "left")
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
@@ -215,11 +215,11 @@ class FillTool extends Tool:
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.Editor.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside, options.contiguous)
 		else:
-			editor.Editor.fill_tiles(pos.x, pos.y, tid, Rect2i(), false, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x, pos.y, tid, Rect2i(), false, options.contiguous)
 			
-		editor.Editor.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(Vector2i(0, 0))
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -306,16 +306,16 @@ class SelectionTool extends Tool:
 		for x in range(selection_rect.position.x, selection_rect.end.x):
 			for y in range(selection_rect.position.y, selection_rect.end.y):
 				var p = Vector2i(x, y)
-				var tid = editor.Editor.get_tile_at(x, y)
+				var tid = editor.FastTilemap.get_tile_at(x, y)
 				if tid != "void":
 					captured_tiles[p - selection_rect.position] = tid
-					editor.Editor.place_tile(x, y, "void")
+					editor.FastTilemap.place_tile(x, y, "void")
 		
 		if captured_tiles.is_empty():
 			is_floating = false
 			return
 
-		editor.Editor.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(Vector2i(0, 0))
 		is_floating = true
 
 	func _preview_tiles():
@@ -339,7 +339,7 @@ class SelectionTool extends Tool:
 		rect.position += move_offset
 		editor.active_selection = rect
 			
-		var cell_size = editor.Editor.get_cell_size()
+		var cell_size = editor.FastTilemap.get_cell_size()
 		var p1 = Vector2(rect.position) * cell_size
 		var p2 = Vector2(rect.end) * cell_size
 		
@@ -357,9 +357,9 @@ class SelectionTool extends Tool:
 		for rel_p in captured_tiles.keys():
 			var p = selection_rect.position + rel_p
 			if editor.is_inside_bubble(p):
-				editor.Editor.place_tile(p.x, p.y, captured_tiles[rel_p])
+				editor.FastTilemap.place_tile(p.x, p.y, captured_tiles[rel_p])
 		
-		editor.Editor.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(Vector2i(0, 0))
 		captured_tiles.clear()
 		is_floating = false
 		_update_visuals()

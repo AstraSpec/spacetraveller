@@ -104,14 +104,10 @@ func _wear_selected_item():
 		var clothing_data = ItemDb.get_clothing_data(item_id)
 		var part_type = clothing_data.get("part", "")
 		
-		# Find a suitable part instance
 		var part_index = -1
 		for i in range(anatomy.get_part_count()):
 			if anatomy.get_part_type_id(i) == part_type or part_type == "":
 				if anatomy.is_part_functional(i):
-					# Check if this layer is already occupied on this part?
-					# For now, let's just use the first functional part.
-					# In a more advanced system, we'd show a list to the user.
 					part_index = i
 					break
 		

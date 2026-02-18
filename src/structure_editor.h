@@ -5,8 +5,8 @@
 
 namespace godot {
 
-class StructureEditor : public FastTileMap {
-    GDCLASS(StructureEditor, FastTileMap)
+class StructureEditor : public Node2D {
+    GDCLASS(StructureEditor, Node2D)
 
 public:
     enum ShapeType {
@@ -17,15 +17,19 @@ public:
 protected:
     static void _bind_methods();
 
+    FastTileMap *tilemap = nullptr;
     std::unordered_map<uint64_t, RID> preview_tile_rids;
     
+    void _create_preview_tile(const Vector2i &p_pos, const String &p_tile_id, RenderingServer *p_rs, RID p_texture_rid, RID p_parent_rid, int p_half, int p_cell_size, TileDb *p_tile_db);
     std::vector<Vector2i> _get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect);
 
 public:
     StructureEditor();
     ~StructureEditor();
 
-    void update_visuals(const Vector2i& centerPos);
+    void set_tilemap(FastTileMap *p_tilemap);
+    FastTileMap *get_tilemap() const;
+
     Dictionary export_to_rle(const String &p_id) const;
     void import_from_rle(const String &p_blueprint, const Array &p_palette);
 

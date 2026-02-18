@@ -3,16 +3,17 @@ extends Node2D
 signal open_save
 signal open_load
 
+@onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
 @export var Editor :StructureEditor
-@export var Background :TextureRect
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
-@export var Camera :ViewCamera
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var ToolOptions :HBoxContainer
-@onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
+@export var LoadWindow :Window
+var FastTilemap :FastTileMap
+var spacing :int = 0
 
 var CHUNK_SIZE = WorldGeneration.get_chunk_size()
 var BUBBLE_SIZE :int = CHUNK_SIZE
@@ -32,29 +33,15 @@ var undo_stack : Array = []
 var redo_stack : Array = []
 const MAX_UNDOS = 100
 
-func _ready() -> void:
+func start_editor() -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
 	
-	TileDb.initialize_data()
-	StructureDb.initialize_data()
-	
-	Editor.set_world_bubble_size(BUBBLE_SIZE)
-	Editor.init_world_bubble(Vector2i(0, 0), true)
-	Editor.update_visuals(Vector2i(0, 0))
-	
-	Background.size = Vector2(
-		CHUNK_SIZE * Editor.get_cell_size(),
-		CHUNK_SIZE * Editor.get_cell_size()
-	)
-	
-	Background.position -= Vector2(
-		CHUNK_SIZE * Editor.get_cell_size() / 2,
-		CHUNK_SIZE * Editor.get_cell_size() / 2
-	)
-	
 	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
+	
+	LoadWindow.FastTilemap = FastTilemap
+	Editor.set_tilemap(FastTilemap)
 	
 	setup_tools()
 	
@@ -63,8 +50,7 @@ func _ready() -> void:
 	
 	_on_mode_changed("pencil")
 	
-	TileGrid.start()
-	Camera._view_centered()
+	TileGrid.start(spacing)
 
 func setup_tools():
 	tools = {
@@ -134,7 +120,7 @@ func _on_key_input(key: String):
 		"redo": redo()
 
 func save_undo_state():
-	undo_stack.push_back(Editor.get_tile_id_cache())
+	undo_stack.push_back(FastTilemap.get_tile_id_cache())
 	if undo_stack.size() > MAX_UNDOS:
 		undo_stack.pop_front()
 	redo_stack.clear()
@@ -142,18 +128,18 @@ func save_undo_state():
 func undo():
 	if undo_stack.is_empty(): return
 	
-	redo_stack.push_back(Editor.get_tile_id_cache())
+	redo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = undo_stack.pop_back()
-	Editor.set_tile_id_cache(state)
-	Editor.update_visuals(Vector2i(0, 0))
+	FastTilemap.set_tile_id_cache(state)
+	FastTilemap.update_visuals(Vector2i(0, 0))
 
 func redo():
 	if redo_stack.is_empty(): return
 	
-	undo_stack.push_back(Editor.get_tile_id_cache())
+	undo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = redo_stack.pop_back()
-	Editor.set_tile_id_cache(state)
-	Editor.update_visuals(Vector2i(0, 0))
+	FastTilemap.set_tile_id_cache(state)
+	FastTilemap.update_visuals(Vector2i(0, 0))
 
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
@@ -170,8 +156,8 @@ func on_tile_changed(_pos: Vector2i):
 func place_tile_at(pos: Vector2i, id: String):
 	if !id or !is_inside_bubble(pos): return
 	
-	Editor.place_tile(pos.x, pos.y, id)
-	Editor.update_visuals(Vector2i(0, 0))
+	FastTilemap.place_tile(pos.x, pos.y, id)
+	FastTilemap.update_visuals(Vector2i(0, 0))
 
 func is_inside_bubble(pos: Vector2i) -> bool:
 	var half = CHUNK_SIZE / 2
@@ -182,12 +168,12 @@ func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 
 func _on_clear_button_pressed() -> void:
 	save_undo_state()
-	Editor.clear_cache()
-	Editor.update_visuals(Vector2i(0, 0))
+	FastTilemap.clear_cache()
+	FastTilemap.update_visuals(Vector2i(0, 0))
 
 func get_mouse_tile_pos() -> Vector2i:
 	var mouse_pos = get_global_mouse_position()
-	var cell_size = Editor.get_cell_size()
+	var cell_size = FastTilemap.get_cell_size()
 	return Vector2i(floor(mouse_pos.x / cell_size), floor(mouse_pos.y / cell_size))
 
 func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
@@ -217,8 +203,8 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0:
-		Editor.clear_cache()
-		Editor.update_visuals(Vector2i(0, 0))
+		FastTilemap.clear_cache()
+		FastTilemap.update_visuals(Vector2i(0, 0))
 	elif index == 1: open_save.emit()
 	elif index == 2: open_load.emit()
 

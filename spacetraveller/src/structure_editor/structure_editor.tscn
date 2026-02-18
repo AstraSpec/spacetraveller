@@ -1,36 +1,23 @@
-[gd_scene load_steps=10 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=8 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" uid="uid://b2paqk26lcf30" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Script" uid="uid://cnfmyow707345" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
-[ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="2_0s7nb"]
-[ext_resource type="Script" uid="uid://cuftphjy14qda" path="res://src/ui/view_camera.gd" id="3_usumf"]
 [ext_resource type="Script" uid="uid://cus5p87q6jx26" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
 [ext_resource type="Script" uid="uid://62f0dcmhyy1u" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" uid="uid://bql7a6oaypjq4" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" uid="uid://8xqc3qvwdw3v" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "Background", "TileIDLabel1", "TileIDLabel2", "TileGrid", "Camera", "SelectionVisual", "editMenu", "ToolOptions")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "SelectionVisual", "editMenu", "ToolOptions", "LoadWindow")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
-Background = NodePath("BG")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
-Camera = NodePath("Camera")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
-
-[node name="BG" type="TextureRect" parent="."]
-texture_repeat = 2
-offset_right = 13.0
-offset_bottom = 13.0
-texture = ExtResource("2_0s7nb")
-stretch_mode = 1
-
-[node name="Camera" type="Camera2D" parent="."]
-script = ExtResource("3_usumf")
+LoadWindow = NodePath("LoadWindow")
 
 [node name="Editor" type="StructureEditor" parent="."]
 

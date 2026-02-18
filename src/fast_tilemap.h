@@ -40,6 +40,7 @@ public:
     void set_tilesheet(const Ref<Texture2D>& texture);
     Ref<Texture2D> get_tilesheet() const;
 
+    void set_spacing(int p_spacing) { spacing = p_spacing; }
     int get_spacing() const { return spacing; }
     int get_cell_size() const { return TILE_SIZE + spacing; }
 
@@ -49,6 +50,7 @@ public:
     int get_world_bubble_radius() const { return world_bubble_radius; }
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
+    void update_visuals(const Vector2i& playerPos);
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
     void place_tile(int x, int y, const String& tile_id);
     String get_tile_at(int x, int y) const;

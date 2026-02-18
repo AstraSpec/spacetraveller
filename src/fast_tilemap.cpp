@@ -14,6 +14,7 @@ void FastTileMap::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilesheet", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_tilesheet", "get_tilesheet");
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("update_visuals", "playerPos"), &FastTileMap::update_visuals);
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id"), &FastTileMap::place_tile);
     ClassDB::bind_method(D_METHOD("get_tile_at", "x", "y"), &FastTileMap::get_tile_at);
     ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "mask", "invert_mask", "contiguous"), &FastTileMap::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(true));
@@ -21,6 +22,7 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_tile_id_cache"), &FastTileMap::get_tile_id_cache);
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache"), &FastTileMap::set_tile_id_cache);
 
+    ClassDB::bind_method(D_METHOD("set_spacing", "spacing"), &FastTileMap::set_spacing);
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
     ClassDB::bind_method(D_METHOD("get_cell_size"), &FastTileMap::get_cell_size);
 
@@ -80,6 +82,36 @@ void FastTileMap::init_world_bubble(const Vector2i& playerPos, bool is_square) {
             RID tile_rid = rs->canvas_item_create();
             rs->canvas_item_set_parent(tile_rid, parent_rid);
             tile_rids[offsetKey] = tile_rid;
+        }
+    }
+}
+
+void FastTileMap::update_visuals(const Vector2i& playerPos) {
+    if (!tilesheet.is_valid()) return;
+    RenderingServer* rs = RenderingServer::get_singleton();
+    RID texture_rid = tilesheet->get_rid();
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    for (auto& pair : tile_rids) {
+        uint64_t offsetKey = pair.first;
+        int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
+        int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
+        int cx = ox + playerPos.x;
+        int cy = oy + playerPos.y;
+        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
+        
+        uint16_t tile_id = 0;
+        auto it = tile_id_cache.find(cellKey);
+        if (it != tile_id_cache.end()) {
+            tile_id = it->second;
+        }
+
+        if (tile_id != 0) {
+            update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db);
+            rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
+        } else {
+            rs->canvas_item_clear(pair.second);
         }
     }
 }

@@ -9,7 +9,9 @@
 using namespace godot;
 
 void StructureEditor::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("update_visuals", "centerPos"), &StructureEditor::update_visuals);
+    ClassDB::bind_method(D_METHOD("set_tilemap", "tilemap"), &StructureEditor::set_tilemap);
+    ClassDB::bind_method(D_METHOD("get_tilemap"), &StructureEditor::get_tilemap);
+
     ClassDB::bind_method(D_METHOD("export_to_rle", "id"), &StructureEditor::export_to_rle);
     ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette"), &StructureEditor::import_from_rle);
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id"), &StructureEditor::update_preview_tiles);
@@ -18,54 +20,32 @@ void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("commit_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::commit_shape);
     ClassDB::bind_method(D_METHOD("clear_preview_tiles"), &StructureEditor::clear_preview_tiles);
 
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilemap", PROPERTY_HINT_RESOURCE_TYPE, "FastTileMap"), "set_tilemap", "get_tilemap");
+
     BIND_ENUM_CONSTANT(SHAPE_RECTANGLE);
     BIND_ENUM_CONSTANT(SHAPE_ELLIPSIS);
 }
 
 StructureEditor::StructureEditor() {
-    spacing = 1;
 }
 
 StructureEditor::~StructureEditor() {
     clear_preview_tiles();
 }
 
-void StructureEditor::update_visuals(const Vector2i& centerPos) {
-    if (!tilesheet.is_valid()) return;
-    
-    RenderingServer* rs = RenderingServer::get_singleton();
-    RID texture_rid = tilesheet->get_rid();
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
+void StructureEditor::set_tilemap(FastTileMap *p_tilemap) {
+    tilemap = p_tilemap;
+}
 
-    for (auto& pair : tile_rids) {
-        uint64_t offsetKey = pair.first;
-        int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
-        int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
-        
-        int cx = ox + centerPos.x;
-        int cy = oy + centerPos.y;
-        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
-        
-        uint16_t tile_id = 0; // void
-        auto it = tile_id_cache.find(cellKey);
-        if (it != tile_id_cache.end()) {
-            tile_id = it->second;
-        }
-
-        if (tile_id != 0) {
-            update_tile_at(ox, oy, centerPos, tile_id, rs, texture_rid, tile_db);
-            rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
-        } else {
-            rs->canvas_item_clear(pair.second);
-        }
-    }
+FastTileMap *StructureEditor::get_tilemap() const {
+    return tilemap;
 }
 
 Dictionary StructureEditor::export_to_rle(const String &p_id) const {
     Dictionary result;
-    
-    int size = world_bubble_size;
+
+    int size = tilemap->get_world_bubble_size();
+    Dictionary cache = tilemap->get_tile_id_cache();
 
     // RLE Encoding with Numeric Indices
     Array palette;
@@ -94,9 +74,10 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
         for (int x = -size/2; x < size/2; x++) {
             uint64_t key = Occlusion::pack_coords(x, y);
             String tile_id = "void";
-            auto it = tile_id_cache.find(key);
-            if (it != tile_id_cache.end()) {
-                if (id_reg) tile_id = id_reg->get_string(it->second);
+            
+            auto it_v = cache.get(key, Variant());
+            if (it_v.get_type() != Variant::NIL) {
+                if (id_reg) tile_id = id_reg->get_string((uint16_t)((int)it_v));
             }
 
             if (tile_id == current_id) {
@@ -120,7 +101,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
 }
 
 void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette) {
-    tile_id_cache.clear();
+    tilemap->clear_cache();
     
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
@@ -135,9 +116,11 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
     String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    int size = world_bubble_size;
+    int size = tilemap->get_world_bubble_size();
     int current_pos = 0;
     int total_expected = size * size;
+
+    Dictionary new_cache;
 
     for (int i = 0; i < parts.size(); i++) {
         String part = parts[i].strip_edges();
@@ -160,106 +143,12 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             
             if (tile_id != 0) {
                 uint64_t key = Occlusion::pack_coords(x, y);
-                tile_id_cache[key] = tile_id;
+                new_cache[key] = (int)tile_id;
             }
             current_pos++;
         }
     }
-}
-
-void StructureEditor::update_preview_tiles(const Array &p_positions, const String &p_tile_id) {
-    clear_preview_tiles();
-
-    if (!tilesheet.is_valid()) return;
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
-
-    const TileInfo* info = tile_db->get_tile_info(p_tile_id);
-    if (!info) return;
-
-    RenderingServer* rs = RenderingServer::get_singleton();
-    RID texture_rid = tilesheet->get_rid();
-    RID parent_rid = get_canvas_item();
-
-    int half = world_bubble_size / 2;
-
-    Vector2i atlas_pos;
-    atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
-    atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
-
-    for (int i = 0; i < p_positions.size(); i++) {
-        Vector2i pos = p_positions[i];
-
-        if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) continue;
-
-        uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
-
-        if (preview_tile_rids.count(key)) {
-            rs->free_rid(preview_tile_rids[key]);
-        }
-
-        RID preview_rid = rs->canvas_item_create();
-        rs->canvas_item_set_parent(preview_rid, parent_rid);
-        rs->canvas_item_set_z_index(preview_rid, 1);
-        
-        rs->canvas_item_add_texture_rect_region(
-            preview_rid,
-            Rect2(pos.x * get_cell_size(), pos.y * get_cell_size(), TILE_SIZE, TILE_SIZE),
-            texture_rid,
-            Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
-        );
-
-        rs->canvas_item_set_modulate(preview_rid, Color(1, 1, 1, 0.5));
-        preview_tile_rids[key] = preview_rid;
-    }
-}
-
-void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data) {
-    clear_preview_tiles();
-
-    if (!tilesheet.is_valid()) return;
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
-
-    RenderingServer* rs = RenderingServer::get_singleton();
-    RID texture_rid = tilesheet->get_rid();
-    RID parent_rid = get_canvas_item();
-
-    int half = world_bubble_size / 2;
-    int cell_size = get_cell_size();
-
-    Array keys = p_data.keys();
-    for (int i = 0; i < keys.size(); i++) {
-        Variant key_v = keys[i];
-        if (key_v.get_type() != Variant::VECTOR2I) continue;
-        Vector2i pos = key_v;
-
-        if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) continue;
-
-        String tile_id = p_data[key_v];
-        const TileInfo* info = tile_db->get_tile_info(tile_id);
-        if (!info) continue;
-
-        uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
-
-        Vector2i atlas_pos;
-        atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
-        atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
-
-        RID preview_rid = rs->canvas_item_create();
-        rs->canvas_item_set_parent(preview_rid, parent_rid);
-        rs->canvas_item_set_z_index(preview_rid, 1);
-        
-        rs->canvas_item_add_texture_rect_region(
-            preview_rid,
-            Rect2(pos.x * cell_size, pos.y * cell_size, TILE_SIZE, TILE_SIZE),
-            texture_rid,
-            Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
-        );
-
-        rs->canvas_item_set_modulate(preview_rid, Color(1, 1, 1, 0.5));
-        preview_tile_rids[key] = preview_rid;
-    }
+    tilemap->set_tile_id_cache(new_cache);
 }
 
 void StructureEditor::clear_preview_tiles() {
@@ -268,6 +157,66 @@ void StructureEditor::clear_preview_tiles() {
         rs->free_rid(pair.second);
     }
     preview_tile_rids.clear();
+}
+
+void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &tile_id, RenderingServer *rs, RID texture_rid, RID parent_rid, int half, int cell_size, TileDb *tile_db) {
+    if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) return;
+
+    const TileInfo* info = tile_db->get_tile_info(tile_id);
+    if (!info) return;
+
+    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    if (preview_tile_rids.count(key)) {
+        rs->free_rid(preview_tile_rids[key]);
+    }
+
+    int tile_size = FastTileMap::get_tile_size();
+    Vector2i atlas_pos(1 + info->atlas.x * (tile_size + 1), 1 + info->atlas.y * (tile_size + 1));
+
+    RID preview_rid = rs->canvas_item_create();
+    rs->canvas_item_set_parent(preview_rid, parent_rid);
+    rs->canvas_item_set_z_index(preview_rid, 1);
+    rs->canvas_item_add_texture_rect_region(preview_rid, Rect2(pos.x * cell_size, pos.y * cell_size, tile_size, tile_size), texture_rid, Rect2(atlas_pos.x, atlas_pos.y, tile_size, tile_size));
+    rs->canvas_item_set_modulate(preview_rid, Color(1, 1, 1, 0.5));
+    preview_tile_rids[key] = preview_rid;
+}
+
+void StructureEditor::update_preview_tiles(const Array &p_positions, const String &p_tile_id) {
+    clear_preview_tiles();
+    Ref<Texture2D> tilesheet = tilemap->get_tilesheet();
+    if (!tilesheet.is_valid()) return;
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    RenderingServer* rs = RenderingServer::get_singleton();
+    RID texture_rid = tilesheet->get_rid();
+    RID parent_rid = get_canvas_item();
+    int half = tilemap->get_world_bubble_size() / 2;
+    int cell_size = tilemap->get_cell_size();
+
+    for (int i = 0; i < p_positions.size(); i++) {
+        _create_preview_tile(p_positions[i], p_tile_id, rs, texture_rid, parent_rid, half, cell_size, tile_db);
+    }
+}
+
+void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data) {
+    clear_preview_tiles();
+    Ref<Texture2D> tilesheet = tilemap->get_tilesheet();
+    if (!tilesheet.is_valid()) return;
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    RenderingServer* rs = RenderingServer::get_singleton();
+    RID texture_rid = tilesheet->get_rid();
+    RID parent_rid = get_canvas_item();
+    int half = tilemap->get_world_bubble_size() / 2;
+    int cell_size = tilemap->get_cell_size();
+
+    Array keys = p_data.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        if (keys[i].get_type() != Variant::VECTOR2I) continue;
+        _create_preview_tile(keys[i], p_data[keys[i]], rs, texture_rid, parent_rid, half, cell_size, tile_db);
+    }
 }
 
 std::vector<Vector2i> StructureEditor::_get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect) {
@@ -381,7 +330,7 @@ void StructureEditor::update_preview_shape(ShapeType p_type, const Vector2i &p_p
 void StructureEditor::commit_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id) {
     std::vector<Vector2i> points = _get_shape_points(p_type, p_p1, p_p2, p_filled, p_perfect);
     for (const Vector2i &p : points) {
-        place_tile(p.x, p.y, p_tile_id);
+        tilemap->place_tile(p.x, p.y, p_tile_id);
     }
-    update_visuals(Vector2i(0, 0));
+    tilemap->update_visuals(Vector2i(0, 0));
 }
