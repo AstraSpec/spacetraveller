@@ -17,7 +17,7 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_visuals", "playerPos"), &FastTileMap::update_visuals);
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id"), &FastTileMap::place_tile);
     ClassDB::bind_method(D_METHOD("get_tile_at", "x", "y"), &FastTileMap::get_tile_at);
-    ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "mask", "invert_mask", "contiguous"), &FastTileMap::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(true));
+    ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "playerPos", "mask", "invert_mask", "contiguous"), &FastTileMap::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(true));
     ClassDB::bind_method(D_METHOD("clear_cache"), &FastTileMap::clear_cache);
     ClassDB::bind_method(D_METHOD("get_tile_id_cache"), &FastTileMap::get_tile_id_cache);
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache"), &FastTileMap::set_tile_id_cache);
@@ -160,7 +160,7 @@ String FastTileMap::get_tile_at(int x, int y) const {
     return "void";
 }
 
-void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Rect2i& mask, bool invert_mask, bool p_contiguous) {
+void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Vector2i& playerPos, const Rect2i& mask, bool invert_mask, bool p_contiguous) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
 
@@ -186,11 +186,14 @@ void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Rect2i& 
             Vector2i p = q.front();
             q.pop();
 
-            if (p.x < -radius || p.x >= radius || p.y < -radius || p.y >= radius) continue;
+            // World bounds check relative to playerPos
+            if (p.x < playerPos.x - radius || p.x >= playerPos.x + radius || 
+                p.y < playerPos.y - radius || p.y >= playerPos.y + radius) continue;
 
-            // Mask check
+            // Mask check (p is in world-space, mask is in relative-space)
             if (has_mask) {
-                bool inside = mask.has_point(p);
+                Vector2i relative_p = p - playerPos;
+                bool inside = mask.has_point(relative_p);
                 if (invert_mask) {
                     if (inside) continue;
                 } else {
@@ -215,13 +218,14 @@ void FastTileMap::fill_tiles(int x, int y, const String& tile_id, const Rect2i& 
         }
     } else {
         // Non-contiguous fill (Replace within the world bubble and mask)
-        for (int gy = -radius; gy < radius; gy++) {
-            for (int gx = -radius; gx < radius; gx++) {
+        for (int gy = playerPos.y - radius; gy < playerPos.y + radius; gy++) {
+            for (int gx = playerPos.x - radius; gx < playerPos.x + radius; gx++) {
                 Vector2i p(gx, gy);
 
-                // Mask check
+                // Mask check (p is in world-space, mask is in relative-space)
                 if (has_mask) {
-                    bool inside = mask.has_point(p);
+                    Vector2i relative_p = p - playerPos;
+                    bool inside = mask.has_point(relative_p);
                     if (invert_mask) {
                         if (inside) continue;
                     } else {

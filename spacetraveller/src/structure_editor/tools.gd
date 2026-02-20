@@ -103,8 +103,8 @@ class LineTool extends Tool:
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
-				editor.FastTilemap.place_tile(p.x, p.y, tid)
-		editor.FastTilemap.update_visuals(Vector2i(0, 0))
+				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, tid)
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_drawing = false
 		on_hover(pos)
 
@@ -145,7 +145,8 @@ class RectangleTool extends Tool:
 
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, options.filled, options.perfect, tid)
+		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), options.filled, options.perfect, tid)
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_drawing = false
 		on_hover(pos)
 
@@ -186,7 +187,8 @@ class EllipsisTool extends Tool:
 
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, options.filled, options.perfect, tid)
+		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), options.filled, options.perfect, tid)
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_drawing = false
 		on_hover(pos)
 
@@ -195,7 +197,7 @@ class EyedropperTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		var id = editor.FastTilemap.get_tile_at(pos.x, pos.y)
+		var id = editor.FastTilemap.get_tile_at(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y)
 		editor.select_tile(id, btn == "left")
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
@@ -215,11 +217,11 @@ class FillTool extends Tool:
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.FastTilemap.fill_tiles(pos.x, pos.y, tid, editor.active_selection, !inside, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, options.contiguous)
 		else:
-			editor.FastTilemap.fill_tiles(pos.x, pos.y, tid, Rect2i(), false, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, options.contiguous)
 			
-		editor.FastTilemap.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -306,16 +308,16 @@ class SelectionTool extends Tool:
 		for x in range(selection_rect.position.x, selection_rect.end.x):
 			for y in range(selection_rect.position.y, selection_rect.end.y):
 				var p = Vector2i(x, y)
-				var tid = editor.FastTilemap.get_tile_at(x, y)
+				var tid = editor.FastTilemap.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
 				if tid != "void":
 					captured_tiles[p - selection_rect.position] = tid
-					editor.FastTilemap.place_tile(x, y, "void")
+					editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
 		
 		if captured_tiles.is_empty():
 			is_floating = false
 			return
 
-		editor.FastTilemap.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_floating = true
 
 	func _preview_tiles():
@@ -357,9 +359,9 @@ class SelectionTool extends Tool:
 		for rel_p in captured_tiles.keys():
 			var p = selection_rect.position + rel_p
 			if editor.is_inside_bubble(p):
-				editor.FastTilemap.place_tile(p.x, p.y, captured_tiles[rel_p])
+				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, captured_tiles[rel_p])
 		
-		editor.FastTilemap.update_visuals(Vector2i(0, 0))
+		editor.FastTilemap.update_visuals(editor.playerOffset)
 		captured_tiles.clear()
 		is_floating = false
 		_update_visuals()

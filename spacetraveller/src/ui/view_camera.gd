@@ -23,7 +23,7 @@ func _view_panned(relative: Vector2):
 	if locked: return
 	_update_camera_pos(position - relative * DRAG_SPEED / zoom.x)
 
-func _view_zoomed(z: int):
+func _view_zoomed(z: int = 0):
 	if locked: return
 	
 	var oldZoomID = zoomID

@@ -58,10 +58,11 @@ sources/2 = SubResource("TileSetAtlasSource_o6ht7")
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("WorldGen", "Player")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("WorldGen", "Player", "Canvas")]
 script = ExtResource("1_14wn1")
 WorldGen = NodePath("WorldGen")
 Player = NodePath("Player")
+Canvas = NodePath("Canvas")
 
 [node name="MapView" type="SubViewport" parent="."]
 size = Vector2i(1412, 512)
@@ -90,12 +91,13 @@ Player = NodePath("../Player")
 
 [node name="Inventory" type="Inventory" parent="."]
 
-[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("World", "inventory", "_Anatomy")]
+[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("Camera", "World", "inventory", "_Anatomy")]
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
 region_rect = Rect2(1353, 378, 12, 12)
 script = ExtResource("4_yn2v7")
+Camera = NodePath("Camera")
 World = NodePath("../WorldGen")
 inventory = NodePath("../Inventory")
 _Anatomy = NodePath("Anatomy")

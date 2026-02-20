@@ -126,6 +126,10 @@ class StructureContext extends InputContext:
 		view_processor = ViewProcessor.new(p_manager)
 
 	func handle_input(event: InputEvent) -> bool:
+		if event.is_action_pressed("ui_cancel"):
+			manager.set_mode(manager.InputMode.EXPLORATION)
+			return true
+			
 		if view_processor.handle_input(event):
 			return true
 		

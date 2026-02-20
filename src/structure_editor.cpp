@@ -332,5 +332,4 @@ void StructureEditor::commit_shape(ShapeType p_type, const Vector2i &p_p1, const
     for (const Vector2i &p : points) {
         tilemap->place_tile(p.x, p.y, p_tile_id);
     }
-    tilemap->update_visuals(Vector2i(0, 0));
 }

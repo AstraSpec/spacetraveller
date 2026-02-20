@@ -2,6 +2,12 @@ extends Node2D
 
 @export var WorldGen :WorldGeneration
 @export var Player :Sprite2D
+@export var Canvas :CanvasLayer
+
+var structure_editor_scene = preload("res://src/structure_editor/structure_editor.tscn")
+var structure_editor_instance = null
+
+var DEFAULT_ZOOM_LVL :int = 3
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
@@ -61,3 +67,25 @@ func _ready() -> void:
 
 	WorldGen.generate_world(Player.cellPos)
 	WorldGen.update_world_bubble(Player.cellPos)
+	
+	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
+
+func _on_structure_editor_toggled(active: bool):
+	if active:
+		structure_editor_instance = structure_editor_scene.instantiate()
+		add_child(structure_editor_instance)
+		structure_editor_instance.FastTilemap = WorldGen
+		structure_editor_instance.spacing = 1
+		structure_editor_instance.start_editor(Player.cellPos)
+		Player.Camera.locked = false
+		Canvas.visible = false
+	else:
+		structure_editor_instance.queue_free()
+		structure_editor_instance = null
+		Player.Camera.zoomID = DEFAULT_ZOOM_LVL-1
+		Player.Camera._view_zoomed(1)
+		Player.Camera._view_centered()
+		Player.Camera.locked = true
+		Canvas.visible = true
+		
+		WorldGen.update_world_bubble(Player.cellPos)

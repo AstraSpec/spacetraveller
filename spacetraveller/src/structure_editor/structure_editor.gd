@@ -28,20 +28,24 @@ var tileID1 :String
 var tileID2 :String
 var lastMousePos :Vector2i
 var mousePos :Vector2i
+var playerOffset :Vector2
 
 var undo_stack : Array = []
 var redo_stack : Array = []
 const MAX_UNDOS = 100
 
-func start_editor() -> void:
+func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
 	
 	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
+
+	playerOffset = offset
 	
 	LoadWindow.FastTilemap = FastTilemap
 	Editor.set_tilemap(FastTilemap)
+	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()
 	
 	setup_tools()
 	
@@ -51,6 +55,7 @@ func start_editor() -> void:
 	_on_mode_changed("pencil")
 	
 	TileGrid.start(spacing)
+	FastTilemap.update_visuals(playerOffset)
 
 func setup_tools():
 	tools = {
@@ -131,7 +136,7 @@ func undo():
 	redo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = undo_stack.pop_back()
 	FastTilemap.set_tile_id_cache(state)
-	FastTilemap.update_visuals(Vector2i(0, 0))
+	FastTilemap.update_visuals(playerOffset)
 
 func redo():
 	if redo_stack.is_empty(): return
@@ -139,7 +144,7 @@ func redo():
 	undo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = redo_stack.pop_back()
 	FastTilemap.set_tile_id_cache(state)
-	FastTilemap.update_visuals(Vector2i(0, 0))
+	FastTilemap.update_visuals(playerOffset)
 
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
@@ -156,11 +161,11 @@ func on_tile_changed(_pos: Vector2i):
 func place_tile_at(pos: Vector2i, id: String):
 	if !id or !is_inside_bubble(pos): return
 	
-	FastTilemap.place_tile(pos.x, pos.y, id)
-	FastTilemap.update_visuals(Vector2i(0, 0))
+	FastTilemap.place_tile(pos.x + playerOffset.x, pos.y + playerOffset.y, id)
+	FastTilemap.update_visuals(playerOffset)
 
 func is_inside_bubble(pos: Vector2i) -> bool:
-	var half = CHUNK_SIZE / 2
+	var half = BUBBLE_SIZE / 2
 	return pos.x >= -half and pos.x < half and pos.y >= -half and pos.y < half
 
 func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
@@ -169,7 +174,7 @@ func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 func _on_clear_button_pressed() -> void:
 	save_undo_state()
 	FastTilemap.clear_cache()
-	FastTilemap.update_visuals(Vector2i(0, 0))
+	FastTilemap.update_visuals(playerOffset)
 
 func get_mouse_tile_pos() -> Vector2i:
 	var mouse_pos = get_global_mouse_position()
@@ -204,7 +209,7 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0:
 		FastTilemap.clear_cache()
-		FastTilemap.update_visuals(Vector2i(0, 0))
+		FastTilemap.update_visuals(playerOffset)
 	elif index == 1: open_save.emit()
 	elif index == 2: open_load.emit()
 

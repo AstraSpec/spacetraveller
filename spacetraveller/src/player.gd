@@ -4,6 +4,7 @@ signal moved_cell(cellPos :Vector2)
 signal moved_chunk(chunkPos :Vector2)
 
 @onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
+@export var Camera :Camera2D
 @export var World : WorldGeneration
 @export var inventory: Inventory
 @export var _Anatomy :Anatomy

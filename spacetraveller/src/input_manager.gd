@@ -17,6 +17,7 @@ signal ui_wear_requested
 signal inventory_item_dropped(item_id: String, amount: int)
 
 signal menu_toggled(id: String, is_open: bool, params: Dictionary)
+signal structure_editor_toggled(active: bool)
 
 signal action_smash_requested
 signal action_pickup_requested
@@ -80,6 +81,14 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 		return
 
+	if event.is_action_pressed("open_structure_mode"):
+		if current_mode == InputMode.STRUCTURE:
+			set_mode(InputMode.EXPLORATION)
+		elif current_mode == InputMode.EXPLORATION:
+			set_mode(InputMode.STRUCTURE)
+		get_viewport().set_input_as_handled()
+		return
+
 	if active_context:
 		if active_context.handle_input(event):
 			get_viewport().set_input_as_handled()
@@ -103,6 +112,9 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
+	
+	if old_mode == InputMode.STRUCTURE or current_mode == InputMode.STRUCTURE:
+		structure_editor_toggled.emit(current_mode == InputMode.STRUCTURE)
 
 func toggle_menu(id: String, params: Dictionary = {}):
 	if current_mode == InputMode.MENU and active_menu_id == id and params.is_empty():
