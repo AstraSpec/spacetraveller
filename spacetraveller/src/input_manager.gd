@@ -31,6 +31,7 @@ enum InputMode { EXPLORATION, MAP, STRUCTURE, MENU }
 var current_mode: InputMode = InputMode.EXPLORATION
 var active_menu_id: String = ""
 var is_shift_pressed = false
+var is_ctrl_pressed = false
 
 var contexts = {}
 var active_context: InputContext
@@ -53,6 +54,14 @@ func _unhandled_input(event: InputEvent):
 
 	if event.is_action("shift"):
 		is_shift_pressed = event.is_pressed()
+	
+	if event.is_action("ctrl"):
+		is_ctrl_pressed = event.is_pressed()
+	
+	if active_context:
+		if active_context.handle_input(event):
+			get_viewport().set_input_as_handled()
+			return
 	
 	# Transition inputs
 	if event.is_action_pressed("open_inventory"):
@@ -88,10 +97,6 @@ func _unhandled_input(event: InputEvent):
 			set_mode(InputMode.STRUCTURE)
 		get_viewport().set_input_as_handled()
 		return
-
-	if active_context:
-		if active_context.handle_input(event):
-			get_viewport().set_input_as_handled()
 
 func _process(delta):
 	if active_context:

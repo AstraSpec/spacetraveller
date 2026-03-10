@@ -123,6 +123,9 @@ func _on_key_input(key: String):
 	match key:
 		"undo": undo()
 		"redo": redo()
+	
+	if active_tool and active_tool.has_method("on_key"):
+		active_tool.on_key(key)
 
 func save_undo_state():
 	undo_stack.push_back(FastTilemap.get_tile_id_cache())

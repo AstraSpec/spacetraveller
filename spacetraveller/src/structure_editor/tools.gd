@@ -20,11 +20,21 @@ class Tool:
 	func on_release(_btn: String, _pos: Vector2i): pass
 	func on_drag(_btn: String, _pos: Vector2i): pass
 	func on_hover(_pos: Vector2i): pass
+	func on_key(_key: String): pass
 	func on_deactivate(): pass
 	
 	func get_options_config() -> Array:
 		return []
 	
+	func get_effective_option(index: int) -> bool:
+		var config = get_options_config()
+		if index >= config.size(): return false
+		var opt_name = config[index].name
+		var val = options.get(opt_name, false)
+		if index == 0 and InputManager.is_shift_pressed: return !val
+		if index == 1 and InputManager.is_ctrl_pressed: return !val
+		return val
+
 	func get_cursor_id() -> String:
 		return ""
 		
@@ -68,6 +78,10 @@ class PencilTool extends Tool:
 
 class LineTool extends Tool:
 	func get_cursor_id(): return "pencil"
+	func get_options_config() -> Array:
+		return [
+			{ "name": "snapped", "label": "Snapped", "default": false }
+		]
 
 	var is_drawing = false
 	var start_pos = Vector2i.ZERO
@@ -88,7 +102,16 @@ class LineTool extends Tool:
 			
 	func on_hover(pos: Vector2i):
 		if is_drawing:
-			var points = editor.get_line_points(start_pos, pos)
+			var target = pos
+			if get_effective_option(0):
+				var delta = Vector2(pos - start_pos)
+				if delta != Vector2.ZERO:
+					var angle = round(delta.angle() / (PI/4.0)) * (PI/4.0)
+					var dist = delta.length()
+					var snapped_delta = Vector2.from_angle(angle) * dist
+					target = start_pos + Vector2i(round(snapped_delta.x), round(snapped_delta.y))
+
+			var points = editor.get_line_points(start_pos, target)
 			points = points.filter(func(p): return is_pos_valid(p))
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
 			editor.Editor.update_preview_tiles(points, tid)
@@ -99,7 +122,16 @@ class LineTool extends Tool:
 				editor.Editor.clear_preview_tiles()
 
 	func _commit(pos: Vector2i):
-		var points = editor.get_line_points(start_pos, pos)
+		var target = pos
+		if get_effective_option(0):
+			var delta = Vector2(pos - start_pos)
+			if delta != Vector2.ZERO:
+				var angle = round(delta.angle() / (PI/4.0)) * (PI/4.0)
+				var dist = delta.length()
+				var snapped_delta = Vector2.from_angle(angle) * dist
+				target = start_pos + Vector2i(round(snapped_delta.x), round(snapped_delta.y))
+
+		var points = editor.get_line_points(start_pos, target)
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
@@ -112,8 +144,8 @@ class RectangleTool extends Tool:
 	func get_cursor_id(): return "pencil"
 	func get_options_config() -> Array:
 		return [
-			{ "name": "filled", "label": "Filled", "default": false },
-			{ "name": "perfect", "label": "Perfect", "default": false }
+			{ "name": "perfect", "label": "Perfect", "default": false },
+			{ "name": "filled", "label": "Filled", "default": false }
 		]
 
 	var is_drawing = false
@@ -136,7 +168,7 @@ class RectangleTool extends Tool:
 	func on_hover(pos: Vector2i):
 		if is_drawing:
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			editor.Editor.update_preview_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, options.filled, options.perfect, tid)
+			editor.Editor.update_preview_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, get_effective_option(0), get_effective_option(1), tid)
 		else:
 			if is_pos_valid(pos):
 				editor.Editor.update_preview_tiles([pos], editor.tileID1)
@@ -145,7 +177,7 @@ class RectangleTool extends Tool:
 
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), options.filled, options.perfect, tid)
+		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
 		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_drawing = false
 		on_hover(pos)
@@ -154,8 +186,8 @@ class EllipsisTool extends Tool:
 	func get_cursor_id(): return "pencil"
 	func get_options_config() -> Array:
 		return [
-			{ "name": "filled", "label": "Filled", "default": false },
-			{ "name": "perfect", "label": "Perfect", "default": false }
+			{ "name": "perfect", "label": "Perfect", "default": false },
+			{ "name": "filled", "label": "Filled", "default": false }
 		]
 
 	var is_drawing = false
@@ -178,7 +210,7 @@ class EllipsisTool extends Tool:
 	func on_hover(pos: Vector2i):
 		if is_drawing:
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			editor.Editor.update_preview_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, options.filled, options.perfect, tid)
+			editor.Editor.update_preview_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, get_effective_option(0), get_effective_option(1), tid)
 		else:
 			if is_pos_valid(pos):
 				editor.Editor.update_preview_tiles([pos], editor.tileID1)
@@ -187,7 +219,7 @@ class EllipsisTool extends Tool:
 
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), options.filled, options.perfect, tid)
+		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
 		editor.FastTilemap.update_visuals(editor.playerOffset)
 		is_drawing = false
 		on_hover(pos)
@@ -217,9 +249,9 @@ class FillTool extends Tool:
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
 		else:
-			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, options.contiguous)
+			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, get_effective_option(0))
 			
 		editor.FastTilemap.update_visuals(editor.playerOffset)
 	func on_hover(_pos: Vector2i):
@@ -296,6 +328,20 @@ class SelectionTool extends Tool:
 			_preview_tiles()
 		else:
 			editor.Editor.clear_preview_tiles()
+
+	func on_key(key: String):
+		if key == "delete":
+			if is_floating:
+				captured_tiles.clear()
+				is_floating = false
+				_update_visuals()
+				editor.Editor.clear_preview_tiles()
+			elif selection_rect.size != Vector2i.ZERO:
+				editor.save_undo_state()
+				for x in range(selection_rect.position.x, selection_rect.end.x):
+					for y in range(selection_rect.position.y, selection_rect.end.y):
+						editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
+				editor.FastTilemap.update_visuals(editor.playerOffset)
 
 	func on_deactivate():
 		if is_floating:

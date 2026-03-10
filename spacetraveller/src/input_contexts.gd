@@ -154,6 +154,15 @@ class StructureContext extends InputContext:
 		elif event.is_action_pressed("structure_selection"): 
 			manager.structure_mode_changed.emit("selection")
 			return true
+		elif event.is_action_pressed("structure_ellipsis"): 
+			manager.structure_mode_changed.emit("ellipsis")
+			return true
+		elif event.is_action_pressed("structure_rectangle"): 
+			manager.structure_mode_changed.emit("rectangle")
+			return true
+		elif event.is_action_pressed("delete"): 
+			manager.structure_key_input.emit("delete")
+			return true
 
 		if event is InputEventMouseButton:
 			var button = ""
