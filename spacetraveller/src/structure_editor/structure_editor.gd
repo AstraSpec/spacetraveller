@@ -12,6 +12,7 @@ signal open_load
 @export var editMenu :PopupMenu
 @export var ToolOptions :HBoxContainer
 @export var LoadWindow :Window
+@export var CoordsLabel :Label
 var FastTilemap :FastTileMap
 var spacing :int = 0
 
@@ -80,6 +81,13 @@ func _process(_delta: float) -> void:
 	if mousePos != lastMousePos:
 		on_tile_changed(mousePos)
 		lastMousePos = mousePos
+	
+	if CoordsLabel:
+		var selection_size = Vector2i.ZERO
+		if active_tool is EditorTools.SelectionTool:
+			selection_size = active_tool.selection_rect.size
+		var global_pos = mousePos + Vector2i(playerOffset)
+		CoordsLabel.update_text(global_pos, selection_size)
 
 func _on_mode_changed(m :String):
 	if tools.has(m):
