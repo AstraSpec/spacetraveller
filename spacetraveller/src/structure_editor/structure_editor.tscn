@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://8xqc3qvwdw3v" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "SelectionVisual", "editMenu", "ToolOptions", "LoadWindow", "CoordsLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -17,9 +17,11 @@ TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContain
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
+chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
 ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
 LoadWindow = NodePath("LoadWindow")
 CoordsLabel = NodePath("Canvas/MarginContainer/CoordsLabel")
+ChunkVisual = NodePath("ChunkVisual")
 
 [node name="Editor" type="StructureEditor" parent="."]
 
@@ -30,6 +32,10 @@ script = ExtResource("5_uujpl")
 script = ExtResource("4_6l3wk")
 
 [node name="SelectionVisual" type="Line2D" parent="."]
+closed = true
+width = 2.0
+
+[node name="ChunkVisual" type="Line2D" parent="."]
 closed = true
 width = 2.0
 
@@ -102,10 +108,18 @@ item_2/id = 2
 auto_translate_mode = 1
 unresizable = false
 
+[node name="Chunk" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
+auto_translate_mode = 1
+unresizable = false
+item_count = 1
+item_0/text = "Select Chunk"
+item_0/id = 0
+
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2
 
 [node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
+oversampling_override = 1.0
 title = "Save Structure"
 initial_position = 1
 size = Vector2i(400, 400)
@@ -214,6 +228,7 @@ text = "Cancel"
 
 [node name="LoadWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "LoadContainer", "LoadButton", "DeleteButton")]
 auto_translate_mode = 1
+oversampling_override = 1.0
 title = "Load Structure"
 initial_position = 1
 size = Vector2i(400, 400)
@@ -268,6 +283,7 @@ text = "Cancel"
 [connection signal="tile_selected" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
+[connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Chunk" to="." method="_on_chunk_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/CreateButton" to="SaveWindow" method="_on_create_button_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/ExistingButton" to="SaveWindow" method="_on_existing_button_pressed"]

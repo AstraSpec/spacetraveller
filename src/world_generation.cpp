@@ -13,6 +13,10 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_world_seed", "seed"), &WorldGeneration::set_world_seed);
     ClassDB::bind_method(D_METHOD("get_world_seed"), &WorldGeneration::get_world_seed);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "world_seed"), "set_world_seed", "get_world_seed");
+
+    ClassDB::bind_method(D_METHOD("set_ignore_occlusion", "ignore"), &WorldGeneration::set_ignore_occlusion);
+    ClassDB::bind_method(D_METHOD("get_ignore_occlusion"), &WorldGeneration::get_ignore_occlusion);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_occlusion"), "set_ignore_occlusion", "get_ignore_occlusion");
     
     // Expose constants
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_region_size"), &WorldGeneration::get_region_size);
@@ -379,7 +383,12 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         
         bool occluded;
         Vector2i cellPos(cx, cy);
-        occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
+        
+        if (ignore_occlusion) {
+            occluded = false;
+        } else {
+            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
+        }
         
         Color color(1.0f, 1.0f, 1.0f, 1.0f);
         if (occluded) {

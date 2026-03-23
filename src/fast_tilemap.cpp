@@ -21,6 +21,7 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("clear_cache"), &FastTileMap::clear_cache);
     ClassDB::bind_method(D_METHOD("get_tile_id_cache"), &FastTileMap::get_tile_id_cache);
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache"), &FastTileMap::set_tile_id_cache);
+    ClassDB::bind_method(D_METHOD("merge_tile_id_cache", "cache"), &FastTileMap::merge_tile_id_cache);
 
     ClassDB::bind_method(D_METHOD("set_spacing", "spacing"), &FastTileMap::set_spacing);
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
@@ -262,6 +263,10 @@ Dictionary FastTileMap::get_tile_id_cache() const {
 
 void FastTileMap::set_tile_id_cache(const Dictionary &p_cache) {
     tile_id_cache.clear();
+    merge_tile_id_cache(p_cache);
+}
+
+void FastTileMap::merge_tile_id_cache(const Dictionary &p_cache) {
     Array keys = p_cache.keys();
     for (int i = 0; i < keys.size(); i++) {
         uint64_t key = keys[i];

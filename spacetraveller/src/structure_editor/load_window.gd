@@ -57,8 +57,11 @@ func _on_load_pressed() -> void:
 		return
 		
 	structureEditor.save_undo_state()
-	Editor.import_from_rle(blueprint, palette)
-	FastTilemap.update_visuals(Vector2i(0, 0))
+	Editor.import_from_rle(blueprint, palette, structureEditor.selectedChunkPos)
+	if FastTilemap.has_method("update_world_bubble"):
+		FastTilemap.update_world_bubble(structureEditor.playerOffset)
+	else:
+		FastTilemap.update_visuals(structureEditor.playerOffset)
 	visible = false
 
 func _on_delete_pressed() -> void:

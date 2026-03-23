@@ -10,9 +10,11 @@ signal open_load
 @export var TileGrid :GridContainer
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
+@export var chunkMenu :PopupMenu
 @export var ToolOptions :HBoxContainer
 @export var LoadWindow :Window
 @export var CoordsLabel :Label
+@export var ChunkVisual :Line2D
 var FastTilemap :FastTileMap
 var spacing :int = 0
 
@@ -25,6 +27,9 @@ var tools = {}
 var active_tool
 var active_selection : Rect2i = Rect2i()
 
+var selectedChunkPos : Vector2i
+var isMovingChunk : bool = false
+
 var tileID1 :String
 var tileID2 :String
 var lastMousePos :Vector2i
@@ -34,6 +39,12 @@ var playerOffset :Vector2
 var undo_stack : Array = []
 var redo_stack : Array = []
 const MAX_UNDOS = 100
+
+func update_editor_visuals():
+	if FastTilemap.has_method("update_world_bubble"):
+		FastTilemap.update_world_bubble(playerOffset)
+	else:
+		FastTilemap.update_visuals(playerOffset)
 
 func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
@@ -55,8 +66,13 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	_on_mode_changed("pencil")
 	
+	selectedChunkPos = Vector2i(floor(offset.x / CHUNK_SIZE), floor(offset.y / CHUNK_SIZE)) * CHUNK_SIZE
+	if !chunkMenu.index_pressed.is_connected(_on_chunk_index_pressed):
+		chunkMenu.index_pressed.connect(_on_chunk_index_pressed)
+	_update_chunk_visual()
+	
 	TileGrid.start(spacing)
-	FastTilemap.update_visuals(playerOffset)
+	update_editor_visuals()
 
 func setup_tools():
 	tools = {
@@ -82,15 +98,22 @@ func _process(_delta: float) -> void:
 		on_tile_changed(mousePos)
 		lastMousePos = mousePos
 	
-	if CoordsLabel:
-		var selection_size = Vector2i.ZERO
-		if active_tool is EditorTools.SelectionTool:
-			selection_size = active_tool.selection_rect.size
-		var global_pos = mousePos + Vector2i(playerOffset)
-		CoordsLabel.update_text(global_pos, selection_size)
+	var selection_size = Vector2i.ZERO
+	if active_tool and active_tool is EditorTools.SelectionTool:
+		selection_size = active_tool.selection_rect.size
+	var global_pos = mousePos + Vector2i(playerOffset)
+	CoordsLabel.update_text(global_pos, selection_size)
+
+	if isMovingChunk:
+		var abs_mouse = mousePos + Vector2i(playerOffset)
+		var new_chunk_pos = Vector2i(floor(float(abs_mouse.x) / CHUNK_SIZE), floor(float(abs_mouse.y) / CHUNK_SIZE)) * CHUNK_SIZE
+		if new_chunk_pos != selectedChunkPos:
+			selectedChunkPos = new_chunk_pos
+			_update_chunk_visual()
 
 func _on_mode_changed(m :String):
 	if tools.has(m):
+		isMovingChunk = false
 		if active_tool:
 			active_tool.on_deactivate()
 		active_tool = tools[m]
@@ -119,6 +142,13 @@ func _update_tool_options():
 		)
 
 func _on_mouse_input(button: String, action: InputManager.MouseAction):
+	if isMovingChunk:
+		if action == InputManager.MouseAction.PRESS and button == "left":
+			isMovingChunk = false
+			_update_chunk_visual()
+			_on_mode_changed("pencil")
+		return
+	
 	match action:
 		InputManager.MouseAction.PRESS:
 			active_tool.on_press(button, mousePos)
@@ -147,7 +177,7 @@ func undo():
 	redo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = undo_stack.pop_back()
 	FastTilemap.set_tile_id_cache(state)
-	FastTilemap.update_visuals(playerOffset)
+	update_editor_visuals()
 
 func redo():
 	if redo_stack.is_empty(): return
@@ -155,7 +185,7 @@ func redo():
 	undo_stack.push_back(FastTilemap.get_tile_id_cache())
 	var state = redo_stack.pop_back()
 	FastTilemap.set_tile_id_cache(state)
-	FastTilemap.update_visuals(playerOffset)
+	update_editor_visuals()
 
 func select_tile(id :String, is_primary :bool = true):
 	if is_primary:
@@ -167,13 +197,14 @@ func select_tile(id :String, is_primary :bool = true):
 	TileIDLabel2.text = "ID2: " + tileID2
 
 func on_tile_changed(_pos: Vector2i):
-	active_tool.on_hover(_pos)
+	if active_tool:
+		active_tool.on_hover(_pos)
 
 func place_tile_at(pos: Vector2i, id: String):
 	if !id or !is_inside_bubble(pos): return
 	
 	FastTilemap.place_tile(pos.x + playerOffset.x, pos.y + playerOffset.y, id)
-	FastTilemap.update_visuals(playerOffset)
+	update_editor_visuals()
 
 func is_inside_bubble(pos: Vector2i) -> bool:
 	var half = BUBBLE_SIZE / 2
@@ -184,8 +215,10 @@ func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
 
 func _on_clear_button_pressed() -> void:
 	save_undo_state()
-	FastTilemap.clear_cache()
-	FastTilemap.update_visuals(playerOffset)
+	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
+		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
+			FastTilemap.place_tile(x, y, "void")
+	update_editor_visuals()
 
 func get_mouse_tile_pos() -> Vector2i:
 	var mouse_pos = get_global_mouse_position()
@@ -219,8 +252,11 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0:
-		FastTilemap.clear_cache()
-		FastTilemap.update_visuals(playerOffset)
+		save_undo_state()
+		for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
+			for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
+				FastTilemap.place_tile(x, y, "void")
+		update_editor_visuals()
 	elif index == 1: open_save.emit()
 	elif index == 2: open_load.emit()
 
@@ -228,3 +264,28 @@ func _on_edit_index_pressed(index: int) -> void:
 	var names = tools.keys()
 	if index < names.size():
 		_on_mode_changed(names[index])
+
+func _on_chunk_index_pressed(index: int) -> void:
+	if index == 0:
+		isMovingChunk = !isMovingChunk
+		if isMovingChunk:
+			if active_tool:
+				active_tool.on_deactivate()
+			active_tool = null
+			Input.set_custom_mouse_cursor(null)
+			Editor.clear_preview_tiles()
+		else:
+			_on_mode_changed("pencil")
+
+func _update_chunk_visual():
+	var cell_size = FastTilemap.get_cell_size()
+	var size = CHUNK_SIZE * cell_size
+	ChunkVisual.points = PackedVector2Array([
+		Vector2(0, 0),
+		Vector2(size, 0),
+		Vector2(size, size),
+		Vector2(0, size)
+	])
+	var rel_pos = selectedChunkPos - Vector2i(playerOffset)
+	ChunkVisual.position = Vector2(rel_pos) * cell_size
+	update_editor_visuals()

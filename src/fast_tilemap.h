@@ -59,6 +59,7 @@ public:
 
     Dictionary get_tile_id_cache() const;
     void set_tile_id_cache(const Dictionary &p_cache);
+    void merge_tile_id_cache(const Dictionary &p_cache);
 };
 
 }

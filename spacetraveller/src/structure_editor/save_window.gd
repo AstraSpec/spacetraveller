@@ -24,7 +24,7 @@ func _on_save_pressed() -> void:
 	var newID = StructureID.text.strip_edges()
 	if newID.is_empty(): return
 	
-	var newRLE :Dictionary = Editor.export_to_rle(newID)
+	var newRLE :Dictionary = Editor.export_to_rle(newID, structureEditor.selectedChunkPos)
 	DbAccess.save_structure(newID, newRLE, currentPath)
 	visible = false
 

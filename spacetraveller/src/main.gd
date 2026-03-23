@@ -75,6 +75,7 @@ func _on_structure_editor_toggled(active: bool):
 		structure_editor_instance = structure_editor_scene.instantiate()
 		add_child(structure_editor_instance)
 		structure_editor_instance.FastTilemap = WorldGen
+		WorldGen.ignore_occlusion = true
 		structure_editor_instance.spacing = 1
 		structure_editor_instance.start_editor(Player.cellPos)
 		Player.Camera.locked = false
@@ -88,4 +89,5 @@ func _on_structure_editor_toggled(active: bool):
 		Player.Camera.locked = true
 		Canvas.visible = true
 		
+		WorldGen.ignore_occlusion = false
 		WorldGen.update_world_bubble(Player.cellPos)

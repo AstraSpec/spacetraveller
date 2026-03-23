@@ -93,6 +93,7 @@ private:
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
+    bool ignore_occlusion = false;
     
     // Data-Driven Registry
     uint16_t id_void = 0;
@@ -135,6 +136,9 @@ public:
     void set_world_seed(int seed);
     int get_world_seed() const;
     
+    void set_ignore_occlusion(bool p_ignore) { ignore_occlusion = p_ignore; }
+    bool get_ignore_occlusion() const { return ignore_occlusion; }
+
     void update_world_bubble(const Vector2i& playerPos);
     Dictionary init_region(const Vector2i& regionPos);
     void drop_item(const Vector2i& pos, const String& item_id, int amount);

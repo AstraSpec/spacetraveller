@@ -136,7 +136,7 @@ class LineTool extends Tool:
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
 				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, tid)
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 		is_drawing = false
 		on_hover(pos)
 
@@ -178,7 +178,7 @@ class RectangleTool extends Tool:
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 		is_drawing = false
 		on_hover(pos)
 
@@ -220,7 +220,7 @@ class EllipsisTool extends Tool:
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
 		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 		is_drawing = false
 		on_hover(pos)
 
@@ -253,7 +253,7 @@ class FillTool extends Tool:
 		else:
 			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, get_effective_option(0))
 			
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -341,7 +341,7 @@ class SelectionTool extends Tool:
 				for x in range(selection_rect.position.x, selection_rect.end.x):
 					for y in range(selection_rect.position.y, selection_rect.end.y):
 						editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
-				editor.FastTilemap.update_visuals(editor.playerOffset)
+				editor.update_editor_visuals()
 
 	func on_deactivate():
 		if is_floating:
@@ -363,7 +363,7 @@ class SelectionTool extends Tool:
 			is_floating = false
 			return
 
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 		is_floating = true
 
 	func _preview_tiles():
@@ -407,7 +407,7 @@ class SelectionTool extends Tool:
 			if editor.is_inside_bubble(p):
 				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, captured_tiles[rel_p])
 		
-		editor.FastTilemap.update_visuals(editor.playerOffset)
+		editor.update_editor_visuals()
 		captured_tiles.clear()
 		is_floating = false
 		_update_visuals()

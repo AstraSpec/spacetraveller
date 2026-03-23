@@ -1,4 +1,5 @@
 #include "structure_editor.h"
+#include "world_generation.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
@@ -12,8 +13,8 @@ void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_tilemap", "tilemap"), &StructureEditor::set_tilemap);
     ClassDB::bind_method(D_METHOD("get_tilemap"), &StructureEditor::get_tilemap);
 
-    ClassDB::bind_method(D_METHOD("export_to_rle", "id"), &StructureEditor::export_to_rle);
-    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette"), &StructureEditor::import_from_rle);
+    ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()));
+    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()));
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id"), &StructureEditor::update_preview_tiles);
     ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data"), &StructureEditor::update_preview_tiles_with_data);
     ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::update_preview_shape);
@@ -41,10 +42,10 @@ FastTileMap *StructureEditor::get_tilemap() const {
     return tilemap;
 }
 
-Dictionary StructureEditor::export_to_rle(const String &p_id) const {
+Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset) const {
     Dictionary result;
 
-    int size = tilemap->get_world_bubble_size();
+    int size = WorldGeneration::get_chunk_size();
     Dictionary cache = tilemap->get_tile_id_cache();
 
     // RLE Encoding with Numeric Indices
@@ -70,8 +71,8 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
 
     // Iterate through the full grid
     IdRegistry* id_reg = IdRegistry::get_singleton();
-    for (int y = -size/2; y < size/2; y++) {
-        for (int x = -size/2; x < size/2; x++) {
+    for (int y = p_offset.y; y < p_offset.y + size; y++) {
+        for (int x = p_offset.x; x < p_offset.x + size; x++) {
             uint64_t key = Occlusion::pack_coords(x, y);
             String tile_id = "void";
             
@@ -100,9 +101,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id) const {
     return result;
 }
 
-void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette) {
-    tilemap->clear_cache();
-    
+void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
 
@@ -116,7 +115,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
     String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    int size = tilemap->get_world_bubble_size();
+    int size = WorldGeneration::get_chunk_size();
     int current_pos = 0;
     int total_expected = size * size;
 
@@ -138,17 +137,16 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
         }
 
         for (int j = 0; j < count && current_pos < total_expected; j++) {
-            int x = (current_pos % size) - size/2;
-            int y = (current_pos / size) - size/2;
+            int x = (current_pos % size) + p_offset.x;
+            int y = (current_pos / size) + p_offset.y;
             
-            if (tile_id != 0) {
-                uint64_t key = Occlusion::pack_coords(x, y);
-                new_cache[key] = (int)tile_id;
-            }
+            uint64_t key = Occlusion::pack_coords(x, y);
+            new_cache[key] = (int)tile_id;
+            
             current_pos++;
         }
     }
-    tilemap->set_tile_id_cache(new_cache);
+    tilemap->merge_tile_id_cache(new_cache);
 }
 
 void StructureEditor::clear_preview_tiles() {
