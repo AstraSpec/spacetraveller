@@ -24,7 +24,21 @@ TileDb::~TileDb() {
 
 TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     TileInfo info;
-    info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
+    
+    Variant atlas_data = p_data.get("atlas", Array());
+    if (atlas_data.get_type() == Variant::ARRAY) {
+        Array arr = atlas_data;
+        if (arr.size() > 0 && arr[0].get_type() == Variant::ARRAY) {
+            // Multiple atlases for tile
+            for (int i = 0; i < arr.size(); i++) {
+                info.atlas_variants.push_back(variant_to_vector2i(arr[i]));
+            }
+        } else {
+            // Single variation
+            info.atlas_variants.push_back(variant_to_vector2i(arr));
+        }
+    }
+    
     info.solid = p_data.get("solid", false);
     info.tags = _parse_tags(p_data.get("tags", Array()));
     
@@ -51,7 +65,7 @@ const TileInfo* TileDb::get_tile_info(uint16_t p_id) const {
 
 Vector2i TileDb::get_atlas_coords(const String &p_id) const {
     const TileInfo* info = get_tile_info(p_id);
-    if (info) return info->atlas;
+    if (info && !info->atlas_variants.empty()) return info->atlas_variants[0];
     return Vector2i(-1, -1);
 }
 

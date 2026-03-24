@@ -18,20 +18,8 @@
     "tags": ["SMASHABLE", "VEGETATION"]
   },
   {
-    "id": "grass1",
-    "atlas": [ 6, 9 ],
-    "solid": false,
-    "tags": ["GROUND", "VEGETATION"]
-  },
-  {
-    "id": "grass2",
-    "atlas": [ 7, 9 ],
-    "solid": false,
-    "tags": ["GROUND", "VEGETATION"]
-  },
-  {
-    "id": "grass3",
-    "atlas": [ 3, 9 ],
+    "id": "grass",
+    "atlas": [[ 6, 9 ], [ 7, 9 ], [ 3, 9 ]],
     "solid": false,
     "tags": ["GROUND", "VEGETATION"]
   },

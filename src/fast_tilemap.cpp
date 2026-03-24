@@ -27,6 +27,10 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
     ClassDB::bind_method(D_METHOD("get_cell_size"), &FastTileMap::get_cell_size);
 
+    ClassDB::bind_method(D_METHOD("set_world_seed", "seed"), &FastTileMap::set_world_seed);
+    ClassDB::bind_method(D_METHOD("get_world_seed"), &FastTileMap::get_world_seed);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "world_seed"), "set_world_seed", "get_world_seed");
+
     ClassDB::bind_static_method("FastTileMap", D_METHOD("get_tile_size"), &FastTileMap::get_tile_size);
     ClassDB::bind_method(D_METHOD("set_world_bubble_size", "size"), &FastTileMap::set_world_bubble_size);
     ClassDB::bind_method(D_METHOD("get_world_bubble_size"), &FastTileMap::get_world_bubble_size);
@@ -126,9 +130,11 @@ void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint
     
     Vector2i atlas_pos(1, 1);
     const TileInfo* info = tile_db->get_tile_info(tile_id);
-    if (info) {
-        atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
-        atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
+    if (info && !info->atlas_variants.empty()) {
+        uint32_t variant_idx = _get_variant_index(ox + playerPos.x, oy + playerPos.y, info->atlas_variants.size());
+        Vector2i variant_coords = info->atlas_variants[variant_idx];
+        atlas_pos.x = 1 + variant_coords.x * (TILE_SIZE + 1);
+        atlas_pos.y = 1 + variant_coords.y * (TILE_SIZE + 1);
     }
     
     // Clear and render tile

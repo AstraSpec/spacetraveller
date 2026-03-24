@@ -169,7 +169,17 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &ti
     }
 
     int tile_size = FastTileMap::get_tile_size();
-    Vector2i atlas_pos(1 + info->atlas.x * (tile_size + 1), 1 + info->atlas.y * (tile_size + 1));
+    Vector2i atlas_coords = info->atlas_variants.empty() ? Vector2i(-1, -1) : info->atlas_variants[0];
+    
+    // Pick variation if multiple exist
+    if (info->atlas_variants.size() > 1 && tilemap) {
+        uint32_t h = (static_cast<uint32_t>(pos.x) * 1597334677U) ^ 
+                     (static_cast<uint32_t>(pos.y) * 3812015801U) ^ 
+                     (static_cast<uint32_t>(tilemap->get_world_seed()));
+        atlas_coords = info->atlas_variants[h % info->atlas_variants.size()];
+    }
+
+    Vector2i atlas_pos(1 + atlas_coords.x * (tile_size + 1), 1 + atlas_coords.y * (tile_size + 1));
 
     RID preview_rid = rs->canvas_item_create();
     rs->canvas_item_set_parent(preview_rid, parent_rid);

@@ -7,7 +7,7 @@
 namespace godot {
 
 struct TileInfo {
-    Vector2i atlas;
+    std::vector<Vector2i> atlas_variants;
     bool solid;
     std::vector<uint16_t> tags;
 };

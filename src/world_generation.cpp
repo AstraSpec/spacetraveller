@@ -63,6 +63,7 @@ Ref<FastNoiseLite> WorldGeneration::get_biome_noise() const {
 
 void WorldGeneration::set_world_seed(int seed) {
     world_seed = seed;
+    FastTileMap::set_world_seed(seed);
     if (biome_noise.is_valid()) {
         biome_noise->set_seed(seed);
     }
@@ -189,17 +190,17 @@ void WorldGeneration::setup_biome_rules() {
 
     // 1. Plains
     reg_biome("plains", {
-        {"grass1", 35}, {"grass2", 35}, {"dirt", 20}, {"grass3", 10}
+        {"grass", 80}, {"dirt", 20}
     });
 
     // 2. Forest
     reg_biome("forest", {
-        {"tree", 30}, {"grass1", 24}, {"grass2", 24}, {"dirt", 14}, {"grass3", 8}
+        {"tree", 30}, {"grass", 56}, {"dirt", 14}
     });
 
     // 3. Buildings (Default ground)
     reg_biome("building", {
-        {"grass1", 35}, {"grass2", 35}, {"dirt", 20}, {"grass3", 10}
+        {"grass", 80}, {"dirt", 20}
     });
 
     // 4. Roads/Alleys/Floors (Fixed Overrides)

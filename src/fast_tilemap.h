@@ -26,6 +26,7 @@ protected:
     int world_bubble_size = 64;
     int world_bubble_radius = 32;
     int spacing = 0;
+    int world_seed = 0;
 
     std::unordered_map<uint64_t, RID> tile_rids;
     std::unordered_map<uint64_t, uint16_t> tile_id_cache;
@@ -44,6 +45,9 @@ public:
     int get_spacing() const { return spacing; }
     int get_cell_size() const { return TILE_SIZE + spacing; }
 
+    void set_world_seed(int p_seed) { world_seed = p_seed; }
+    int get_world_seed() const { return world_seed; }
+
     static int get_tile_size() { return TILE_SIZE; }
     void set_world_bubble_size(int p_size);
     int get_world_bubble_size() const { return world_bubble_size; }
@@ -60,6 +64,15 @@ public:
     Dictionary get_tile_id_cache() const;
     void set_tile_id_cache(const Dictionary &p_cache);
     void merge_tile_id_cache(const Dictionary &p_cache);
+
+protected:
+    uint32_t _get_variant_index(int x, int y, int variant_count) const {
+        if (variant_count <= 1) return 0;
+        uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^ 
+                     (static_cast<uint32_t>(y) * 3812015801U) ^ 
+                     (static_cast<uint32_t>(world_seed));
+        return h % variant_count;
+    }
 };
 
 }

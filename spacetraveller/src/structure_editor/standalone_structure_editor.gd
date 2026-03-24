@@ -14,6 +14,7 @@ func _ready() -> void:
 	var CHUNK_SIZE = WorldGeneration.get_chunk_size()
 	FastTilemap.set_spacing(CUSTOM_SPACING)
 	FastTilemap.set_world_bubble_size(CHUNK_SIZE)
+	FastTilemap.set_world_seed(randi())
 	FastTilemap.init_world_bubble(Vector2i(0, 0), true)
 	FastTilemap.update_visuals(Vector2i(0, 0))
 	
