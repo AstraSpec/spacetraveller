@@ -163,7 +163,16 @@ class StructureContext extends InputContext:
 		elif event.is_action_pressed("delete"): 
 			manager.structure_key_input.emit("delete")
 			return true
-
+		elif event.is_action_pressed("copy"): 
+			manager.structure_key_input.emit("copy")
+			return true
+		elif event.is_action_pressed("cut"): 
+			manager.structure_key_input.emit("cut")
+			return true
+		elif event.is_action_pressed("paste"): 
+			manager.structure_key_input.emit("paste")
+			return true
+		
 		if event is InputEventMouseButton:
 			var button = ""
 			if event.button_index == MOUSE_BUTTON_LEFT: button = "left"

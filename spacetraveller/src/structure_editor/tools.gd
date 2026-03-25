@@ -8,6 +8,10 @@ const CURSORS = {
 }
 
 class Tool:
+	static var clipboard = {
+		"tiles": {},
+		"size": Vector2i.ZERO
+	}
 	var editor
 	var options = {}
 	
@@ -330,34 +334,69 @@ class SelectionTool extends Tool:
 			editor.Editor.clear_preview_tiles()
 
 	func on_key(key: String):
-		if key == "delete":
-			if is_floating:
-				captured_tiles.clear()
-				is_floating = false
-				_update_visuals()
-				editor.Editor.clear_preview_tiles()
-			elif selection_rect.size != Vector2i.ZERO:
-				editor.save_undo_state()
-				for x in range(selection_rect.position.x, selection_rect.end.x):
-					for y in range(selection_rect.position.y, selection_rect.end.y):
-						editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
-				editor.update_editor_visuals()
+		match key:
+			"delete":
+				_delete_selection()
+			"copy":
+				_copy_to_clipboard()
+			"cut":
+				_cut_to_clipboard()
+			"paste":
+				_paste_from_clipboard()
+			"undo", "redo":
+				if is_floating:
+					captured_tiles.clear()
+					is_floating = false
+					_update_visuals()
+					editor.Editor.clear_preview_tiles()
 
 	func on_deactivate():
 		if is_floating:
 			_commit_move()
 		editor.Editor.clear_preview_tiles()
 
+	func _copy_to_clipboard():
+		if selection_rect.size == Vector2i.ZERO: return
+		Tool.clipboard.tiles = _read_tiles_from_rect(selection_rect)
+		Tool.clipboard.size = selection_rect.size
+
+	func _cut_to_clipboard():
+		if selection_rect.size == Vector2i.ZERO: return
+		editor.save_undo_state()
+		Tool.clipboard.tiles = _read_tiles_from_rect(selection_rect, true)
+		Tool.clipboard.size = selection_rect.size
+		editor.update_editor_visuals()
+
+	func _paste_from_clipboard():
+		if Tool.clipboard.tiles.is_empty(): return
+		
+		if is_floating:
+			_commit_move()
+			
+		editor.save_undo_state()
+		captured_tiles = Tool.clipboard.tiles.duplicate()
+		selection_rect = Rect2i(editor.mousePos, Tool.clipboard.size)
+		move_offset = Vector2i.ZERO
+		is_floating = true
+		is_moving = false
+		is_selecting = false
+		_update_visuals()
+		_preview_tiles()
+
+	func _delete_selection():
+		if is_floating:
+			captured_tiles.clear()
+			is_floating = false
+			_update_visuals()
+			editor.Editor.clear_preview_tiles()
+		elif selection_rect.size != Vector2i.ZERO:
+			editor.save_undo_state()
+			_read_tiles_from_rect(selection_rect, true)
+			editor.update_editor_visuals()
+
 	func _capture_and_cut_tiles():
 		editor.save_undo_state()
-		captured_tiles.clear()
-		for x in range(selection_rect.position.x, selection_rect.end.x):
-			for y in range(selection_rect.position.y, selection_rect.end.y):
-				var p = Vector2i(x, y)
-				var tid = editor.FastTilemap.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
-				if tid != "void":
-					captured_tiles[p - selection_rect.position] = tid
-					editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
+		captured_tiles = _read_tiles_from_rect(selection_rect, true)
 		
 		if captured_tiles.is_empty():
 			is_floating = false
@@ -365,6 +404,17 @@ class SelectionTool extends Tool:
 
 		editor.update_editor_visuals()
 		is_floating = true
+
+	func _read_tiles_from_rect(rect: Rect2i, clear_map: bool = false) -> Dictionary:
+		var tiles = {}
+		for x in range(rect.position.x, rect.end.x):
+			for y in range(rect.position.y, rect.end.y):
+				var tid = editor.FastTilemap.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
+				if tid != "void":
+					tiles[Vector2i(x, y) - rect.position] = tid
+					if clear_map:
+						editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
+		return tiles
 
 	func _preview_tiles():
 		var preview_data = {}
