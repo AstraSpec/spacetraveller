@@ -74,6 +74,9 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	TileGrid.start(spacing)
 	update_editor_visuals()
 
+func _exit_tree() -> void:
+	Input.set_custom_mouse_cursor(null)
+
 func setup_tools():
 	tools = {
 		"pencil": EditorTools.PencilTool.new(self),

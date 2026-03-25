@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=25 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -17,6 +17,7 @@
 [ext_resource type="StyleBox" uid="uid://cl5k3aow0gvn" path="res://src/ui/theme/panel.tres" id="15_yaehf"]
 [ext_resource type="Script" uid="uid://cgugc1j1sx1tg" path="res://src/ui/menu_window.gd" id="16_menu"]
 [ext_resource type="PackedScene" uid="uid://d3c2r6p20mg1h" path="res://src/ui/spacer_label.tscn" id="17_074og"]
+[ext_resource type="Script" uid="uid://cpf70sw4uacnu" path="res://src/ui/map_ui.gd" id="17_getpj"]
 [ext_resource type="Script" uid="uid://bwtfnra3owd3s" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
 [ext_resource type="Script" uid="uid://dk0ty1jdmq7i0" path="res://src/ui/inventory/clothing_tab.gd" id="19_clot"]
 [ext_resource type="Script" uid="uid://bmgye7kyg0mjc" path="res://src/ui/inventory/stats_tab.gd" id="20_stats"]
@@ -127,8 +128,10 @@ oversampling_override = 1.0
 title = "Inventory"
 initial_position = 1
 size = Vector2i(930, 560)
+visible = false
 unfocusable = true
 script = ExtResource("16_menu")
+size_preset = 0
 menu_id = "inventory"
 tabs = NodePath("TabContainer")
 
@@ -449,6 +452,7 @@ size = Vector2i(930, 560)
 visible = false
 unfocusable = true
 script = ExtResource("16_menu")
+size_preset = 0
 menu_id = "nearby"
 single_tab = NodePath("Nearby")
 
@@ -545,6 +549,7 @@ size = Vector2i(400, 300)
 visible = false
 unfocusable = true
 script = ExtResource("16_menu")
+size_preset = 2
 menu_id = "actions"
 single_tab = NodePath("Actions")
 
@@ -571,6 +576,38 @@ size_flags_horizontal = 3
 
 [node name="StripContainer" parent="Canvas/Window/ActionsUI/Actions/VBoxContainer/MarginContainer/ItemList" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+
+[node name="MapUI" type="Window" parent="Canvas/Window"]
+oversampling_override = 1.0
+title = "Map"
+initial_position = 1
+size = Vector2i(930, 560)
+unfocusable = true
+script = ExtResource("17_getpj")
+size_preset = 0
+
+[node name="Map" type="Control" parent="Canvas/Window/MapUI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_ghimp")
+
+[node name="ViewportRect" type="TextureRect" parent="Canvas/Window/MapUI/Map"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("ViewportTexture_kjl2a")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15
@@ -634,37 +671,6 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="Map" type="Control" parent="Canvas"]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-script = ExtResource("7_ghimp")
-
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Map"]
-clip_contents = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 40
-
-[node name="ViewportRect" type="TextureRect" parent="Canvas/Map/MarginContainer"]
-texture_filter = 1
-layout_mode = 2
-texture = SubResource("ViewportTexture_kjl2a")
-expand_mode = 1
-stretch_mode = 2
-
 [node name="InteractionCell" parent="." instance=ExtResource("11_efxa6")]
 visible = false
 
@@ -672,6 +678,5 @@ visible = false
 visible = false
 position = Vector2(-12, 0)
 
-[connection signal="generated" from="WorldGen" to="Canvas/Map" method="_on_world_generated"]
-[connection signal="close_requested" from="Canvas/Window/InventoryUI" to="Canvas/Window/InventoryUI" method="_on_close_requested"]
+[connection signal="generated" from="WorldGen" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]

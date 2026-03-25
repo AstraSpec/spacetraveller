@@ -1,4 +1,4 @@
-extends Window
+extends BaseWindow
 
 @export var menu_id: String
 @export var tabs: TabContainer
@@ -7,6 +7,7 @@ extends Window
 var current_tab: BaseListTab
 
 func _ready() -> void:
+	super._ready()
 	visible = false
 	InputManager.menu_toggled.connect(_on_menu_toggled)
 	InputManager.ui_directional_input.connect(_on_directional_input)
@@ -82,6 +83,3 @@ func _on_wear_input():
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
 		current_tab.handle_action("wear")
-
-func _on_close_requested() -> void:
-	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
