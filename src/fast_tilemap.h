@@ -65,6 +65,9 @@ public:
     void set_tile_id_cache(const Dictionary &p_cache);
     void merge_tile_id_cache(const Dictionary &p_cache);
 
+    Array get_seen_cells() const;
+    void set_seen_cells(const Array &p_seen);
+
 protected:
     uint32_t _get_variant_index(int x, int y, int variant_count) const {
         if (variant_count <= 1) return 0;

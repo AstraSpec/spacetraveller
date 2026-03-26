@@ -16,6 +16,9 @@ void Anatomy::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_part_integrity", "index"), &Anatomy::get_part_integrity);
     ClassDB::bind_method(D_METHOD("set_part_integrity", "index", "integrity"), &Anatomy::set_part_integrity);
     ClassDB::bind_method(D_METHOD("get_functional_parts_list"), &Anatomy::get_functional_parts_list);
+
+    ClassDB::bind_method(D_METHOD("get_save_data"), &Anatomy::get_save_data);
+    ClassDB::bind_method(D_METHOD("load_save_data", "data"), &Anatomy::load_save_data);
 }
 
 Anatomy::Anatomy() {}
@@ -133,6 +136,37 @@ Array Anatomy::get_functional_parts_list() const {
         }
     }
     return list;
+}
+
+Dictionary Anatomy::get_save_data() const {
+    Dictionary data;
+    data["race_id"] = race_id;
+    Array insts;
+    for (const auto& inst : instances) {
+        Dictionary d;
+        d["type_id"] = inst.type_id;
+        d["parent_index"] = inst.parent_index;
+        d["integrity"] = inst.integrity;
+        d["local_index"] = inst.local_index;
+        insts.push_back(d);
+    }
+    data["instances"] = insts;
+    return data;
+}
+
+void Anatomy::load_save_data(const Dictionary &p_data) {
+    race_id = p_data.get("race_id", "");
+    instances.clear();
+    Array insts = p_data.get("instances", Array());
+    for (int i = 0; i < insts.size(); i++) {
+        Dictionary d = insts[i];
+        PartInstance inst;
+        inst.type_id = d.get("type_id", "");
+        inst.parent_index = d.get("parent_index", -1);
+        inst.integrity = d.get("integrity", 1.0f);
+        inst.local_index = d.get("local_index", 0);
+        instances.push_back(inst);
+    }
 }
 
 }

@@ -98,6 +98,12 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 		return
 
+	if event.is_action_pressed("ui_cancel"):
+		if current_mode == InputMode.EXPLORATION:
+			toggle_menu("esc")
+			get_viewport().set_input_as_handled()
+			return
+
 func _process(delta):
 	if active_context:
 		active_context.process(delta)

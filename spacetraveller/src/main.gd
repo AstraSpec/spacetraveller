@@ -69,6 +69,10 @@ func _ready() -> void:
 	WorldGen.update_world_bubble(Player.cellPos)
 	
 	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
+	
+	SaveManager.register_world(WorldGen)
+	SaveManager.register_player(Player)
+	SaveManager.register_inventory(inventory)
 
 func _on_structure_editor_toggled(active: bool):
 	if active:

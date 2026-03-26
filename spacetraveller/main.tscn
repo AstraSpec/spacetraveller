@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=27 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -21,6 +21,8 @@
 [ext_resource type="Script" uid="uid://bwtfnra3owd3s" path="res://src/ui/inventory/nearby_tab.gd" id="17_near"]
 [ext_resource type="Script" uid="uid://dk0ty1jdmq7i0" path="res://src/ui/inventory/clothing_tab.gd" id="19_clot"]
 [ext_resource type="Script" uid="uid://bmgye7kyg0mjc" path="res://src/ui/inventory/stats_tab.gd" id="20_stats"]
+[ext_resource type="Script" uid="uid://deddxv13sbvc2" path="res://src/ui/esc_ui.gd" id="21_esct"]
+[ext_resource type="Script" uid="uid://5lt6d1nwnsg7" path="res://src/ui/load_game_ui.gd" id="22_load"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -131,7 +133,6 @@ size = Vector2i(930, 560)
 visible = false
 unfocusable = true
 script = ExtResource("16_menu")
-size_preset = 0
 menu_id = "inventory"
 tabs = NodePath("TabContainer")
 
@@ -452,7 +453,6 @@ size = Vector2i(930, 560)
 visible = false
 unfocusable = true
 script = ExtResource("16_menu")
-size_preset = 0
 menu_id = "nearby"
 single_tab = NodePath("Nearby")
 
@@ -549,9 +549,9 @@ size = Vector2i(400, 300)
 visible = false
 unfocusable = true
 script = ExtResource("16_menu")
-size_preset = 2
 menu_id = "actions"
 single_tab = NodePath("Actions")
+size_preset = 2
 
 [node name="Actions" type="MarginContainer" parent="Canvas/Window/ActionsUI" node_paths=PackedStringArray("player", "stripContainer")]
 anchors_preset = 15
@@ -582,9 +582,9 @@ oversampling_override = 1.0
 title = "Map"
 initial_position = 1
 size = Vector2i(930, 560)
+visible = false
 unfocusable = true
 script = ExtResource("17_getpj")
-size_preset = 0
 
 [node name="Map" type="Control" parent="Canvas/Window/MapUI"]
 layout_mode = 3
@@ -608,6 +608,96 @@ mouse_filter = 2
 texture = SubResource("ViewportTexture_kjl2a")
 expand_mode = 1
 stretch_mode = 2
+
+[node name="EscUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("single_tab")]
+oversampling_override = 1.0
+title = "Main Menu"
+initial_position = 1
+size = Vector2i(400, 300)
+visible = false
+unfocusable = true
+script = ExtResource("16_menu")
+menu_id = "esc"
+single_tab = NodePath("Esc")
+size_preset = 2
+
+[node name="Esc" type="MarginContainer" parent="Canvas/Window/EscUI" node_paths=PackedStringArray("stripContainer")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("21_esct")
+stripContainer = NodePath("VBoxContainer/MarginContainer/ItemList/StripContainer")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/EscUI/Esc"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/EscUI/Esc/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="MarginContainer" parent="Canvas/Window/EscUI/Esc/VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StripContainer" parent="Canvas/Window/EscUI/Esc/VBoxContainer/MarginContainer/ItemList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="LoadGameUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("LoadContainer", "LoadButton", "DeleteButton")]
+auto_translate_mode = 1
+title = "Load Game"
+initial_position = 1
+size = Vector2i(400, 400)
+visible = false
+unfocusable = true
+script = ExtResource("22_load")
+LoadContainer = NodePath("MarginContainer/VBoxContainer/ScrollContainer/LoadContainer")
+LoadButton = NodePath("MarginContainer/VBoxContainer/Footer/Load")
+DeleteButton = NodePath("MarginContainer/VBoxContainer/Footer/Delete")
+size_preset = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/LoadGameUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/LoadGameUI/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LoadContainer" type="VBoxContainer" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Footer" type="HBoxContainer" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+alignment = 2
+
+[node name="Load" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+disabled = true
+text = "Load"
+
+[node name="Delete" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+disabled = true
+text = "Delete"
+
+[node name="Close" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Cancel"
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15
@@ -680,3 +770,6 @@ position = Vector2(-12, 0)
 
 [connection signal="generated" from="WorldGen" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]
+[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Load" to="Canvas/Window/LoadGameUI" method="_on_load_pressed"]
+[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Delete" to="Canvas/Window/LoadGameUI" method="_on_delete_pressed"]
+[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Close" to="Canvas/Window/LoadGameUI" method="_on_close_pressed"]

@@ -41,6 +41,9 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_items_at", "pos"), &WorldGeneration::get_items_at);
     ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "inventory"), &WorldGeneration::pickup_item_specific);
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &WorldGeneration::has_item);
+
+    ClassDB::bind_method(D_METHOD("get_save_data"), &WorldGeneration::get_save_data);
+    ClassDB::bind_method(D_METHOD("load_save_data", "data"), &WorldGeneration::load_save_data);
 }
 
 WorldGeneration::WorldGeneration() {
@@ -520,4 +523,78 @@ bool WorldGeneration::has_item(const Vector2i& pos) const {
     uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
     auto it = dropped_items.find(key);
     return it != dropped_items.end() && !it->second.empty();
+}
+
+Dictionary WorldGeneration::get_save_data() const {
+    Dictionary data;
+    data["seed"] = world_seed;
+    
+    Dictionary chunks;
+    for (auto const& [key, val] : region_chunks) {
+        chunks[key] = (int)val;
+    }
+    data["region_chunks"] = chunks;
+
+    Dictionary items;
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    for (auto const& [key, list] : dropped_items) {
+        Array a;
+        for (const auto& item : list) {
+            Dictionary d;
+            d["id"] = id_reg ? id_reg->get_string(item.id) : String::num_int64(item.id);
+            d["amount"] = item.amount;
+            a.push_back(d);
+        }
+        items[key] = a;
+    }
+    data["dropped_items"] = items;
+    data["tile_id_cache"] = get_tile_id_cache();
+    data["seen_cells"] = get_seen_cells();
+
+    return data;
+}
+
+void WorldGeneration::load_save_data(const Dictionary &p_data) {
+    world_seed = p_data.get("seed", 0);
+    
+    region_chunks.clear();
+    Dictionary chunks = p_data.get("region_chunks", Dictionary());
+    Array chunk_keys = chunks.keys();
+    for (int i = 0; i < chunk_keys.size(); i++) {
+        Variant key_var = chunk_keys[i];
+        uint64_t key;
+        if (key_var.get_type() == Variant::STRING) {
+            key = ((String)key_var).to_int();
+        } else {
+            key = key_var;
+        }
+        region_chunks[key] = (uint32_t)((int)chunks[key_var]);
+    }
+
+    dropped_items.clear();
+    Dictionary items = p_data.get("dropped_items", Dictionary());
+    Array item_keys = items.keys();
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    for (int i = 0; i < item_keys.size(); i++) {
+        Variant key_var = item_keys[i];
+        uint64_t key;
+        if (key_var.get_type() == Variant::STRING) {
+            key = ((String)key_var).to_int();
+        } else {
+            key = key_var;
+        }
+        Array a = items[key_var];
+        std::vector<DroppedItem> list;
+        for (int j = 0; j < a.size(); j++) {
+            Dictionary d = a[j];
+            uint16_t id = id_reg ? id_reg->get_id(d.get("id", "")) : (uint16_t)d.get("id", 0);
+            list.push_back({id, (int)d.get("amount", 0)});
+        }
+        dropped_items[key] = list;
+    }
+
+    set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()));
+    set_seen_cells(p_data.get("seen_cells", Array()));
+    
+    last_chunk_valid = false;
 }

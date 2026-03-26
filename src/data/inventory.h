@@ -50,6 +50,9 @@ public:
     void set_max_volume(float p_volume) { max_volume = p_volume; }
 
     Array get_items_list() const; // For UI
+
+    Dictionary get_save_data() const;
+    void load_save_data(const Dictionary &p_data);
 };
 
 }

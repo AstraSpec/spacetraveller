@@ -1,6 +1,7 @@
 extends MarginContainer
 
 signal hovered(index: int)
+signal pressed(index: int)
 
 @onready var StyleBoxLight = preload("res://src/ui/strip_container/style_box_light.tres")
 @onready var StyleBoxDark = preload("res://src/ui/strip_container/style_box_dark.tres")
@@ -13,6 +14,7 @@ var item_index : int = -1
 
 func _ready() -> void:
 	button.mouse_entered.connect(_on_mouse_entered)
+	button.pressed.connect(_on_button_pressed)
 
 func setup(index: int, left_text: String, right_text: String):
 	item_index = index
@@ -36,3 +38,6 @@ func set_selected(is_selected: bool):
 
 func _on_mouse_entered():
 	hovered.emit(item_index)
+
+func _on_button_pressed():
+	pressed.emit(item_index)

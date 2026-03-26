@@ -77,6 +77,35 @@ func _on_movement_triggered(dir: Vector2):
 		interact_cell(dir)
 		TimeManager.advance_turn()
 
+func get_save_data() -> Dictionary:
+	return {
+		"cellPos": {"x": cellPos.x, "y": cellPos.y},
+		"chunkPos": {"x": chunkPos.x, "y": chunkPos.y},
+		"anatomy": _Anatomy.get_save_data(),
+		"clothing": get_node("Clothing").get_save_data()
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	cellPos = _load_vector2(data.get("cellPos", cellPos))
+	chunkPos = _load_vector2(data.get("chunkPos", chunkPos))
+	
+	if data.has("anatomy"):
+		_Anatomy.load_save_data(data["anatomy"])
+	if data.has("clothing"):
+		get_node("Clothing").load_save_data(data["clothing"])
+		
+	moved_cell.emit(cellPos)
+	moved_chunk.emit(chunkPos)
+
+func _load_vector2(v) -> Vector2:
+	if v is Vector2:
+		return v
+	if v is Dictionary:
+		return Vector2(v.get("x", 0), v.get("y", 0))
+	if v is String:
+		return str_to_var("Vector2" + v) if not v.begins_with("Vector2") else str_to_var(v)
+	return Vector2.ZERO
+
 func interact_cell(displacement: Vector2) -> void:
 	cellPos += displacement
 	moved_cell.emit(cellPos)

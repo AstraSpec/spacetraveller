@@ -23,6 +23,9 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache"), &FastTileMap::set_tile_id_cache);
     ClassDB::bind_method(D_METHOD("merge_tile_id_cache", "cache"), &FastTileMap::merge_tile_id_cache);
 
+    ClassDB::bind_method(D_METHOD("get_seen_cells"), &FastTileMap::get_seen_cells);
+    ClassDB::bind_method(D_METHOD("set_seen_cells", "seen"), &FastTileMap::set_seen_cells);
+
     ClassDB::bind_method(D_METHOD("set_spacing", "spacing"), &FastTileMap::set_spacing);
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
     ClassDB::bind_method(D_METHOD("get_cell_size"), &FastTileMap::get_cell_size);
@@ -275,8 +278,34 @@ void FastTileMap::set_tile_id_cache(const Dictionary &p_cache) {
 void FastTileMap::merge_tile_id_cache(const Dictionary &p_cache) {
     Array keys = p_cache.keys();
     for (int i = 0; i < keys.size(); i++) {
-        uint64_t key = keys[i];
-        tile_id_cache[key] = (uint16_t)((int)p_cache[keys[i]]);
+        Variant key_var = keys[i];
+        uint64_t key;
+        if (key_var.get_type() == Variant::STRING) {
+            key = ((String)key_var).to_int();
+        } else {
+            key = key_var;
+        }
+        tile_id_cache[key] = (uint16_t)((int)p_cache[key_var]);
+    }
+}
+
+Array FastTileMap::get_seen_cells() const {
+    Array a;
+    for (uint64_t key : seen_cells) {
+        a.push_back(key);
+    }
+    return a;
+}
+
+void FastTileMap::set_seen_cells(const Array &p_seen) {
+    seen_cells.clear();
+    for (int i = 0; i < p_seen.size(); i++) {
+        Variant v = p_seen[i];
+        if (v.get_type() == Variant::STRING) {
+            seen_cells.insert(((String)v).to_int());
+        } else {
+            seen_cells.insert((uint64_t)v);
+        }
     }
 }
 

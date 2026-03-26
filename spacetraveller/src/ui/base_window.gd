@@ -12,7 +12,6 @@ func _ready() -> void:
 	close_requested.connect(_on_close_requested)
 	get_tree().root.size_changed.connect(_update_window_size)
 	
-	# Initial size update
 	_update_window_size()
 
 func _update_window_size() -> void:

@@ -31,6 +31,9 @@ public:
     float get_total_armor() const;
     Array get_equipped_items_list() const;
     Dictionary get_equipped_at(int p_part_index, const String &p_layer) const;
+
+    Dictionary get_save_data() const;
+    void load_save_data(const Dictionary &p_data);
 };
 
 }

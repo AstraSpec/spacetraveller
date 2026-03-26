@@ -127,9 +127,18 @@ func _update_selection_visuals() -> void:
 func _connect_strip_signals() -> void:
 	for i in range(stripContainer.get_button_count()):
 		var btn = stripContainer.get_button(i)
-		if btn and not btn.hovered.is_connected(_on_button_hovered):
-			btn.hovered.connect(_on_button_hovered)
+		if btn:
+			if not btn.hovered.is_connected(_on_button_hovered):
+				btn.hovered.connect(_on_button_hovered)
+			if btn.has_signal("pressed") and not btn.pressed.is_connected(_on_button_pressed):
+				btn.pressed.connect(_on_button_pressed)
 
 func _on_button_hovered(index: int) -> void:
 	selected_index = index
 	_update_selection_visuals()
+
+func _on_button_pressed(index: int) -> void:
+	if not is_inside_tree(): return
+	selected_index = index
+	_update_selection_visuals()
+	_on_item_activated()

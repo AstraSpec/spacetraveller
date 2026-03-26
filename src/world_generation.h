@@ -145,6 +145,9 @@ public:
     Array get_items_at(const Vector2i& pos) const;
     bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory);
     bool has_item(const Vector2i& pos) const;
+
+    Dictionary get_save_data() const;
+    void load_save_data(const Dictionary &p_data);
 };
 
 }

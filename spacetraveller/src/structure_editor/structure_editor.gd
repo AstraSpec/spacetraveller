@@ -206,7 +206,7 @@ func on_tile_changed(_pos: Vector2i):
 func place_tile_at(pos: Vector2i, id: String):
 	if !id or !is_inside_bubble(pos): return
 	
-	FastTilemap.place_tile(pos.x + playerOffset.x, pos.y + playerOffset.y, id)
+	FastTilemap.place_tile(int(pos.x + playerOffset.x), int(pos.y + playerOffset.y), id)
 	update_editor_visuals()
 
 func is_inside_bubble(pos: Vector2i) -> bool:

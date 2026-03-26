@@ -23,6 +23,9 @@ void Inventory::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("get_items_list"), &Inventory::get_items_list);
 
+    ClassDB::bind_method(D_METHOD("get_save_data"), &Inventory::get_save_data);
+    ClassDB::bind_method(D_METHOD("load_save_data", "data"), &Inventory::load_save_data);
+
     ADD_SIGNAL(MethodInfo("item_added", PropertyInfo(Variant::STRING, "item_id"), PropertyInfo(Variant::INT, "amount")));
     ADD_SIGNAL(MethodInfo("item_removed", PropertyInfo(Variant::STRING, "item_id"), PropertyInfo(Variant::INT, "amount")));
     ADD_SIGNAL(MethodInfo("inventory_changed"));
@@ -133,6 +136,36 @@ Array Inventory::get_items_list() const {
         list.push_back(d);
     }
     return list;
+}
+
+Dictionary Inventory::get_save_data() const {
+    Dictionary data;
+    data["max_weight"] = max_weight;
+    data["max_volume"] = max_volume;
+    data["items"] = get_items_list();
+    return data;
+}
+
+void Inventory::load_save_data(const Dictionary &p_data) {
+    items.clear();
+    max_weight = p_data.get("max_weight", 50.0f);
+    max_volume = p_data.get("max_volume", 20.0f);
+
+    Array list = p_data.get("items", Array());
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return;
+
+    for (int i = 0; i < list.size(); i++) {
+        Dictionary d = list[i];
+        String id_str = d.get("id", "");
+        int amount = d.get("amount", 0);
+        uint16_t id = id_reg->get_id(id_str);
+        if (id != 0) {
+            items.push_back({id, amount});
+        }
+    }
+    update_totals();
+    emit_signal("inventory_changed");
 }
 
 }

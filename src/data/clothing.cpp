@@ -13,6 +13,9 @@ void Clothing::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_total_armor"), &Clothing::get_total_armor);
     ClassDB::bind_method(D_METHOD("get_equipped_items_list"), &Clothing::get_equipped_items_list);
     ClassDB::bind_method(D_METHOD("get_equipped_at", "part_index", "layer"), &Clothing::get_equipped_at);
+
+    ClassDB::bind_method(D_METHOD("get_save_data"), &Clothing::get_save_data);
+    ClassDB::bind_method(D_METHOD("load_save_data", "data"), &Clothing::load_save_data);
 }
 
 Clothing::Clothing() {}
@@ -128,6 +131,42 @@ Dictionary Clothing::get_equipped_at(int p_part_index, const String &p_layer) co
         }
     }
     return Dictionary();
+}
+
+Dictionary Clothing::get_save_data() const {
+    Dictionary data;
+    Dictionary parts;
+    for (const auto& part_pair : equipped_items) {
+        Dictionary layers;
+        for (const auto& layer_pair : part_pair.second) {
+            layers[layer_pair.first] = layer_pair.second;
+        }
+        parts[part_pair.first] = layers;
+    }
+    data["equipped"] = parts;
+    return data;
+}
+
+void Clothing::load_save_data(const Dictionary &p_data) {
+    equipped_items.clear();
+    Dictionary parts = p_data.get("equipped", Dictionary());
+    Array part_keys = parts.keys();
+    for (int i = 0; i < part_keys.size(); i++) {
+        Variant key_var = part_keys[i];
+        int part_idx;
+        if (key_var.get_type() == Variant::STRING) {
+            part_idx = ((String)key_var).to_int();
+        } else {
+            part_idx = key_var;
+        }
+        Dictionary layers = parts[key_var];
+        Array layer_keys = layers.keys();
+        for (int j = 0; j < layer_keys.size(); j++) {
+            String layer = layer_keys[j];
+            String item_id = layers[layer_keys[j]];
+            equipped_items[part_idx][layer] = item_id;
+        }
+    }
 }
 
 }

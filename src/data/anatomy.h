@@ -42,6 +42,9 @@ public:
     void set_part_integrity(int p_index, float p_integrity);
 
     Array get_functional_parts_list() const;
+
+    Dictionary get_save_data() const;
+    void load_save_data(const Dictionary &p_data);
 };
 
 }

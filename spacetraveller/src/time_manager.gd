@@ -30,6 +30,10 @@ func advance_turn(count: int = 1) -> void:
 	_update_environment()
 	turn_passed.emit()
 
+func reset() -> void:
+	total_turns = 28800
+	_update_environment()
+
 func _update_environment() -> void:
 	var ctx = _get_environment_context()
 	
