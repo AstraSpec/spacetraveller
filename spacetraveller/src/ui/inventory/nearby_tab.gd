@@ -1,6 +1,5 @@
 extends BaseListTab
 
-@export var player: Sprite2D
 @export var world: WorldGeneration
 @export var itemDetailsLabel: Label
 
@@ -9,6 +8,8 @@ var use_filter: bool = false
 
 func refresh_view() -> void:
 	super.refresh_view()
+
+func _on_refresh() -> void:
 	if itemDetailsLabel:
 		itemDetailsLabel.visible = !_items_cache.is_empty()
 
@@ -22,9 +23,7 @@ func set_params(params: Dictionary) -> void:
 	refresh_view()
 
 func _get_display_data() -> Array:
-	if not world or not player: return []
-	
-	var center = Vector2i(player.cellPos)
+	var center = Vector2i(Player.cellPos)
 	var items_map = {} # id -> {amount, positions: [ {pos, amount} ] }
 	
 	var tiles_to_scan = []
@@ -64,7 +63,7 @@ func handle_action(action_name: String, params: Dictionary = {}):
 		_pickup_selected_item(params.get("all", false))
 
 func _pickup_selected_item(all: bool):
-	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
+	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
 	var item_data = _items_cache[selected_index]
@@ -75,7 +74,7 @@ func _pickup_selected_item(all: bool):
 	# Pick up from sources until we have enough
 	for source in item_data["sources"]:
 		var to_get = min(total_to_pickup - picked_up_so_far, source["amount"])
-		if world.pickup_item_specific(source["pos"], item_id, to_get, player.inventory):
+		if world.pickup_item_specific(source["pos"], item_id, to_get, Player._Inventory):
 			picked_up_so_far += to_get
 			TimeManager.advance_turn()
 
@@ -83,5 +82,5 @@ func _pickup_selected_item(all: bool):
 				break
 			
 	if picked_up_so_far > 0:
-		world.update_world_bubble(player.cellPos)
+		world.update_world_bubble(Player.cellPos)
 		refresh_view()

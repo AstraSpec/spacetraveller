@@ -5,13 +5,13 @@ const SAVE_DIR_NAME = "saves"
 
 var save_path: String = ""
 
-var _world: WorldGeneration
-var _player: Node
-var _inventory: Inventory
+var WorldGen: WorldGeneration
+var Player: Node
+var _Inventory: Inventory
 
-func register_world(w: WorldGeneration) -> void: _world = w
-func register_player(p: Node) -> void: _player = p
-func register_inventory(i: Inventory) -> void: _inventory = i
+func register_world(w: WorldGeneration) -> void: WorldGen = w
+func register_player(p: Node) -> void: Player = p
+func register_inventory(i: Inventory) -> void: _Inventory = i
 
 func _ready() -> void:
 	initialize()
@@ -29,7 +29,7 @@ func initialize() -> void:
 		print("Created save directory: ", save_path)
 
 func save_game(slot_name: String = "") -> void:
-	if not _world or not _player or not _inventory:
+	if not WorldGen or not Player or not _Inventory:
 		printerr("Cannot save: nodes not registered in SaveManager")
 		return
 		
@@ -41,9 +41,9 @@ func save_game(slot_name: String = "") -> void:
 	var data = {
 		"version": 1,
 		"time": TimeManager.total_turns,
-		"player": _player.get_save_data(),
-		"inventory": _inventory.get_save_data(),
-		"world": _world.get_save_data()
+		"player": Player.get_save_data(),
+		"inventory": _Inventory.get_save_data(),
+		"world": WorldGen.get_save_data()
 	}
 	
 	var file = FileAccess.open(full_path, FileAccess.WRITE)
@@ -55,7 +55,7 @@ func save_game(slot_name: String = "") -> void:
 		printerr("Failed to save game to: ", full_path)
 
 func load_game(slot_name: String) -> void:
-	if not _world or not _player or not _inventory:
+	if not WorldGen or not Player or not _Inventory:
 		printerr("Cannot load: nodes not registered in SaveManager")
 		return
 		
@@ -90,19 +90,19 @@ func load_game(slot_name: String) -> void:
 		TimeManager.total_turns = data["time"]
 		
 	if data.has("world"):
-		_world.load_save_data(data["world"])
+		WorldGen.load_save_data(data["world"])
 		
 	if data.has("player"):
-		_player.load_save_data(data["player"])
+		Player.load_save_data(data["player"])
 		
 	if data.has("inventory"):
-		_inventory.load_save_data(data["inventory"])
+		_Inventory.load_save_data(data["inventory"])
 		
 	print("Game loaded from: ", full_path)
 	
 	# Refresh UI/Visuals
-	_world.update_world_bubble(_player.cellPos)
-	_inventory.inventory_changed.emit()
+	WorldGen.update_world_bubble(Player.cellPos)
+	_Inventory.inventory_changed.emit()
 
 func get_save_list() -> Array:
 	var saves = []

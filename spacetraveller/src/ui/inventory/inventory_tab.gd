@@ -2,7 +2,6 @@ extends BaseListTab
 
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
-@export var inventory: Inventory
 @export var weightVolumeLabel: RichTextLabel
 
 const MODIFIER_NAMES = {
@@ -11,9 +10,7 @@ const MODIFIER_NAMES = {
 }
 
 func _get_display_data() -> Array:
-	if not inventory: return []
-	
-	var items = inventory.get_items_list()
+	var items = Player._Inventory.get_items_list()
 	var formatted = []
 	
 	for item in items:
@@ -35,7 +32,9 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	for child in detailsContainer.get_children():
 		child.queue_free()
 		
-	var item_id = item_data["id"]
+	var item_id = item_data.get("id", "")
+	if item_id == "": return
+	
 	var modifiers = ItemDb.get_item_modifiers(item_id)
 	
 	for key in modifiers.keys():
@@ -62,12 +61,14 @@ func _add_spacer_label(label: String, value: String):
 
 func refresh_view() -> void:
 	super.refresh_view()
+
+func _on_refresh() -> void:
 	_update_totals()
 
 func _update_totals() -> void:
-	if weightVolumeLabel and inventory:
-		var total_weight = inventory.get_total_weight()
-		var total_volume = inventory.get_total_volume()
+	if weightVolumeLabel:
+		var total_weight = Player._Inventory.get_total_weight()
+		var total_volume = Player._Inventory.get_total_volume()
 		weightVolumeLabel.text = "Weight: [color=#66ff66]%.1f[/color]\nVolume: [color=#66ff66]%.1f[/color]" % [total_weight, total_volume]
 
 func handle_action(action_name: String, params: Dictionary = {}):
@@ -77,55 +78,22 @@ func handle_action(action_name: String, params: Dictionary = {}):
 		_wear_selected_item()
 
 func _wear_selected_item():
-	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
+	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
-	var item_data = _items_cache[selected_index]
-	var item_id = item_data["id"]
-	
-	# Check if wearable
-	if not ItemDb.has_tag(item_id, "WEARABLE"):
-		return
-		
-	# Find player more robustly
-	var player = null
-	var parent = inventory.get_parent()
-	if "Player" in parent:
-		player = parent.Player
-	elif parent.has_node("Player"):
-		player = parent.get_node("Player")
-		
-	if not player: return
-
-	var clothing = player.get_node_or_null("Clothing")
-	var anatomy = player.get_node_or_null("Anatomy")
-	
-	if clothing and anatomy:
-		var clothing_data = ItemDb.get_clothing_data(item_id)
-		var part_type = clothing_data.get("part", "")
-		
-		var part_index = -1
-		for i in range(anatomy.get_part_count()):
-			if anatomy.get_part_type_id(i) == part_type or part_type == "":
-				if anatomy.is_part_functional(i):
-					part_index = i
-					break
-		
-		if part_index != -1:
-			if clothing.equip_item(item_id, part_index):
-				inventory.remove_item(item_id, 1)
-				TimeManager.advance_turn()
-				refresh_view()
+	var item_id = _items_cache[selected_index]["id"]
+	if Player.equip_item(item_id):
+		refresh_view()
 
 func _drop_selected_item(all: bool):
-	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
+	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
 	var item_data = _items_cache[selected_index]
 	var item_id = item_data["id"]
 	var amount_to_remove = item_data["amount"] if all else 1
 	
-	if inventory.remove_item(item_id, amount_to_remove):
+	if Player._Inventory.remove_item(item_id, amount_to_remove):
 		InputManager.inventory_item_dropped.emit(item_id, amount_to_remove)
 		TimeManager.advance_turn()
 		refresh_view()

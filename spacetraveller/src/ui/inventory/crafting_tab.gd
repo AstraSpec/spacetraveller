@@ -1,6 +1,5 @@
 extends BaseListTab
 
-@export var inventory: Inventory
 @export var CraftButton :Button
 @export var InsufficientLabel :Label
 
@@ -16,6 +15,9 @@ func _get_display_data() -> Array:
 			"quantity_text": ""
 		})
 	return formatted
+
+func _on_refresh() -> void:
+	pass
 
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
@@ -36,7 +38,7 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	var can_craft = true
 	for req in reqs:
 		var label = Label.new()
-		var has_item = inventory.has_item(req["id"], req["amount"]) if inventory else false
+		var has_item = Player._Inventory.has_item(req["id"], req["amount"])
 		var item_name = ItemDb.get_item_name(req["id"])
 		label.text = "  - %s x%d" % [item_name, req["amount"]]
 		
@@ -68,31 +70,29 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		InsufficientLabel.visible = true
 
 func _on_item_activated() -> void:
-	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
+	if _items_cache.is_empty() or selected_index < 0:
 		return
 		
 	var recipe_id = _items_cache[selected_index]["id"]
 	_craft_recipe(recipe_id)
 
 func _craft_recipe(recipe_id: String):
-	if not inventory: return
-	
 	var reqs = RecipeDb.get_recipe_requirements(recipe_id)
 	var results = RecipeDb.get_recipe_results(recipe_id)
 	var craft_time = RecipeDb.get_recipe_time(recipe_id)
 	
 	# Final check
 	for req in reqs:
-		if not inventory.has_item(req["id"], req["amount"]):
+		if not Player._Inventory.has_item(req["id"], req["amount"]):
 			return
 			
 	# Consume
 	for req in reqs:
-		inventory.remove_item(req["id"], req["amount"])
+		Player._Inventory.remove_item(req["id"], req["amount"])
 		
 	# Produce
 	for res in results:
-		inventory.add_item(res["id"], res["amount"])
+		Player._Inventory.add_item(res["id"], res["amount"])
 		
 	# Advance time
 	var turns_to_advance = max(1, int(craft_time))

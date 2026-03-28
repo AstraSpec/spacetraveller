@@ -1,12 +1,8 @@
 extends BaseListTab
 
-@export var player: Sprite2D
-
 func _get_display_data() -> Array:
-	if not player: return []
-	
 	var data = []
-	for action in player.available_actions:
+	for action in Player.available_actions:
 		data.append({
 			"display_name": action.get_action_name(),
 			"description": "Trigger " + action.get_action_name() + " action.",
@@ -15,13 +11,12 @@ func _get_display_data() -> Array:
 	return data
 
 func _on_item_activated() -> void:
-	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
+	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
 	var action_data = _items_cache[selected_index]
 	var action = action_data["action_ref"]
 	
-	if player and player.has_method("_try_set_action"):
-		player._try_set_action(action)
-		# Close the menu after selecting an action
-		InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+	Player._try_set_action(action)
+	# Close the menu after selecting an action
+	InputManager.set_mode(InputManager.InputMode.EXPLORATION)

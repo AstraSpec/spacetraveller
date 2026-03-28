@@ -6,8 +6,10 @@ signal moved_chunk(chunkPos :Vector2)
 @onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
 @export var Camera :Camera2D
 @export var World : WorldGeneration
-@export var inventory: Inventory
+@export var _Inventory: Inventory
 @export var _Anatomy :Anatomy
+@export var _Clothing :Clothing
+@export var _Equipment: EquipmentComponent
 
 const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 
@@ -82,7 +84,7 @@ func get_save_data() -> Dictionary:
 		"cellPos": {"x": cellPos.x, "y": cellPos.y},
 		"chunkPos": {"x": chunkPos.x, "y": chunkPos.y},
 		"anatomy": _Anatomy.get_save_data(),
-		"clothing": get_node("Clothing").get_save_data()
+		"clothing": _Clothing.get_save_data()
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -92,7 +94,7 @@ func load_save_data(data: Dictionary) -> void:
 	if data.has("anatomy"):
 		_Anatomy.load_save_data(data["anatomy"])
 	if data.has("clothing"):
-		get_node("Clothing").load_save_data(data["clothing"])
+		_Clothing.load_save_data(data["clothing"])
 		
 	moved_cell.emit(cellPos)
 	moved_chunk.emit(chunkPos)
@@ -117,3 +119,9 @@ func interact_cell(displacement: Vector2) -> void:
 		moved_chunk.emit(chunkPos)
 	
 	World.update_world_bubble(cellPos)
+
+func equip_item(item_id: String) -> bool:
+	return _Equipment.equip_item(item_id)
+
+func unequip_item(item_id: String) -> bool:
+	return _Equipment.unequip_item(item_id)

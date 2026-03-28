@@ -2,44 +2,53 @@ extends Window
 
 @export var structureEditor :Node2D
 @export var Editor :StructureEditor
-@export var LoadContainer :VBoxContainer
+@export var LoadContainer :ButtonListContainer
 @export var LoadButton :Button
 @export var DeleteButton :Button
 var FastTilemap :FastTileMap
-
-@onready var StructureLoad = preload("res://src/structure_editor/structure_button.tscn")
 
 var selectedID : String = ""
 
 func _ready() -> void:
 	structureEditor.open_load.connect(open)
+	LoadContainer.item_selected.connect(_on_structure_selected_idx)
+	LoadContainer.item_activated.connect(_on_structure_activated)
+	
+	InputManager.ui_directional_input.connect(_on_directional_input)
+	InputManager.ui_accept.connect(_on_accept_input)
+	InputManager.ui_cancel.connect(_on_close_requested_signal)
+	
 	_update_buttons()
+
+func _on_directional_input(direction: Vector2) -> void:
+	if not visible: return
+	LoadContainer.handle_directional_input(direction)
+
+func _on_accept_input() -> void:
+	if not visible: return
+	_on_load_pressed()
+
+func _on_close_requested_signal() -> void:
+	if not visible: return
+	_on_close_pressed()
 
 func open() -> void:
 	visible = true
 	selectedID = ""
+	InputManager.set_mode(InputManager.InputMode.MENU)
 	_update_buttons()
 	
-	for child in LoadContainer.get_children():
-		child.queue_free()
-		
 	var structures = StructureDb.get_ids()
-	for id in structures:
-		var instance = StructureLoad.instantiate()
-		LoadContainer.add_child(instance)
-		
-		instance.text = id
-		instance.pressed.connect(_on_structure_selected.bind(id))
-		
-		instance.gui_input.connect(func(event):
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
-				_on_structure_selected(id)
-				_on_load_pressed()
-		)
+	if LoadContainer:
+		LoadContainer.set_data(structures)
 
-func _on_structure_selected(id: String) -> void:
-	selectedID = id
+func _on_structure_selected_idx(_idx: int, id: Variant) -> void:
+	selectedID = str(id)
 	_update_buttons()
+
+func _on_structure_activated(_idx: int, id: Variant) -> void:
+	selectedID = str(id)
+	_on_load_pressed()
 
 func _update_buttons() -> void:
 	var hasSelection = selectedID != ""
@@ -63,6 +72,7 @@ func _on_load_pressed() -> void:
 	else:
 		FastTilemap.update_visuals(structureEditor.playerOffset)
 	visible = false
+	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
 
 func _on_delete_pressed() -> void:
 	if selectedID == "": return
@@ -71,6 +81,8 @@ func _on_delete_pressed() -> void:
 
 func _on_close_pressed() -> void:
 	visible = false
+	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
 
 func _on_close_requested() -> void:
 	visible = false
+	InputManager.set_mode(InputManager.InputMode.STRUCTURE)

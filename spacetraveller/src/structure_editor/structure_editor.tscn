@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://bql7a6oaypjq4" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" uid="uid://8xqc3qvwdw3v" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
+[ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
+[ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
 [node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
 script = ExtResource("1_urqvf")
@@ -256,8 +258,10 @@ theme_override_constants/margin_bottom = 8
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="LoadContainer" type="VBoxContainer" parent="LoadWindow/MarginContainer/VBoxContainer"]
+[node name="LoadContainer" parent="LoadWindow/MarginContainer/VBoxContainer" instance=ExtResource("10_4c57u")]
 layout_mode = 2
+button_scene = ExtResource("11_btns")
+columns = 1
 
 [node name="Footer" type="HBoxContainer" parent="LoadWindow/MarginContainer/VBoxContainer"]
 layout_mode = 2

@@ -4,6 +4,16 @@ class_name BaseWindow
 enum SizePreset { LARGE, TALL, SMALL }
 
 @export var size_preset: SizePreset = SizePreset.LARGE
+var Player: Node2D:
+	set(val):
+		Player = val
+		_propagate_player(self, val)
+
+func _propagate_player(node: Node, p: Node2D):
+	for child in node.get_children():
+		if child is BaseListTab:
+			child.Player = p
+		_propagate_player(child, p)
 
 func _ready() -> void:
 	unfocusable = true

@@ -44,6 +44,11 @@ func _ready() -> void:
 		InputMode.MENU: InputContext.MenuContext.new(self)
 	}
 	active_context = contexts.get(current_mode)
+	ui_cancel.connect(_on_ui_cancel)
+
+func _on_ui_cancel():
+	if current_mode == InputMode.MENU:
+		set_mode(InputMode.EXPLORATION)
 
 func _unhandled_input(event: InputEvent):
 	# Global inputs
