@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://d4kkxelc8bkwf"]
 
-[ext_resource type="Script" uid="uid://c7u6ewxvfwuaf" path="res://src/ui/button_list_container.gd" id="1_rhium"]
+[ext_resource type="Script" uid="uid://dgio6h0vxvopb" path="res://src/ui/button_list_container.gd" id="1_rhium"]
 
 [node name="StripContainer" type="ScrollContainer"]
 anchors_preset = 15

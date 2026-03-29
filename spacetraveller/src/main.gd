@@ -21,6 +21,22 @@ func _ready() -> void:
 	RecipeDb.initialize_data()
 	StructureDb.initialize_data()
 	
+	SaveManager.register_world(WorldGen)
+	SaveManager.register_player(Player)
+	SaveManager.register_inventory(Player._Inventory)
+	WorldGen.generate_world(Vector2i(Player.cellPos))
+	
+	if not SaveManager.loaded_save_data.is_empty():
+		SaveManager.apply_loaded_data()
+		SaveManager.loaded_save_data = {} # Clear memory
+	else:
+		_initialize_new_game()
+
+	InputManager.reset_stack(InputManager.InputMode.EXPLORATION)
+	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
+	_initialize_windows()
+
+func _initialize_new_game():
 	# DEBUG
 	var _Anatomy = Player._Anatomy
 	var _Clothing = Player._Clothing
@@ -64,16 +80,7 @@ func _ready() -> void:
 	if finger_idx != -1:
 		if _Clothing.equip_item("gold_ring", finger_idx): _Inventory.remove_item("gold_ring", 1)
 
-	WorldGen.generate_world(Player.cellPos)
 	WorldGen.update_world_bubble(Player.cellPos)
-	
-	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
-	
-	SaveManager.register_world(WorldGen)
-	SaveManager.register_player(Player)
-	SaveManager.register_inventory(Player._Inventory)
-	
-	_initialize_windows()
 
 func _initialize_windows():
 	for window in Canvas.get_node("Window").get_children():

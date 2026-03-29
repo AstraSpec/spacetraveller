@@ -8,6 +8,7 @@ var save_path: String = ""
 var WorldGen: WorldGeneration
 var Player: Node
 var _Inventory: Inventory
+var loaded_save_data: Dictionary = {}
 
 func register_world(w: WorldGeneration) -> void: WorldGen = w
 func register_player(p: Node) -> void: Player = p
@@ -54,25 +55,21 @@ func save_game(slot_name: String = "") -> void:
 	else:
 		printerr("Failed to save game to: ", full_path)
 
-func load_game(slot_name: String) -> void:
-	if not WorldGen or not Player or not _Inventory:
-		printerr("Cannot load: nodes not registered in SaveManager")
-		return
-		
+func load_save_to_memory(slot_name: String) -> bool:
 	if slot_name == "":
-		printerr("Cannot load: no slot name provided")
-		return
+		printerr("Cannot load to memory: no slot name provided")
+		return false
 		
 	var full_path = save_path.path_join(slot_name + ".json")
 	
 	if not FileAccess.file_exists(full_path):
 		printerr("Save file does not exist: ", full_path)
-		return
+		return false
 		
 	var file = FileAccess.open(full_path, FileAccess.READ)
 	if not file:
 		printerr("Failed to open save file: ", full_path)
-		return
+		return false
 		
 	var json_string = file.get_as_text()
 	file.close()
@@ -81,28 +78,42 @@ func load_game(slot_name: String) -> void:
 	var error = json.parse(json_string)
 	if error != OK:
 		printerr("JSON Parse Error: ", json.get_error_message(), " at line ", json.get_error_line())
+		return false
+		
+	loaded_save_data = json.data
+	return true
+
+func apply_loaded_data() -> void:
+	if loaded_save_data.is_empty():
 		return
 		
-	var data = json.data
-	
 	# Order matters for loading
-	if data.has("time"):
-		TimeManager.total_turns = data["time"]
+	if loaded_save_data.has("time"):
+		TimeManager.total_turns = loaded_save_data["time"]
 		
-	if data.has("world"):
-		WorldGen.load_save_data(data["world"])
+	if loaded_save_data.has("world") and WorldGen:
+		WorldGen.load_save_data(loaded_save_data["world"])
 		
-	if data.has("player"):
-		Player.load_save_data(data["player"])
+	if loaded_save_data.has("player") and Player:
+		Player.load_save_data(loaded_save_data["player"])
 		
-	if data.has("inventory"):
-		_Inventory.load_save_data(data["inventory"])
+	if loaded_save_data.has("inventory") and _Inventory:
+		_Inventory.load_save_data(loaded_save_data["inventory"])
 		
-	print("Game loaded from: ", full_path)
-	
-	# Refresh UI/Visuals
-	WorldGen.update_world_bubble(Player.cellPos)
-	_Inventory.inventory_changed.emit()
+	if WorldGen and Player:
+		WorldGen.update_world_bubble(Player.cellPos)
+	if _Inventory:
+		_Inventory.inventory_changed.emit()
+
+func load_game(slot_name: String) -> void:
+	if not WorldGen or not Player or not _Inventory:
+		printerr("Cannot load: nodes not registered in SaveManager")
+		return
+		
+	if load_save_to_memory(slot_name):
+		apply_loaded_data()
+		loaded_save_data = {} # Clear after applying
+		print("Game loaded from: ", slot_name)
 
 func get_save_list() -> Array:
 	var saves = []

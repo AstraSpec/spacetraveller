@@ -21,7 +21,7 @@
 [ext_resource type="Script" uid="uid://dk0ty1jdmq7i0" path="res://src/ui/inventory/clothing_tab.gd" id="19_clot"]
 [ext_resource type="Script" uid="uid://bmgye7kyg0mjc" path="res://src/ui/inventory/stats_tab.gd" id="20_stats"]
 [ext_resource type="Script" uid="uid://deddxv13sbvc2" path="res://src/ui/esc_ui.gd" id="21_esct"]
-[ext_resource type="Script" uid="uid://5lt6d1nwnsg7" path="res://src/ui/load_game_ui.gd" id="22_load"]
+[ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
 [ext_resource type="Script" uid="uid://bwvnix5mygmpt" path="res://src/player/equipment_component.gd" id="27_equip"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
@@ -644,55 +644,8 @@ size_flags_horizontal = 3
 [node name="StripContainer" parent="Canvas/Window/EscUI/Esc/VBoxContainer/MarginContainer/ItemList" instance=ExtResource("10_4c57u")]
 layout_mode = 2
 
-[node name="LoadGameUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("LoadContainer", "LoadButton", "DeleteButton")]
-auto_translate_mode = 1
-title = "Load Game"
-initial_position = 1
-size = Vector2i(400, 400)
+[node name="LoadGameUI" parent="Canvas/Window" instance=ExtResource("22_load_scene")]
 visible = false
-unfocusable = true
-script = ExtResource("22_load")
-LoadContainer = NodePath("MarginContainer/VBoxContainer/LoadContainer")
-LoadButton = NodePath("MarginContainer/VBoxContainer/Footer/Load")
-DeleteButton = NodePath("MarginContainer/VBoxContainer/Footer/Delete")
-size_preset = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/LoadGameUI"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/LoadGameUI/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="LoadContainer" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer" instance=ExtResource("10_4c57u")]
-layout_mode = 2
-
-[node name="Footer" type="HBoxContainer" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 8
-alignment = 2
-
-[node name="Load" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
-layout_mode = 2
-disabled = true
-text = "Load"
-
-[node name="Delete" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
-layout_mode = 2
-disabled = true
-text = "Delete"
-
-[node name="Close" type="Button" parent="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer"]
-layout_mode = 2
-text = "Cancel"
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15
@@ -758,6 +711,3 @@ metadata/_tab_index = 1
 
 [connection signal="generated" from="WorldGen" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]
-[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Load" to="Canvas/Window/LoadGameUI" method="_on_load_pressed"]
-[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Delete" to="Canvas/Window/LoadGameUI" method="_on_delete_pressed"]
-[connection signal="pressed" from="Canvas/Window/LoadGameUI/MarginContainer/VBoxContainer/Footer/Close" to="Canvas/Window/LoadGameUI" method="_on_close_pressed"]

@@ -43,4 +43,4 @@ func _update_window_size() -> void:
 	position = pos
 
 func _on_close_requested() -> void:
-	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+	InputManager.pop_mode()

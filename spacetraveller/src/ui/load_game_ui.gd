@@ -12,7 +12,7 @@ func _ready() -> void:
 	InputManager.menu_toggled.connect(_on_menu_toggled)
 	InputManager.ui_directional_input.connect(_on_directional_input)
 	InputManager.ui_accept.connect(_on_accept_input)
-	InputManager.ui_cancel.connect(_on_close_pressed_signal)
+	InputManager.ui_delete.connect(_on_delete_pressed_signal)
 	LoadContainer.item_selected.connect(_on_save_selected_idx)
 	LoadContainer.item_activated.connect(_on_save_activated)
 	_update_buttons()
@@ -29,6 +29,10 @@ func _on_close_pressed_signal() -> void:
 	if not visible: return
 	_on_close_pressed()
 
+func _on_delete_pressed_signal() -> void:
+	if not visible: return
+	_on_delete_pressed()
+
 func _on_menu_toggled(id: String, is_open: bool, _params: Dictionary) -> void:
 	if id == "load_game":
 		if is_open:
@@ -37,13 +41,19 @@ func _on_menu_toggled(id: String, is_open: bool, _params: Dictionary) -> void:
 			visible = false
 
 func open() -> void:
-	visible = true
+	call_deferred("set_visible", true)
 	selectedID = ""
-	_update_buttons()
+	InputManager.push_mode(InputManager.InputMode.MENU)
 	
 	var saves = SaveManager.get_save_list()
 	if LoadContainer:
 		LoadContainer.set_data(saves)
+		if LoadContainer.get_button_count() > 0:
+			LoadContainer.selected_index = 0
+			var data = LoadContainer._get_data_for_button_index(0)
+			_on_save_selected_idx(0, data)
+		else:
+			_update_buttons()
 
 func _on_save_selected_idx(_idx: int, id: Variant) -> void:
 	selectedID = str(id)
@@ -60,8 +70,16 @@ func _update_buttons() -> void:
 
 func _on_load_pressed() -> void:
 	if selectedID == "": return
-	SaveManager.load_game(selectedID)
-	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+	
+	if not SaveManager.Player:
+		# We are on title screen
+		if SaveManager.load_save_to_memory(selectedID):
+			get_tree().change_scene_to_file("res://main.tscn")
+	else:
+		# We are in-game
+		SaveManager.load_game(selectedID)
+		InputManager.pop_mode()
+	
 	visible = false
 
 func _on_delete_pressed() -> void:
@@ -70,7 +88,7 @@ func _on_delete_pressed() -> void:
 	open()
 
 func _on_close_pressed() -> void:
-	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+	InputManager.pop_mode()
 	visible = false
 
 func _on_close_requested() -> void:

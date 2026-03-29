@@ -10,6 +10,7 @@ signal directional_input(direction: Vector2)
 signal ui_directional_input(direction: Vector2)
 signal ui_accept
 signal ui_cancel
+signal ui_delete
 signal ui_next_tab
 signal ui_prev_tab
 signal ui_drop_requested(all: bool)
@@ -29,6 +30,7 @@ enum MouseAction { PRESS, RELEASE, DRAG }
 
 enum InputMode { EXPLORATION, MAP, STRUCTURE, MENU }
 var current_mode: InputMode = InputMode.EXPLORATION
+var _mode_stack: Array[InputMode] = []
 var active_menu_id: String = ""
 var is_shift_pressed = false
 var is_ctrl_pressed = false
@@ -48,7 +50,26 @@ func _ready() -> void:
 
 func _on_ui_cancel():
 	if current_mode == InputMode.MENU:
-		set_mode(InputMode.EXPLORATION)
+		pop_mode()
+
+func push_mode(mode: InputMode, _params: Dictionary = {}):
+	_mode_stack.append(current_mode)
+	set_mode(mode, _params)
+
+func pop_mode():
+	if _mode_stack.is_empty():
+		return
+	
+	if current_mode == InputMode.MENU and active_menu_id != "":
+		menu_toggled.emit(active_menu_id, false, {})
+		active_menu_id = ""
+		
+	var prev_mode = _mode_stack.pop_back()
+	set_mode(prev_mode)
+
+func reset_stack(initial_mode: InputMode = InputMode.EXPLORATION):
+	_mode_stack.clear()
+	set_mode(initial_mode)
 
 func _unhandled_input(event: InputEvent):
 	# Global inputs
@@ -89,17 +110,17 @@ func _unhandled_input(event: InputEvent):
 
 	if event.is_action_pressed("open_map"):
 		if current_mode == InputMode.MAP:
-			set_mode(InputMode.EXPLORATION)
+			pop_mode()
 		elif current_mode == InputMode.EXPLORATION:
-			set_mode(InputMode.MAP)
+			push_mode(InputMode.MAP)
 		get_viewport().set_input_as_handled()
 		return
 
 	if event.is_action_pressed("open_structure_mode"):
 		if current_mode == InputMode.STRUCTURE:
-			set_mode(InputMode.EXPLORATION)
+			pop_mode()
 		elif current_mode == InputMode.EXPLORATION:
-			set_mode(InputMode.STRUCTURE)
+			push_mode(InputMode.STRUCTURE)
 		get_viewport().set_input_as_handled()
 		return
 
@@ -123,8 +144,9 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 	
 	# Handle UI signals
 	if old_mode == InputMode.MENU and current_mode != InputMode.MENU:
-		menu_toggled.emit(active_menu_id, false, {})
-		active_menu_id = ""
+		if active_menu_id != "":
+			menu_toggled.emit(active_menu_id, false, {})
+			active_menu_id = ""
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
@@ -134,8 +156,8 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 
 func toggle_menu(id: String, params: Dictionary = {}):
 	if current_mode == InputMode.MENU and active_menu_id == id and params.is_empty():
-		set_mode(InputMode.EXPLORATION)
+		pop_mode()
 	else:
 		active_menu_id = id
-		set_mode(InputMode.MENU, params)
+		push_mode(InputMode.MENU, params)
 		menu_toggled.emit(active_menu_id, true, params)

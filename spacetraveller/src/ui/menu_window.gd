@@ -14,7 +14,6 @@ func _ready() -> void:
 	InputManager.ui_accept.connect(_on_accept_input)
 	InputManager.ui_drop_requested.connect(_on_drop_input)
 	InputManager.ui_wear_requested.connect(_on_wear_input)
-	InputManager.ui_cancel.connect(_on_close_requested)
 	InputManager.ui_next_tab.connect(_on_next_tab)
 	InputManager.ui_prev_tab.connect(_on_prev_tab)
 	

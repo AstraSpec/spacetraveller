@@ -51,10 +51,8 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
 	
-	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
-
 	playerOffset = offset
-	
+
 	LoadWindow.FastTilemap = FastTilemap
 	Editor.set_tilemap(FastTilemap)
 	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()

@@ -16,9 +16,13 @@ func _ready() -> void:
 	
 	InputManager.ui_directional_input.connect(_on_directional_input)
 	InputManager.ui_accept.connect(_on_accept_input)
-	InputManager.ui_cancel.connect(_on_close_requested_signal)
+	InputManager.ui_delete.connect(_on_delete_pressed_signal)
 	
 	_update_buttons()
+
+func _on_delete_pressed_signal() -> void:
+	if not visible: return
+	_on_delete_pressed()
 
 func _on_directional_input(direction: Vector2) -> void:
 	if not visible: return
@@ -33,14 +37,19 @@ func _on_close_requested_signal() -> void:
 	_on_close_pressed()
 
 func open() -> void:
-	visible = true
+	call_deferred("set_visible", true)
 	selectedID = ""
-	InputManager.set_mode(InputManager.InputMode.MENU)
-	_update_buttons()
+	InputManager.push_mode(InputManager.InputMode.MENU)
 	
 	var structures = StructureDb.get_ids()
 	if LoadContainer:
 		LoadContainer.set_data(structures)
+		if LoadContainer.get_button_count() > 0:
+			LoadContainer.selected_index = 0
+			var data = LoadContainer._get_data_for_button_index(0)
+			_on_structure_selected_idx(0, data)
+		else:
+			_update_buttons()
 
 func _on_structure_selected_idx(_idx: int, id: Variant) -> void:
 	selectedID = str(id)
@@ -72,7 +81,7 @@ func _on_load_pressed() -> void:
 	else:
 		FastTilemap.update_visuals(structureEditor.playerOffset)
 	visible = false
-	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
+	InputManager.pop_mode()
 
 func _on_delete_pressed() -> void:
 	if selectedID == "": return
@@ -81,8 +90,8 @@ func _on_delete_pressed() -> void:
 
 func _on_close_pressed() -> void:
 	visible = false
-	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
+	InputManager.pop_mode()
 
 func _on_close_requested() -> void:
 	visible = false
-	InputManager.set_mode(InputManager.InputMode.STRUCTURE)
+	InputManager.pop_mode()

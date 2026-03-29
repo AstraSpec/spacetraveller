@@ -8,7 +8,7 @@ func _get_display_data() -> Array:
 		{ "display_name": "Load Game", "id": "load" },
 		{ "display_name": "Options", "id": "options" },
 		{ "display_name": "Keybinds", "id": "keybinds" },
-		{ "display_name": "Exit game", "id": "exit" }
+		{ "display_name": "Exit Game", "id": "title" }
 	]
 
 func _on_item_activated() -> void:
@@ -18,21 +18,22 @@ func _on_item_activated() -> void:
 	var item = _items_cache[selected_index]
 	match item.id:
 		"close":
-			InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+			InputManager.pop_mode()
 		"new":
 			TimeManager.reset()
-			InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+			InputManager.pop_mode()
 			# Delay reload slightly to ensure menu is closed and input handled
 			await get_tree().process_frame
 			get_tree().reload_current_scene()
 		"save":
 			SaveManager.save_game()
-			InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+			InputManager.pop_mode()
 		"load":
 			InputManager.toggle_menu("load_game")
 		"options":
 			print("Options - Not yet implemented")
 		"keybinds":
 			print("Keybinds - Not yet implemented")
-		"exit":
-			get_tree().quit()
+		"title":
+			SaveManager.loaded_save_data = {}
+			get_tree().change_scene_to_file("res://src/ui/title_scene.tscn")

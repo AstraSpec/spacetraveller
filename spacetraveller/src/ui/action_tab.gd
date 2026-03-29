@@ -19,4 +19,4 @@ func _on_item_activated() -> void:
 	
 	Player._try_set_action(action)
 	# Close the menu after selecting an action
-	InputManager.set_mode(InputManager.InputMode.EXPLORATION)
+	InputManager.pop_mode()

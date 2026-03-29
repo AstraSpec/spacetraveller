@@ -109,7 +109,7 @@ class MapContext extends InputContext:
 
 	func handle_input(event: InputEvent) -> bool:
 		if event.is_action_pressed("ui_cancel"):
-			manager.set_mode(manager.InputMode.EXPLORATION)
+			manager.pop_mode()
 			return true
 			
 		if view_processor.handle_input(event):
@@ -131,7 +131,7 @@ class StructureContext extends InputContext:
 
 	func handle_input(event: InputEvent) -> bool:
 		if event.is_action_pressed("ui_cancel"):
-			manager.set_mode(manager.InputMode.EXPLORATION)
+			manager.pop_mode()
 			return true
 			
 		if view_processor.handle_input(event):
@@ -226,6 +226,9 @@ class MenuContext extends InputContext:
 			return true
 		elif event.is_action_pressed("wear_item"):
 			manager.ui_wear_requested.emit()
+			return true
+		elif event.is_action_pressed("delete"):
+			manager.ui_delete.emit()
 			return true
 		return false
 
