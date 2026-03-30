@@ -4,34 +4,30 @@ extends BaseWindow
 @export var LoadButton: Button
 @export var DeleteButton: Button
 
+var list_actions: ListActionsUI
 var selectedID: String = ""
 
 func _ready() -> void:
 	super._ready()
 	visible = false
+	
+	# Initialize ListActionsUI logic
+	list_actions = ListActionsUI.new()
+	list_actions.list_container = LoadContainer
+	list_actions.action_buttons = [LoadButton]
+	list_actions.delete_button = DeleteButton
+	add_child(list_actions)
+	
+	list_actions.action_triggered.connect(func(_data): _on_load_pressed())
+	list_actions.delete_requested.connect(func(_data): _on_delete_pressed())
+	list_actions.selection_changed.connect(_on_save_selected)
+	
 	InputManager.menu_toggled.connect(_on_menu_toggled)
-	InputManager.ui_directional_input.connect(_on_directional_input)
-	InputManager.ui_accept.connect(_on_accept_input)
-	InputManager.ui_delete.connect(_on_delete_pressed_signal)
-	LoadContainer.item_selected.connect(_on_save_selected_idx)
-	LoadContainer.item_activated.connect(_on_save_activated)
 	_update_buttons()
 
-func _on_directional_input(direction: Vector2) -> void:
-	if not visible: return
-	LoadContainer.handle_directional_input(direction)
-
-func _on_accept_input() -> void:
-	if not visible: return
-	_on_load_pressed()
-
-func _on_close_pressed_signal() -> void:
-	if not visible: return
-	_on_close_pressed()
-
-func _on_delete_pressed_signal() -> void:
-	if not visible: return
-	_on_delete_pressed()
+func _on_save_selected(id: Variant) -> void:
+	selectedID = str(id) if id != null else ""
+	_update_buttons()
 
 func _on_menu_toggled(id: String, is_open: bool, _params: Dictionary) -> void:
 	if id == "load_game":
@@ -43,7 +39,6 @@ func _on_menu_toggled(id: String, is_open: bool, _params: Dictionary) -> void:
 func open() -> void:
 	call_deferred("set_visible", true)
 	selectedID = ""
-	InputManager.push_mode(InputManager.InputMode.MENU)
 	
 	var saves = SaveManager.get_save_list()
 	if LoadContainer:
@@ -51,17 +46,9 @@ func open() -> void:
 		if LoadContainer.get_button_count() > 0:
 			LoadContainer.selected_index = 0
 			var data = LoadContainer._get_data_for_button_index(0)
-			_on_save_selected_idx(0, data)
+			_on_save_selected(data)
 		else:
 			_update_buttons()
-
-func _on_save_selected_idx(_idx: int, id: Variant) -> void:
-	selectedID = str(id)
-	_update_buttons()
-
-func _on_save_activated(_idx: int, id: Variant) -> void:
-	selectedID = str(id)
-	_on_load_pressed()
 
 func _update_buttons() -> void:
 	var hasSelection = selectedID != ""
@@ -88,8 +75,7 @@ func _on_delete_pressed() -> void:
 	open()
 
 func _on_close_pressed() -> void:
-	InputManager.pop_mode()
-	visible = false
+	_on_close_requested()
 
 func _on_close_requested() -> void:
 	super._on_close_requested()

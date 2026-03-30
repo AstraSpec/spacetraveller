@@ -29,11 +29,13 @@ func _on_item_activated() -> void:
 			SaveManager.save_game()
 			InputManager.pop_mode()
 		"load":
+			InputManager.pop_mode()
 			InputManager.toggle_menu("load_game")
 		"options":
 			print("Options - Not yet implemented")
 		"keybinds":
-			print("Keybinds - Not yet implemented")
+			InputManager.pop_mode()
+			InputManager.toggle_menu("keybinds")
 		"title":
 			SaveManager.loaded_save_data = {}
 			get_tree().change_scene_to_file("res://src/ui/title_scene.tscn")

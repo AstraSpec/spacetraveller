@@ -1,0 +1,49 @@
+[gd_scene load_steps=4 format=3 uid="uid://c3v6w8r4v1n2c"]
+
+[ext_resource type="Script" uid="uid://dfhdhsjgoergg" path="res://src/ui/keybind_window.gd" id="1_kbw"]
+[ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_blc"]
+[ext_resource type="StyleBox" uid="uid://cl5k3aow0gvn" path="res://src/ui/theme/panel.tres" id="3_pnl"]
+
+[node name="KeybindWindow" type="Window" node_paths=PackedStringArray("list_container", "reset_button")]
+title = "Keybinds"
+initial_position = 1
+size = Vector2i(600, 450)
+visible = false
+unfocusable = true
+script = ExtResource("1_kbw")
+list_container = NodePath("Panel/VBoxContainer/MarginContainer/ButtonListContainer")
+reset_button = NodePath("Panel/VBoxContainer/Footer/ResetButton")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("3_pnl")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ButtonListContainer" parent="Panel/VBoxContainer/MarginContainer" instance=ExtResource("2_blc")]
+layout_mode = 2
+
+[node name="Footer" type="MarginContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ResetButton" type="Button" parent="Panel/VBoxContainer/Footer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Reset All Keys to Defaults"

@@ -3,8 +3,9 @@
 [ext_resource type="Script" uid="uid://0s4dd3bn584d" path="res://src/ui/title_scene.gd" id="1_title"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_btns"]
 [ext_resource type="PackedScene" path="res://src/ui/load_game_ui.tscn" id="3_load"]
+[ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="4_kbw"]
 
-[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui")]
+[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui", "keybind_ui")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,6 +15,7 @@ grow_vertical = 2
 script = ExtResource("1_title")
 menu_container = NodePath("CenterContainer/VBoxContainer/MenuContainer")
 load_game_ui = NodePath("LoadGameUI")
+keybind_ui = NodePath("KeybindWindow")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -47,3 +49,6 @@ custom_minimum_size = Vector2(300, 200)
 layout_mode = 2
 
 [node name="LoadGameUI" parent="." instance=ExtResource("3_load")]
+
+[node name="KeybindWindow" parent="." instance=ExtResource("4_kbw")]
+visible = false

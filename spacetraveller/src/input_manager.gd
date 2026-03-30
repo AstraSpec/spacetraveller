@@ -20,6 +20,8 @@ signal inventory_item_dropped(item_id: String, amount: int)
 signal menu_toggled(id: String, is_open: bool, params: Dictionary)
 signal structure_editor_toggled(active: bool)
 
+signal input_captured(event: InputEvent)
+
 signal action_smash_requested
 signal action_pickup_requested
 
@@ -34,11 +36,21 @@ var _mode_stack: Array[InputMode] = []
 var active_menu_id: String = ""
 var is_shift_pressed = false
 var is_ctrl_pressed = false
+var is_capturing: bool = false
+
+var default_mappings: Dictionary = {}
 
 var contexts = {}
 var active_context: InputContext
 
 func _ready() -> void:
+	# Snapshot default mappings before any custom overrides are loaded
+	for group in InputSettings.BINDABLE_ACTIONS:
+		for action in InputSettings.BINDABLE_ACTIONS[group]:
+			var action_id = action.id
+			if InputMap.has_action(action_id):
+				default_mappings[action_id] = InputMap.action_get_events(action_id)
+
 	contexts = {
 		InputMode.EXPLORATION: InputContext.ExplorationContext.new(self),
 		InputMode.MAP: InputContext.MapContext.new(self),
@@ -56,6 +68,12 @@ func push_mode(mode: InputMode, _params: Dictionary = {}):
 	_mode_stack.append(current_mode)
 	set_mode(mode, _params)
 
+func start_capture():
+	is_capturing = true
+
+func stop_capture():
+	is_capturing = false
+
 func pop_mode():
 	if _mode_stack.is_empty():
 		return
@@ -72,6 +90,13 @@ func reset_stack(initial_mode: InputMode = InputMode.EXPLORATION):
 	set_mode(initial_mode)
 
 func _unhandled_input(event: InputEvent):
+	if is_capturing:
+		if event.is_pressed() and (event is InputEventKey or event is InputEventJoypadButton):
+			is_capturing = false
+			input_captured.emit(event)
+			get_viewport().set_input_as_handled()
+		return
+
 	# Global inputs
 	if event.is_action_pressed("debug_mode"):
 		debug_toggled.emit()

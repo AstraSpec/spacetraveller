@@ -27,18 +27,24 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_4tagx")
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Label1" type="Label" parent="HBoxContainer"]
+[node name="Label1" type="RichTextLabel" parent="HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 2
-size_flags_vertical = 1
+size_flags_horizontal = 3
+mouse_filter = 2
+bbcode_enabled = true
 text = "Hey its me, name!"
+fit_content = true
+autowrap_mode = 0
 
 [node name="Control" type="Control" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Label2" type="Label" parent="HBoxContainer"]
+[node name="Label2" type="RichTextLabel" parent="HBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 10
+bbcode_enabled = true
 text = "Volume"
+fit_content = true
+autowrap_mode = 0

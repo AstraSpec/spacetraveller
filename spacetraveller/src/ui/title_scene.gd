@@ -2,6 +2,7 @@ extends Control
 
 @export var menu_container: ButtonListContainer
 @export var load_game_ui: BaseWindow
+@export var keybind_ui: BaseWindow
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
@@ -25,11 +26,13 @@ func _ready() -> void:
 
 func _on_ui_directional_input(direction: Vector2) -> void:
 	if load_game_ui and load_game_ui.visible: return
+	if keybind_ui and keybind_ui.visible: return
 	if menu_container:
 		menu_container.handle_directional_input(direction)
 
 func _on_ui_accept() -> void:
 	if load_game_ui and load_game_ui.visible: return
+	if keybind_ui and keybind_ui.visible: return
 	var item = menu_container._get_data_for_button_index(menu_container.selected_index)
 	_on_menu_item_activated(menu_container.selected_index, item)
 
