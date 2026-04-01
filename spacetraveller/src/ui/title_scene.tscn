@@ -1,11 +1,12 @@
-[gd_scene load_steps=4 format=3 uid="uid://ci0phsmjrb76e"]
+[gd_scene load_steps=6 format=3 uid="uid://ci0phsmjrb76e"]
 
 [ext_resource type="Script" uid="uid://0s4dd3bn584d" path="res://src/ui/title_scene.gd" id="1_title"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_btns"]
-[ext_resource type="PackedScene" path="res://src/ui/load_game_ui.tscn" id="3_load"]
+[ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="3_load"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="4_kbw"]
+[ext_resource type="PackedScene" uid="uid://dpisuvofgvf2" path="res://src/ui/credits_window.tscn" id="5_crd"]
 
-[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui", "keybind_ui")]
+[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui", "keybind_ui", "credits_ui")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,6 +17,7 @@ script = ExtResource("1_title")
 menu_container = NodePath("CenterContainer/VBoxContainer/MenuContainer")
 load_game_ui = NodePath("LoadGameUI")
 keybind_ui = NodePath("KeybindWindow")
+credits_ui = NodePath("CreditsWindow")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -38,11 +40,12 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="Title" type="RichTextLabel" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "SPACE TRAVELLER"
-horizontal_alignment = 1
+bbcode_enabled = true
+text = "[center][b][font_size=64]SPACE TRAVELLER[/font_size][/b][/center]"
+fit_content = true
+autowrap_mode = 0
 
 [node name="MenuContainer" parent="CenterContainer/VBoxContainer" instance=ExtResource("2_btns")]
 custom_minimum_size = Vector2(300, 200)
@@ -51,4 +54,5 @@ layout_mode = 2
 [node name="LoadGameUI" parent="." instance=ExtResource("3_load")]
 
 [node name="KeybindWindow" parent="." instance=ExtResource("4_kbw")]
-visible = false
+
+[node name="CreditsWindow" parent="." instance=ExtResource("5_crd")]
