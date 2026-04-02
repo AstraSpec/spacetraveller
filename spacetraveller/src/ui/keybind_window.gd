@@ -7,7 +7,6 @@ class_name KeybindWindow
 var list_actions: ListActionsUI
 var current_action_id: String = ""
 var is_rebinding: bool = false
-var InputSettings = preload("res://src/input_settings.gd")
 
 func _ready() -> void:
 	super._ready()
@@ -80,6 +79,8 @@ func _rebind_action(action_id: String, event: InputEvent) -> void:
 	# Add the new event
 	InputMap.action_add_event(action_id, event)
 	
+	SettingsManager.save_keybind(action_id, InputMap.action_get_events(action_id))
+	
 	is_rebinding = false
 	refresh_list()
 
@@ -93,9 +94,14 @@ func _on_reset_pressed() -> void:
 		# Clear current mappings for this action
 		InputMap.action_erase_events(action_id)
 		# Restore the defaults from our snapshot
-		for event in InputManager.default_mappings[action_id]:
+		var defaults = InputManager.default_mappings[action_id]
+		for event in defaults:
 			InputMap.action_add_event(action_id, event)
+		
+		SettingsManager.save_keybind(action_id, defaults, false)
 	
+	# Save to disk once after the bulk update
+	SettingsManager.save_settings()
 	refresh_list()
 
 func _on_close_requested() -> void:

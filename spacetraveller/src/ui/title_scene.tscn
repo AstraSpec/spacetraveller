@@ -1,12 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://ci0phsmjrb76e"]
+[gd_scene load_steps=7 format=3 uid="uid://ci0phsmjrb76e"]
 
 [ext_resource type="Script" uid="uid://0s4dd3bn584d" path="res://src/ui/title_scene.gd" id="1_title"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_btns"]
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="3_load"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="4_kbw"]
 [ext_resource type="PackedScene" uid="uid://dpisuvofgvf2" path="res://src/ui/credits_window.tscn" id="5_crd"]
+[ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="6_opt"]
 
-[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui", "keybind_ui", "credits_ui")]
+[node name="TitleScene" type="Control" node_paths=PackedStringArray("menu_container", "load_game_ui", "keybind_ui", "credits_ui", "options_ui")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,6 +19,7 @@ menu_container = NodePath("CenterContainer/VBoxContainer/MenuContainer")
 load_game_ui = NodePath("LoadGameUI")
 keybind_ui = NodePath("KeybindWindow")
 credits_ui = NodePath("CreditsWindow")
+options_ui = NodePath("OptionsWindow")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -56,3 +58,5 @@ layout_mode = 2
 [node name="KeybindWindow" parent="." instance=ExtResource("4_kbw")]
 
 [node name="CreditsWindow" parent="." instance=ExtResource("5_crd")]
+
+[node name="OptionsWindow" parent="." instance=ExtResource("6_opt")]

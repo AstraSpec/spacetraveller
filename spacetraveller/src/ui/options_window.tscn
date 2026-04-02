@@ -1,0 +1,57 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1v2x4y506w7"]
+
+[ext_resource type="Script" uid="uid://dq1de3wlncsss" path="res://src/ui/options_window.gd" id="1_a2b3c"]
+[ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_d4e5f"]
+
+[node name="OptionsWindow" type="Window" node_paths=PackedStringArray("list_container", "reset_button")]
+title = "Options"
+initial_position = 2
+size = Vector2i(400, 300)
+visible = false
+unfocusable = true
+script = ExtResource("1_a2b3c")
+list_container = NodePath("Panel/MarginContainer/VBoxContainer/ButtonListContainer")
+reset_button = NodePath("Panel/MarginContainer/VBoxContainer/Footer/ResetButton")
+size_preset = 2
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ButtonListContainer" parent="Panel/MarginContainer/VBoxContainer" instance=ExtResource("2_d4e5f")]
+layout_mode = 2
+
+[node name="Footer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Reset to Defaults"
+
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Close"
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="pressed" from="Panel/MarginContainer/VBoxContainer/Footer/CloseButton" to="." method="_on_close_requested"]

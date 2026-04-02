@@ -18,8 +18,6 @@ func _propagate_player(node: Node, p: Node2D):
 func _ready() -> void:
 	unfocusable = true
 	initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_MAIN_WINDOW_SCREEN
-	
-	close_requested.connect(_on_close_requested)
 	get_tree().root.size_changed.connect(_update_window_size)
 	
 	_update_window_size()

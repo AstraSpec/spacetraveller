@@ -32,7 +32,8 @@ func _on_item_activated() -> void:
 			InputManager.pop_mode()
 			InputManager.toggle_menu("load_game")
 		"options":
-			print("Options - Not yet implemented")
+			InputManager.pop_mode()
+			InputManager.toggle_menu("options")
 		"keybinds":
 			InputManager.pop_mode()
 			InputManager.toggle_menu("keybinds")

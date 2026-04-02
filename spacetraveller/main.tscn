@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=29 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://deddxv13sbvc2" path="res://src/ui/esc_ui.gd" id="21_esct"]
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="23_kbw_scene"]
+[ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="24_opt_scene"]
 [ext_resource type="Script" uid="uid://bwvnix5mygmpt" path="res://src/player/equipment_component.gd" id="27_equip"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
@@ -646,10 +647,10 @@ size_flags_horizontal = 3
 layout_mode = 2
 
 [node name="LoadGameUI" parent="Canvas/Window" instance=ExtResource("22_load_scene")]
-visible = false
 
 [node name="KeybindWindow" parent="Canvas/Window" instance=ExtResource("23_kbw_scene")]
-visible = false
+
+[node name="OptionsWindow" parent="Canvas/Window" instance=ExtResource("24_opt_scene")]
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15

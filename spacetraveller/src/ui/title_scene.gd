@@ -4,6 +4,7 @@ extends Control
 @export var load_game_ui: BaseWindow
 @export var keybind_ui: BaseWindow
 @export var credits_ui: BaseWindow
+@export var options_ui: BaseWindow
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
@@ -29,6 +30,7 @@ func _on_ui_directional_input(direction: Vector2) -> void:
 	if load_game_ui and load_game_ui.visible: return
 	if keybind_ui and keybind_ui.visible: return
 	if credits_ui and credits_ui.visible: return
+	if options_ui and options_ui.visible: return
 	if menu_container:
 		menu_container.handle_directional_input(direction)
 
@@ -36,6 +38,7 @@ func _on_ui_accept() -> void:
 	if load_game_ui and load_game_ui.visible: return
 	if keybind_ui and keybind_ui.visible: return
 	if credits_ui and credits_ui.visible: return
+	if options_ui and options_ui.visible: return
 	var item = menu_container._get_data_for_button_index(menu_container.selected_index)
 	_on_menu_item_activated(menu_container.selected_index, item)
 
@@ -52,7 +55,7 @@ func _on_menu_item_activated(_index: int, data: Variant) -> void:
 		"load":
 			InputManager.toggle_menu("load_game")
 		"options":
-			print("Options not implemented")
+			InputManager.toggle_menu("options")
 		"credits":
 			InputManager.toggle_menu("credits")
 		"exit":

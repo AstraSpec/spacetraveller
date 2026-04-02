@@ -59,6 +59,8 @@ func _ready() -> void:
 	}
 	active_context = contexts.get(current_mode)
 	ui_cancel.connect(_on_ui_cancel)
+	
+	SettingsManager.load_settings()
 
 func _on_ui_cancel():
 	if current_mode == InputMode.MENU:

@@ -47,7 +47,7 @@ func handle_directional_input(direction: Vector2) -> void:
 	if direction.y != 0:
 		selected_index = (selected_index + int(direction.y) + count) % count
 	
-	if direction.x != 0:
+	if direction.x != 0 and columns > 1:
 		selected_index = (selected_index + int(direction.x) * _items_per_column + count) % count
 		
 	if old_index != selected_index:

@@ -1,10 +1,5 @@
 extends Node
 
-const GAME_NAME = "SpaceTraveller"
-const SAVE_DIR_NAME = "saves"
-
-var save_path: String = ""
-
 var WorldGen: WorldGeneration
 var Player: Node
 var _Inventory: Inventory
@@ -14,21 +9,6 @@ func register_world(w: WorldGeneration) -> void: WorldGen = w
 func register_player(p: Node) -> void: Player = p
 func register_inventory(i: Inventory) -> void: _Inventory = i
 
-func _ready() -> void:
-	initialize()
-
-func initialize() -> void:
-	var appdata = OS.get_environment("APPDATA")
-	if appdata == "":
-		# Fallback for non-windows
-		appdata = OS.get_config_dir()
-	
-	save_path = appdata.path_join(GAME_NAME).path_join(SAVE_DIR_NAME)
-	
-	if not DirAccess.dir_exists_absolute(save_path):
-		DirAccess.make_dir_recursive_absolute(save_path)
-		print("Created save directory: ", save_path)
-
 func save_game(slot_name: String = "") -> void:
 	if not WorldGen or not Player or not _Inventory:
 		printerr("Cannot save: nodes not registered in SaveManager")
@@ -37,7 +17,7 @@ func save_game(slot_name: String = "") -> void:
 	if slot_name == "":
 		slot_name = _generate_save_name()
 		
-	var full_path = save_path.path_join(slot_name + ".json")
+	var full_path = App.save_path.path_join(slot_name + ".json")
 	
 	var data = {
 		"version": 1,
@@ -60,7 +40,7 @@ func load_save_to_memory(slot_name: String) -> bool:
 		printerr("Cannot load to memory: no slot name provided")
 		return false
 		
-	var full_path = save_path.path_join(slot_name + ".json")
+	var full_path = App.save_path.path_join(slot_name + ".json")
 	
 	if not FileAccess.file_exists(full_path):
 		printerr("Save file does not exist: ", full_path)
@@ -117,10 +97,10 @@ func load_game(slot_name: String) -> void:
 
 func get_save_list() -> Array:
 	var saves = []
-	if not DirAccess.dir_exists_absolute(save_path):
+	if not DirAccess.dir_exists_absolute(App.save_path):
 		return saves
 		
-	var dir = DirAccess.open(save_path)
+	var dir = DirAccess.open(App.save_path)
 	if dir:
 		dir.list_dir_begin()
 		var file_name = dir.get_next()
@@ -133,7 +113,7 @@ func get_save_list() -> Array:
 	return saves
 
 func delete_save(slot_name: String) -> void:
-	var full_path = save_path.path_join(slot_name + ".json")
+	var full_path = App.save_path.path_join(slot_name + ".json")
 	if FileAccess.file_exists(full_path):
 		DirAccess.remove_absolute(full_path)
 		print("Deleted save: ", full_path)
