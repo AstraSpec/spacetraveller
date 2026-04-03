@@ -1,8 +1,8 @@
-[gd_scene load_steps=9 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=11 format=3 uid="uid://c7bpkfyb6qvuq"]
 
-[ext_resource type="Script" uid="uid://b2paqk26lcf30" path="res://src/structure_editor/tile_grid.gd" id="1_7cscp"]
 [ext_resource type="Script" uid="uid://cnfmyow707345" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Script" uid="uid://cus5p87q6jx26" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
+[ext_resource type="Script" uid="uid://bitirlnmh6jus" path="res://src/structure_editor/structure_grid.gd" id="4_06qem"]
 [ext_resource type="Script" uid="uid://dde1sonk5ofmj" path="res://src/structure_editor/coords_label.gd" id="5_byu7x"]
 [ext_resource type="Script" uid="uid://62f0dcmhyy1u" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" uid="uid://bql7a6oaypjq4" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
@@ -11,12 +11,13 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
-TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid")
+TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGrid")
+ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemGrid")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
@@ -74,12 +75,36 @@ text = "Tile chosen: "
 layout_mode = 2
 text = "Clear"
 
-[node name="TileGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer"]
+[node name="TabContainer" type="TabContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/side_margin = 0
+current_tab = 0
+
+[node name="Tiles" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="TileGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 columns = 8
-script = ExtResource("1_7cscp")
+script = ExtResource("4_06qem")
+
+[node name="Items" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="ItemGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 8
+script = ExtResource("4_06qem")
 
 [node name="CoordsLabel" type="Label" parent="Canvas/MarginContainer"]
 layout_mode = 2
@@ -261,7 +286,6 @@ theme_override_constants/separation = 10
 [node name="LoadContainer" parent="LoadWindow/MarginContainer/VBoxContainer" instance=ExtResource("10_4c57u")]
 layout_mode = 2
 button_scene = ExtResource("11_btns")
-columns = 1
 
 [node name="Footer" type="HBoxContainer" parent="LoadWindow/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -284,7 +308,6 @@ layout_mode = 2
 text = "Cancel"
 
 [connection signal="pressed" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
-[connection signal="tile_selected" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileGrid" to="." method="_on_tile_grid_tile_selected"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Chunk" to="." method="_on_chunk_index_pressed"]

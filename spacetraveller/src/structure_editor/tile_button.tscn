@@ -11,6 +11,5 @@ region = Rect2(1, 1, 12, 12)
 custom_minimum_size = Vector2(24, 24)
 offset_right = 24.0
 offset_bottom = 24.0
-scale = Vector2(2, 2)
 texture_normal = SubResource("AtlasTexture_u3n0j")
 stretch_mode = 0

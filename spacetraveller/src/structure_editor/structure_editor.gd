@@ -8,6 +8,7 @@ signal open_load
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
+@export var ItemGrid :GridContainer
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -69,7 +70,12 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 		chunkMenu.index_pressed.connect(_on_chunk_index_pressed)
 	_update_chunk_visual()
 	
-	TileGrid.start(spacing)
+	TileGrid.start(spacing, TileDb)
+	ItemGrid.start(spacing, ItemDb)
+	
+	TileGrid.selection_changed.connect(_on_selection_changed)
+	ItemGrid.selection_changed.connect(_on_selection_changed)
+	
 	update_editor_visuals()
 
 func _exit_tree() -> void:
@@ -211,7 +217,7 @@ func is_inside_bubble(pos: Vector2i) -> bool:
 	var half = BUBBLE_SIZE / 2
 	return pos.x >= -half and pos.x < half and pos.y >= -half and pos.y < half
 
-func _on_tile_grid_tile_selected(id: String, is_primary: bool) -> void:
+func _on_selection_changed(id: String, is_primary: bool) -> void:
 	select_tile(id, is_primary)
 
 func _on_clear_button_pressed() -> void:

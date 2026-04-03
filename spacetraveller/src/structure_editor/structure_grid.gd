@@ -1,21 +1,24 @@
 extends GridContainer
 
-signal tile_selected(id: String, is_primary: bool)
+signal selection_changed(id: String, is_primary: bool)
 
 var spacing = 0
 
-func start(_spacing :int) -> void:
+func start(_spacing :int, db: Object) -> void:
 	spacing = _spacing
 	
-	var ids = TileDb.get_ids()
+	for child in get_children():
+		child.queue_free()
+		
+	var ids = db.get_ids()
 	for id in ids:
-		add_tile_button(id)
+		add_entry_button(id, db)
 
-func add_tile_button(id: String) -> void:
+func add_entry_button(id: String, db: Object) -> void:
 	var button = preload("res://src/structure_editor/tile_button.tscn").instantiate()
 	
-	var atlas = TileDb.get_atlas_coords(id)
-	var new_atlas = button.texture_normal
+	var atlas = db.get_atlas_coords(id)
+	var new_atlas = button.texture_normal.duplicate()
 	
 	# Structure tile and spacing
 	var tile_size = FastTileMap.get_tile_size()
@@ -33,7 +36,7 @@ func add_tile_button(id: String) -> void:
 	button.gui_input.connect(func(event):
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				tile_selected.emit(id, true)
+				selection_changed.emit(id, true)
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
-				tile_selected.emit(id, false)
+				selection_changed.emit(id, false)
 	)
