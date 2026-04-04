@@ -9,6 +9,7 @@ signal open_load
 @export var TileIDLabel2 :Label
 @export var TileGrid :GridContainer
 @export var ItemGrid :GridContainer
+@export var ItemAmountInput :SpinBox
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -33,6 +34,8 @@ var isMovingChunk : bool = false
 
 var tileID1 :String
 var tileID2 :String
+var tileType1 :String = "tile"
+var tileType2 :String = "tile"
 var lastMousePos :Vector2i
 var mousePos :Vector2i
 var playerOffset :Vector2
@@ -60,8 +63,8 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	setup_tools()
 	
-	select_tile("road_bricks")
-	select_tile("void", false)
+	select_entry("road_bricks", "tile")
+	select_entry("void", "tile", false)
 	
 	_on_mode_changed("pencil")
 	
@@ -73,8 +76,8 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	TileGrid.start(spacing, TileDb)
 	ItemGrid.start(spacing, ItemDb)
 	
-	TileGrid.selection_changed.connect(_on_selection_changed)
-	ItemGrid.selection_changed.connect(_on_selection_changed)
+	TileGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "tile", is_primary))
+	ItemGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "item", is_primary))
 	
 	update_editor_visuals()
 
@@ -85,8 +88,8 @@ func setup_tools():
 	tools = {
 		"pencil": EditorTools.PencilTool.new(self),
 		"line": EditorTools.LineTool.new(self),
-		"rectangle": EditorTools.RectangleTool.new(self),
-		"ellipsis": EditorTools.EllipsisTool.new(self),
+		"rectangle": EditorTools.ShapeTool.new(self, StructureEditor.SHAPE_RECTANGLE),
+		"ellipsis": EditorTools.ShapeTool.new(self, StructureEditor.SHAPE_ELLIPSIS),
 		"eyedropper": EditorTools.EyedropperTool.new(self),
 		"fill": EditorTools.FillTool.new(self),
 		"selection": EditorTools.SelectionTool.new(self)
@@ -194,11 +197,13 @@ func redo():
 	FastTilemap.set_tile_id_cache(state)
 	update_editor_visuals()
 
-func select_tile(id :String, is_primary :bool = true):
+func select_entry(id: String, type: String = "tile", is_primary: bool = true):
 	if is_primary:
 		tileID1 = id
+		tileType1 = type
 	else:
 		tileID2 = id
+		tileType2 = type
 	
 	TileIDLabel1.text = "ID1: " + tileID1
 	TileIDLabel2.text = "ID2: " + tileID2
@@ -207,18 +212,30 @@ func on_tile_changed(_pos: Vector2i):
 	if active_tool:
 		active_tool.on_hover(_pos)
 
-func place_tile_at(pos: Vector2i, id: String):
+var item_amount: int:
+	get: return int(ItemAmountInput.value) if ItemAmountInput else 1
+
+func place_at(pos: Vector2i, id: String, type: String = "tile"):
 	if !id or !is_inside_bubble(pos): return
-	
-	FastTilemap.place_tile(int(pos.x + playerOffset.x), int(pos.y + playerOffset.y), id)
+	place_entry(Vector2i(int(pos.x + playerOffset.x), int(pos.y + playerOffset.y)), id, type)
+	update_editor_visuals()
+
+func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount: int = -1):
+	match type:
+		"item":
+			FastTilemap.drop_item(world_pos, id, amount if amount > 0 else item_amount)
+		_:
+			FastTilemap.place_tile(world_pos.x, world_pos.y, id)
+
+func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
+	var points = Editor.get_shape_points(shape_type, p1, p2, filled, perfect)
+	for p in points:
+		place_entry(p, id, type, amount)
 	update_editor_visuals()
 
 func is_inside_bubble(pos: Vector2i) -> bool:
 	var half = BUBBLE_SIZE / 2
 	return pos.x >= -half and pos.x < half and pos.y >= -half and pos.y < half
-
-func _on_selection_changed(id: String, is_primary: bool) -> void:
-	select_tile(id, is_primary)
 
 func _on_clear_button_pressed() -> void:
 	save_undo_state()

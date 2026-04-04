@@ -20,7 +20,7 @@ protected:
     FastTileMap *tilemap = nullptr;
     std::unordered_map<uint64_t, RID> preview_tile_rids;
     
-    void _create_preview_tile(const Vector2i &p_pos, const String &p_tile_id, RenderingServer *p_rs, RID p_texture_rid, RID p_parent_rid, int p_half, int p_cell_size, TileDb *p_tile_db);
+    void _create_preview_tile(const Vector2i &p_pos, const String &p_id, const String &p_entry_type, RenderingServer *p_rs, RID p_texture_rid, RID p_parent_rid, int p_half, int p_cell_size);
     std::vector<Vector2i> _get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect);
 
 public:
@@ -33,10 +33,10 @@ public:
     Dictionary export_to_rle(const String &p_id, const Vector2i &p_offset = Vector2i()) const;
     void import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset = Vector2i());
 
-    void update_preview_tiles(const Array &p_positions, const String &p_tile_id);
-    void update_preview_tiles_with_data(const Dictionary &p_data);
-    void update_preview_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id);
-    void commit_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id);
+    void update_preview_tiles(const Array &p_positions, const String &p_tile_id, const String &p_entry_type = "tile");
+    void update_preview_tiles_with_data(const Dictionary &p_data, const String &p_entry_type = "tile");
+    void update_preview_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id, const String &p_entry_type = "tile");
+    Array get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect);
     void clear_preview_tiles();
 };
 

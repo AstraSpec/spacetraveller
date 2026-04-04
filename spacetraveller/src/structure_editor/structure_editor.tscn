@@ -11,13 +11,14 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "ItemAmountInput", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGrid")
-ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemGrid")
+ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemGrid")
+ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
@@ -93,12 +94,30 @@ theme_override_constants/v_separation = 0
 columns = 8
 script = ExtResource("4_06qem")
 
-[node name="Items" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+[node name="Items" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="ItemGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+[node name="AmountContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+layout_mode = 2
+
+[node name="AmountLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer"]
+layout_mode = 2
+text = "Amount:"
+
+[node name="ItemAmountInput" type="SpinBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 999.0
+value = 1.0
+
+[node name="ItemScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0

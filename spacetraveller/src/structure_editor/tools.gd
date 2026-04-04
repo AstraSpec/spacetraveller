@@ -72,13 +72,14 @@ class PencilTool extends Tool:
 	func on_drag(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_hover(pos: Vector2i):
 		if is_pos_valid(pos):
-			editor.Editor.update_preview_tiles([pos], editor.tileID1)
+			editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
 		else:
 			editor.Editor.clear_preview_tiles()
 	func _paint(btn: String, pos: Vector2i):
 		if !is_pos_valid(pos): return
 		var id = editor.tileID1 if btn == "left" else editor.tileID2
-		editor.place_tile_at(pos, id)
+		var type = editor.tileType1 if btn == "left" else editor.tileType2
+		editor.place_at(pos, id, type)
 
 class LineTool extends Tool:
 	func get_cursor_id(): return "pencil"
@@ -118,10 +119,11 @@ class LineTool extends Tool:
 			var points = editor.get_line_points(start_pos, target)
 			points = points.filter(func(p): return is_pos_valid(p))
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			editor.Editor.update_preview_tiles(points, tid)
+			var ttype = editor.tileType1 if button == "left" else editor.tileType2
+			editor.Editor.update_preview_tiles(points, tid, ttype)
 		else:
 			if is_pos_valid(pos):
-				editor.Editor.update_preview_tiles([pos], editor.tileID1)
+				editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
 			else:
 				editor.Editor.clear_preview_tiles()
 
@@ -137,14 +139,21 @@ class LineTool extends Tool:
 
 		var points = editor.get_line_points(start_pos, target)
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
+		var ttype = editor.tileType1 if button == "left" else editor.tileType2
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
-				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, tid)
+				editor.place_entry(Vector2i(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y), tid, ttype)
 		editor.update_editor_visuals()
 		is_drawing = false
 		on_hover(pos)
 
-class RectangleTool extends Tool:
+class ShapeTool extends Tool:
+	var shape_type: int
+	
+	func _init(e, p_shape_type: int):
+		super(e)
+		shape_type = p_shape_type
+
 	func get_cursor_id(): return "pencil"
 	func get_options_config() -> Array:
 		return [
@@ -172,59 +181,18 @@ class RectangleTool extends Tool:
 	func on_hover(pos: Vector2i):
 		if is_drawing:
 			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			editor.Editor.update_preview_shape(StructureEditor.SHAPE_RECTANGLE, start_pos, pos, get_effective_option(0), get_effective_option(1), tid)
+			var ttype = editor.tileType1 if button == "left" else editor.tileType2
+			editor.Editor.update_preview_shape(shape_type, start_pos, pos, get_effective_option(0), get_effective_option(1), tid, ttype)
 		else:
 			if is_pos_valid(pos):
-				editor.Editor.update_preview_tiles([pos], editor.tileID1)
+				editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
 			else:
 				editor.Editor.clear_preview_tiles()
 
 	func _commit(pos: Vector2i):
 		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_RECTANGLE, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
-		editor.update_editor_visuals()
-		is_drawing = false
-		on_hover(pos)
-
-class EllipsisTool extends Tool:
-	func get_cursor_id(): return "pencil"
-	func get_options_config() -> Array:
-		return [
-			{ "name": "perfect", "label": "Perfect", "default": false },
-			{ "name": "filled", "label": "Filled", "default": false }
-		]
-
-	var is_drawing = false
-	var start_pos = Vector2i.ZERO
-	var button = ""
-
-	func on_press(btn: String, pos: Vector2i):
-		if !is_pos_valid(pos): return
-		if !is_drawing:
-			editor.save_undo_state()
-			is_drawing = true
-			start_pos = pos
-			button = btn
-			on_hover(pos)
-
-	func on_release(btn: String, pos: Vector2i):
-		if is_drawing and btn == button:
-			_commit(pos)
-
-	func on_hover(pos: Vector2i):
-		if is_drawing:
-			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			editor.Editor.update_preview_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos, pos, get_effective_option(0), get_effective_option(1), tid)
-		else:
-			if is_pos_valid(pos):
-				editor.Editor.update_preview_tiles([pos], editor.tileID1)
-			else:
-				editor.Editor.clear_preview_tiles()
-
-	func _commit(pos: Vector2i):
-		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		editor.Editor.commit_shape(StructureEditor.SHAPE_ELLIPSIS, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid)
-		editor.update_editor_visuals()
+		var ttype = editor.tileType1 if button == "left" else editor.tileType2
+		editor.commit_shape(shape_type, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid, ttype)
 		is_drawing = false
 		on_hover(pos)
 
@@ -233,8 +201,14 @@ class EyedropperTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		var id = editor.FastTilemap.get_tile_at(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y)
-		editor.select_tile(id, btn == "left")
+		var world_pos = Vector2i(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y)
+		if editor.FastTilemap.has_method("has_item") and editor.FastTilemap.has_item(world_pos):
+			var items = editor.FastTilemap.get_items_at(world_pos)
+			if items.size() > 0:
+				editor.select_entry(items[0].id, "item", btn == "left")
+				return
+		var id = editor.FastTilemap.get_tile_at(world_pos.x, world_pos.y)
+		editor.select_entry(id, "tile", btn == "left")
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -248,6 +222,8 @@ class FillTool extends Tool:
 		
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
+		var ttype = editor.tileType1 if btn == "left" else editor.tileType2
+		if ttype != "tile": return
 		editor.save_undo_state()
 		var tid = editor.tileID1 if btn == "left" else editor.tileID2
 		

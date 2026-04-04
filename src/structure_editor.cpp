@@ -15,10 +15,10 @@ void StructureEditor::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()));
     ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()));
-    ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id"), &StructureEditor::update_preview_tiles);
-    ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data"), &StructureEditor::update_preview_tiles_with_data);
-    ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::update_preview_shape);
-    ClassDB::bind_method(D_METHOD("commit_shape", "type", "p1", "p2", "filled", "perfect", "tile_id"), &StructureEditor::commit_shape);
+    ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id", "entry_type"), &StructureEditor::update_preview_tiles, DEFVAL("tile"));
+    ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data", "entry_type"), &StructureEditor::update_preview_tiles_with_data, DEFVAL("tile"));
+    ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id", "entry_type"), &StructureEditor::update_preview_shape, DEFVAL("tile"));
+    ClassDB::bind_method(D_METHOD("get_shape_points", "type", "p1", "p2", "filled", "perfect"), &StructureEditor::get_shape_points);
     ClassDB::bind_method(D_METHOD("clear_preview_tiles"), &StructureEditor::clear_preview_tiles);
 
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilemap", PROPERTY_HINT_RESOURCE_TYPE, "FastTileMap"), "set_tilemap", "get_tilemap");
@@ -157,26 +157,35 @@ void StructureEditor::clear_preview_tiles() {
     preview_tile_rids.clear();
 }
 
-void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &tile_id, RenderingServer *rs, RID texture_rid, RID parent_rid, int half, int cell_size, TileDb *tile_db) {
+void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_id, const String &entry_type, RenderingServer *rs, RID texture_rid, RID parent_rid, int half, int cell_size) {
     if (pos.x < -half || pos.x >= half || pos.y < -half || pos.y >= half) return;
 
-    const TileInfo* info = tile_db->get_tile_info(tile_id);
-    if (!info) return;
+    int tile_size = FastTileMap::get_tile_size();
+    Vector2i atlas_coords(-1, -1);
+
+    if (entry_type == "item") {
+        ItemDb* item_db = ItemDb::get_singleton();
+        if (!item_db) return;
+        const ItemInfo* info = item_db->get_item_info(p_id);
+        if (!info) return;
+        atlas_coords = info->atlas;
+    } else {
+        TileDb* tile_db = TileDb::get_singleton();
+        if (!tile_db) return;
+        const TileInfo* info = tile_db->get_tile_info(p_id);
+        if (!info) return;
+        atlas_coords = info->atlas_variants.empty() ? Vector2i(-1, -1) : info->atlas_variants[0];
+        if (info->atlas_variants.size() > 1 && tilemap) {
+            uint32_t h = (static_cast<uint32_t>(pos.x) * 1597334677U) ^ 
+                         (static_cast<uint32_t>(pos.y) * 3812015801U) ^ 
+                         (static_cast<uint32_t>(tilemap->get_world_seed()));
+            atlas_coords = info->atlas_variants[h % info->atlas_variants.size()];
+        }
+    }
 
     uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
     if (preview_tile_rids.count(key)) {
         rs->free_rid(preview_tile_rids[key]);
-    }
-
-    int tile_size = FastTileMap::get_tile_size();
-    Vector2i atlas_coords = info->atlas_variants.empty() ? Vector2i(-1, -1) : info->atlas_variants[0];
-    
-    // Pick variation if multiple exist
-    if (info->atlas_variants.size() > 1 && tilemap) {
-        uint32_t h = (static_cast<uint32_t>(pos.x) * 1597334677U) ^ 
-                     (static_cast<uint32_t>(pos.y) * 3812015801U) ^ 
-                     (static_cast<uint32_t>(tilemap->get_world_seed()));
-        atlas_coords = info->atlas_variants[h % info->atlas_variants.size()];
     }
 
     Vector2i atlas_pos(1 + atlas_coords.x * (tile_size + 1), 1 + atlas_coords.y * (tile_size + 1));
@@ -189,12 +198,10 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &ti
     preview_tile_rids[key] = preview_rid;
 }
 
-void StructureEditor::update_preview_tiles(const Array &p_positions, const String &p_tile_id) {
+void StructureEditor::update_preview_tiles(const Array &p_positions, const String &p_tile_id, const String &p_entry_type) {
     clear_preview_tiles();
     Ref<Texture2D> tilesheet = tilemap->get_tilesheet();
     if (!tilesheet.is_valid()) return;
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
 
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
@@ -203,16 +210,14 @@ void StructureEditor::update_preview_tiles(const Array &p_positions, const Strin
     int cell_size = tilemap->get_cell_size();
 
     for (int i = 0; i < p_positions.size(); i++) {
-        _create_preview_tile(p_positions[i], p_tile_id, rs, texture_rid, parent_rid, half, cell_size, tile_db);
+        _create_preview_tile(p_positions[i], p_tile_id, p_entry_type, rs, texture_rid, parent_rid, half, cell_size);
     }
 }
 
-void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data) {
+void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data, const String &p_entry_type) {
     clear_preview_tiles();
     Ref<Texture2D> tilesheet = tilemap->get_tilesheet();
     if (!tilesheet.is_valid()) return;
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
 
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
@@ -223,7 +228,7 @@ void StructureEditor::update_preview_tiles_with_data(const Dictionary &p_data) {
     Array keys = p_data.keys();
     for (int i = 0; i < keys.size(); i++) {
         if (keys[i].get_type() != Variant::VECTOR2I) continue;
-        _create_preview_tile(keys[i], p_data[keys[i]], rs, texture_rid, parent_rid, half, cell_size, tile_db);
+        _create_preview_tile(keys[i], p_data[keys[i]], p_entry_type, rs, texture_rid, parent_rid, half, cell_size);
     }
 }
 
@@ -326,18 +331,20 @@ std::vector<Vector2i> StructureEditor::_get_shape_points(ShapeType p_type, const
     return points;
 }
 
-void StructureEditor::update_preview_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id) {
+void StructureEditor::update_preview_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id, const String &p_entry_type) {
     std::vector<Vector2i> points = _get_shape_points(p_type, p_p1, p_p2, p_filled, p_perfect);
     Array positions;
     for (const Vector2i &p : points) {
         positions.push_back(p);
     }
-    update_preview_tiles(positions, p_tile_id);
+    update_preview_tiles(positions, p_tile_id, p_entry_type);
 }
 
-void StructureEditor::commit_shape(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect, const String &p_tile_id) {
+Array StructureEditor::get_shape_points(ShapeType p_type, const Vector2i &p_p1, const Vector2i &p_p2, bool p_filled, bool p_perfect) {
     std::vector<Vector2i> points = _get_shape_points(p_type, p_p1, p_p2, p_filled, p_perfect);
+    Array res;
     for (const Vector2i &p : points) {
-        tilemap->place_tile(p.x, p.y, p_tile_id);
+        res.push_back(p);
     }
+    return res;
 }
