@@ -2,6 +2,7 @@
 
 #include "world_generation.h"
 #include "fast_tilemap.h"
+#include "pathfinder.h"
 #include "structure_editor.h"
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
@@ -31,6 +32,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_RUNTIME_CLASS(FastTileMap);
 	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
+	GDREGISTER_CLASS(Pathfinder);
 	GDREGISTER_RUNTIME_CLASS(Inventory);
 	GDREGISTER_RUNTIME_CLASS(Clothing);
 	GDREGISTER_RUNTIME_CLASS(Anatomy);

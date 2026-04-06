@@ -11,6 +11,8 @@ signal moved_chunk(chunkPos :Vector2)
 @export var _Clothing :Clothing
 @export var _Equipment: EquipmentComponent
 
+var nav_agent: NavAgent
+
 const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 
 var CHUNK_SIZE = WorldGeneration.get_chunk_size()
@@ -27,10 +29,23 @@ func _ready():
 	InputManager.directional_input.connect(_on_movement_triggered)
 	InputManager.action_smash_requested.connect(_on_smash_requested)
 	InputManager.action_pickup_requested.connect(_on_pickup_requested)
+	InputManager.exploration_right_click.connect(_on_right_click)
 	
+	nav_agent = NavAgent.new()
+	nav_agent.delay = 0.05
+	add_child(nav_agent)
+	nav_agent.tilemap = World
+	nav_agent.step_completed.connect(func(_pos): TimeManager.advance_turn())
+
 	# Register default actions
 	available_actions.append(SmashAction.new(self, World))
 	available_actions.append(PickupAction.new(self, World))
+
+func _on_right_click(_global_pos: Vector2):
+	var mouse_local = get_local_mouse_position()
+	var cell_diff = (mouse_local / World.get_cell_size()).floor()
+	var target_cell = Vector2i(cellPos) + Vector2i(cell_diff)
+	nav_agent.navigate_to(target_cell)
 
 func _on_smash_requested():
 	_try_set_action(SmashAction.new(self, World))
@@ -65,6 +80,7 @@ func _try_set_action(action: PlayerAction):
 		currentAction = null
 
 func _on_movement_triggered(dir: Vector2):
+	nav_agent.stop()
 	if currentAction:
 		var target_cell = Vector2i(cellPos) + Vector2i(dir)
 		if currentAction.is_valid(target_cell):
