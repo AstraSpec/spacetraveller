@@ -18,6 +18,22 @@ namespace godot {
 class FastTileMap : public Node2D {
     GDCLASS(FastTileMap, Node2D)
 
+public:
+    enum Layer {
+        LAYER_TILE = 0,
+        LAYER_INDICATOR = 1,
+        LAYER_MAX
+    };
+
+    struct LayerProperties {
+        int z_index;
+        Color seen_modulation;
+        Color hidden_modulation;
+        bool has_items;
+    };
+
+    static const LayerProperties LAYER_PROPS[LAYER_MAX];
+
 protected:
     static void _bind_methods();
 
@@ -28,8 +44,8 @@ protected:
     int spacing = 0;
     int world_seed = 0;
 
-    std::unordered_map<uint64_t, RID> tile_rids;
-    std::unordered_map<uint64_t, uint16_t> tile_id_cache;
+    std::unordered_map<uint64_t, RID> tile_rids[LAYER_MAX];
+    std::unordered_map<uint64_t, uint16_t> tile_id_cache[LAYER_MAX];
     std::unordered_set<uint64_t> seen_cells;
 
     Ref<Texture2D> tilesheet;
@@ -55,15 +71,16 @@ public:
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
     void update_visuals(const Vector2i& playerPos);
-    void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
-    void place_tile(int x, int y, const String& tile_id);
-    String get_tile_at(int x, int y) const;
-    void fill_tiles(int x, int y, const String& tile_id, const Vector2i& playerPos, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool p_contiguous = true);
-    void clear_cache();
+    void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
+    void place_tile(int x, int y, const String& tile_id, Layer p_layer = LAYER_TILE);
+    String get_tile_at(int x, int y, Layer p_layer = LAYER_TILE) const;
+    void fill_tiles(int x, int y, const String& tile_id, const Vector2i& playerPos, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool p_contiguous = true, Layer p_layer = LAYER_TILE);
+    void clear_cache(Layer p_layer = LAYER_TILE);
+    void clear_all_caches();
 
-    Dictionary get_tile_id_cache() const;
-    void set_tile_id_cache(const Dictionary &p_cache);
-    void merge_tile_id_cache(const Dictionary &p_cache);
+    Dictionary get_tile_id_cache(Layer p_layer = LAYER_TILE) const;
+    void set_tile_id_cache(const Dictionary &p_cache, Layer p_layer = LAYER_TILE);
+    void merge_tile_id_cache(const Dictionary &p_cache, Layer p_layer = LAYER_TILE);
 
     Array get_seen_cells() const;
     void set_seen_cells(const Array &p_seen);
@@ -79,6 +96,8 @@ protected:
 };
 
 }
+
+VARIANT_ENUM_CAST(FastTileMap::Layer);
 
 #endif // SPACETRAVELLER_FAST_TILEMAP_H
 

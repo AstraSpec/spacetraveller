@@ -46,7 +46,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     Dictionary result;
 
     int size = WorldGeneration::get_chunk_size();
-    Dictionary cache = tilemap->get_tile_id_cache();
+    Dictionary cache = tilemap->get_tile_id_cache(FastTileMap::LAYER_TILE);
 
     // RLE Encoding with Numeric Indices
     Array palette;
@@ -146,7 +146,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             current_pos++;
         }
     }
-    tilemap->merge_tile_id_cache(new_cache);
+    tilemap->merge_tile_id_cache(new_cache, FastTileMap::LAYER_TILE);
 }
 
 void StructureEditor::clear_preview_tiles() {

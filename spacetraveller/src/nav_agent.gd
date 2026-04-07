@@ -5,6 +5,7 @@ signal path_completed
 signal step_completed(pos: Vector2i)
 
 @export var delay: float = 0.0
+@export var show_path: bool = false
 var path: Array = []
 var is_moving: bool = false
 var entity: Node2D
@@ -21,10 +22,25 @@ func navigate_to(target: Vector2i):
 	path = Pathfinder.find_path(tilemap, Vector2i(entity.cellPos), target)
 	
 	if path.is_empty():
+		if show_path:
+			_clear_visual_path()
 		return
+
+	if show_path:
+		_draw_visual_path()
 
 	if !is_moving:
 		_start_moving()
+
+func _draw_visual_path():
+	_clear_visual_path()
+	for i in range(path.size()):
+		var p = path[i]
+		var id = "path_end" if i == path.size() - 1 else "path_node"
+		tilemap.place_tile(p.x, p.y, id, FastTileMap.LAYER_INDICATOR)
+
+func _clear_visual_path():
+	tilemap.clear_cache(FastTileMap.LAYER_INDICATOR)
 
 func _start_moving():
 	is_moving = true
@@ -37,7 +53,10 @@ func _move_next():
 		return
 
 	var next_pos = path.pop_front()
-
+	
+	if show_path:
+		tilemap.place_tile(next_pos.x, next_pos.y, "void", FastTileMap.LAYER_INDICATOR)
+	
 	var diff = Vector2(next_pos) - entity.cellPos
 	entity.interact_cell(diff)
 

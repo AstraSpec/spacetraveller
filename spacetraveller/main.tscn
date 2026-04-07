@@ -87,7 +87,6 @@ texture_filter = 1
 tile_set = SubResource("TileSet_3mine")
 
 [node name="Camera" type="Camera2D" parent="MapView"]
-position_smoothing_enabled = true
 script = ExtResource("4_8p67s")
 
 [node name="WorldGen" type="WorldGeneration" parent="." node_paths=PackedStringArray("Player")]

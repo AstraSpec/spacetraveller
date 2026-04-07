@@ -322,90 +322,83 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
     if (!tile_db || !item_db || !id_reg) return;
     
     // First pass: render tiles and build tile map
-    for (auto& pair : tile_rids) {
-        uint64_t offsetKey = pair.first;
-        
-        // Unpack offset
+    for (auto const& [offsetKey, _] : tile_rids[LAYER_TILE]) {
         int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
         int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
-        
-        // Calculate cell position
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
-        
-        // Check for items first
-        auto it_item = dropped_items.find(cellKey);
-        if (it_item != dropped_items.end() && !it_item->second.empty()) {
-            uint16_t item_id_numeric = it_item->second[0].id;
-            const ItemInfo* info = item_db->get_item_info(item_id_numeric);
-            
-            if (info) {
-                Vector2i atlas_pos;
-                atlas_pos.x = 1 + info->atlas.x * (FastTileMap::get_tile_size() + 1);
-                atlas_pos.y = 1 + info->atlas.y * (FastTileMap::get_tile_size() + 1);
 
-                RID tile_rid = pair.second;
+        for (int l = 0; l < LAYER_MAX; l++) {
+            const LayerProperties& props = LAYER_PROPS[l];
+            RID tile_rid = tile_rids[l][offsetKey];
+            uint16_t tile_id = 0;
+
+            // Item override logic
+            if (props.has_items) {
+                auto it_item = dropped_items.find(cellKey);
+                if (it_item != dropped_items.end() && !it_item->second.empty()) {
+                    uint16_t item_id_numeric = it_item->second[0].id;
+                    const ItemInfo* info = item_db->get_item_info(item_id_numeric);
+                    if (info) {
+                        Vector2i atlas_pos;
+                        atlas_pos.x = 1 + info->atlas.x * (FastTileMap::get_tile_size() + 1);
+                        atlas_pos.y = 1 + info->atlas.y * (FastTileMap::get_tile_size() + 1);
+
+                        rs->canvas_item_clear(tile_rid);
+                        rs->canvas_item_add_texture_rect_region(
+                            tile_rid,
+                            Rect2(ox * get_cell_size(), oy * get_cell_size(), FastTileMap::get_tile_size(), FastTileMap::get_tile_size()),
+                            texture_rid,
+                            Rect2(atlas_pos.x, atlas_pos.y, FastTileMap::get_tile_size(), FastTileMap::get_tile_size())
+                        );
+                        continue; 
+                    }
+                }
+            }
+            
+            // Standard cache lookup/generation
+            auto it = tile_id_cache[l].find(cellKey);
+            if (it != tile_id_cache[l].end()) {
+                tile_id = it->second;
+            } else if (l == LAYER_TILE) {
+                tile_id = get_tile(cx, cy);
+                tile_id_cache[l][cellKey] = tile_id;
+            }
+
+            if (tile_id != 0) {
+                update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db, (Layer)l);
+            } else {
                 rs->canvas_item_clear(tile_rid);
-                rs->canvas_item_add_texture_rect_region(
-                    tile_rid,
-                    Rect2(ox * get_cell_size(), oy * get_cell_size(), FastTileMap::get_tile_size(), FastTileMap::get_tile_size()),
-                    texture_rid,
-                    Rect2(atlas_pos.x, atlas_pos.y, FastTileMap::get_tile_size(), FastTileMap::get_tile_size())
-                );
-                // Skip normal tile rendering
-                continue;
             }
         }
-        
-        // Get or compute tile ID
-        uint16_t tile_id;
-        auto it = tile_id_cache.find(cellKey);
-        if (it != tile_id_cache.end()) {
-            tile_id = it->second;
-        } else {
-            tile_id = get_tile(cx, cy);
-            tile_id_cache[cellKey] = tile_id;
-        }
-        
-        update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db);
     }
-    
+
     // Second pass: compute occlusion and apply modulation
-    for (auto& pair : tile_rids) {
-        uint64_t offsetKey = pair.first;
-        RID tile_rid = pair.second;
-        
-        // Unpack offset
+    for (auto const& [offsetKey, _] : tile_rids[LAYER_TILE]) {
         int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
         int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
-        
-        // Calculate cell position
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
-        
-        bool occluded;
-        Vector2i cellPos(cx, cy);
-        
-        if (ignore_occlusion) {
-            occluded = false;
-        } else {
-            occluded = Occlusion::is_occluded(cellPos, playerPos, tile_id_cache);
+
+        bool occluded = ignore_occlusion ? false : Occlusion::is_occluded(Vector2i(cx, cy), playerPos, tile_id_cache[LAYER_TILE]);
+        bool seen = seen_cells.count(cellKey) > 0;
+        if (!occluded) {
+            seen_cells.insert(cellKey);
+            seen = true;
         }
-        
-        Color color(1.0f, 1.0f, 1.0f, 1.0f);
-        if (occluded) {
-            if (seen_cells.count(cellKey) > 0) {
-                color = Color(0.4f, 0.4f, 0.5f, 1.0f);  // Previously seen
+
+        for (int l = 0; l < LAYER_MAX; l++) {
+            const LayerProperties& props = LAYER_PROPS[l];
+            RID tile_rid = tile_rids[l][offsetKey];
+            
+            if (!occluded) {
+                rs->canvas_item_set_modulate(tile_rid, Color(1, 1, 1, 1));
             } else {
-                color = Color(0.0f, 0.0f, 0.0f, 1.0f);  // Never seen
+                rs->canvas_item_set_modulate(tile_rid, seen ? props.seen_modulation : props.hidden_modulation);
             }
-        } else {
-            seen_cells.insert(cellKey);  // Mark as seen
         }
-        
-        rs->canvas_item_set_modulate(tile_rid, color);
     }
 }
 
@@ -548,7 +541,7 @@ Dictionary WorldGeneration::get_save_data() const {
         items[key] = a;
     }
     data["dropped_items"] = items;
-    data["tile_id_cache"] = get_tile_id_cache();
+    data["tile_id_cache"] = get_tile_id_cache(LAYER_TILE);
     data["seen_cells"] = get_seen_cells();
 
     return data;
@@ -593,7 +586,7 @@ void WorldGeneration::load_save_data(const Dictionary &p_data) {
         dropped_items[key] = list;
     }
 
-    set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()));
+    set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), LAYER_TILE);
     set_seen_cells(p_data.get("seen_cells", Array()));
     
     last_chunk_valid = false;
