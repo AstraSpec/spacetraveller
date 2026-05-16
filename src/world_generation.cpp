@@ -374,6 +374,9 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         }
     }
 
+    std::unordered_set<uint64_t> visible_keys;
+    Occlusion::compute_visible(playerPos, world_bubble_radius, tile_id_cache[LAYER_TILE], visible_keys);
+
     // Second pass: compute occlusion and apply modulation
     for (auto const& [offsetKey, _] : tile_rids[LAYER_TILE]) {
         int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
@@ -382,7 +385,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int cy = oy + playerPos.y;
         uint64_t cellKey = Occlusion::pack_coords(cx, cy);
 
-        bool occluded = ignore_occlusion ? false : Occlusion::is_occluded(Vector2i(cx, cy), playerPos, tile_id_cache[LAYER_TILE]);
+        bool occluded = ignore_occlusion ? false : (visible_keys.find(cellKey) == visible_keys.end());
         bool seen = seen_cells.count(cellKey) > 0;
         if (!occluded) {
             seen_cells.insert(cellKey);
