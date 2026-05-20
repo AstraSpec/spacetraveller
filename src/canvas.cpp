@@ -1,5 +1,5 @@
 #include "canvas.h"
-#include "data/id_registry.h"
+#include "core/id_registry.h"
 #include <cmath>
 #include <algorithm>
 #include <fstream>

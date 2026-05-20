@@ -1,5 +1,5 @@
 #include "clothing.h"
-#include "item_db.h"
+#include "data/item_db.h"
 #include "anatomy.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>

@@ -1,6 +1,6 @@
 #include "inventory.h"
-#include "item_db.h"
-#include "id_registry.h"
+#include "data/item_db.h"
+#include "core/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace godot {

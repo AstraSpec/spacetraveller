@@ -1,5 +1,5 @@
 #include "chunk_db.h"
-#include "id_registry.h"
+#include "core/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace godot {

@@ -1,5 +1,5 @@
 #include "fast_tilemap.h"
-#include "data/id_registry.h"
+#include "core/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/engine.hpp>

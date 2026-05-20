@@ -21,7 +21,7 @@
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
 #include "data/item_db.h"
-#include "data/inventory.h"
+#include "components/inventory.h"
 
 #include "fast_tilemap.h"
 

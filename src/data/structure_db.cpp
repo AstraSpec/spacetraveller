@@ -1,5 +1,5 @@
 #include "structure_db.h"
-#include "id_registry.h"
+#include "core/id_registry.h"
 #include "../world_generation.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>

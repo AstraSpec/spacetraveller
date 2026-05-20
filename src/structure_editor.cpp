@@ -3,7 +3,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
-#include "data/id_registry.h"
+#include "core/id_registry.h"
 #include <unordered_set>
 #include <algorithm>
 

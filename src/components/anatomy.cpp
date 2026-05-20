@@ -1,6 +1,6 @@
 #include "anatomy.h"
-#include "race_db.h"
-#include "body_part_db.h"
+#include "data/race_db.h"
+#include "data/body_part_db.h"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace godot {

@@ -1,6 +1,6 @@
 #include "city_generation.h"
 #include "world_generation.h"
-#include "data/id_registry.h"
+#include "core/id_registry.h"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
