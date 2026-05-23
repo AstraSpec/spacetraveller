@@ -14,10 +14,6 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_world_seed"), &WorldGeneration::get_world_seed);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "world_seed"), "set_world_seed", "get_world_seed");
 
-    ClassDB::bind_method(D_METHOD("set_ignore_occlusion", "ignore"), &WorldGeneration::set_ignore_occlusion);
-    ClassDB::bind_method(D_METHOD("get_ignore_occlusion"), &WorldGeneration::get_ignore_occlusion);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_occlusion"), "set_ignore_occlusion", "get_ignore_occlusion");
-    
     // Expose constants
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_region_size"), &WorldGeneration::get_region_size);
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("get_chunk_size"), &WorldGeneration::get_chunk_size);
@@ -35,6 +31,8 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_EAST", WorldCoords::ROT_EAST);
 
     // Method bindings
+    ClassDB::bind_method(D_METHOD("setup_renderer"), &WorldGeneration::setup_renderer);
+    ClassDB::bind_method(D_METHOD("get_renderer"), &WorldGeneration::get_renderer);
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &WorldGeneration::init_region);
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &WorldGeneration::drop_item);
@@ -47,9 +45,20 @@ void WorldGeneration::_bind_methods() {
 }
 
 WorldGeneration::WorldGeneration() {
+    cell_data = std::make_unique<CellData>();
 }
 
-WorldGeneration::~WorldGeneration() {
+WorldGeneration::~WorldGeneration() = default;
+
+void WorldGeneration::setup_renderer() {
+    if (renderer) return;
+    renderer = memnew(FastTileMap);
+    renderer->set_name("Renderer");
+    add_child(renderer);
+    
+    renderer->set_tile_source([this](int x, int y){ return get_tile(x, y); });
+    renderer->set_cell_data(cell_data.get());
+    renderer->set_occlusion_enabled(true);
 }
 
 // Property setters/getters
@@ -66,7 +75,9 @@ Ref<FastNoiseLite> WorldGeneration::get_biome_noise() const {
 
 void WorldGeneration::set_world_seed(int seed) {
     world_seed = seed;
-    FastTileMap::set_world_seed(seed);
+    if (renderer) {
+        renderer->set_world_seed(seed);
+    }
     if (biome_noise.is_valid()) {
         biome_noise->set_seed(seed);
     }
@@ -310,98 +321,8 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
 
 // Update world bubble - main loop
 void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
-    if (!tilesheet.is_valid()) {
-        return;
-    }
-    
-    RenderingServer* rs = RenderingServer::get_singleton();
-    RID texture_rid = tilesheet->get_rid();
-    TileDb* tile_db = TileDb::get_singleton();
-    ItemDb* item_db = ItemDb::get_singleton();
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    if (!tile_db || !item_db || !id_reg) return;
-    
-    // First pass: render tiles and build tile map
-    for (auto const& [offsetKey, _] : tile_rids[LAYER_TILE]) {
-        int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
-        int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
-        int cx = ox + playerPos.x;
-        int cy = oy + playerPos.y;
-        uint64_t cellKey = WorldCoords::pack_coords(cx, cy);
-
-        for (int l = 0; l < LAYER_MAX; l++) {
-            const LayerProperties& props = LAYER_PROPS[l];
-            RID tile_rid = tile_rids[l][offsetKey];
-            uint16_t tile_id = 0;
-
-            // Item override logic
-            if (props.has_items) {
-                auto it_item = dropped_items.find(cellKey);
-                if (it_item != dropped_items.end() && !it_item->second.empty()) {
-                    uint16_t item_id_numeric = it_item->second[0].id;
-                    const ItemInfo* info = item_db->get_item_info(item_id_numeric);
-                    if (info) {
-                        Vector2i atlas_pos;
-                        atlas_pos.x = 1 + info->atlas.x * (FastTileMap::get_tile_size() + 1);
-                        atlas_pos.y = 1 + info->atlas.y * (FastTileMap::get_tile_size() + 1);
-
-                        rs->canvas_item_clear(tile_rid);
-                        rs->canvas_item_add_texture_rect_region(
-                            tile_rid,
-                            Rect2(ox * get_cell_size(), oy * get_cell_size(), FastTileMap::get_tile_size(), FastTileMap::get_tile_size()),
-                            texture_rid,
-                            Rect2(atlas_pos.x, atlas_pos.y, FastTileMap::get_tile_size(), FastTileMap::get_tile_size())
-                        );
-                        continue; 
-                    }
-                }
-            }
-            
-            // Standard cache lookup/generation
-            auto it = tile_id_cache[l].find(cellKey);
-            if (it != tile_id_cache[l].end()) {
-                tile_id = it->second;
-            } else if (l == LAYER_TILE) {
-                tile_id = get_tile(cx, cy);
-                tile_id_cache[l][cellKey] = tile_id;
-            }
-
-            if (tile_id != 0) {
-                update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db, (Layer)l);
-            } else {
-                rs->canvas_item_clear(tile_rid);
-            }
-        }
-    }
-
-    std::unordered_set<uint64_t> visible_keys;
-    Occlusion::compute_visible(playerPos, world_bubble_radius, tile_id_cache[LAYER_TILE], visible_keys);
-
-    // Second pass: compute occlusion and apply modulation
-    for (auto const& [offsetKey, _] : tile_rids[LAYER_TILE]) {
-        int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
-        int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
-        int cx = ox + playerPos.x;
-        int cy = oy + playerPos.y;
-        uint64_t cellKey = WorldCoords::pack_coords(cx, cy);
-
-        bool occluded = ignore_occlusion ? false : (visible_keys.find(cellKey) == visible_keys.end());
-        bool seen = seen_cells.count(cellKey) > 0;
-        if (!occluded) {
-            seen_cells.insert(cellKey);
-            seen = true;
-        }
-
-        for (int l = 0; l < LAYER_MAX; l++) {
-            const LayerProperties& props = LAYER_PROPS[l];
-            RID tile_rid = tile_rids[l][offsetKey];
-            
-            if (!occluded) {
-                rs->canvas_item_set_modulate(tile_rid, Color(1, 1, 1, 1));
-            } else {
-                rs->canvas_item_set_modulate(tile_rid, seen ? props.seen_modulation : props.hidden_modulation);
-            }
-        }
+    if (renderer) {
+        renderer->update_visuals(playerPos);
     }
 }
 
@@ -444,81 +365,58 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
 
     apply_auto_tiling(regionPos);
 
+    if (renderer) {
+        renderer->invalidate_region_cache(Rect2i(regionPos.x * WorldCoords::REGION_SIZE, regionPos.y * WorldCoords::REGION_SIZE, WorldCoords::REGION_SIZE, WorldCoords::REGION_SIZE));
+    }
+
     return result;
 }
 
 void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int amount) {
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    if (!id_reg) return;
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (!reg) return;
 
-    uint16_t id = id_reg->get_id(item_id);
     uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
-    
-    // Stack items if they already exist
-    auto& items = dropped_items[key];
-    for (auto& item : items) {
-        if (item.id == id) {
-            item.amount += amount;
-            return;
-        }
-    }
-    
-    items.push_back({id, amount});
+    cell_data->add_item(key, reg->get_id(item_id), amount);
 }
 
 Array WorldGeneration::get_items_at(const Vector2i& pos) const {
     Array list;
     uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
-    auto it = dropped_items.find(key);
-    
-    if (it != dropped_items.end()) {
-        IdRegistry* id_reg = IdRegistry::get_singleton();
-        for (const auto& item : it->second) {
-            Dictionary d;
-            d["id"] = id_reg ? id_reg->get_string(item.id) : String::num_int64(item.id);
-            d["amount"] = item.amount;
-            list.push_back(d);
-        }
+    const std::vector<DroppedItem>* items = cell_data->get_items(key);
+    if (!items) return list;
+
+    IdRegistry* reg = IdRegistry::get_singleton();
+    for (const auto& item : *items) {
+        Dictionary d;
+        d["id"] = reg ? reg->get_string(item.id) : String::num_int64(item.id);
+        d["amount"] = item.amount;
+        list.push_back(d);
     }
     return list;
 }
 
 bool WorldGeneration::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory) {
     if (!p_inventory) return false;
-    
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    if (!id_reg) return false;
-    uint16_t numeric_id = id_reg->get_id(item_id);
+
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (!reg) return false;
+    uint16_t numeric_id = reg->get_id(item_id);
 
     uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
-    auto it = dropped_items.find(key);
-    
-    if (it != dropped_items.end()) {
-        for (auto item_it = it->second.begin(); item_it != it->second.end(); ++item_it) {
-            if (item_it->id == numeric_id) {
-                int to_pickup = MIN(amount, item_it->amount);
-                if (p_inventory->add_item_numeric(numeric_id, to_pickup)) {
-                    item_it->amount -= to_pickup;
-                    if (item_it->amount <= 0) {
-                        it->second.erase(item_it);
-                    }
-                    if (it->second.empty()) {
-                        dropped_items.erase(it);
-                    }
-                    return true;
-                }
-                return false;
-            }
-        }
-    }
-    
-    return false;
+    int available = cell_data->peek_item_amount(key, numeric_id);
+    if (available <= 0) return false;
+
+    int to_pickup = MIN(amount, available);
+    if (!p_inventory->add_item_numeric(numeric_id, to_pickup)) return false;
+
+    cell_data->remove_item(key, numeric_id, to_pickup);
+    return true;
 }
 
 bool WorldGeneration::has_item(const Vector2i& pos) const {
     uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
-    auto it = dropped_items.find(key);
-    return it != dropped_items.end() && !it->second.empty();
+    return cell_data->has_items(key);
 }
 
 Dictionary WorldGeneration::get_save_data() const {
@@ -531,21 +429,14 @@ Dictionary WorldGeneration::get_save_data() const {
     }
     data["region_chunks"] = chunks;
 
-    Dictionary items;
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    for (auto const& [key, list] : dropped_items) {
-        Array a;
-        for (const auto& item : list) {
-            Dictionary d;
-            d["id"] = id_reg ? id_reg->get_string(item.id) : String::num_int64(item.id);
-            d["amount"] = item.amount;
-            a.push_back(d);
-        }
-        items[key] = a;
+    data["dropped_items"] = cell_data->serialize();
+    if (renderer) {
+        data["tile_id_cache"] = renderer->get_tile_id_cache(FastTileMap::LAYER_TILE);
+        data["seen_cells"] = renderer->get_seen_cells();
+    } else {
+        data["tile_id_cache"] = Dictionary();
+        data["seen_cells"] = Array();
     }
-    data["dropped_items"] = items;
-    data["tile_id_cache"] = get_tile_id_cache(LAYER_TILE);
-    data["seen_cells"] = get_seen_cells();
 
     return data;
 }
@@ -567,30 +458,13 @@ void WorldGeneration::load_save_data(const Dictionary &p_data) {
         region_chunks[key] = (uint32_t)((int)chunks[key_var]);
     }
 
-    dropped_items.clear();
-    Dictionary items = p_data.get("dropped_items", Dictionary());
-    Array item_keys = items.keys();
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    for (int i = 0; i < item_keys.size(); i++) {
-        Variant key_var = item_keys[i];
-        uint64_t key;
-        if (key_var.get_type() == Variant::STRING) {
-            key = ((String)key_var).to_int();
-        } else {
-            key = key_var;
-        }
-        Array a = items[key_var];
-        std::vector<DroppedItem> list;
-        for (int j = 0; j < a.size(); j++) {
-            Dictionary d = a[j];
-            uint16_t id = id_reg ? id_reg->get_id(d.get("id", "")) : (uint16_t)d.get("id", 0);
-            list.push_back({id, (int)d.get("amount", 0)});
-        }
-        dropped_items[key] = list;
-    }
+    cell_data->deserialize(p_data.get("dropped_items", Dictionary()));
 
-    set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), LAYER_TILE);
-    set_seen_cells(p_data.get("seen_cells", Array()));
+    if (renderer) {
+        renderer->set_world_seed(world_seed);
+        renderer->set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), FastTileMap::LAYER_TILE);
+        renderer->set_seen_cells(p_data.get("seen_cells", Array()));
+    }
     
     last_chunk_valid = false;
 }

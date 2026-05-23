@@ -10,8 +10,10 @@
 #include <godot_cpp/variant/color.hpp>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 #include "data/tile_db.h"
 #include "occlusion.h"
+#include "cell_data.h"
 
 namespace godot {
 
@@ -19,6 +21,8 @@ class FastTileMap : public Node2D {
     GDCLASS(FastTileMap, Node2D)
 
 public:
+    using TileSource = std::function<uint16_t(int world_x, int world_y)>;
+
     enum Layer {
         LAYER_TILE = 0,
         LAYER_INDICATOR = 1,
@@ -50,12 +54,27 @@ protected:
 
     Ref<Texture2D> tilesheet;
 
+    TileSource tile_source = nullptr;
+    CellData* cell_data_source = nullptr;
+
+    bool occlusion_enabled = false;
+
 public:
     FastTileMap();
     ~FastTileMap();
 
     void set_tilesheet(const Ref<Texture2D>& texture);
     Ref<Texture2D> get_tilesheet() const;
+
+    void set_tile_source(TileSource p_source) { tile_source = p_source; }
+    void set_cell_data(CellData* p_cell_data) { cell_data_source = p_cell_data; }
+    void set_occlusion_enabled(bool p_enabled) { occlusion_enabled = p_enabled; }
+    bool is_occlusion_enabled() const { return occlusion_enabled; }
+
+    void invalidate_tile_cache(int world_x, int world_y, Layer p_layer = LAYER_TILE);
+    void invalidate_region_cache(const Rect2i& p_rect, Layer p_layer = LAYER_TILE);
+    void draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer* rs, RID texture_rid, class ItemDb* item_db, Layer p_layer = LAYER_TILE);
+
 
     void set_spacing(int p_spacing) { spacing = p_spacing; }
     int get_spacing() const { return spacing; }

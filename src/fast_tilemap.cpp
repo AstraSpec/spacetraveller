@@ -1,5 +1,7 @@
 #include "fast_tilemap.h"
 #include "core/id_registry.h"
+#include "data/item_db.h"
+#include "core/world_coords.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/engine.hpp>
@@ -46,6 +48,13 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_world_bubble_size", "size"), &FastTileMap::set_world_bubble_size);
     ClassDB::bind_method(D_METHOD("get_world_bubble_size"), &FastTileMap::get_world_bubble_size);
     ClassDB::bind_method(D_METHOD("get_world_bubble_radius"), &FastTileMap::get_world_bubble_radius);
+
+    ClassDB::bind_method(D_METHOD("set_occlusion_enabled", "enabled"), &FastTileMap::set_occlusion_enabled);
+    ClassDB::bind_method(D_METHOD("is_occlusion_enabled"), &FastTileMap::is_occlusion_enabled);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "occlusion_enabled"), "set_occlusion_enabled", "is_occlusion_enabled");
+
+    ClassDB::bind_method(D_METHOD("invalidate_tile_cache", "world_x", "world_y", "layer"), &FastTileMap::invalidate_tile_cache, DEFVAL(LAYER_TILE));
+    ClassDB::bind_method(D_METHOD("invalidate_region_cache", "rect", "layer"), &FastTileMap::invalidate_region_cache, DEFVAL(LAYER_TILE));
 
     BIND_ENUM_CONSTANT(LAYER_TILE);
     BIND_ENUM_CONSTANT(LAYER_INDICATOR);
@@ -118,9 +127,12 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
     TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
+    ItemDb* item_db = ItemDb::get_singleton();
+    if (!tile_db || !item_db) return;
 
+    // Pass 1 - Draw: iterate bubble offsets per layer.
     for (int l = 0; l < LAYER_MAX; l++) {
+        const LayerProperties& props = LAYER_PROPS[l];
         for (auto& pair : tile_rids[l]) {
             uint64_t offsetKey = pair.first;
             int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
@@ -129,21 +141,114 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
             int cy = oy + playerPos.y;
             uint64_t cellKey = Occlusion::pack_coords(cx, cy);
             
-            uint16_t tile_id = 0;
-            auto it = tile_id_cache[l].find(cellKey);
-            if (it != tile_id_cache[l].end()) {
-                tile_id = it->second;
+            bool item_drawn = false;
+            if (props.has_items && cell_data_source) {
+                const DroppedItem* top = cell_data_source->get_top_item(cellKey);
+                if (top) {
+                    draw_item_at(ox, oy, top->id, rs, texture_rid, item_db, (Layer)l);
+                    item_drawn = true;
+                }
             }
+            
+            if (!item_drawn) {
+                uint16_t tile_id = 0;
+                auto it = tile_id_cache[l].find(cellKey);
+                if (it != tile_id_cache[l].end()) {
+                    tile_id = it->second;
+                } else if (l == LAYER_TILE && tile_source) {
+                    tile_id = tile_source(cx, cy);
+                    if (tile_id != 0) {
+                        tile_id_cache[l][cellKey] = tile_id;
+                    }
+                }
+                
+                if (tile_id != 0) {
+                    update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db, (Layer)l);
+                } else {
+                    rs->canvas_item_clear(pair.second);
+                }
+            }
+        }
+    }
 
-            if (tile_id != 0) {
-                update_tile_at(ox, oy, playerPos, tile_id, rs, texture_rid, tile_db, (Layer)l);
+    // Pass 2 - Occlusion:
+    if (occlusion_enabled) {
+        std::unordered_set<uint64_t> visible_keys;
+        Occlusion::compute_visible(playerPos, world_bubble_radius, tile_id_cache[LAYER_TILE], visible_keys);
+        
+        for (int l = 0; l < LAYER_MAX; l++) {
+            const LayerProperties& props = LAYER_PROPS[l];
+            for (auto& pair : tile_rids[l]) {
+                uint64_t offsetKey = pair.first;
+                int ox = static_cast<int>(static_cast<int32_t>(offsetKey >> 32));
+                int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
+                int cx = ox + playerPos.x;
+                int cy = oy + playerPos.y;
+                uint64_t cellKey = Occlusion::pack_coords(cx, cy);
+                
+                bool occluded = visible_keys.find(cellKey) == visible_keys.end();
+                bool seen = seen_cells.count(cellKey) > 0;
+                if (!occluded) {
+                    seen_cells.insert(cellKey);
+                    seen = true;
+                }
+                
+                if (!occluded) {
+                    rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
+                } else {
+                    rs->canvas_item_set_modulate(pair.second, seen ? props.seen_modulation : props.hidden_modulation);
+                }
+            }
+        }
+    } else {
+        // Force white modulation on all RIDs
+        for (int l = 0; l < LAYER_MAX; l++) {
+            for (auto& pair : tile_rids[l]) {
                 rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
-            } else {
-                rs->canvas_item_clear(pair.second);
             }
         }
     }
 }
+
+void FastTileMap::draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer* rs, RID texture_rid, ItemDb* item_db, Layer p_layer) {
+    uint64_t offsetKey = Occlusion::pack_coords(ox, oy);
+    auto it_rid = tile_rids[p_layer].find(offsetKey);
+    if (it_rid == tile_rids[p_layer].end()) return;
+    
+    RID tile_rid = it_rid->second;
+    const ItemInfo* info = item_db->get_item_info(item_id);
+    if (!info) return;
+
+    Vector2i atlas_pos;
+    atlas_pos.x = 1 + info->atlas.x * (TILE_SIZE + 1);
+    atlas_pos.y = 1 + info->atlas.y * (TILE_SIZE + 1);
+
+    rs->canvas_item_clear(tile_rid);
+    rs->canvas_item_add_texture_rect_region(
+        tile_rid,
+        Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
+        texture_rid,
+        Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
+    );
+}
+
+void FastTileMap::invalidate_tile_cache(int world_x, int world_y, Layer p_layer) {
+    uint64_t key = Occlusion::pack_coords(world_x, world_y);
+    tile_id_cache[p_layer].erase(key);
+}
+
+void FastTileMap::invalidate_region_cache(const Rect2i& p_rect, Layer p_layer) {
+    auto& cache = tile_id_cache[p_layer];
+    for (auto it = cache.begin(); it != cache.end(); ) {
+        Vector2i pos = WorldCoords::unpack_coords(it->first);
+        if (p_rect.has_point(pos)) {
+            it = cache.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 
 void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer) {
     uint64_t offsetKey = Occlusion::pack_coords(ox, oy);
@@ -179,6 +284,7 @@ void FastTileMap::place_tile(int x, int y, const String& tile_id, Layer p_layer)
     }
 }
 
+// Reads tile_id_cache only, won't find tiles outside of world bubble
 String FastTileMap::get_tile_at(int x, int y, Layer p_layer) const {
     uint64_t cellKey = Occlusion::pack_coords(x, y);
     auto it = tile_id_cache[p_layer].find(cellKey);

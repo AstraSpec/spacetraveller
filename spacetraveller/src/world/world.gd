@@ -9,8 +9,9 @@ signal generated(regionChunks)
 var seed_ :int = randi()
 
 func _ready() -> void:
+	setup_renderer()
 	biome_noise = BiomeNoise
-	tilesheet = Tilesheet
+	get_renderer().tilesheet = Tilesheet
 	world_seed = seed_
 	
 	InputManager.inventory_item_dropped.connect(_on_inventory_item_dropped)
@@ -21,5 +22,5 @@ func _on_inventory_item_dropped(ID: String, amount: int) -> void:
 
 func generate_world(playerPos :Vector2i) -> void:
 	var regionChunks = init_region(Vector2i.ZERO)
-	init_world_bubble(playerPos)
+	get_renderer().init_world_bubble(playerPos)
 	generated.emit(regionChunks)

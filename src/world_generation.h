@@ -3,27 +3,22 @@
 
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/fast_noise_lite.hpp>
-#include <godot_cpp/classes/texture2d.hpp>
-#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
-#include <godot_cpp/variant/rid.hpp>
-#include <godot_cpp/variant/color.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 #include <cmath>
-#include <godot_cpp/variant/utility_functions.hpp>
 #include "core/world_coords.h"
-#include "occlusion.h"
 #include "city_generation.h"
 #include "data/tile_db.h"
 #include "data/chunk_db.h"
 #include "data/item_db.h"
 #include "components/inventory.h"
-
+#include "cell_data.h"
 #include "fast_tilemap.h"
 
 namespace godot {
@@ -31,11 +26,6 @@ namespace godot {
 struct BiomeTile {
     uint16_t id;
     int weight;
-};
-
-struct DroppedItem {
-    uint16_t id;
-    int amount;
 };
 
 struct BiomeInfo {
@@ -47,13 +37,14 @@ struct BiomeInfo {
     uint16_t border_tile_id = 0;
 };
 
-class WorldGeneration : public FastTileMap {
-    GDCLASS(WorldGeneration, FastTileMap)
+class WorldGeneration : public Node2D {
+    GDCLASS(WorldGeneration, Node2D)
 
 private:
+    FastTileMap* renderer = nullptr;
     std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [Rot][ID]
-    std::unordered_map<uint64_t, std::vector<DroppedItem>> dropped_items;
-    
+    std::unique_ptr<CellData> cell_data;
+
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
     uint16_t last_chunk_id = 0;
@@ -69,7 +60,6 @@ private:
     // References set from GDScript
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
-    bool ignore_occlusion = false;
     
     // Data-Driven Registry
     uint16_t id_void = 0;
@@ -95,6 +85,9 @@ protected:
 public:
     WorldGeneration();
     ~WorldGeneration();
+
+    void setup_renderer();
+    FastTileMap* get_renderer() const { return renderer; }
     
     static int get_region_size() { return WorldCoords::REGION_SIZE; }
     static int get_chunk_size() { return WorldCoords::CHUNK_SIZE; }
@@ -107,9 +100,6 @@ public:
     void set_world_seed(int seed);
     int get_world_seed() const;
     
-    void set_ignore_occlusion(bool p_ignore) { ignore_occlusion = p_ignore; }
-    bool get_ignore_occlusion() const { return ignore_occlusion; }
-
     void update_world_bubble(const Vector2i& playerPos);
     Dictionary init_region(const Vector2i& regionPos);
     void drop_item(const Vector2i& pos, const String& item_id, int amount);

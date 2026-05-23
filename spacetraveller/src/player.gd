@@ -35,7 +35,7 @@ func _ready():
 	nav_agent.delay = 0.05
 	nav_agent.show_path = true
 	add_child(nav_agent)
-	nav_agent.tilemap = World
+	nav_agent.tilemap = World.get_renderer()
 	nav_agent.step_completed.connect(func(_pos): TimeManager.advance_turn())
 
 	# Register default actions
@@ -44,7 +44,7 @@ func _ready():
 
 func _on_right_click(_global_pos: Vector2):
 	var mouse_local = get_local_mouse_position()
-	var cell_diff = (mouse_local / World.get_cell_size()).floor()
+	var cell_diff = (mouse_local / World.get_renderer().get_cell_size()).floor()
 	var target_cell = Vector2i(cellPos) + Vector2i(cell_diff)
 	nav_agent.navigate_to(target_cell)
 	World.update_world_bubble(cellPos)
