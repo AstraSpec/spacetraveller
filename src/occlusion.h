@@ -1,6 +1,7 @@
 #ifndef SPACETRAVELLER_OCCLUSION_H
 #define SPACETRAVELLER_OCCLUSION_H
 
+#include "core/world_coords.h"
 #include <godot_cpp/variant/vector2i.hpp>
 #include <unordered_map>
 #include <unordered_set>
@@ -13,8 +14,7 @@ class TileDb;
 class Occlusion {
 public:
     static inline uint64_t pack_coords(int x, int y) {
-        return (static_cast<uint64_t>(static_cast<uint32_t>(x)) << 32) |
-                static_cast<uint64_t>(static_cast<uint32_t>(y));
+        return WorldCoords::pack_coords(x, y);
     }
 
     // Compute all visible tiles using Recursive Shadowcasting

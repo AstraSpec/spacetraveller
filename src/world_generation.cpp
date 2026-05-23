@@ -25,14 +25,14 @@ void WorldGeneration::_bind_methods() {
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("pack_coords", "x", "y"), &WorldGeneration::pack_coords);
     ClassDB::bind_static_method("WorldGeneration", D_METHOD("unpack_coords", "key"), &WorldGeneration::unpack_coords);
 
-    BIND_CONSTANT(ROTATION_MASK);
-    BIND_CONSTANT(ORIENTATION_SHIFT);
-    BIND_CONSTANT(ID_MASK);
+    ClassDB::bind_integer_constant(get_class_static(), "", "ROTATION_MASK", WorldCoords::ROTATION_MASK);
+    ClassDB::bind_integer_constant(get_class_static(), "", "ORIENTATION_SHIFT", WorldCoords::ORIENTATION_SHIFT);
+    ClassDB::bind_integer_constant(get_class_static(), "", "ID_MASK", WorldCoords::ID_MASK);
 
-    BIND_CONSTANT(ROT_SOUTH);
-    BIND_CONSTANT(ROT_WEST);
-    BIND_CONSTANT(ROT_NORTH);
-    BIND_CONSTANT(ROT_EAST);
+    ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_SOUTH", WorldCoords::ROT_SOUTH);
+    ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_WEST", WorldCoords::ROT_WEST);
+    ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_NORTH", WorldCoords::ROT_NORTH);
+    ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_EAST", WorldCoords::ROT_EAST);
 
     // Method bindings
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &WorldGeneration::update_world_bubble);
@@ -95,52 +95,52 @@ void WorldGeneration::apply_auto_tiling(const Vector2i& p_region_pos) {
     uint16_t road_tag_id = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
 
     // Use a grid for O(1) lookups during this pass
-    std::vector<uint16_t> grid(REGION_SIZE * REGION_SIZE, 0);
+    std::vector<uint16_t> grid(WorldCoords::REGION_SIZE * WorldCoords::REGION_SIZE, 0);
     std::vector<uint64_t> chunk_keys;
     chunk_keys.reserve(region_chunks.size());
 
     for (auto& pair : region_chunks) {
         chunk_keys.push_back(pair.first);
-        Vector2i pos = unpack_coords(pair.first);
+        Vector2i pos = WorldCoords::unpack_coords(pair.first);
         
         // Only interested in chunks within the current region for the grid
-        int rel_x = pos.x - p_region_pos.x * REGION_SIZE;
-        int rel_y = pos.y - p_region_pos.y * REGION_SIZE;
+        int rel_x = pos.x - p_region_pos.x * WorldCoords::REGION_SIZE;
+        int rel_y = pos.y - p_region_pos.y * WorldCoords::REGION_SIZE;
         
-        if (rel_x >= 0 && rel_x < REGION_SIZE && rel_y >= 0 && rel_y < REGION_SIZE) {
-            grid[rel_y * REGION_SIZE + rel_x] = static_cast<uint16_t>(pair.second & ID_MASK);
+        if (rel_x >= 0 && rel_x < WorldCoords::REGION_SIZE && rel_y >= 0 && rel_y < WorldCoords::REGION_SIZE) {
+            grid[rel_y * WorldCoords::REGION_SIZE + rel_x] = static_cast<uint16_t>(pair.second & WorldCoords::ID_MASK);
         }
     }
 
     for (uint64_t key : chunk_keys) {
         uint32_t packed = region_chunks[key];
-        uint16_t chunk_id = static_cast<uint16_t>(packed & ID_MASK);
+        uint16_t chunk_id = static_cast<uint16_t>(packed & WorldCoords::ID_MASK);
 
         auto it_rule = biome_rules.find(chunk_id);
         if (it_rule == biome_rules.end() || !it_rule->second.auto_tiled) {
             continue;
         }
 
-        Vector2i pos = unpack_coords(key);
-        int rel_x = pos.x - p_region_pos.x * REGION_SIZE;
-        int rel_y = pos.y - p_region_pos.y * REGION_SIZE;
+        Vector2i pos = WorldCoords::unpack_coords(key);
+        int rel_x = pos.x - p_region_pos.x * WorldCoords::REGION_SIZE;
+        int rel_y = pos.y - p_region_pos.y * WorldCoords::REGION_SIZE;
 
         uint32_t mask = 0;
         bool current_is_road = (chunk_db && road_tag_id != 0) ? chunk_db->has_tag(chunk_id, road_tag_id) : false;
 
         auto get_grid_id = [&](int nx, int ny) -> uint16_t {
-            if (nx < 0 || nx >= REGION_SIZE || ny < 0 || ny >= REGION_SIZE) {
+            if (nx < 0 || nx >= WorldCoords::REGION_SIZE || ny < 0 || ny >= WorldCoords::REGION_SIZE) {
                 // Fallback to region_chunks for out-of-bounds
-                int gx = p_region_pos.x * REGION_SIZE + nx;
-                int gy = p_region_pos.y * REGION_SIZE + ny;
-                uint64_t n_key = pack_coords(gx, gy);
+                int gx = p_region_pos.x * WorldCoords::REGION_SIZE + nx;
+                int gy = p_region_pos.y * WorldCoords::REGION_SIZE + ny;
+                uint64_t n_key = WorldCoords::pack_coords(gx, gy);
                 auto n_it = region_chunks.find(n_key);
-                return (n_it != region_chunks.end()) ? static_cast<uint16_t>(n_it->second & ID_MASK) : 0;
+                return (n_it != region_chunks.end()) ? static_cast<uint16_t>(n_it->second & WorldCoords::ID_MASK) : 0;
             }
-            return grid[ny * REGION_SIZE + nx];
+            return grid[ny * WorldCoords::REGION_SIZE + nx];
         };
 
-        auto check_neighbor = [&](int dx, int dy, NeighborBits bit) {
+        auto check_neighbor = [&](int dx, int dy, WorldCoords::NeighborBits bit) {
             uint16_t n_id = get_grid_id(rel_x + dx, rel_y + dy);
             if (n_id != 0) {
                 bool neighbor_connects = false;
@@ -160,12 +160,12 @@ void WorldGeneration::apply_auto_tiling(const Vector2i& p_region_pos) {
             }
         };
 
-        check_neighbor(0, -1, NEIGH_NORTH);
-        check_neighbor(1, 0, NEIGH_EAST);
-        check_neighbor(0, 1, NEIGH_SOUTH);
-        check_neighbor(-1, 0, NEIGH_WEST);
+        check_neighbor(0, -1, WorldCoords::NEIGH_NORTH);
+        check_neighbor(1, 0, WorldCoords::NEIGH_EAST);
+        check_neighbor(0, 1, WorldCoords::NEIGH_SOUTH);
+        check_neighbor(-1, 0, WorldCoords::NEIGH_WEST);
 
-        region_chunks[key] = (packed & ~(NEIGHBOR_MASK << NEIGHBOR_SHIFT)) | (mask << NEIGHBOR_SHIFT);
+        region_chunks[key] = (packed & ~(WorldCoords::NEIGHBOR_MASK << WorldCoords::NEIGHBOR_SHIFT)) | (mask << WorldCoords::NEIGHBOR_SHIFT);
     }
 }
 
@@ -232,9 +232,9 @@ void WorldGeneration::setup_biome_rules() {
 }
 
 uint16_t WorldGeneration::get_tile(int x, int y) {
-    int cx = (x >= 0) ? (x / CHUNK_SIZE) : ((x - (CHUNK_SIZE - 1)) / CHUNK_SIZE);
-    int cy = (y >= 0) ? (y / CHUNK_SIZE) : ((y - (CHUNK_SIZE - 1)) / CHUNK_SIZE);
-    uint64_t chunk_key = Occlusion::pack_coords(cx, cy);
+    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
 
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
         auto it = region_chunks.find(chunk_key);
@@ -244,9 +244,9 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
         }
         
         uint32_t packed = it->second;
-        last_chunk_id = static_cast<uint16_t>(packed & ID_MASK);
-        last_chunk_rotation = static_cast<uint8_t>(packed >> ORIENTATION_SHIFT);
-        last_chunk_neighbors = static_cast<uint8_t>((packed >> NEIGHBOR_SHIFT) & NEIGHBOR_MASK);
+        last_chunk_id = static_cast<uint16_t>(packed & WorldCoords::ID_MASK);
+        last_chunk_rotation = static_cast<uint8_t>(packed >> WorldCoords::ORIENTATION_SHIFT);
+        last_chunk_neighbors = static_cast<uint8_t>((packed >> WorldCoords::NEIGHBOR_SHIFT) & WorldCoords::NEIGHBOR_MASK);
         last_chunk_key = chunk_key;
         
         auto it_rule = biome_rules.find(last_chunk_id);
@@ -259,13 +259,13 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
 
     // 0. Auto-Tiling Path (Fast Border Check)
     if (last_biome_ptr && last_biome_ptr->auto_tiled) {
-        int lx = x % CHUNK_SIZE; if (lx < 0) lx += CHUNK_SIZE;
-        int ly = y % CHUNK_SIZE; if (ly < 0) ly += CHUNK_SIZE;
+        int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
+        int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
 
         bool west = lx < 3;
-        bool east = lx >= CHUNK_SIZE - 3;
+        bool east = lx >= WorldCoords::CHUNK_SIZE - 3;
         bool north = ly < 3;
-        bool south = ly >= CHUNK_SIZE - 3;
+        bool south = ly >= WorldCoords::CHUNK_SIZE - 3;
 
         // Corners (3x3) are always borders for road/alley chunks
         if ((west || east) && (north || south)) {
@@ -273,25 +273,25 @@ uint16_t WorldGeneration::get_tile(int x, int y) {
         }
 
         // Edges are borders if the corresponding cardinal neighbor is missing
-        if ((west && !(last_chunk_neighbors & NEIGH_WEST)) ||
-            (east && !(last_chunk_neighbors & NEIGH_EAST)) ||
-            (north && !(last_chunk_neighbors & NEIGH_NORTH)) ||
-            (south && !(last_chunk_neighbors & NEIGH_SOUTH))) {
+        if ((west && !(last_chunk_neighbors & WorldCoords::NEIGH_WEST)) ||
+            (east && !(last_chunk_neighbors & WorldCoords::NEIGH_EAST)) ||
+            (north && !(last_chunk_neighbors & WorldCoords::NEIGH_NORTH)) ||
+            (south && !(last_chunk_neighbors & WorldCoords::NEIGH_SOUTH))) {
             return last_biome_ptr->border_tile_id;
         }
     }
 
     // 1. Structure Lookup Path (Hot Path)
     if (chunk_id == id_building && s_db) {
-        int lx = x % CHUNK_SIZE; if (lx < 0) lx += CHUNK_SIZE;
-        int ly = y % CHUNK_SIZE; if (ly < 0) ly += CHUNK_SIZE;
+        int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
+        int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
         
         int rx = lx, ry = ly;
-        int max_coord = CHUNK_SIZE - 1;
+        int max_coord = WorldCoords::CHUNK_SIZE - 1;
         switch (last_chunk_rotation) {
-            case ROT_WEST: rx = ly; ry = max_coord - lx; break; // 1
-            case ROT_NORTH: rx = max_coord - lx; ry = max_coord - ly; break; // 2
-            case ROT_EAST: rx = max_coord - ly; ry = lx; break; // 3
+            case WorldCoords::ROT_WEST: rx = ly; ry = max_coord - lx; break; // 1
+            case WorldCoords::ROT_NORTH: rx = max_coord - lx; ry = max_coord - ly; break; // 2
+            case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break; // 3
         }
 
         // Optimized StructureDb call
@@ -327,7 +327,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
-        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
+        uint64_t cellKey = WorldCoords::pack_coords(cx, cy);
 
         for (int l = 0; l < LAYER_MAX; l++) {
             const LayerProperties& props = LAYER_PROPS[l];
@@ -383,7 +383,7 @@ void WorldGeneration::update_world_bubble(const Vector2i& playerPos) {
         int oy = static_cast<int>(static_cast<int32_t>(offsetKey & 0xFFFFFFFF));
         int cx = ox + playerPos.x;
         int cy = oy + playerPos.y;
-        uint64_t cellKey = Occlusion::pack_coords(cx, cy);
+        uint64_t cellKey = WorldCoords::pack_coords(cx, cy);
 
         bool occluded = ignore_occlusion ? false : (visible_keys.find(cellKey) == visible_keys.end());
         bool seen = seen_cells.count(cellKey) > 0;
@@ -412,32 +412,32 @@ Dictionary WorldGeneration::init_region(const Vector2i& regionPos) {
     region_chunks.clear();
     last_chunk_valid = false;
 
-    Canvas cityCanvas(REGION_SIZE);
+    Canvas cityCanvas(WorldCoords::REGION_SIZE);
     CityGeneration::spawn_city(cityCanvas, 127, 128, world_seed);
 
     Dictionary result;
-    for (int y = 0; y < REGION_SIZE; y++) {
-        for (int x = 0; x < REGION_SIZE; x++) {
+    for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
+        for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
             CityPixel pixel = cityCanvas.getPixel(x, y);
             uint16_t chunk_id = pixel.id;
             
             // Fallback to biome
             if (chunk_id == id_void) {
-                int gx = regionPos.x * REGION_SIZE + x;
-                int gy = regionPos.y * REGION_SIZE + y;
+                int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+                int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
                 uint32_t h = get_hash(gx, gy, static_cast<uint32_t>(world_seed));
                 chunk_id = (h % 100 < 50) ? id_forest : id_plains;
             }
 
-            uint8_t rot = pixel.meta & ROTATION_MASK;
+            uint8_t rot = pixel.meta & WorldCoords::ROTATION_MASK;
 
             // Store the chunk type using packed coordinates relative to regionPos
-            int gx = regionPos.x * REGION_SIZE + x;
-            int gy = regionPos.y * REGION_SIZE + y;
-            uint64_t key = Occlusion::pack_coords(gx, gy);
+            int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+            int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+            uint64_t key = WorldCoords::pack_coords(gx, gy);
 
             // Pack rotation (8-bit) and chunk_id (16-bit) into 32-bit map value
-            region_chunks[key] = (static_cast<uint32_t>(rot) << ORIENTATION_SHIFT) | chunk_id;
+            region_chunks[key] = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
             result[key] = id_reg->get_string(chunk_id);
         }
     }
@@ -452,7 +452,7 @@ void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int 
     if (!id_reg) return;
 
     uint16_t id = id_reg->get_id(item_id);
-    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
     
     // Stack items if they already exist
     auto& items = dropped_items[key];
@@ -468,7 +468,7 @@ void WorldGeneration::drop_item(const Vector2i& pos, const String& item_id, int 
 
 Array WorldGeneration::get_items_at(const Vector2i& pos) const {
     Array list;
-    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
     auto it = dropped_items.find(key);
     
     if (it != dropped_items.end()) {
@@ -490,7 +490,7 @@ bool WorldGeneration::pickup_item_specific(const Vector2i& pos, const String& it
     if (!id_reg) return false;
     uint16_t numeric_id = id_reg->get_id(item_id);
 
-    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
     auto it = dropped_items.find(key);
     
     if (it != dropped_items.end()) {
@@ -516,7 +516,7 @@ bool WorldGeneration::pickup_item_specific(const Vector2i& pos, const String& it
 }
 
 bool WorldGeneration::has_item(const Vector2i& pos) const {
-    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
     auto it = dropped_items.find(key);
     return it != dropped_items.end() && !it->second.empty();
 }

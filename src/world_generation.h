@@ -16,6 +16,7 @@
 #include <vector>
 #include <cmath>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include "core/world_coords.h"
 #include "occlusion.h"
 #include "city_generation.h"
 #include "data/tile_db.h"
@@ -49,32 +50,7 @@ struct BiomeInfo {
 class WorldGeneration : public FastTileMap {
     GDCLASS(WorldGeneration, FastTileMap)
 
-public:
-    static constexpr uint32_t ROTATION_MASK = 0x03;
-    static constexpr uint32_t ORIENTATION_SHIFT = 16;
-    static constexpr uint32_t ID_MASK = 0xFFFF;
-    static constexpr uint32_t NEIGHBOR_SHIFT = 20;
-    static constexpr uint32_t NEIGHBOR_MASK = 0x0F;
-
-    enum {
-        ROT_SOUTH = 0,
-        ROT_WEST = 1,
-        ROT_NORTH = 2,
-        ROT_EAST = 3
-    };
-
-    enum NeighborBits {
-        NEIGH_NORTH = 1 << 0,
-        NEIGH_EAST = 1 << 1,
-        NEIGH_SOUTH = 1 << 2,
-        NEIGH_WEST = 1 << 3
-    };
-
 private:
-    // Constants
-    static const int REGION_SIZE = 256;
-    static const int CHUNK_SIZE = 24;
-
     std::unordered_map<uint64_t, uint32_t> region_chunks; // Packed: [Rot][ID]
     std::unordered_map<uint64_t, std::vector<DroppedItem>> dropped_items;
     
@@ -120,16 +96,11 @@ public:
     WorldGeneration();
     ~WorldGeneration();
     
-    static int get_region_size() { return REGION_SIZE; }
-    static int get_chunk_size() { return CHUNK_SIZE; }
+    static int get_region_size() { return WorldCoords::REGION_SIZE; }
+    static int get_chunk_size() { return WorldCoords::CHUNK_SIZE; }
 
-    static uint64_t pack_coords(int x, int y) { return Occlusion::pack_coords(x, y); }
-    static Vector2i unpack_coords(uint64_t key) {
-        return Vector2i(
-            static_cast<int>(static_cast<int32_t>(key >> 32)),
-            static_cast<int>(static_cast<int32_t>(key & 0xFFFFFFFF))
-        );
-    }
+    static uint64_t pack_coords(int x, int y) { return WorldCoords::pack_coords(x, y); }
+    static Vector2i unpack_coords(uint64_t key) { return WorldCoords::unpack_coords(key); }
     
     void set_biome_noise(const Ref<FastNoiseLite>& noise);
     Ref<FastNoiseLite> get_biome_noise() const;

@@ -1,5 +1,5 @@
 #include "city_generation.h"
-#include "world_generation.h"
+#include "core/world_coords.h"
 #include "core/id_registry.h"
 #include <iostream>
 #include <cmath>
@@ -334,17 +334,17 @@ void CityGeneration::generateCity(
                 if (dist > 2.0 && dist < gridSize * 0.49) {
                     if (isNearAnyRoad(x, y, 1)) {
                         // Calculate rotation based on adjacent roads/alleys
-                        uint8_t rotation = WorldGeneration::ROT_SOUTH;
+                        uint8_t rotation = WorldCoords::ROT_SOUTH;
                         auto is_road = [&](int nx, int ny) {
                             if (nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return false;
                             CityPixel p = canvas.getPixel(nx, ny);
                             return p.id == id_road || p.id == id_alley || p.id == id_wall || p.id == id_gate;
                         };
 
-                        if (is_road(x, y + 1)) rotation = WorldGeneration::ROT_SOUTH;
-                        else if (is_road(x, y - 1)) rotation = WorldGeneration::ROT_NORTH;
-                        else if (is_road(x - 1, y)) rotation = WorldGeneration::ROT_WEST;
-                        else if (is_road(x + 1, y)) rotation = WorldGeneration::ROT_EAST;
+                        if (is_road(x, y + 1)) rotation = WorldCoords::ROT_SOUTH;
+                        else if (is_road(x, y - 1)) rotation = WorldCoords::ROT_NORTH;
+                        else if (is_road(x - 1, y)) rotation = WorldCoords::ROT_WEST;
+                        else if (is_road(x + 1, y)) rotation = WorldCoords::ROT_EAST;
 
                         canvas.setPixel(x, y, id_building, rotation);
                     }

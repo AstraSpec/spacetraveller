@@ -1,13 +1,13 @@
 #include "structure_db.h"
 #include "core/id_registry.h"
-#include "../world_generation.h"
+#include "core/world_coords.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
 
 template<> StructureDb* DataBase<StructureInfo, StructureDb>::singleton = nullptr;
-const int StructureDb::CHUNK_SIZE = WorldGeneration::get_chunk_size();
+const int StructureDb::CHUNK_SIZE = WorldCoords::CHUNK_SIZE;
 
 void StructureDb::_bind_methods() {
     ClassDB::bind_static_method("StructureDb", D_METHOD("get_singleton"), &StructureDb::get_singleton);
