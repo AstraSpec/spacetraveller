@@ -7,7 +7,7 @@ extends Control
 @onready var Player :Sprite2D = get_node("/root/Main/Player")
 
 const SOURCE :int = 2
-var REGION_SIZE = WorldGeneration.get_region_size()
+var REGION_SIZE = GameWorld.get_region_size()
 var TILE_SIZE = FastTileMap.get_tile_size()
 
 func _ready():
@@ -30,7 +30,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	# Determine bounds from any key in the dictionary
 	var firstKey = regionChunks.keys()[0]
-	var coords = WorldGeneration.unpack_coords(firstKey)
+	var coords = GameWorld.unpack_coords(firstKey)
 	var coordX = coords.x
 	var coordY = coords.y
 	
@@ -39,7 +39,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 	
 	for y in range(startY, startY + REGION_SIZE):
 		for x in range(startX, startX + REGION_SIZE):
-			var key = WorldGeneration.pack_coords(x, y)
+			var key = GameWorld.pack_coords(x, y)
 			var chunkID = regionChunks.get(key, "")
 			
 			if chunkID == "":

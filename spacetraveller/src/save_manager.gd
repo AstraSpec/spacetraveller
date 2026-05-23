@@ -1,11 +1,11 @@
 extends Node
 
-var WorldGen: WorldGeneration
+var WorldGen: GameWorld
 var Player: Node
 var _Inventory: Inventory
 var loaded_save_data: Dictionary = {}
 
-func register_world(w: WorldGeneration) -> void: WorldGen = w
+func register_world(w: GameWorld) -> void: WorldGen = w
 func register_player(p: Node) -> void: Player = p
 func register_inventory(i: Inventory) -> void: _Inventory = i
 

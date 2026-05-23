@@ -9,7 +9,7 @@
 
 namespace godot {
 
-CityGeneration::CityGeneration(Canvas& p_canvas, uint32_t seed, IdRegistry* p_registry) 
+CityGeneration::CityGeneration(GenGrid& p_canvas, uint32_t seed, IdRegistry* p_registry) 
     : canvas(p_canvas), rng(seed), registry(p_registry) {
     
     id_road = registry->register_string("road");
@@ -375,7 +375,7 @@ namespace {
     constexpr bool USE_SPECIAL = true;
 }
 
-void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) {
+void CityGeneration::spawn_city(GenGrid& p_canvas, int x, int y, int world_seed) {
     IdRegistry* registry = IdRegistry::get_singleton();
     if (!registry) return;
 
@@ -410,9 +410,9 @@ void CityGeneration::spawn_city(Canvas& p_canvas, int x, int y, int world_seed) 
     std::uniform_int_distribution<int> radius_jitter_dist(-RADIUS_JITTER, RADIUS_JITTER);
     std::uniform_int_distribution<int> spokes_jitter_dist(-SPOKE_JITTER, SPOKE_JITTER);
     
-    radius = std::clamp(radius + radius_jitter_dist(city_rng), MIN_CITY_SIZE, MAX_CITY_SIZE);
-    spokes = std::clamp(spokes + spokes_jitter_dist(city_rng), MIN_SPOKES, MAX_SPOKES);
-    rings = std::clamp(rings, MIN_RINGS, MAX_RINGS);
+    radius = CLAMP(radius + radius_jitter_dist(city_rng), MIN_CITY_SIZE, MAX_CITY_SIZE);
+    spokes = CLAMP(spokes + spokes_jitter_dist(city_rng), MIN_SPOKES, MAX_SPOKES);
+    rings = CLAMP(rings, MIN_RINGS, MAX_RINGS);
 
     CityGeneration gen(p_canvas, city_seed, registry);
     gen.generateCity(

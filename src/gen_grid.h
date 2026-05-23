@@ -1,5 +1,5 @@
-#ifndef SPACETRAVELLER_CANVAS_H
-#define SPACETRAVELLER_CANVAS_H
+#ifndef SPACETRAVELLER_GEN_GRID_H
+#define SPACETRAVELLER_GEN_GRID_H
 
 #include <godot_cpp/variant/string.hpp>
 #include <vector>
@@ -28,13 +28,13 @@ struct CityPixel {
     }
 };
 
-class Canvas {
+class GenGrid {
 private:
     int gridSize;
     std::vector<CityPixel> grid;
 
 public:
-    Canvas(int p_gridSize);
+    GenGrid(int p_gridSize);
     
     void clear(uint16_t p_id = 0, uint8_t p_meta = 0);
     void setPixel(int x, int y, uint16_t p_id, uint8_t p_meta = 0);
@@ -49,4 +49,4 @@ public:
 
 }
 
-#endif // SPACETRAVELLER_CANVAS_H
+#endif // SPACETRAVELLER_GEN_GRID_H

@@ -5,7 +5,7 @@ signal moved_chunk(chunkPos :Vector2)
 
 @onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
 @export var Camera :Camera2D
-@export var World : WorldGeneration
+@export var World : GameWorld
 @export var _Inventory: Inventory
 @export var _Anatomy :Anatomy
 @export var _Clothing :Clothing
@@ -15,7 +15,7 @@ var nav_agent: NavAgent
 
 const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 
-var CHUNK_SIZE = WorldGeneration.get_chunk_size()
+var CHUNK_SIZE = GameWorld.get_chunk_size()
 
 var cellPos : Vector2 = Vector2.ZERO
 var chunkPos : Vector2 = Vector2.ZERO

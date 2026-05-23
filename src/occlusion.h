@@ -13,10 +13,6 @@ class TileDb;
 
 class Occlusion {
 public:
-    static inline uint64_t pack_coords(int x, int y) {
-        return WorldCoords::pack_coords(x, y);
-    }
-
     // Compute all visible tiles using Recursive Shadowcasting
     // Output: visible_keys contains pack_coords(x,y) for each visible tile
     static void compute_visible(

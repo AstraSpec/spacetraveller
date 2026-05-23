@@ -11,7 +11,7 @@ func _ready() -> void:
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
 	
-	var CHUNK_SIZE = WorldGeneration.get_chunk_size()
+	var CHUNK_SIZE = GameWorld.get_chunk_size()
 	FastTilemap.set_spacing(CUSTOM_SPACING)
 	FastTilemap.set_world_bubble_size(CHUNK_SIZE)
 	FastTilemap.set_world_seed(randi())

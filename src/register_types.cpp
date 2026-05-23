@@ -1,6 +1,6 @@
 #include "register_types.h"
 
-#include "world_generation.h"
+#include "game_world.h"
 #include "fast_tilemap.h"
 #include "pathfinder.h"
 #include "structure_editor.h"
@@ -24,13 +24,13 @@
 
 using namespace godot;
 
-void initialize_world_generation_module(ModuleInitializationLevel p_level) {
+void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
 
 	GDREGISTER_RUNTIME_CLASS(FastTileMap);
-	GDREGISTER_RUNTIME_CLASS(WorldGeneration);
+	GDREGISTER_RUNTIME_CLASS(GameWorld);
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
 	GDREGISTER_CLASS(Pathfinder);
 	GDREGISTER_RUNTIME_CLASS(Inventory);
@@ -74,7 +74,7 @@ void initialize_world_generation_module(ModuleInitializationLevel p_level) {
 	Engine::get_singleton()->register_singleton("RaceDb", RaceDb::get_singleton());
 }
 
-void uninitialize_world_generation_module(ModuleInitializationLevel p_level) {
+void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
@@ -112,8 +112,8 @@ extern "C" {
 GDExtensionBool GDE_EXPORT library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
 	godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
-	init_obj.register_initializer(initialize_world_generation_module);
-	init_obj.register_terminator(uninitialize_world_generation_module);
+	init_obj.register_initializer(initialize_game_world_module);
+	init_obj.register_terminator(uninitialize_game_world_module);
 	init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 	return init_obj.init();

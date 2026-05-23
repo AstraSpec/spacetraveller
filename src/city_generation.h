@@ -1,7 +1,7 @@
 #ifndef SPACETRAVELLER_CITY_GENERATION_H
 #define SPACETRAVELLER_CITY_GENERATION_H
 
-#include "canvas.h"
+#include "gen_grid.h"
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/core/math.hpp>
@@ -17,7 +17,7 @@ struct CityNode {
 
 class CityGeneration {
 private:
-    Canvas& canvas;
+    GenGrid& canvas;
     std::vector<double> spokeJitters;
     std::vector<double> spawnRands;
     
@@ -51,7 +51,7 @@ private:
     bool isNearAnyRoad(int x, int y, int range);
 
 public:
-    CityGeneration(Canvas& p_canvas, uint32_t seed, class IdRegistry* p_registry);
+    CityGeneration(GenGrid& p_canvas, uint32_t seed, class IdRegistry* p_registry);
     
     void generateCity(
         double centerX, double centerY,
@@ -62,7 +62,7 @@ public:
         bool useRiver, bool useJitter, bool useSpecial
     );
 
-    static void spawn_city(Canvas& p_canvas, int x, int y, int world_seed);
+    static void spawn_city(GenGrid& p_canvas, int x, int y, int world_seed);
 };
 
 }

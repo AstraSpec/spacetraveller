@@ -1,4 +1,4 @@
-extends WorldGeneration
+extends GameWorld
 
 @export var Tilesheet :Texture2D
 @export var Player :Sprite2D

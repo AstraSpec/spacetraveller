@@ -2,9 +2,9 @@ extends RefCounted
 class_name PlayerAction
 
 var player: Sprite2D
-var world: WorldGeneration
+var world: GameWorld
 
-func _init(p_player: Sprite2D, p_world: WorldGeneration):
+func _init(p_player: Sprite2D, p_world: GameWorld):
 	player = p_player
 	world = p_world
 

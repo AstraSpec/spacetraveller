@@ -51,7 +51,7 @@ Array Pathfinder::find_path(FastTileMap* p_tilemap, const Vector2i& p_start, con
         return std::abs(a.x - b.x) + std::abs(a.y - b.y);
     };
 
-    uint64_t start_key = Occlusion::pack_coords(p_start.x, p_start.y);
+    uint64_t start_key = WorldCoords::pack_coords(p_start.x, p_start.y);
     open.push({p_start, 0, heuristic(p_start, p_end)});
     g_scores[start_key] = 0;
 
@@ -69,21 +69,21 @@ Array Pathfinder::find_path(FastTileMap* p_tilemap, const Vector2i& p_start, con
             Vector2i curr = p_end;
             while (curr != p_start) {
                 res.push_front(curr);
-                uint64_t key = Occlusion::pack_coords(curr.x, curr.y);
+                uint64_t key = WorldCoords::pack_coords(curr.x, curr.y);
                 if (parents.find(key) == parents.end()) break;
                 curr = parents[key];
             }
             return res;
         }
 
-        uint64_t current_key = Occlusion::pack_coords(current.pos.x, current.pos.y);
+        uint64_t current_key = WorldCoords::pack_coords(current.pos.x, current.pos.y);
         if (current.g > g_scores[current_key]) continue;
 
         for (const Vector2i& d : dirs) {
             Vector2i next = current.pos + d;
             if (!is_walkable(p_tilemap, next)) continue;
 
-            uint64_t next_key = Occlusion::pack_coords(next.x, next.y);
+            uint64_t next_key = WorldCoords::pack_coords(next.x, next.y);
             int new_g = current.g + 1;
 
             if (g_scores.find(next_key) == g_scores.end() || new_g < g_scores[next_key]) {

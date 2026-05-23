@@ -23,7 +23,7 @@ sources = (
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(
-        "spacetraveller/bin/WorldGeneration.{}.{}.framework/WorldGeneration.{}.{}".format(
+        "spacetraveller/bin/GameWorld.{}.{}.framework/GameWorld.{}.{}".format(
             env["platform"], env["target"], env["platform"], env["target"]
         ),
         source=sources,
@@ -31,17 +31,17 @@ if env["platform"] == "macos":
 elif env["platform"] == "ios":
     if env["ios_simulator"]:
         library = env.StaticLibrary(
-            "spacetraveller/bin/WorldGeneration.{}.{}.simulator.a".format(env["platform"], env["target"]),
+            "spacetraveller/bin/GameWorld.{}.{}.simulator.a".format(env["platform"], env["target"]),
             source=sources,
         )
     else:
         library = env.StaticLibrary(
-            "spacetraveller/bin/WorldGeneration.{}.{}.a".format(env["platform"], env["target"]),
+            "spacetraveller/bin/GameWorld.{}.{}.a".format(env["platform"], env["target"]),
             source=sources,
         )
 else:
     library = env.SharedLibrary(
-        "spacetraveller/bin/WorldGeneration{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
+        "spacetraveller/bin/GameWorld{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,
     )
 

@@ -1,6 +1,6 @@
 extends BaseListTab
 
-@export var world: WorldGeneration
+@export var world: GameWorld
 @export var itemDetailsLabel: Label
 
 var filter_pos: Vector2i = Vector2i(-1, -1)

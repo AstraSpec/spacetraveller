@@ -1,5 +1,5 @@
 #include "structure_editor.h"
-#include "world_generation.h"
+#include "game_world.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
@@ -45,7 +45,7 @@ FastTileMap *StructureEditor::get_tilemap() const {
 Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset) const {
     Dictionary result;
 
-    int size = WorldGeneration::get_chunk_size();
+    int size = GameWorld::get_chunk_size();
     Dictionary cache = tilemap->get_tile_id_cache(FastTileMap::LAYER_TILE);
 
     // RLE Encoding with Numeric Indices
@@ -73,7 +73,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     IdRegistry* id_reg = IdRegistry::get_singleton();
     for (int y = p_offset.y; y < p_offset.y + size; y++) {
         for (int x = p_offset.x; x < p_offset.x + size; x++) {
-            uint64_t key = Occlusion::pack_coords(x, y);
+            uint64_t key = WorldCoords::pack_coords(x, y);
             String tile_id = "void";
             
             auto it_v = cache.get(key, Variant());
@@ -115,7 +115,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
     String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    int size = WorldGeneration::get_chunk_size();
+    int size = GameWorld::get_chunk_size();
     int current_pos = 0;
     int total_expected = size * size;
 
@@ -140,7 +140,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             int x = (current_pos % size) + p_offset.x;
             int y = (current_pos / size) + p_offset.y;
             
-            uint64_t key = Occlusion::pack_coords(x, y);
+            uint64_t key = WorldCoords::pack_coords(x, y);
             new_cache[key] = (int)tile_id;
             
             current_pos++;
@@ -183,7 +183,7 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         }
     }
 
-    uint64_t key = Occlusion::pack_coords(pos.x, pos.y);
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
     if (preview_tile_rids.count(key)) {
         rs->free_rid(preview_tile_rids[key]);
     }
@@ -251,7 +251,7 @@ std::vector<Vector2i> StructureEditor::_get_shape_points(ShapeType p_type, const
     Vector2i max_p(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
 
     auto add_point = [&](int x, int y) {
-        uint64_t key = Occlusion::pack_coords(x, y);
+        uint64_t key = WorldCoords::pack_coords(x, y);
         if (unique_points.find(key) == unique_points.end()) {
             unique_points.insert(key);
             points.push_back(Vector2i(x, y));

@@ -5,7 +5,7 @@
 
 using namespace godot;
 
-void initialize_world_generation_module(ModuleInitializationLevel p_level);
-void uninitialize_world_generation_module(ModuleInitializationLevel p_level);
+void initialize_game_world_module(ModuleInitializationLevel p_level);
+void uninitialize_game_world_module(ModuleInitializationLevel p_level);
 
 #endif // ! SPACETRAVELLER_REGISTER_TYPES_H

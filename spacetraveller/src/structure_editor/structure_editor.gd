@@ -20,9 +20,9 @@ signal open_load
 var FastTilemap :FastTileMap
 var spacing :int = 0
 
-var CHUNK_SIZE = WorldGeneration.get_chunk_size()
+var CHUNK_SIZE = GameWorld.get_chunk_size()
 var BUBBLE_SIZE :int = CHUNK_SIZE
-var REGION_SIZE = WorldGeneration.get_region_size()
+var REGION_SIZE = GameWorld.get_region_size()
 var TILE_SIZE = FastTileMap.get_tile_size()
 
 var tools = {}

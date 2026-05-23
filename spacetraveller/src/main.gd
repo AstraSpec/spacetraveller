@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var WorldGen :WorldGeneration
+@export var WorldGen :GameWorld
 @export var Player :Sprite2D
 @export var Canvas :CanvasLayer
 

@@ -8,7 +8,7 @@ static inline bool is_opaque(
     int x, int y,
     const std::unordered_map<uint64_t, uint16_t>& tile_cache
 ) {
-    auto it = tile_cache.find(Occlusion::pack_coords(x, y));
+    auto it = tile_cache.find(WorldCoords::pack_coords(x, y));
     if (it == tile_cache.end()) {
         return false;
     }
@@ -55,7 +55,7 @@ static void cast_light(
             const int map_y = cy + dx * yx + dy * yy;
 
             if (dx * dx + dy * dy < radius2) {
-                visible_keys.insert(Occlusion::pack_coords(map_x, map_y));
+                visible_keys.insert(WorldCoords::pack_coords(map_x, map_y));
             }
 
             if (blocked) {
@@ -87,12 +87,12 @@ void Occlusion::compute_visible(
 ) {
     visible_keys.clear();
     if (radius <= 0) {
-        visible_keys.insert(Occlusion::pack_coords(playerPos.x, playerPos.y));
+        visible_keys.insert(WorldCoords::pack_coords(playerPos.x, playerPos.y));
         return;
     }
 
     visible_keys.reserve(static_cast<size_t>(radius) * static_cast<size_t>(radius) * 4);
-    visible_keys.insert(Occlusion::pack_coords(playerPos.x, playerPos.y));
+    visible_keys.insert(WorldCoords::pack_coords(playerPos.x, playerPos.y));
 
     static const int multipliers[4][8] = {
         {1, 0, 0, -1, -1, 0, 0, 1},
