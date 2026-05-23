@@ -73,13 +73,13 @@
   },
   {
     "id": "path_end",
-    "atlas": [ 16, 0 ],
+    "atlas": [ 17, 0 ],
     "solid": false,
     "tags": ["INDICATOR"]
   },
   {
     "id": "path_node",
-    "atlas": [ 17, 0 ],
+    "atlas": [ 18, 0 ],
     "solid": false,
     "tags": ["INDICATOR"]
   }
