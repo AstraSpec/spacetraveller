@@ -15,13 +15,11 @@ struct DroppedItem {
 };
 
 class CellData {
-    static CellData* singleton;
     std::unordered_map<uint64_t, std::vector<DroppedItem>> dropped_items;
 
 public:
-    static CellData* get_singleton();
-    CellData();
-    ~CellData();
+    CellData() = default;
+    ~CellData() = default;
 
     // Core state
     void add_item(uint64_t key, uint16_t item_id, int amount);

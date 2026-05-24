@@ -1,5 +1,5 @@
 #include "structure_editor.h"
-#include "game_world.h"
+#include "world/game_world.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"

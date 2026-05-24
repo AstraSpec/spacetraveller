@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/array.hpp>
-#include "fast_tilemap.h"
+#include "world/fast_tilemap.h"
 
 namespace godot {
 

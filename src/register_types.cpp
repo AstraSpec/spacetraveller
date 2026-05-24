@@ -1,7 +1,7 @@
 #include "register_types.h"
 
-#include "game_world.h"
-#include "fast_tilemap.h"
+#include "world/game_world.h"
+#include "world/fast_tilemap.h"
 #include "pathfinder.h"
 #include "structure_editor.h"
 #include "data/tile_db.h"

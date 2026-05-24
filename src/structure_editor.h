@@ -1,7 +1,7 @@
 #ifndef SPACETRAVELLER_STRUCTURE_EDITOR_H
 #define SPACETRAVELLER_STRUCTURE_EDITOR_H
 
-#include "fast_tilemap.h"
+#include "world/fast_tilemap.h"
 
 namespace godot {
 

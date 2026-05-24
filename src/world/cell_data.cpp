@@ -4,13 +4,6 @@
 
 using namespace godot;
 
-CellData* CellData::singleton = nullptr;
-
-CellData::CellData()  { singleton = this; }
-CellData::~CellData() { if (singleton == this) singleton = nullptr; }
-
-CellData* CellData::get_singleton() { return singleton; }
-
 void CellData::add_item(uint64_t key, uint16_t item_id, int amount) {
     auto& stack = dropped_items[key];
     for (auto& item : stack) {
