@@ -91,6 +91,7 @@ func _on_structure_editor_toggled(active: bool):
 	if active:
 		structure_editor_instance = structure_editor_scene.instantiate()
 		add_child(structure_editor_instance)
+		structure_editor_instance.World = WorldGen
 		structure_editor_instance.FastTilemap = WorldGen.get_renderer()
 		WorldGen.get_renderer().set_occlusion_enabled(false)
 		structure_editor_instance.spacing = 1

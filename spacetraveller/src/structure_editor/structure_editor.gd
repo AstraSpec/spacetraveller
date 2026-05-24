@@ -17,6 +17,7 @@ signal open_load
 @export var LoadWindow :Window
 @export var CoordsLabel :Label
 @export var ChunkVisual :Line2D
+var World :GameWorld
 var FastTilemap :FastTileMap
 var spacing :int = 0
 
@@ -45,9 +46,9 @@ var redo_stack : Array = []
 const MAX_UNDOS = 100
 
 func update_editor_visuals():
-	if FastTilemap.has_method("update_world_bubble"):
-		FastTilemap.update_world_bubble(playerOffset)
-	else:
+	if World:
+		World.update_world_bubble(playerOffset)
+	elif FastTilemap:
 		FastTilemap.update_visuals(playerOffset)
 
 func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
@@ -57,7 +58,10 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	playerOffset = offset
 
+	LoadWindow.World = World
 	LoadWindow.FastTilemap = FastTilemap
+	if World:
+		Editor.set_world(World)
 	Editor.set_tilemap(FastTilemap)
 	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()
 	
@@ -176,7 +180,7 @@ func _on_key_input(key: String):
 		active_tool.on_key(key)
 
 func save_undo_state():
-	undo_stack.push_back(FastTilemap.get_tile_id_cache())
+	undo_stack.push_back(World.get_tile_id_cache())
 	if undo_stack.size() > MAX_UNDOS:
 		undo_stack.pop_front()
 	redo_stack.clear()
@@ -184,17 +188,17 @@ func save_undo_state():
 func undo():
 	if undo_stack.is_empty(): return
 	
-	redo_stack.push_back(FastTilemap.get_tile_id_cache())
+	redo_stack.push_back(World.get_tile_id_cache())
 	var state = undo_stack.pop_back()
-	FastTilemap.set_tile_id_cache(state)
+	World.set_tile_id_cache(state)
 	update_editor_visuals()
 
 func redo():
 	if redo_stack.is_empty(): return
 	
-	undo_stack.push_back(FastTilemap.get_tile_id_cache())
+	undo_stack.push_back(World.get_tile_id_cache())
 	var state = redo_stack.pop_back()
-	FastTilemap.set_tile_id_cache(state)
+	World.set_tile_id_cache(state)
 	update_editor_visuals()
 
 func select_entry(id: String, type: String = "tile", is_primary: bool = true):
@@ -223,9 +227,9 @@ func place_at(pos: Vector2i, id: String, type: String = "tile"):
 func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount: int = -1):
 	match type:
 		"item":
-			FastTilemap.drop_item(world_pos, id, amount if amount > 0 else item_amount)
+			World.drop_item(world_pos, id, amount if amount > 0 else item_amount)
 		_:
-			FastTilemap.place_tile(world_pos.x, world_pos.y, id)
+			World.place_tile(world_pos.x, world_pos.y, id)
 
 func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
 	var points = Editor.get_shape_points(shape_type, p1, p2, filled, perfect)
@@ -241,7 +245,7 @@ func _on_clear_button_pressed() -> void:
 	save_undo_state()
 	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
 		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
-			FastTilemap.place_tile(x, y, "void")
+			World.place_tile(x, y, "void")
 	update_editor_visuals()
 
 func get_mouse_tile_pos() -> Vector2i:
@@ -279,7 +283,7 @@ func _on_file_index_pressed(index: int) -> void:
 		save_undo_state()
 		for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
 			for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
-				FastTilemap.place_tile(x, y, "void")
+				World.place_tile(x, y, "void")
 		update_editor_visuals()
 	elif index == 1: open_save.emit()
 	elif index == 2: open_load.emit()

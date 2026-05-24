@@ -4,9 +4,10 @@
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/array.hpp>
-#include "world/fast_tilemap.h"
 
 namespace godot {
+
+class GameWorld;
 
 class Pathfinder : public Object {
     GDCLASS(Pathfinder, Object)
@@ -18,8 +19,8 @@ public:
     Pathfinder();
     ~Pathfinder();
 
-    static Array find_path(FastTileMap* p_tilemap, const Vector2i& p_start, const Vector2i& p_end);
-    static bool is_walkable(FastTileMap* p_tilemap, const Vector2i& p_pos);
+    static Array find_path(GameWorld* p_world, const Vector2i& p_start, const Vector2i& p_end);
+    static bool is_walkable(GameWorld* p_world, const Vector2i& p_pos);
 };
 
 }

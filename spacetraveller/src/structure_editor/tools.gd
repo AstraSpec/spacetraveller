@@ -202,12 +202,12 @@ class EyedropperTool extends Tool:
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var world_pos = Vector2i(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y)
-		if editor.FastTilemap.has_method("has_item") and editor.FastTilemap.has_item(world_pos):
-			var items = editor.FastTilemap.get_items_at(world_pos)
+		if editor.World.has_item(world_pos):
+			var items = editor.World.get_items_at(world_pos)
 			if items.size() > 0:
 				editor.select_entry(items[0].id, "item", btn == "left")
 				return
-		var id = editor.FastTilemap.get_tile_at(world_pos.x, world_pos.y)
+		var id = editor.World.get_tile_at(world_pos.x, world_pos.y)
 		editor.select_entry(id, "tile", btn == "left")
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
@@ -229,9 +229,9 @@ class FillTool extends Tool:
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
 		else:
-			editor.FastTilemap.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, get_effective_option(0))
 			
 		editor.update_editor_visuals()
 	func on_hover(_pos: Vector2i):
@@ -385,11 +385,11 @@ class SelectionTool extends Tool:
 		var tiles = {}
 		for x in range(rect.position.x, rect.end.x):
 			for y in range(rect.position.y, rect.end.y):
-				var tid = editor.FastTilemap.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
+				var tid = editor.World.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
 				if tid != "void":
 					tiles[Vector2i(x, y) - rect.position] = tid
 					if clear_map:
-						editor.FastTilemap.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
+						editor.World.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
 		return tiles
 
 	func _preview_tiles():
@@ -431,7 +431,7 @@ class SelectionTool extends Tool:
 		for rel_p in captured_tiles.keys():
 			var p = selection_rect.position + rel_p
 			if editor.is_inside_bubble(p):
-				editor.FastTilemap.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, captured_tiles[rel_p])
+				editor.World.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, captured_tiles[rel_p])
 		
 		editor.update_editor_visuals()
 		captured_tiles.clear()

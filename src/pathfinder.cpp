@@ -1,4 +1,5 @@
 #include "pathfinder.h"
+#include "world/game_world.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <queue>
 #include <unordered_map>
@@ -20,16 +21,16 @@ struct AStarNode {
 };
 
 void Pathfinder::_bind_methods() {
-    ClassDB::bind_static_method("Pathfinder", D_METHOD("find_path", "tilemap", "start", "end"), &Pathfinder::find_path);
-    ClassDB::bind_static_method("Pathfinder", D_METHOD("is_walkable", "tilemap", "pos"), &Pathfinder::is_walkable);
+    ClassDB::bind_static_method("Pathfinder", D_METHOD("find_path", "world", "start", "end"), &Pathfinder::find_path);
+    ClassDB::bind_static_method("Pathfinder", D_METHOD("is_walkable", "world", "pos"), &Pathfinder::is_walkable);
 }
 
 Pathfinder::Pathfinder() {}
 Pathfinder::~Pathfinder() {}
 
-bool Pathfinder::is_walkable(FastTileMap* p_tilemap, const Vector2i& p_pos) {
-    if (!p_tilemap) return false;
-    String tid = p_tilemap->get_tile_at(p_pos.x, p_pos.y);
+bool Pathfinder::is_walkable(GameWorld* p_world, const Vector2i& p_pos) {
+    if (!p_world) return false;
+    String tid = p_world->get_tile_at(p_pos.x, p_pos.y);
     if (tid == "void") return true; // Assuming void is walkable
 
     TileDb* tile_db = TileDb::get_singleton();
@@ -38,10 +39,10 @@ bool Pathfinder::is_walkable(FastTileMap* p_tilemap, const Vector2i& p_pos) {
     return !tile_db->is_solid(tid);
 }
 
-Array Pathfinder::find_path(FastTileMap* p_tilemap, const Vector2i& p_start, const Vector2i& p_end) {
+Array Pathfinder::find_path(GameWorld* p_world, const Vector2i& p_start, const Vector2i& p_end) {
     Array res;
-    if (!p_tilemap || p_start == p_end) return res;
-    if (!is_walkable(p_tilemap, p_end)) return res;
+    if (!p_world || p_start == p_end) return res;
+    if (!is_walkable(p_world, p_end)) return res;
 
     std::priority_queue<AStarNode, std::vector<AStarNode>, std::greater<AStarNode>> open;
     std::unordered_map<uint64_t, int> g_scores;
@@ -81,7 +82,7 @@ Array Pathfinder::find_path(FastTileMap* p_tilemap, const Vector2i& p_start, con
 
         for (const Vector2i& d : dirs) {
             Vector2i next = current.pos + d;
-            if (!is_walkable(p_tilemap, next)) continue;
+            if (!is_walkable(p_world, next)) continue;
 
             uint64_t next_key = WorldCoords::pack_coords(next.x, next.y);
             int new_g = current.g + 1;

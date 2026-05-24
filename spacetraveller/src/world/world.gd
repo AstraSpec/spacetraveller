@@ -22,5 +22,5 @@ func _on_inventory_item_dropped(ID: String, amount: int) -> void:
 
 func generate_world(playerPos :Vector2i) -> void:
 	var regionChunks = init_region(Vector2i.ZERO)
-	get_renderer().init_world_bubble(playerPos)
+	init_world_bubble(playerPos)
 	generated.emit(regionChunks)

@@ -10,6 +10,8 @@
 using namespace godot;
 
 void StructureEditor::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_world", "world"), &StructureEditor::set_world);
+    ClassDB::bind_method(D_METHOD("get_world"), &StructureEditor::get_world);
     ClassDB::bind_method(D_METHOD("set_tilemap", "tilemap"), &StructureEditor::set_tilemap);
     ClassDB::bind_method(D_METHOD("get_tilemap"), &StructureEditor::get_tilemap);
 
@@ -34,6 +36,15 @@ StructureEditor::~StructureEditor() {
     clear_preview_tiles();
 }
 
+void StructureEditor::set_world(GameWorld *p_world) {
+    world = p_world;
+    tilemap = p_world ? p_world->get_renderer() : nullptr;
+}
+
+GameWorld *StructureEditor::get_world() const {
+    return world;
+}
+
 void StructureEditor::set_tilemap(FastTileMap *p_tilemap) {
     tilemap = p_tilemap;
 }
@@ -46,7 +57,8 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     Dictionary result;
 
     int size = GameWorld::get_chunk_size();
-    Dictionary cache = tilemap->get_tile_id_cache(FastTileMap::LAYER_TILE);
+    if (!world) return result;
+    Dictionary cache = world->get_tile_id_cache(GameWorld::LAYER_TILE);
 
     // RLE Encoding with Numeric Indices
     Array palette;
@@ -102,6 +114,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
 }
 
 void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset) {
+    if (!world) return;
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
 
@@ -146,7 +159,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             current_pos++;
         }
     }
-    tilemap->merge_tile_id_cache(new_cache, FastTileMap::LAYER_TILE);
+    world->merge_tile_id_cache(new_cache, GameWorld::LAYER_TILE);
 }
 
 void StructureEditor::clear_preview_tiles() {

@@ -35,7 +35,7 @@ func _ready():
 	nav_agent.delay = 0.05
 	nav_agent.show_path = true
 	add_child(nav_agent)
-	nav_agent.tilemap = World.get_renderer()
+	nav_agent.world = World
 	nav_agent.step_completed.connect(func(_pos): TimeManager.advance_turn())
 
 	# Register default actions

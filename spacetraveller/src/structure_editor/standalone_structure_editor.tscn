@@ -6,10 +6,10 @@
 [ext_resource type="PackedScene" uid="uid://c7bpkfyb6qvuq" path="res://src/structure_editor/structure_editor.tscn" id="3_tx6rs"]
 [ext_resource type="Texture2D" uid="uid://co3cd22r88h1k" path="res://gfx/urizen.png" id="4_ulq57"]
 
-[node name="StandaloneStructureEditor" type="Node2D" node_paths=PackedStringArray("_StructureEditor", "FastTilemap", "BG", "Camera")]
+[node name="StandaloneStructureEditor" type="Node2D" node_paths=PackedStringArray("_StructureEditor", "World", "BG", "Camera")]
 script = ExtResource("1_ijg4f")
 _StructureEditor = NodePath("StructureEditor")
-FastTilemap = NodePath("TileMap")
+World = NodePath("World")
 BG = NodePath("BG")
 Camera = NodePath("Camera")
 
@@ -23,7 +23,6 @@ stretch_mode = 1
 [node name="Camera" type="Camera2D" parent="."]
 script = ExtResource("2_tx6rs")
 
-[node name="TileMap" type="FastTileMap" parent="."]
-tilesheet = ExtResource("4_ulq57")
+[node name="World" type="GameWorld" parent="."]
 
 [node name="StructureEditor" parent="." instance=ExtResource("3_tx6rs")]

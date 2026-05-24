@@ -5,6 +5,7 @@ extends Window
 @export var LoadContainer :ButtonListContainer
 @export var LoadButton :Button
 @export var DeleteButton :Button
+var World :GameWorld
 var FastTilemap :FastTileMap
 
 var list_actions: ListActionsUI
@@ -62,9 +63,9 @@ func _on_load_pressed() -> void:
 		
 	structureEditor.save_undo_state()
 	Editor.import_from_rle(blueprint, palette, structureEditor.selectedChunkPos)
-	if FastTilemap.has_method("update_world_bubble"):
-		FastTilemap.update_world_bubble(structureEditor.playerOffset)
-	else:
+	if World:
+		World.update_world_bubble(structureEditor.playerOffset)
+	elif FastTilemap:
 		FastTilemap.update_visuals(structureEditor.playerOffset)
 	visible = false
 	InputManager.pop_mode()
