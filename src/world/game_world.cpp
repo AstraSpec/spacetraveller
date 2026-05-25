@@ -1,4 +1,6 @@
 #include "game_world.h"
+#include "path/path_request.h"
+#include "path/path_result.h"
 #include "data/structure_db.h"
 #include "core/id_registry.h"
 
@@ -56,12 +58,17 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "inventory"), &GameWorld::pickup_item_specific);
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &GameWorld::has_item);
 
+    ClassDB::bind_method(D_METHOD("is_cell_seen", "pos"), &GameWorld::is_cell_seen);
+    ClassDB::bind_method(D_METHOD("request_player_path", "start", "goal"), &GameWorld::request_player_path);
+    ClassDB::bind_method(D_METHOD("find_path", "start", "goal"), &GameWorld::find_path);
+
     ClassDB::bind_method(D_METHOD("get_save_data"), &GameWorld::get_save_data);
     ClassDB::bind_method(D_METHOD("load_save_data", "data"), &GameWorld::load_save_data);
 }
 
 GameWorld::GameWorld() {
     generator = std::make_unique<WorldGenerator>();
+    pathfinder = std::make_unique<AStarGridPathfinder>();
 }
 
 GameWorld::~GameWorld() = default;
@@ -211,6 +218,39 @@ bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id,
 
 bool GameWorld::has_item(const Vector2i& pos) const {
     return bubble.has_items(pos);
+}
+
+bool GameWorld::is_cell_seen(const Vector2i& pos) const {
+    return bubble.is_cell_seen(pos.x, pos.y);
+}
+
+Array GameWorld::request_player_path(const Vector2i& start, const Vector2i& goal) {
+    if (!bubble.is_cell_seen(goal.x, goal.y)) {
+        return Array();
+    }
+    return find_path_with_flags(start, goal, PATH_FLAG_ALLOW_DIAGONAL);
+}
+
+Array GameWorld::find_path(const Vector2i& start, const Vector2i& goal) {
+    return find_path_with_flags(start, goal, 0);
+}
+
+Array GameWorld::find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags) {
+    if (!pathfinder) {
+        return Array();
+    }
+
+    std::vector<Vector2i> blocking;
+    blocking.push_back(start);
+
+    TraversalSnapshot traversal = bubble.build_traversal_snapshot(start, goal, blocking);
+    PathRequest request;
+    request.start = start;
+    request.goal = goal;
+    request.flags = flags;
+
+    PathResult result = pathfinder->find_path(request, traversal);
+    return path_result_to_array(result);
 }
 
 Dictionary GameWorld::get_save_data() const {

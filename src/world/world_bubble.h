@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include "cell_data.h"
+#include "traversal_snapshot.h"
 
 namespace godot {
 
@@ -82,6 +83,14 @@ public:
 
     Array get_seen_cells() const;
     void set_seen_cells(const Array& p_seen);
+    bool is_cell_seen(int x, int y) const;
+
+    uint16_t query_tile_id(int x, int y);
+    TraversalSnapshot build_traversal_snapshot(
+        const Vector2i& start,
+        const Vector2i& goal,
+        const std::vector<Vector2i>& blocking_positions = std::vector<Vector2i>()
+    );
 
     const std::unordered_map<uint64_t, uint16_t>& get_tile_cache(Layer p_layer = LAYER_TILE) const {
         return tile_id_cache[p_layer];

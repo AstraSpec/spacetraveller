@@ -16,6 +16,7 @@
 #include "fast_tilemap.h"
 #include "world_bubble.h"
 #include "world_generator.h"
+#include "path/a_star_grid.h"
 
 namespace godot {
 
@@ -33,6 +34,7 @@ private:
     FastTileMap* renderer = nullptr;
     WorldBubble bubble;
     std::unique_ptr<WorldGenerator> generator;
+    std::unique_ptr<AStarGridPathfinder> pathfinder;
 
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
@@ -82,7 +84,13 @@ public:
     bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory);
     bool has_item(const Vector2i& pos) const;
 
+    bool is_cell_seen(const Vector2i& pos) const;
+    Array request_player_path(const Vector2i& start, const Vector2i& goal);
+    Array find_path(const Vector2i& start, const Vector2i& goal);
+
     Dictionary get_save_data() const;
+
+    Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
     void load_save_data(const Dictionary &p_data);
 };
 

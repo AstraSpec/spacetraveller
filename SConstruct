@@ -17,6 +17,7 @@ env.Append(CPPPATH=["src/"])
 sources = (
     Glob("src/*.cpp")
     + Glob("src/world/*.cpp")
+    + Glob("src/path/*.cpp")
     + Glob("src/data/*.cpp")
     + Glob("src/components/*.cpp")
     + Glob("src/core/*.cpp")

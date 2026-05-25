@@ -248,6 +248,24 @@ void WorldBubble::set_seen_cells(const Array& p_seen) {
     }
 }
 
+bool WorldBubble::is_cell_seen(int x, int y) const {
+    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    return seen_cells.count(cell_key) > 0;
+}
+
+uint16_t WorldBubble::query_tile_id(int x, int y) {
+    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    return resolve_tile_id(LAYER_TILE, cell_key, x, y);
+}
+
+TraversalSnapshot WorldBubble::build_traversal_snapshot(
+    const Vector2i& start,
+    const Vector2i& goal,
+    const std::vector<Vector2i>& blocking_positions
+) {
+    return TraversalSnapshot(this, start, goal, blocking_positions);
+}
+
 WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
     const Vector2i& player_pos,
     const std::vector<uint64_t>& offset_keys,
