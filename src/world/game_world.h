@@ -12,11 +12,18 @@
 #include <memory>
 #include "core/world_coords.h"
 #include "data/item_db.h"
+#include "data/race_db.h"
 #include "components/inventory.h"
+#include "entities/entity_pool.h"
 #include "fast_tilemap.h"
 #include "world_bubble.h"
 #include "world_generator.h"
 #include "path/a_star_grid.h"
+#include "turn_scheduler.h"
+#include "components/locomotion.h"
+#include "components/perception.h"
+#include "components/action_resolver.h"
+#include "components/ai_controller.h"
 
 namespace godot {
 
@@ -33,6 +40,7 @@ public:
 private:
     FastTileMap* renderer = nullptr;
     WorldBubble bubble;
+    EntityPool entity_pool;
     std::unique_ptr<WorldGenerator> generator;
     std::unique_ptr<AStarGridPathfinder> pathfinder;
 
@@ -50,6 +58,11 @@ public:
     FastTileMap* get_renderer() const { return renderer; }
     WorldBubble* get_bubble() { return &bubble; }
     const WorldBubble* get_bubble() const { return &bubble; }
+
+    std::unordered_map<uint32_t, LocomotionData> locomotion_data;
+    std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
+    std::unordered_map<uint32_t, AIData> ai_data;
+    TurnScheduler turn_scheduler;
 
     static int get_region_size() { return WorldCoords::REGION_SIZE; }
     static int get_chunk_size() { return WorldCoords::CHUNK_SIZE; }
@@ -87,6 +100,13 @@ public:
     bool is_cell_seen(const Vector2i& pos) const;
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
     Array find_path(const Vector2i& start, const Vector2i& goal);
+
+    uint32_t spawn_entity(int x, int y, const String& race_id, const String& ai_tier = "raycast");
+    void despawn_entity(uint32_t entity_id);
+    EntityPool* get_entity_pool() { return &entity_pool; }
+    const EntityPool* get_entity_pool() const { return &entity_pool; }
+
+    void process_npcs(int current_turn, int player_x, int player_y);
 
     Dictionary get_save_data() const;
 

@@ -14,8 +14,11 @@
 #include <vector>
 #include "cell_data.h"
 #include "traversal_snapshot.h"
+#include "entities/entity.h"
 
 namespace godot {
+
+class EntityPool;
 
 class WorldBubble {
 public:
@@ -27,12 +30,19 @@ public:
         LAYER_MAX
     };
 
+    struct CellEntity {
+        uint32_t entity_id;
+    };
+
     struct CellVisual {
         bool draw_item = false;
         uint16_t item_id = 0;
         uint16_t tile_id = 0;
         bool occluded = false;
         bool seen = true;
+        uint16_t entity_sprite_id = 0;
+        uint16_t entity_atlas_x = 0;
+        uint16_t entity_atlas_y = 0;
     };
 
     struct BubbleSnapshot {
@@ -44,6 +54,9 @@ private:
     std::unordered_map<uint64_t, uint16_t> tile_id_cache[LAYER_MAX];
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
+    std::unordered_map<uint64_t, CellEntity> entity_positions;
+
+    EntityPool* entity_pool_source = nullptr;
 
     int world_bubble_radius = 32;
     TileSource tile_source = nullptr;
@@ -84,6 +97,15 @@ public:
     Array get_seen_cells() const;
     void set_seen_cells(const Array& p_seen);
     bool is_cell_seen(int x, int y) const;
+
+    void set_entity_pool(EntityPool* pool) { entity_pool_source = pool; }
+    void set_entity(int x, int y, uint32_t entity_id);
+    void remove_entity(int x, int y);
+    void update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id);
+    void clear_entities();
+    const CellEntity* get_entity_at(int x, int y) const;
+    Dictionary serialize_entity_positions() const;
+    void deserialize_entity_positions(const Dictionary& data);
 
     uint16_t query_tile_id(int x, int y);
     TraversalSnapshot build_traversal_snapshot(

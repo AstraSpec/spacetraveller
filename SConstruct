@@ -21,6 +21,7 @@ sources = (
     + Glob("src/data/*.cpp")
     + Glob("src/components/*.cpp")
     + Glob("src/core/*.cpp")
+    + Glob("src/entities/*.cpp")
 )
 
 if env["platform"] == "macos":

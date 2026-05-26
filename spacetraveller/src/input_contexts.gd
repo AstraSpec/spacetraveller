@@ -86,7 +86,9 @@ class ExplorationContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
 	func handle_input(event: InputEvent) -> bool:
-		if event.is_action_pressed("action_smash"):
+		if event.is_action_pressed("end_turn"):
+			manager.directional_input.emit(Vector2.ZERO)
+		elif event.is_action_pressed("action_smash"):
 			manager.action_smash_requested.emit()
 			return true
 		elif event.is_action_pressed("action_pickup"):

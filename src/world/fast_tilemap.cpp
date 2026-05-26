@@ -138,6 +138,20 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
                 rs->canvas_item_clear(pair.second);
             }
 
+            if (l == LAYER_TILE && visual.entity_sprite_id != 0) {
+                rs->canvas_item_add_texture_rect_region(
+                    pair.second,
+                    Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
+                    texture_rid,
+                    Rect2(
+                        1 + visual.entity_atlas_x * (TILE_SIZE + 1),
+                        1 + visual.entity_atlas_y * (TILE_SIZE + 1),
+                        TILE_SIZE,
+                        TILE_SIZE
+                    )
+                );
+            }
+
             if (occlusion_enabled) {
                 if (!visual.occluded) {
                     rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));

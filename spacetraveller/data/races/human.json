@@ -1,6 +1,8 @@
 {
   "id": "human",
   "name": "Human",
+  "atlas": [104, 17],
+  "perception_tier": "raycast",
   "parts": [
     { "id": "torso", "parent": "", "count": 1 },
     { "id": "head", "parent": "torso", "count": 1 },

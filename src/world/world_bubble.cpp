@@ -1,4 +1,5 @@
 #include "world_bubble.h"
+#include "entities/entity_pool.h"
 #include "core/id_registry.h"
 #include "core/world_coords.h"
 #include "occlusion.h"
@@ -201,6 +202,56 @@ void WorldBubble::clear_all_caches() {
     }
 }
 
+void WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
+    uint64_t key = WorldCoords::pack_coords(x, y);
+    entity_positions[key] = {entity_id};
+}
+
+void WorldBubble::remove_entity(int x, int y) {
+    uint64_t key = WorldCoords::pack_coords(x, y);
+    entity_positions.erase(key);
+}
+
+void WorldBubble::update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id) {
+    uint64_t old_key = WorldCoords::pack_coords(old_x, old_y);
+    auto it = entity_positions.find(old_key);
+    if (it != entity_positions.end() && it->second.entity_id == entity_id) {
+        entity_positions.erase(it);
+    }
+    uint64_t new_key = WorldCoords::pack_coords(new_x, new_y);
+    entity_positions[new_key] = {entity_id};
+}
+
+void WorldBubble::clear_entities() {
+    entity_positions.clear();
+}
+
+const WorldBubble::CellEntity* WorldBubble::get_entity_at(int x, int y) const {
+    uint64_t key = WorldCoords::pack_coords(x, y);
+    auto it = entity_positions.find(key);
+    return (it != entity_positions.end()) ? &it->second : nullptr;
+}
+
+Dictionary WorldBubble::serialize_entity_positions() const {
+    Dictionary data;
+    for (const auto& [key, ce] : entity_positions) {
+        data[static_cast<double>(key)] = static_cast<int64_t>(ce.entity_id);
+    }
+    return data;
+}
+
+void WorldBubble::deserialize_entity_positions(const Dictionary& data) {
+    entity_positions.clear();
+    Array keys = data.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Variant key_var = keys[i];
+        uint64_t key = (key_var.get_type() == Variant::STRING) ? ((String)key_var).to_int() : static_cast<uint64_t>(static_cast<int64_t>(key_var));
+        CellEntity ce;
+        ce.entity_id = static_cast<uint32_t>(static_cast<int64_t>(data[key_var]));
+        entity_positions[key] = ce;
+    }
+}
+
 Dictionary WorldBubble::get_tile_id_cache(Layer p_layer) const {
     Dictionary d;
     for (auto const& [key, val] : tile_id_cache[p_layer]) {
@@ -313,12 +364,38 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 if (top) {
                     visual.draw_item = true;
                     visual.item_id = top->id;
+
+                    auto ent_it = entity_positions.find(cell_key);
+                    if (ent_it != entity_positions.end()) {
+                        visual.entity_sprite_id = 1;
+                        if (entity_pool_source) {
+                            const Entity* entity = entity_pool_source->get_entity(ent_it->second.entity_id);
+                            if (entity) {
+                                visual.entity_atlas_x = entity->atlas_x;
+                                visual.entity_atlas_y = entity->atlas_y;
+                            }
+                        }
+                    }
+
                     snapshot.cells[l][offset_key] = visual;
                     continue;
                 }
             }
 
             visual.tile_id = resolve_tile_id(l, cell_key, cx, cy);
+
+            auto ent_it = entity_positions.find(cell_key);
+            if (ent_it != entity_positions.end()) {
+                visual.entity_sprite_id = 1;
+                if (entity_pool_source) {
+                    const Entity* entity = entity_pool_source->get_entity(ent_it->second.entity_id);
+                    if (entity) {
+                        visual.entity_atlas_x = entity->atlas_x;
+                        visual.entity_atlas_y = entity->atlas_y;
+                    }
+                }
+            }
+
             snapshot.cells[l][offset_key] = visual;
         }
     }

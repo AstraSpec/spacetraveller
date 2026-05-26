@@ -3,6 +3,7 @@
 #include "path/path_result.h"
 #include "data/structure_db.h"
 #include "core/id_registry.h"
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -64,11 +65,16 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("get_save_data"), &GameWorld::get_save_data);
     ClassDB::bind_method(D_METHOD("load_save_data", "data"), &GameWorld::load_save_data);
+
+    ClassDB::bind_method(D_METHOD("spawn_entity", "x", "y", "race_id", "ai_tier"), &GameWorld::spawn_entity, DEFVAL("raycast"));
+    ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
+    ClassDB::bind_method(D_METHOD("process_npcs", "current_turn", "player_x", "player_y"), &GameWorld::process_npcs);
 }
 
 GameWorld::GameWorld() {
     generator = std::make_unique<WorldGenerator>();
     pathfinder = std::make_unique<AStarGridPathfinder>();
+    bubble.set_entity_pool(&entity_pool);
 }
 
 GameWorld::~GameWorld() = default;
@@ -253,6 +259,153 @@ Array GameWorld::find_path_with_flags(const Vector2i& start, const Vector2i& goa
     return path_result_to_array(result);
 }
 
+uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id, const String& ai_tier) {
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (!race_db) return EntityPool::INVALID_ID;
+
+    const RaceInfo* race = race_db->get_race_info(race_id);
+    if (!race) return EntityPool::INVALID_ID;
+
+    uint32_t entity_id = entity_pool.create_entity(x, y, race->atlas.x, race->atlas.y);
+    bubble.set_entity(x, y, entity_id);
+
+    LocomotionData loco;
+    Locomotion::init(loco, loco.speed);
+    locomotion_data[entity_id] = loco;
+
+    PerceptionMemory mem;
+    perception_memory[entity_id] = mem;
+
+    AIData ai;
+    ai.wander_center = Vector2i(x, y);
+    if (ai_tier == "none") ai.perception_tier = PerceptionTier::NONE;
+    else if (ai_tier == "full") ai.perception_tier = PerceptionTier::FULL_OCCLUSION;
+    else ai.perception_tier = PerceptionTier::RAYCAST;
+    ai_data[entity_id] = ai;
+
+    turn_scheduler.push(entity_id, 0.0f);
+    Entity* e = entity_pool.get_entity(entity_id);
+    if (e) e->next_turn_time = 0.0f;
+
+    return entity_id;
+}
+
+void GameWorld::despawn_entity(uint32_t entity_id) {
+    const Entity* e = entity_pool.get_entity(entity_id);
+    if (e) {
+        bubble.remove_entity(e->x, e->y);
+    }
+    entity_pool.destroy_entity(entity_id);
+
+    turn_scheduler.remove(entity_id);
+    locomotion_data.erase(entity_id);
+    perception_memory.erase(entity_id);
+    ai_data.erase(entity_id);
+}
+
+void GameWorld::process_npcs(int current_turn, int player_x, int player_y) {
+    float turn_f = static_cast<float>(current_turn);
+    Vector2i player_pos(player_x, player_y);
+
+    //UtilityFunctions::print("=== NPC Turn ", current_turn, " (player at ", player_x, ",", player_y, ") ===");
+
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    std::vector<Vector2i> blocking_positions;
+    blocking_positions.reserve(entity_pool.living_count());
+    for (const auto& entity : entity_pool.get_all()) {
+        blocking_positions.push_back({entity.x, entity.y});
+    }
+
+    while (turn_scheduler.peek_time() <= turn_f) {
+        uint32_t entity_id = turn_scheduler.pop();
+        if (entity_id == 0) continue;
+
+        Entity* entity = entity_pool.get_entity(entity_id);
+        if (!entity) continue;
+
+        float base_time = entity->next_turn_time;
+        if (base_time + 1.0f < turn_f) {
+            base_time = turn_f;
+        }
+
+        auto loco_it = locomotion_data.find(entity_id);
+        if (loco_it == locomotion_data.end()) continue;
+        auto& loco = loco_it->second;
+
+        auto& mem = perception_memory[entity_id];
+        auto& ai = ai_data[entity_id];
+
+        switch (ai.perception_tier) {
+            case PerceptionTier::FULL_OCCLUSION:
+                Perception::tick_full(mem, *entity, bubble, player_pos);
+                break;
+            case PerceptionTier::RAYCAST:
+                Perception::tick_raycast(mem, *entity, player_pos, bubble, *tile_db);
+                break;
+            default:
+                break;
+        }
+
+        auto find_path = [&](const Vector2i& from, const Vector2i& to) -> PathResult {
+            std::vector<Vector2i> entity_blocking;
+            for (const auto& bp : blocking_positions) {
+                if (bp != from) entity_blocking.push_back(bp);
+            }
+            TraversalSnapshot traversal = bubble.build_traversal_snapshot(from, to, entity_blocking);
+            PathRequest request;
+            request.start = from;
+            request.goal = to;
+            request.flags = PATH_FLAG_ALLOW_DIAGONAL;
+            return pathfinder->find_path(request, traversal);
+        };
+
+        AIContext ctx{*entity, bubble, *tile_db, mem, player_pos, find_path};
+        Intent intent = AIController::tick(ai, loco, ctx);
+
+        /*
+        UtilityFunctions::print(
+            "NPC ", entity_id,
+            " pos=(", entity->x, ",", entity->y, ")",
+            " state=", ai.state == AIState::CHASE ? "CHASE" : "WANDER",
+            " player_seen=", mem.player_seen,
+            " intent=", intent.type == IntentType::MOVE ? "MOVE" : "NONE",
+            intent.type == IntentType::MOVE ? " target=(" + String::num_int64(intent.target.x) + "," + String::num_int64(intent.target.y) + ")" : "",
+            " stuck=", ai.stuck_counter
+        );
+        */
+
+        float cost = 1.0f;
+        if (intent.type == IntentType::MOVE) {
+            float move_cost = ActionResolver::resolve_move(intent, *entity, bubble, loco);
+            if (move_cost > 0.0f) {
+                //UtilityFunctions::print("  -> moved to (", intent.target.x, ",", intent.target.y, ") cost=", move_cost);
+                cost = move_cost / loco.speed;
+                for (auto& bp : blocking_positions) {
+                    Vector2i old_pos(entity->x - (intent.target.x - entity->x),
+                                     entity->y - (intent.target.y - entity->y));
+                    if (bp == old_pos) {
+                        bp = Vector2i(entity->x, entity->y);
+                        break;
+                    }
+                }
+            } else {
+                //UtilityFunctions::print("  -> blocked");
+                Locomotion::clear_path(loco);
+                ai.stuck_counter++;
+            }
+        } else {
+            //UtilityFunctions::print("  -> no action (stuck=", ai.stuck_counter, ")");
+            ai.stuck_counter++;
+        }
+
+        if (cost <= 0.0f) cost = 1.0f / loco.speed;
+        entity->next_turn_time = base_time + cost;
+        turn_scheduler.push(entity_id, entity->next_turn_time);
+    }
+}
+
 Dictionary GameWorld::get_save_data() const {
     Dictionary data;
     data["seed"] = world_seed;
@@ -267,6 +420,50 @@ Dictionary GameWorld::get_save_data() const {
     data["dropped_items"] = bubble.serialize_ground_items();
     data["tile_id_cache"] = bubble.get_tile_id_cache(WorldBubble::LAYER_TILE);
     data["seen_cells"] = bubble.get_seen_cells();
+    data["entities"] = entity_pool.serialize();
+    data["entity_positions"] = bubble.serialize_entity_positions();
+
+    Dictionary loco_data;
+    for (const auto& [id, ld] : locomotion_data) {
+        Dictionary d;
+        d["speed"] = ld.speed;
+        Array path_arr;
+        for (const auto& p : ld.path) path_arr.push_back(Vector2i(p.x, p.y));
+        d["path"] = path_arr;
+        d["path_index"] = ld.path_index;
+        loco_data[static_cast<int64_t>(id)] = d;
+    }
+    data["locomotion_data"] = loco_data;
+
+    Dictionary mem_data;
+    for (const auto& [id, pm] : perception_memory) {
+        Dictionary d;
+        Array known_tiles;
+        for (uint64_t k : pm.known_tiles) known_tiles.push_back(static_cast<int64_t>(k));
+        d["known_tiles"] = known_tiles;
+        Array known_entities;
+        for (uint64_t e : pm.known_entities) known_entities.push_back(static_cast<int64_t>(e));
+        d["known_entities"] = known_entities;
+        d["last_known_player_x"] = pm.last_known_player_pos.x;
+        d["last_known_player_y"] = pm.last_known_player_pos.y;
+        d["player_seen"] = pm.player_seen;
+        mem_data[static_cast<int64_t>(id)] = d;
+    }
+    data["perception_memory"] = mem_data;
+
+    Dictionary ai_save;
+    for (const auto& [id, ad] : ai_data) {
+        Dictionary d;
+        d["state"] = static_cast<int>(ad.state);
+        d["perception_tier"] = static_cast<int>(ad.perception_tier);
+        d["wander_center_x"] = ad.wander_center.x;
+        d["wander_center_y"] = ad.wander_center.y;
+        d["wander_radius"] = ad.wander_radius;
+        d["wander_cooldown"] = ad.wander_cooldown;
+        d["stuck_counter"] = ad.stuck_counter;
+        ai_save[static_cast<int64_t>(id)] = d;
+    }
+    data["ai_data"] = ai_save;
 
     return data;
 }
@@ -292,6 +489,70 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
     bubble.deserialize_ground_items(p_data.get("dropped_items", Dictionary()));
     bubble.set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), WorldBubble::LAYER_TILE);
     bubble.set_seen_cells(p_data.get("seen_cells", Array()));
+    entity_pool.deserialize(p_data.get("entities", Dictionary()));
+    bubble.deserialize_entity_positions(p_data.get("entity_positions", Dictionary()));
+
+    locomotion_data.clear();
+    Dictionary loco_data = p_data.get("locomotion_data", Dictionary());
+    Array loco_ids = loco_data.keys();
+    for (int i = 0; i < loco_ids.size(); i++) {
+        Dictionary d = loco_data[loco_ids[i]];
+        LocomotionData ld;
+        ld.speed = static_cast<float>(static_cast<double>(d.get("speed", 1.0)));
+        Array path_arr = d.get("path", Array());
+        for (int j = 0; j < path_arr.size(); j++) {
+            ld.path.push_back(path_arr[j]);
+        }
+        ld.path_index = static_cast<int>(d.get("path_index", 0));
+        locomotion_data[static_cast<uint32_t>(static_cast<int64_t>(loco_ids[i]))] = ld;
+    }
+
+    perception_memory.clear();
+    Dictionary mem_data = p_data.get("perception_memory", Dictionary());
+    Array mem_ids = mem_data.keys();
+    for (int i = 0; i < mem_ids.size(); i++) {
+        Dictionary d = mem_data[mem_ids[i]];
+        PerceptionMemory pm;
+        Array known_tiles = d.get("known_tiles", Array());
+        for (int j = 0; j < known_tiles.size(); j++) {
+            pm.known_tiles.insert(static_cast<uint64_t>(static_cast<int64_t>(known_tiles[j])));
+        }
+        Array known_entities = d.get("known_entities", Array());
+        for (int j = 0; j < known_entities.size(); j++) {
+            pm.known_entities.insert(static_cast<uint64_t>(static_cast<int64_t>(known_entities[j])));
+        }
+        pm.last_known_player_pos = Vector2i(
+            static_cast<int>(d.get("last_known_player_x", 0)),
+            static_cast<int>(d.get("last_known_player_y", 0))
+        );
+        pm.player_seen = d.get("player_seen", false);
+        perception_memory[static_cast<uint32_t>(static_cast<int64_t>(mem_ids[i]))] = pm;
+    }
+
+    ai_data.clear();
+    Dictionary ai_save = p_data.get("ai_data", Dictionary());
+    Array ai_ids = ai_save.keys();
+    for (int i = 0; i < ai_ids.size(); i++) {
+        Dictionary d = ai_save[ai_ids[i]];
+        AIData ad;
+        ad.state = static_cast<AIState>(static_cast<int>(d.get("state", 0)));
+        ad.perception_tier = static_cast<PerceptionTier>(static_cast<int>(d.get("perception_tier", 0)));
+        ad.wander_center = Vector2i(
+            static_cast<int>(d.get("wander_center_x", 0)),
+            static_cast<int>(d.get("wander_center_y", 0))
+        );
+        ad.wander_radius = static_cast<float>(static_cast<double>(d.get("wander_radius", 10.0)));
+        ad.wander_cooldown = static_cast<int>(d.get("wander_cooldown", 0));
+        ad.stuck_counter = static_cast<int>(d.get("stuck_counter", 0));
+        ai_data[static_cast<uint32_t>(static_cast<int64_t>(ai_ids[i]))] = ad;
+    }
+
+    turn_scheduler.clear();
+    for (const auto& entity : entity_pool.get_all()) {
+        if (ai_data.count(entity.id) > 0) {
+            turn_scheduler.push(entity.id, entity.next_turn_time);
+        }
+    }
 
     if (renderer) {
         renderer->set_world_seed(world_seed);

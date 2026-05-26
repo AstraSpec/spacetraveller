@@ -3,6 +3,7 @@
 #include "core/world_coords.h"
 #include <queue>
 #include <unordered_map>
+#include <algorithm>
 
 using namespace godot;
 
@@ -72,7 +73,7 @@ PathResult AStarGridPathfinder::find_path(const PathRequest& request, const Trav
         if (current.pos == end) {
             Vector2i curr = end;
             while (curr != start) {
-                result.waypoints.insert(result.waypoints.begin(), curr);
+                result.waypoints.push_back(curr);
                 const uint64_t key = WorldCoords::pack_coords(curr.x, curr.y);
                 auto parent_it = parents.find(key);
                 if (parent_it == parents.end()) {
@@ -80,6 +81,7 @@ PathResult AStarGridPathfinder::find_path(const PathRequest& request, const Trav
                 }
                 curr = parent_it->second;
             }
+            std::reverse(result.waypoints.begin(), result.waypoints.end());
             result.found = true;
             return result;
         }

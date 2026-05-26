@@ -130,12 +130,14 @@ func _on_movement_triggered(dir: Vector2):
 			currentAction.execute(target_cell)
 			World.update_world_bubble(cellPos)
 			TimeManager.advance_turn()
+			World.process_npcs(TimeManager.total_turns, cellPos.x, cellPos.y)
 		
 		currentAction = null
 		_clear_interaction_cells()
 	else:
 		interact_cell(dir)
 		TimeManager.advance_turn()
+		World.process_npcs(TimeManager.total_turns, cellPos.x, cellPos.y)
 
 func get_save_data() -> Dictionary:
 	return {
