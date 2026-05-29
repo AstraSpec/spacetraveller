@@ -10,6 +10,7 @@
 #include "components/ai_controller.h"
 #include "components/perception.h"
 #include "components/locomotion.h"
+#include "components/equipment.h"
 
 #include <cmath>
 #include <vector>
@@ -60,7 +61,7 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
         cost = ActionResolver::resolve_attack(d.player_entity_id, defender_id, *d.bubble, def_hp_it->second, d.ledger->equipment_data[d.player_entity_id], 10.0f);
 
         if (cost > 0.0f) {
-            float dmg = def_hp_it->second.max_hp - def_hp_it->second.current_hp;
+            float dmg = 10.0f + Equipment::get_attack_power(d.ledger->equipment_data[d.player_entity_id]);
             d.sink->on_combat_event(d.player_entity_id, defender_id, dmg, def_hp_it->second.alive ? "hit" : "kill");
             if (!def_hp_it->second.alive) {
                 d.sink->on_entity_died(defender_id, "combat");
@@ -183,7 +184,7 @@ void SimulationDirector::process_game_turn(float current_time) {
                     cost = ActionResolver::resolve_attack(entity_id, d.player_entity_id, *d.bubble,
                                                           pl_hp_it->second, d.ledger->equipment_data[entity_id], atk_damage);
                     if (cost > 0.0f) {
-                        float dmg = pl_hp_it->second.max_hp - pl_hp_it->second.current_hp;
+                        float dmg = atk_damage + Equipment::get_attack_power(d.ledger->equipment_data[entity_id]);
                         d.sink->on_combat_event(entity_id, d.player_entity_id, dmg,
                                                 pl_hp_it->second.alive ? "hit" : "kill");
                         if (!pl_hp_it->second.alive) {

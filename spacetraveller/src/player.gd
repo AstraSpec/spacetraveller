@@ -42,6 +42,7 @@ func _on_entity_moved(entity_id: int, new_pos: Vector2i, new_chunk: Vector2i):
 		moved_cell.emit(Vector2(new_pos))
 		moved_chunk.emit(Vector2(new_chunk))
 		World.update_world_bubble(new_pos)
+		_check_ground_items(new_pos)
 
 func _on_right_click(_global_pos: Vector2):
 	_clear_path()
@@ -172,3 +173,14 @@ func _on_smash_requested():
 
 func _on_pickup_requested():
 	_try_set_action(PickupAction.new(self, World))
+
+func _check_ground_items(pos: Vector2i) -> void:
+	var items = World.get_items_at(pos)
+	if items.is_empty():
+		return
+	var top_id = str(items[0].get("id", ""))
+	var top_name = ItemDb.get_item_name(top_id) if not top_id.is_empty() else "something"
+	var msg = "You see %s here." % top_name
+	if items.size() > 1:
+		msg += " And others."
+	EventBus.post("ground", msg, {"pos": pos, "items": items})

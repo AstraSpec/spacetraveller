@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://b2v3w5x7y81aa"]
+
+[ext_resource type="Script" uid="uid://degh5yiupc3ud" path="res://src/ui/event_log.gd" id="1_evlog"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+bg_color = Color(0.1164, 0.1164, 0.12, 1)
+shadow_color = Color(0, 0, 0, 0.09803922)
+shadow_size = 4
+shadow_offset = Vector2(0, -2)
+
+[node name="EventLog" type="PanelContainer" node_paths=PackedStringArray("LogText", "SearchBar")]
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+script = ExtResource("1_evlog")
+LogText = NodePath("VBoxContainer/ScrollContainer/LogText")
+SearchBar = NodePath("VBoxContainer/SearchBar")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="LogText" type="RichTextLabel" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/bold_font_size = 12
+theme_override_font_sizes/bold_italics_font_size = 12
+theme_override_font_sizes/italics_font_size = 12
+theme_override_font_sizes/mono_font_size = 12
+bbcode_enabled = true
+scroll_following = true
+
+[node name="SearchBar" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Search..."
+
+[connection signal="text_changed" from="VBoxContainer/SearchBar" to="." method="_on_search_bar_text_changed"]
