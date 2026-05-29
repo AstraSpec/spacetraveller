@@ -70,17 +70,5 @@
     "atlas": [ 52, 0 ],
     "solid": false,
     "tags": ["FLOOR"]
-  },
-  {
-    "id": "path_end",
-    "atlas": [ 17, 0 ],
-    "solid": false,
-    "tags": ["INDICATOR"]
-  },
-  {
-    "id": "path_node",
-    "atlas": [ 18, 0 ],
-    "solid": false,
-    "tags": ["INDICATOR"]
   }
 ]

@@ -3,7 +3,6 @@ extends Sprite2D
 signal moved_cell(cellPos :Vector2)
 signal moved_chunk(chunkPos :Vector2)
 
-@onready var InteractionCell :PackedScene = preload("res://src/interaction_cell.tscn")
 @export var Camera :Camera2D
 @export var World : GameWorld
 @export var PathfindingTimer :Timer
@@ -13,8 +12,8 @@ const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIG
 var CHUNK_SIZE = GameWorld.get_chunk_size()
 
 var currentAction: PlayerAction = null
-var interactionCells : Array[Node2D] = []
-var pathIndicators : Array[Node2D] = []
+var interactionCells : Array[Vector2i] = []
+var pathIndicators : Array[Vector2i] = []
 
 var available_actions: Array[PlayerAction] = []
 
@@ -84,47 +83,48 @@ func _on_pathfinding_timer_timeout() -> void:
 		_clear_path()
 
 func _show_path_indicators():
-	var tile_size = World.get_renderer().get_cell_size()
-	for waypoint in current_path:
-		var inst = InteractionCell.instantiate()
-		inst.position = Vector2(waypoint - Vector2i(cellPos())) * tile_size
-		inst.modulate = Color(0.3, 0.6, 1.0, 1.0)
-		add_child(inst)
-		pathIndicators.append(inst)
+	for i in range(current_path.size()):
+		var waypoint = current_path[i]
+		var is_endpoint = (i == current_path.size() - 1)
+		var atlas_x = 17 if is_endpoint else 18
+		World.add_overlay(waypoint.x, waypoint.y, atlas_x, 0, Color(1.0, 1.0, 1.0, 1.0), -1.0)
+		pathIndicators.append(waypoint)
+	World.update_world_bubble(cellPos())
 
 func _clear_path():
 	current_path.clear()
+	_clear_path_overlays()
+
+func _clear_path_overlays():
 	for indicator in pathIndicators:
-		indicator.queue_free()
+		World.remove_overlay(indicator.x, indicator.y)
 	pathIndicators.clear()
+	World.update_world_bubble(cellPos())
 
 func _refresh_path_indicators():
-	for indicator in pathIndicators:
-		indicator.queue_free()
-	pathIndicators.clear()
+	_clear_path_overlays()
 	_show_path_indicators()
 
 func _clear_interaction_cells():
 	for cell in interactionCells:
-		cell.queue_free()
+		World.remove_overlay(cell.x, cell.y)
 	interactionCells.clear()
+	World.update_world_bubble(cellPos())
 
 func _try_set_action(action: PlayerAction):
 	_clear_interaction_cells()
 	_clear_path()
-	var tile_size = FastTileMap.get_tile_size()
 	var found_valid = false
 
 	for dir :Vector2 in DIR:
 		var target = Vector2i(cellPos() + dir)
 		if action.is_valid(target):
 			found_valid = true
-			var inst = InteractionCell.instantiate()
-			inst.position = dir * tile_size
-			add_child(inst)
-			interactionCells.append(inst)
+			World.add_overlay(target.x, target.y, 20, 0, Color(1.0, 1.0, 1.0, 1.0), -1.0)
+			interactionCells.append(target)
 
 	if found_valid:
+		World.update_world_bubble(cellPos())
 		currentAction = action
 	else:
 		currentAction = null

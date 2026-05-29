@@ -97,6 +97,10 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_health", "entity_id"), &GameWorld::get_entity_health);
     ClassDB::bind_method(D_METHOD("get_player_health"), &GameWorld::get_player_health);
 
+    ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
+    ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
+    ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
+
     ClassDB::bind_method(D_METHOD("spawn_player", "x", "y", "race_id"), &GameWorld::spawn_player);
     ClassDB::bind_method(D_METHOD("get_entity_position", "entity_id"), &GameWorld::get_entity_position);
     ClassDB::bind_method(D_METHOD("get_entity_chunk", "entity_id"), &GameWorld::get_entity_chunk);
@@ -431,6 +435,8 @@ void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float 
 }
 
 void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) {
+    Vector2i pos = get_entity_position(defender_id);
+    bubble.add_overlay(pos.x, pos.y, 19, 0, Color(1, 1, 1, 1), 0.1f);
     emit_signal("combat_event", attacker_id, defender_id, damage, result);
 }
 
@@ -444,6 +450,18 @@ Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
 
 Dictionary GameWorld::get_player_health() const {
     return get_entity_health(player_entity_id);
+}
+
+void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime) {
+    bubble.add_overlay(x, y, (uint16_t)atlas_x, (uint16_t)atlas_y, color, lifetime);
+}
+
+void GameWorld::remove_overlay(int x, int y) {
+    bubble.remove_overlay(x, y);
+}
+
+void GameWorld::clear_overlays() {
+    bubble.clear_overlays();
 }
 
 void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {

@@ -100,6 +100,9 @@ void FastTileMap::init_world_bubble(const Vector2i& playerPos, bool is_square) {
 void FastTileMap::update_visuals(const Vector2i& playerPos) {
     if (!tilesheet.is_valid() || !bubble_source) return;
 
+    last_player_pos = playerPos;
+    has_rendered = true;
+
     RenderingServer* rs = RenderingServer::get_singleton();
     RID texture_rid = tilesheet->get_rid();
     TileDb* tile_db = TileDb::get_singleton();
@@ -132,6 +135,19 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
 
             if (visual.draw_item) {
                 draw_item_at(ox, oy, visual.item_id, rs, texture_rid, item_db, (Layer)l);
+            } else if (visual.draw_overlay) {
+                rs->canvas_item_clear(pair.second);
+                rs->canvas_item_add_texture_rect_region(
+                    pair.second,
+                    Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
+                    texture_rid,
+                    Rect2(
+                        1 + visual.overlay_atlas_x * (TILE_SIZE + 1),
+                        1 + visual.overlay_atlas_y * (TILE_SIZE + 1),
+                        TILE_SIZE,
+                        TILE_SIZE
+                    )
+                );
             } else if (visual.tile_id != 0) {
                 update_tile_at(ox, oy, playerPos, visual.tile_id, rs, texture_rid, tile_db, (Layer)l);
             } else {
@@ -152,7 +168,9 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
                 );
             }
 
-            if (occlusion_enabled) {
+            if (l == LAYER_INDICATOR && visual.draw_overlay) {
+                rs->canvas_item_set_modulate(pair.second, visual.overlay_color);
+            } else if (occlusion_enabled) {
                 if (!visual.occluded) {
                     rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
                 } else {
@@ -210,4 +228,12 @@ void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint
         texture_rid,
         Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
     );
+}
+
+void FastTileMap::_process(double delta) {
+    if (!bubble_source || !has_rendered) return;
+    if (!bubble_source->has_timed_overlays()) return;
+
+    bubble_source->tick_overlays(static_cast<float>(delta));
+    update_visuals(last_player_pos);
 }

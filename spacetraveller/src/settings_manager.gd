@@ -98,10 +98,10 @@ func _apply_video_settings() -> void:
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 		DisplayServer.window_set_size(res)
-		# Center window
-		var screen = DisplayServer.window_get_current_screen()
+		var screen = DisplayServer.get_primary_screen()
 		var screen_size = DisplayServer.screen_get_size(screen)
-		DisplayServer.window_set_position((screen_size - res) / 2)
+		var screen_pos = DisplayServer.screen_get_position(screen)
+		DisplayServer.window_set_position(screen_pos + (screen_size - res) / 2)
 
 func _apply_keybinds() -> void:
 	if not _config.has_section("Controls"):

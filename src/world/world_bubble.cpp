@@ -371,6 +371,49 @@ void WorldBubble::deserialize_frozen_entities(const Dictionary& data) {
     }
 }
 
+void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime) {
+    uint64_t key = WorldCoords::pack_coords(x, y);
+    Overlay ov;
+    ov.atlas_x = atlas_x;
+    ov.atlas_y = atlas_y;
+    ov.color = color;
+    ov.lifetime = lifetime;
+    ov.age = 0.0f;
+    overlays[key] = ov;
+}
+
+void WorldBubble::remove_overlay(int x, int y) {
+    overlays.erase(WorldCoords::pack_coords(x, y));
+}
+
+void WorldBubble::clear_overlays() {
+    overlays.clear();
+}
+
+bool WorldBubble::tick_overlays(float delta) {
+    bool changed = false;
+    for (auto it = overlays.begin(); it != overlays.end(); ) {
+        if (it->second.lifetime >= 0.0f) {
+            it->second.age += delta;
+            if (it->second.age >= it->second.lifetime) {
+                it = overlays.erase(it);
+                changed = true;
+                continue;
+            }
+            changed = true;
+        }
+        ++it;
+    }
+    return changed;
+}
+
+bool WorldBubble::has_timed_overlays() const {
+    for (const auto& [key, ov] : overlays) {
+        if (ov.lifetime >= 0.0f) return true;
+    }
+    return false;
+}
+
 TraversalSnapshot WorldBubble::build_traversal_snapshot(
     const Vector2i& start,
     const Vector2i& goal,
@@ -454,6 +497,22 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                     if (entity) {
                         visual.entity_atlas_x = entity->atlas_x;
                         visual.entity_atlas_y = entity->atlas_y;
+                    }
+                }
+            }
+
+            if (l == LAYER_INDICATOR) {
+                auto ov_it = overlays.find(cell_key);
+                if (ov_it != overlays.end()) {
+                    const Overlay& ov = ov_it->second;
+                    visual.draw_overlay = true;
+                    visual.overlay_atlas_x = ov.atlas_x;
+                    visual.overlay_atlas_y = ov.atlas_y;
+                    visual.overlay_color = ov.color;
+                    if (ov.lifetime > 0.0f) {
+                        float remaining = 1.0f - (ov.age / ov.lifetime);
+                        if (remaining < 0.0f) remaining = 0.0f;
+                        visual.overlay_color.a *= remaining;
                     }
                 }
             }

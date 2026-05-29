@@ -50,6 +50,9 @@ protected:
 
     bool occlusion_enabled = false;
 
+    Vector2i last_player_pos;
+    bool has_rendered = false;
+
     void draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer* rs, RID texture_rid, class ItemDb* item_db, Layer p_layer = LAYER_TILE);
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
 
@@ -87,6 +90,7 @@ public:
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
     void update_visuals(const Vector2i& playerPos);
+    void _process(double delta) override;
 };
 
 }

@@ -43,10 +43,22 @@ public:
         uint16_t entity_sprite_id = 0;
         uint16_t entity_atlas_x = 0;
         uint16_t entity_atlas_y = 0;
+        bool draw_overlay = false;
+        uint16_t overlay_atlas_x = 0;
+        uint16_t overlay_atlas_y = 0;
+        Color overlay_color = Color(1, 1, 1, 1);
     };
 
     struct BubbleSnapshot {
         std::unordered_map<uint64_t, CellVisual> cells[LAYER_MAX];
+    };
+
+    struct Overlay {
+        uint16_t atlas_x = 0;
+        uint16_t atlas_y = 0;
+        Color color = Color(1, 1, 1, 1);
+        float lifetime = -1.0f; // seconds; < 0 = persistent until removed
+        float age = 0.0f;
     };
 
 private:
@@ -55,6 +67,7 @@ private:
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
     std::unordered_map<uint64_t, CellEntity> entity_positions;
+    std::unordered_map<uint64_t, Overlay> overlays;
 
     EntityPool* entity_pool_source = nullptr;
     std::unordered_map<uint64_t, Dictionary> frozen_entities;
@@ -116,6 +129,12 @@ public:
     std::vector<uint64_t> get_frozen_keys_in_range(const Vector2i& center, int radius) const;
     Dictionary serialize_frozen_entities() const;
     void deserialize_frozen_entities(const Dictionary& data);
+
+    void add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime = -1.0f);
+    void remove_overlay(int x, int y);
+    void clear_overlays();
+    bool tick_overlays(float delta);
+    bool has_timed_overlays() const;
 
     uint16_t query_tile_id(int x, int y);
     TraversalSnapshot build_traversal_snapshot(

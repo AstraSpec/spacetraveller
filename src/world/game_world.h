@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
 #include <godot_cpp/variant/string.hpp>
+#include <godot_cpp/variant/color.hpp>
 #include <memory>
 #include "core/world_coords.h"
 #include "data/item_db.h"
@@ -143,6 +144,10 @@ public:
 
     Dictionary get_entity_health(uint32_t entity_id) const;
     Dictionary get_player_health() const;
+
+    void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime);
+    void remove_overlay(int x, int y);
+    void clear_overlays();
 
     Dictionary get_save_data() const;
 
