@@ -1,6 +1,6 @@
 extends Node2D
 
-@export var WorldGen :GameWorld
+@export var _GameWorld :GameWorld
 @export var Player :Sprite2D
 @export var Canvas :CanvasLayer
 
@@ -11,8 +11,7 @@ var DEFAULT_ZOOM_LVL :int = 3
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
-	Player.interact_cell(Vector2(2899, 2899))
-	
+
 	TileDb.initialize_data()
 	BodyPartDb.initialize_data()
 	RaceDb.initialize_data()
@@ -20,15 +19,13 @@ func _ready() -> void:
 	ItemDb.initialize_data()
 	RecipeDb.initialize_data()
 	StructureDb.initialize_data()
-	
-	SaveManager.register_world(WorldGen)
-	SaveManager.register_player(Player)
-	SaveManager.register_inventory(Player._Inventory)
-	WorldGen.generate_world(Vector2i(Player.cellPos))
-	
+
+	SaveManager.register_world(_GameWorld)
+	_GameWorld.generate_world(Vector2i(2899, 2899))
+
 	if not SaveManager.loaded_save_data.is_empty():
 		SaveManager.apply_loaded_data()
-		SaveManager.loaded_save_data = {} # Clear memory
+		SaveManager.loaded_save_data = {}
 	else:
 		_initialize_new_game()
 
@@ -37,50 +34,78 @@ func _ready() -> void:
 	_initialize_windows()
 
 func _initialize_new_game():
-	# DEBUG
-	var _Anatomy = Player._Anatomy
-	var _Clothing = Player._Clothing
-	_Anatomy.initialize_from_race("human")
-	
-	var _Inventory = Player._Inventory
-	_Inventory.add_item("stick", 5)
-	_Inventory.add_item("rope", 2)
-	_Inventory.add_item("flint", 1)
-	_Inventory.add_item("spider_silk", 4)
-	_Inventory.add_item("bone", 1)
-	_Inventory.add_item("iron_shard", 1)
-	_Inventory.add_item("wooden_sword", 1)
-	_Inventory.add_item("torch", 2)
-	_Inventory.add_item("fire_starter", 1)
-	_Inventory.add_item("bone_needle", 1)
-	
-	_Inventory.add_item("bra_wool", 1)
-	_Inventory.add_item("panties_wool", 1)
-	_Inventory.add_item("linen_shirt", 1)
-	_Inventory.add_item("linen_trousers", 1)
-	_Inventory.add_item("silver_earrings", 2)
-	_Inventory.add_item("gold_ring", 1)
-		
-	var torso_idx = _Anatomy.find_part_of_type("torso")
-	if torso_idx != -1:
-		if _Clothing.equip_item("bra_wool", torso_idx): _Inventory.remove_item("bra_wool", 1)
-		if _Clothing.equip_item("panties_wool", torso_idx): _Inventory.remove_item("panties_wool", 1)
-		if _Clothing.equip_item("linen_shirt", torso_idx): _Inventory.remove_item("linen_shirt", 1)
-		
-	var leg_idx = _Anatomy.find_part_of_type("leg")
-	if leg_idx != -1:
-		if _Clothing.equip_item("linen_trousers", leg_idx): _Inventory.remove_item("linen_trousers", 1)
-		
-	var ear_idx_1 = _Anatomy.find_part_of_type("ear", 0)
-	var ear_idx_2 = _Anatomy.find_part_of_type("ear", 1)
-	if ear_idx_1 != -1 and _Clothing.equip_item("silver_earrings", ear_idx_1): _Inventory.remove_item("silver_earrings", 1)
-	if ear_idx_2 != -1 and _Clothing.equip_item("silver_earrings", ear_idx_2): _Inventory.remove_item("silver_earrings", 1)
-	
-	var finger_idx = _Anatomy.find_part_of_type("finger")
-	if finger_idx != -1:
-		if _Clothing.equip_item("gold_ring", finger_idx): _Inventory.remove_item("gold_ring", 1)
+	_GameWorld.initialize_entity_anatomy(0, "human")
+	_GameWorld.initialize_entity_inventory(0)
 
-	WorldGen.update_world_bubble(Player.cellPos)
+	_GameWorld.add_entity_inventory_item(0, "stick", 5)
+	_GameWorld.add_entity_inventory_item(0, "rope", 2)
+	_GameWorld.add_entity_inventory_item(0, "flint", 1)
+	_GameWorld.add_entity_inventory_item(0, "spider_silk", 4)
+	_GameWorld.add_entity_inventory_item(0, "bone", 1)
+	_GameWorld.add_entity_inventory_item(0, "iron_shard", 1)
+	_GameWorld.add_entity_inventory_item(0, "wooden_sword", 1)
+	_GameWorld.add_entity_inventory_item(0, "torch", 2)
+	_GameWorld.add_entity_inventory_item(0, "fire_starter", 1)
+	_GameWorld.add_entity_inventory_item(0, "bone_needle", 1)
+
+	_GameWorld.add_entity_inventory_item(0, "bra_wool", 1)
+	_GameWorld.add_entity_inventory_item(0, "panties_wool", 1)
+	_GameWorld.add_entity_inventory_item(0, "linen_shirt", 1)
+	_GameWorld.add_entity_inventory_item(0, "linen_trousers", 1)
+	_GameWorld.add_entity_inventory_item(0, "silver_earrings", 2)
+	_GameWorld.add_entity_inventory_item(0, "gold_ring", 1)
+
+	var anatomy = _GameWorld.get_entity_anatomy(0)
+	
+	var torso_idx = -1
+	var leg_idx = -1
+	var ear_idx_1 = -1
+	var ear_idx_2 = -1
+	var finger_idx = -1
+
+	var parts = anatomy.get("parts", [])
+	for i in range(parts.size()):
+		var part = parts[i]
+		var type_id = part.get("type_id", "")
+		#var local_index = part.get("local_index", 0)
+
+		if type_id == "torso" and torso_idx == -1:
+			torso_idx = i
+		elif type_id == "leg" and leg_idx == -1:
+			leg_idx = i
+		elif type_id == "ear":
+			if ear_idx_1 == -1:
+				ear_idx_1 = i
+			elif ear_idx_2 == -1:
+				ear_idx_2 = i
+		elif type_id == "finger" and finger_idx == -1:
+			finger_idx = i
+	
+	if torso_idx != -1:
+		if _GameWorld.equip_entity_clothing(0, torso_idx, "bra_wool", "under"):
+			_GameWorld.remove_entity_inventory_item(0, "bra_wool", 1)
+		if _GameWorld.equip_entity_clothing(0, torso_idx, "panties_wool", "under"):
+			_GameWorld.remove_entity_inventory_item(0, "panties_wool", 1)
+		if _GameWorld.equip_entity_clothing(0, torso_idx, "linen_shirt", "outer"):
+			_GameWorld.remove_entity_inventory_item(0, "linen_shirt", 1)
+
+	if leg_idx != -1:
+		if _GameWorld.equip_entity_clothing(0, leg_idx, "linen_trousers", "outer"):
+			_GameWorld.remove_entity_inventory_item(0, "linen_trousers", 1)
+
+	if ear_idx_1 != -1:
+		if _GameWorld.equip_entity_clothing(0, ear_idx_1, "silver_earrings", "accessory"):
+			_GameWorld.remove_entity_inventory_item(0, "silver_earrings", 1)
+	if ear_idx_2 != -1:
+		if _GameWorld.equip_entity_clothing(0, ear_idx_2, "silver_earrings", "accessory"):
+			_GameWorld.remove_entity_inventory_item(0, "silver_earrings", 1)
+
+	if finger_idx != -1:
+		if _GameWorld.equip_entity_clothing(0, finger_idx, "gold_ring", "accessory"):
+			_GameWorld.remove_entity_inventory_item(0, "gold_ring", 1)
+
+
+	_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 
 func _initialize_windows():
 	for window in Canvas.get_node("Window").get_children():
@@ -91,11 +116,11 @@ func _on_structure_editor_toggled(active: bool):
 	if active:
 		structure_editor_instance = structure_editor_scene.instantiate()
 		add_child(structure_editor_instance)
-		structure_editor_instance.World = WorldGen
-		structure_editor_instance.FastTilemap = WorldGen.get_renderer()
-		WorldGen.get_renderer().set_occlusion_enabled(false)
+		structure_editor_instance.World = _GameWorld
+		structure_editor_instance.FastTilemap = _GameWorld.get_renderer()
+		_GameWorld.get_renderer().set_occlusion_enabled(false)
 		structure_editor_instance.spacing = 1
-		structure_editor_instance.start_editor(Player.cellPos)
+		structure_editor_instance.start_editor(_GameWorld.get_player_position())
 		Player.Camera.locked = false
 		Canvas.visible = false
 	else:
@@ -106,6 +131,6 @@ func _on_structure_editor_toggled(active: bool):
 		Player.Camera._view_centered()
 		Player.Camera.locked = true
 		Canvas.visible = true
-		
-		WorldGen.get_renderer().set_occlusion_enabled(true)
-		WorldGen.update_world_bubble(Player.cellPos)
+
+		_GameWorld.get_renderer().set_occlusion_enabled(true)
+		_GameWorld.update_world_bubble(_GameWorld.get_player_position())

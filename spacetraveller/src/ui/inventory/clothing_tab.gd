@@ -2,32 +2,40 @@ extends BaseListTab
 
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
-@export var armorLabel: RichTextLabel
+@export var _GameWorld :GameWorld
+@export var armorLabel :RichTextLabel
 
 func _get_display_data() -> Array:
-	var items = Player._Clothing.get_equipped_items_list()
+	var clothing = _GameWorld.get_entity_clothing(0)
 	var formatted = []
 	
-	for entry in items:
-		var item_id = entry["id"]
-		var data = ItemDb.get_clothing_data(item_id)
-		var part_key = data.get("part", "other")
-		formatted.append({
-			"id": item_id,
-			"display_name": ItemDb.get_item_name(item_id),
-			"description": ItemDb.get_item_description(item_id),
-			"part_name": entry["part_name"],
-			"layer": entry["layer"],
-			"quantity_text": "",
-			"type": ItemDb.get_item_type(item_id),
-			"separator_key": part_key
-		})
+	var equipped = clothing.get("equipped", {})
+	var part_keys = equipped.keys()
+	
+	for part_idx in part_keys:
+		var layers = equipped[part_idx]
+		var layer_keys = layers.keys()
+		
+		for layer in layer_keys:
+			var item_id = layers[layer]
+			var data = ItemDb.get_clothing_data(item_id)
+			var part_key = data.get("part", "other")
+			
+			formatted.append({
+				"id": item_id,
+				"display_name": ItemDb.get_item_name(item_id),
+				"description": ItemDb.get_item_description(item_id),
+				"part_name": _GameWorld.get_entity_anatomy_part_name(0, int(part_idx)),
+				"layer": layer,
+				"quantity_text": "",
+				"type": ItemDb.get_item_type(item_id),
+				"separator_key": part_key
+			})
 	return formatted
 
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
 	
-	# Clear old children
 	for child in detailsContainer.get_children():
 		child.queue_free()
 		
@@ -56,7 +64,7 @@ func _on_refresh() -> void:
 
 func _update_armor_display() -> void:
 	if armorLabel:
-		var total_armor = Player._Clothing.get_total_armor()
+		var total_armor = _GameWorld.get_entity_armor_rating(0)
 		armorLabel.text = "Total Armor: [color=#66ff66]%.1f[/color]" % total_armor
 
 func handle_action(action_name: String, _params: Dictionary = {}):
@@ -68,5 +76,5 @@ func _unequip_selected_item():
 		return
 	
 	var item_id = _items_cache[selected_index]["id"]
-	if Player.unequip_item(item_id):
+	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
 		refresh_view()

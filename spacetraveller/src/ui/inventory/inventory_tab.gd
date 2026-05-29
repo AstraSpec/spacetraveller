@@ -2,6 +2,7 @@ extends BaseListTab
 
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
+@export var _GameWorld :GameWorld
 @export var weightVolumeLabel: RichTextLabel
 
 const MODIFIER_NAMES = {
@@ -10,17 +11,19 @@ const MODIFIER_NAMES = {
 }
 
 func _get_display_data() -> Array:
-	var items = Player._Inventory.get_items_list()
+	var inv = _GameWorld.get_entity_inventory(0)
+	var items = inv.get("items", {})
 	var formatted = []
 	
-	for item in items:
-		var item_id = item["id"]
+	var keys = items.keys()
+	for item_id in keys:
+		var amount = items[item_id]
 		formatted.append({
 			"id": item_id,
-			"amount": item["amount"],
+			"amount": amount,
 			"display_name": ItemDb.get_item_name(item_id),
 			"description": ItemDb.get_item_description(item_id),
-			"quantity_text": "x" + str(item["amount"]),
+			"quantity_text": "x" + str(amount),
 			"type": ItemDb.get_item_type(item_id)
 		})
 	return formatted
@@ -28,7 +31,6 @@ func _get_display_data() -> Array:
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
 	
-	# Clear old children
 	for child in detailsContainer.get_children():
 		child.queue_free()
 		
@@ -46,7 +48,6 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		inst.Label1.text = display_name
 		inst.Label2.text = "%.1f" % value
 
-	# Add clothing info if applicable
 	var clothing_data = ItemDb.get_clothing_data(item_id)
 	if not clothing_data.is_empty():
 		_add_spacer_label("Part", clothing_data.get("part", "any").capitalize())
@@ -67,8 +68,8 @@ func _on_refresh() -> void:
 
 func _update_totals() -> void:
 	if weightVolumeLabel:
-		var total_weight = Player._Inventory.get_total_weight()
-		var total_volume = Player._Inventory.get_total_volume()
+		var total_weight = _GameWorld.get_entity_inventory_weight(0)
+		var total_volume = _GameWorld.get_entity_inventory_volume(0)
 		weightVolumeLabel.text = "Weight: [color=#66ff66]%.1f[/color]\nVolume: [color=#66ff66]%.1f[/color]" % [total_weight, total_volume]
 
 func handle_action(action_name: String, params: Dictionary = {}):
@@ -82,7 +83,7 @@ func _wear_selected_item():
 		return
 	
 	var item_id = _items_cache[selected_index]["id"]
-	if Player.equip_item(item_id):
+	if _GameWorld.equip_entity_clothing_by_string(0, item_id):
 		refresh_view()
 
 func _drop_selected_item(all: bool):
@@ -93,7 +94,7 @@ func _drop_selected_item(all: bool):
 	var item_id = item_data["id"]
 	var amount_to_remove = item_data["amount"] if all else 1
 	
-	if Player._Inventory.remove_item(item_id, amount_to_remove):
+	if _GameWorld.remove_entity_inventory_item(0, item_id, amount_to_remove):
 		InputManager.inventory_item_dropped.emit(item_id, amount_to_remove)
 		TimeManager.advance_turn()
 		refresh_view()

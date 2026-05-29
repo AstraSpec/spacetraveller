@@ -226,6 +226,16 @@ void WorldBubble::clear_entities() {
     entity_positions.clear();
 }
 
+void WorldBubble::rebuild_from_pool() {
+    clear_entities();
+    if (!entity_pool_source) {
+        return;
+    }
+    for (const Entity& e : entity_pool_source->get_all()) {
+        set_entity(e.x, e.y, e.id);
+    }
+}
+
 const WorldBubble::CellEntity* WorldBubble::get_entity_at(int x, int y) const {
     uint64_t key = WorldCoords::pack_coords(x, y);
     auto it = entity_positions.find(key);

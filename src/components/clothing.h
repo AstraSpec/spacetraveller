@@ -1,41 +1,31 @@
 #ifndef SPACETRAVELLER_CLOTHING_H
 #define SPACETRAVELLER_CLOTHING_H
 
-#include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
-#include <godot_cpp/variant/array.hpp>
 #include <map>
-#include <string>
 
 namespace godot {
 
-class Clothing : public Node {
-    GDCLASS(Clothing, Node)
+struct AnatomyData;
 
-private:
-    // PartInstance Index -> Layer -> ItemID
-    std::map<int, std::map<String, String>> equipped_items;
-
-protected:
-    static void _bind_methods();
-
-public:
-    Clothing();
-    ~Clothing();
-
-    bool equip_item(const String &p_item_id, int p_part_index);
-    bool unequip_item(const String &p_item_id);
-    bool is_equipped(const String &p_item_id) const;
-    
-    float get_total_armor() const;
-    Array get_equipped_items_list() const;
-    Dictionary get_equipped_at(int p_part_index, const String &p_layer) const;
-
-    Dictionary get_save_data() const;
-    void load_save_data(const Dictionary &p_data);
+struct ClothingData {
+    // part_index -> layer -> item_id
+    std::map<int, std::map<String, String>> equipped;
 };
+
+namespace Clothing {
+    void init(ClothingData& data);
+    bool equip(ClothingData& data, const class AnatomyData& anatomy, int part_index, const String& item_id, const String& layer);
+    bool unequip(ClothingData& data, const String& item_id);
+    bool is_equipped(const ClothingData& data, const String& item_id);
+    float get_armor(const ClothingData& data, const class AnatomyData& anatomy);
+    Dictionary get_list(const ClothingData& data, const class AnatomyData& anatomy);
+    Dictionary get_at(const ClothingData& data, int part_index, const String& layer);
+    Dictionary serialize(const ClothingData& data);
+    void deserialize(ClothingData& data, const Dictionary& dict);
+}
 
 }
 
-#endif // ! SPACETRAVELLER_CLOTHING_H
+#endif // SPACETRAVELLER_CLOTHING_H

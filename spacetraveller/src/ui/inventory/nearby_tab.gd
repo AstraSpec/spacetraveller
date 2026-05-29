@@ -1,6 +1,6 @@
 extends BaseListTab
 
-@export var world: GameWorld
+@export var _GameWorld: GameWorld
 @export var itemDetailsLabel: Label
 
 var filter_pos: Vector2i = Vector2i(-1, -1)
@@ -23,7 +23,7 @@ func set_params(params: Dictionary) -> void:
 	refresh_view()
 
 func _get_display_data() -> Array:
-	var center = Vector2i(Player.cellPos)
+	var center = _GameWorld.get_player_position()
 	var items_map = {} # id -> {amount, positions: [ {pos, amount} ] }
 	
 	var tiles_to_scan = []
@@ -35,7 +35,7 @@ func _get_display_data() -> Array:
 				tiles_to_scan.append(center + Vector2i(x, y))
 	
 	for pos in tiles_to_scan:
-		var raw_items = world.get_items_at(pos)
+		var raw_items = _GameWorld.get_items_at(pos)
 		for item in raw_items:
 			var id = item["id"]
 			if not items_map.has(id):
@@ -71,16 +71,16 @@ func _pickup_selected_item(all: bool):
 	var total_to_pickup = item_data["amount"] if all else 1
 	var picked_up_so_far = 0
 	
-	# Pick up from sources until we have enough
 	for source in item_data["sources"]:
 		var to_get = min(total_to_pickup - picked_up_so_far, source["amount"])
-		if world.pickup_item_specific(source["pos"], item_id, to_get, Player._Inventory):
+		# Pass entity ID 0 (player) instead of Player._Inventory
+		if _GameWorld.pickup_item_specific(source["pos"], item_id, to_get, 0):
 			picked_up_so_far += to_get
 			TimeManager.advance_turn()
-
+			
 			if picked_up_so_far >= total_to_pickup:
 				break
 			
 	if picked_up_so_far > 0:
-		world.update_world_bubble(Player.cellPos)
+		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 		refresh_view()

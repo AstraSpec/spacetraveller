@@ -1,17 +1,14 @@
 extends Node
 
-var WorldGen: GameWorld
-var Player: Node
-var _Inventory: Inventory
+var _GameWorld: GameWorld
 var loaded_save_data: Dictionary = {}
 
-func register_world(w: GameWorld) -> void: WorldGen = w
-func register_player(p: Node) -> void: Player = p
-func register_inventory(i: Inventory) -> void: _Inventory = i
+func register_world(w: GameWorld) -> void:
+	_GameWorld = w
 
 func save_game(slot_name: String = "") -> void:
-	if not WorldGen or not Player or not _Inventory:
-		printerr("Cannot save: nodes not registered in SaveManager")
+	if not _GameWorld:
+		printerr("Cannot save: GameWorld not registered in SaveManager")
 		return
 		
 	if slot_name == "":
@@ -22,9 +19,7 @@ func save_game(slot_name: String = "") -> void:
 	var data = {
 		"version": 1,
 		"time": TimeManager.total_turns,
-		"player": Player.get_save_data(),
-		"inventory": _Inventory.get_save_data(),
-		"world": WorldGen.get_save_data()
+		"world": _GameWorld.get_save_data()
 	}
 	
 	var file = FileAccess.open(full_path, FileAccess.WRITE)
@@ -67,32 +62,23 @@ func apply_loaded_data() -> void:
 	if loaded_save_data.is_empty():
 		return
 		
-	# Order matters for loading
 	if loaded_save_data.has("time"):
 		TimeManager.total_turns = loaded_save_data["time"]
 		
-	if loaded_save_data.has("world") and WorldGen:
-		WorldGen.load_save_data(loaded_save_data["world"])
-		
-	if loaded_save_data.has("player") and Player:
-		Player.load_save_data(loaded_save_data["player"])
-		
-	if loaded_save_data.has("inventory") and _Inventory:
-		_Inventory.load_save_data(loaded_save_data["inventory"])
-		
-	if WorldGen and Player:
-		WorldGen.update_world_bubble(Player.cellPos)
-	if _Inventory:
-		_Inventory.inventory_changed.emit()
+	if loaded_save_data.has("world") and _GameWorld:
+		_GameWorld.load_save_data(loaded_save_data["world"])
+		# Entity 0 (player) position, anatomy, clothing, health, equipment
+		# are all restored inside _GameWorld.load_save_data()
+		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 
 func load_game(slot_name: String) -> void:
-	if not WorldGen or not Player or not _Inventory:
-		printerr("Cannot load: nodes not registered in SaveManager")
+	if not _GameWorld:
+		printerr("Cannot load: GameWorld not registered in SaveManager")
 		return
 		
 	if load_save_to_memory(slot_name):
 		apply_loaded_data()
-		loaded_save_data = {} # Clear after applying
+		loaded_save_data = {}
 		print("Game loaded from: ", slot_name)
 
 func get_save_list() -> Array:

@@ -2,6 +2,7 @@
 #include "path/path_request.h"
 #include "path/path_result.h"
 #include "data/structure_db.h"
+#include "data/tile_db.h"
 #include "core/id_registry.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -31,6 +32,12 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_NORTH", WorldCoords::ROT_NORTH);
     ClassDB::bind_integer_constant(get_class_static(), "Rotation", "ROT_EAST", WorldCoords::ROT_EAST);
 
+    BIND_ENUM_CONSTANT(INTENT_NONE);
+    BIND_ENUM_CONSTANT(INTENT_MOVE);
+    BIND_ENUM_CONSTANT(INTENT_ATTACK);
+    BIND_ENUM_CONSTANT(INTENT_SMASH);
+    BIND_ENUM_CONSTANT(INTENT_PICKUP);
+
     ClassDB::bind_method(D_METHOD("setup_renderer"), &GameWorld::setup_renderer);
     ClassDB::bind_method(D_METHOD("get_renderer"), &GameWorld::get_renderer);
 
@@ -54,12 +61,22 @@ void GameWorld::_bind_methods() {
     BIND_ENUM_CONSTANT(LAYER_TILE);
     BIND_ENUM_CONSTANT(LAYER_INDICATOR);
     BIND_ENUM_CONSTANT(LAYER_MAX);
+
+    ClassDB::bind_method(D_METHOD("initialize_entity_inventory", "entity_id"), &GameWorld::initialize_entity_inventory);
+    ClassDB::bind_method(D_METHOD("add_entity_inventory_item", "entity_id", "item_id", "amount"), &GameWorld::add_entity_inventory_item);
+    ClassDB::bind_method(D_METHOD("remove_entity_inventory_item", "entity_id", "item_id", "amount"), &GameWorld::remove_entity_inventory_item);
+    ClassDB::bind_method(D_METHOD("get_entity_inventory_item_amount", "entity_id", "item_id"), &GameWorld::get_entity_inventory_item_amount);
+    ClassDB::bind_method(D_METHOD("get_entity_inventory", "entity_id"), &GameWorld::get_entity_inventory);
+    ClassDB::bind_method(D_METHOD("get_entity_inventory_weight", "entity_id"), &GameWorld::get_entity_inventory_weight);
+    ClassDB::bind_method(D_METHOD("get_entity_inventory_volume", "entity_id"), &GameWorld::get_entity_inventory_volume);
+
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &GameWorld::drop_item);
     ClassDB::bind_method(D_METHOD("get_items_at", "pos"), &GameWorld::get_items_at);
-    ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "inventory"), &GameWorld::pickup_item_specific);
+    ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "entity_id"), &GameWorld::pickup_item_specific);
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &GameWorld::has_item);
 
     ClassDB::bind_method(D_METHOD("is_cell_seen", "pos"), &GameWorld::is_cell_seen);
+    ClassDB::bind_method(D_METHOD("has_entity_at_cell", "x", "y"), &GameWorld::has_entity_at_cell);
     ClassDB::bind_method(D_METHOD("request_player_path", "start", "goal"), &GameWorld::request_player_path);
     ClassDB::bind_method(D_METHOD("find_path", "start", "goal"), &GameWorld::find_path);
 
@@ -68,13 +85,56 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("spawn_entity", "x", "y", "race_id", "ai_tier"), &GameWorld::spawn_entity, DEFVAL("raycast"));
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
-    ClassDB::bind_method(D_METHOD("process_npcs", "current_turn", "player_x", "player_y"), &GameWorld::process_npcs);
+
+    ClassDB::bind_method(D_METHOD("initialize_entity_anatomy", "entity_id", "race_id"), &GameWorld::initialize_entity_anatomy);
+    ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
+    ClassDB::bind_method(D_METHOD("get_entity_clothing", "entity_id"), &GameWorld::get_entity_clothing);
+    ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
+    ClassDB::bind_method(D_METHOD("equip_entity_clothing", "entity_id", "part_index", "item_id", "layer"), &GameWorld::equip_entity_clothing);
+    ClassDB::bind_method(D_METHOD("unequip_entity_clothing", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing);
+    ClassDB::bind_method(D_METHOD("get_entity_armor_rating", "entity_id"), &GameWorld::get_entity_armor_rating);
+    ClassDB::bind_method(D_METHOD("unequip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing_by_string);
+
+    ClassDB::bind_method(D_METHOD("spawn_player", "x", "y", "race_id"), &GameWorld::spawn_player);
+    ClassDB::bind_method(D_METHOD("get_entity_position", "entity_id"), &GameWorld::get_entity_position);
+    ClassDB::bind_method(D_METHOD("get_entity_chunk", "entity_id"), &GameWorld::get_entity_chunk);
+    ClassDB::bind_method(D_METHOD("get_player_position"), &GameWorld::get_player_position);
+    ClassDB::bind_method(D_METHOD("get_player_chunk"), &GameWorld::get_player_chunk);
+    ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
+
+    ADD_SIGNAL(MethodInfo("entity_moved",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::VECTOR2I, "new_pos"),
+        PropertyInfo(Variant::VECTOR2I, "new_chunk")));
+    ADD_SIGNAL(MethodInfo("entity_died",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::STRING, "cause")));
+    ADD_SIGNAL(MethodInfo("player_turn_ready",
+        PropertyInfo(Variant::INT, "entity_id")));
+    ADD_SIGNAL(MethodInfo("player_action_resolved",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::FLOAT, "cost"),
+        PropertyInfo(Variant::FLOAT, "next_turn_time")));
+    ADD_SIGNAL(MethodInfo("combat_event",
+        PropertyInfo(Variant::INT, "attacker_id"),
+        PropertyInfo(Variant::INT, "defender_id"),
+        PropertyInfo(Variant::FLOAT, "damage"),
+        PropertyInfo(Variant::STRING, "result")));
 }
 
 GameWorld::GameWorld() {
     generator = std::make_unique<WorldGenerator>();
     pathfinder = std::make_unique<AStarGridPathfinder>();
-    bubble.set_entity_pool(&entity_pool);
+    bubble.set_entity_pool(&entity_ledger.get_entity_pool());
+
+    SimulationDirectorDeps deps;
+    deps.ledger = &entity_ledger;
+    deps.bubble = &bubble;
+    deps.pathfinder = pathfinder.get();
+    deps.scheduler = &turn_scheduler;
+    deps.sink = static_cast<ISimulationEventSink*>(this);
+    deps.player_entity_id = player_entity_id;
+    sim_director.configure(deps);
 }
 
 GameWorld::~GameWorld() = default;
@@ -205,9 +265,7 @@ Array GameWorld::get_items_at(const Vector2i& pos) const {
     return bubble.get_items_at(pos);
 }
 
-bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory) {
-    if (!p_inventory) return false;
-
+bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id) {
     IdRegistry* reg = IdRegistry::get_singleton();
     if (!reg) return false;
 
@@ -216,7 +274,11 @@ bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id,
     if (available <= 0) return false;
 
     int to_pickup = MIN(amount, available);
-    if (!p_inventory->add_item_numeric(numeric_id, to_pickup)) return false;
+
+    auto inv_it = entity_ledger.inventory_data.find(entity_id);
+    if (inv_it == entity_ledger.inventory_data.end()) return false;
+
+    if (!Inventory::add_item(inv_it->second, numeric_id, to_pickup)) return false;
 
     bubble.remove_item(pos, numeric_id, to_pickup);
     return true;
@@ -230,181 +292,201 @@ bool GameWorld::is_cell_seen(const Vector2i& pos) const {
     return bubble.is_cell_seen(pos.x, pos.y);
 }
 
+bool GameWorld::has_entity_at_cell(int x, int y) const {
+    return bubble.get_entity_at(x, y) != nullptr;
+}
+
 Array GameWorld::request_player_path(const Vector2i& start, const Vector2i& goal) {
-    if (!bubble.is_cell_seen(goal.x, goal.y)) {
-        return Array();
-    }
-    return find_path_with_flags(start, goal, PATH_FLAG_ALLOW_DIAGONAL);
+    return sim_director.request_player_path(start, goal);
 }
 
 Array GameWorld::find_path(const Vector2i& start, const Vector2i& goal) {
-    return find_path_with_flags(start, goal, 0);
+    return sim_director.find_path(start, goal);
 }
 
-Array GameWorld::find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags) {
-    if (!pathfinder) {
-        return Array();
+
+uint32_t GameWorld::spawn_player(int x, int y, const String& race_id) {
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (!race_db) return PLAYER_ENTITY_ID;
+
+    Vector2i atlas = race_db->get_atlas_coords(race_id);
+    uint32_t id = entity_ledger.spawn_player(Vector2i(x, y), atlas.x, atlas.y);
+
+    // Register in bubble
+    bubble.set_entity(x, y, id);
+
+    LocomotionData& loco = entity_ledger.locomotion_data[id];
+    Locomotion::init(loco, 1.0f);
+
+    // Schedule the player's first turn so the scheduler state matches a loaded game
+    Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
+    if (entity) {
+        turn_scheduler.push(id, entity->next_turn_time);
     }
 
-    std::vector<Vector2i> blocking;
-    blocking.push_back(start);
-
-    TraversalSnapshot traversal = bubble.build_traversal_snapshot(start, goal, blocking);
-    PathRequest request;
-    request.start = start;
-    request.goal = goal;
-    request.flags = flags;
-
-    PathResult result = pathfinder->find_path(request, traversal);
-    return path_result_to_array(result);
+    return id;
 }
 
 uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id, const String& ai_tier) {
     RaceDb* race_db = RaceDb::get_singleton();
     if (!race_db) return EntityPool::INVALID_ID;
 
-    const RaceInfo* race = race_db->get_race_info(race_id);
-    if (!race) return EntityPool::INVALID_ID;
+    Vector2i atlas = race_db->get_atlas_coords(race_id);
+    uint32_t id = entity_ledger.spawn_entity(Vector2i(x, y), atlas.x, atlas.y, race_id);
 
-    uint32_t entity_id = entity_pool.create_entity(x, y, race->atlas.x, race->atlas.y);
-    bubble.set_entity(x, y, entity_id);
+    bubble.set_entity(x, y, id);
 
-    LocomotionData loco;
-    Locomotion::init(loco, loco.speed);
-    locomotion_data[entity_id] = loco;
+    LocomotionData& loco = entity_ledger.locomotion_data[id];
+    Locomotion::init(loco, 1.0f);
 
-    PerceptionMemory mem;
-    perception_memory[entity_id] = mem;
-
-    AIData ai;
+    AIData& ai = entity_ledger.ai_data[id];
+    ai.state = AIState::WANDER;
     ai.wander_center = Vector2i(x, y);
-    if (ai_tier == "none") ai.perception_tier = PerceptionTier::NONE;
-    else if (ai_tier == "full") ai.perception_tier = PerceptionTier::FULL_OCCLUSION;
-    else ai.perception_tier = PerceptionTier::RAYCAST;
-    ai_data[entity_id] = ai;
+    ai.wander_radius = 4.0f;
+    ai.stuck_counter = 0;
 
-    turn_scheduler.push(entity_id, 0.0f);
-    Entity* e = entity_pool.get_entity(entity_id);
-    if (e) e->next_turn_time = 0.0f;
+    if (ai_tier == "full_occlusion") {
+        ai.perception_tier = PerceptionTier::FULL_OCCLUSION;
+    } else {
+        ai.perception_tier = PerceptionTier::RAYCAST;
+    }
 
-    return entity_id;
+    entity_ledger.perception_memory[id] = PerceptionMemory{};
+
+    // Schedule first turn
+    Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
+    if (entity) {
+        turn_scheduler.push(id, entity->next_turn_time);
+    }
+
+    return id;
 }
 
 void GameWorld::despawn_entity(uint32_t entity_id) {
-    const Entity* e = entity_pool.get_entity(entity_id);
+    if (entity_id == player_entity_id) return;
+
+    Entity* entity = entity_ledger.get_entity_pool().get_entity(entity_id);
+    if (entity) {
+        bubble.remove_entity(entity->x, entity->y);
+    }
+
+    entity_ledger.destroy_entity(entity_id);
+}
+
+Vector2i GameWorld::get_entity_position(uint32_t entity_id) const {
+    const Entity* e = entity_ledger.get_entity_pool().get_entity(entity_id);
+    if (e) return Vector2i(e->x, e->y);
+    return Vector2i();
+}
+
+Vector2i GameWorld::get_entity_chunk(uint32_t entity_id) const {
+    const Entity* e = entity_ledger.get_entity_pool().get_entity(entity_id);
     if (e) {
-        bubble.remove_entity(e->x, e->y);
+        int cs = WorldCoords::CHUNK_SIZE;
+        return Vector2i(floor((float)e->x / cs), floor((float)e->y / cs));
     }
-    entity_pool.destroy_entity(entity_id);
-
-    turn_scheduler.remove(entity_id);
-    locomotion_data.erase(entity_id);
-    perception_memory.erase(entity_id);
-    ai_data.erase(entity_id);
+    return Vector2i();
 }
 
-void GameWorld::process_npcs(int current_turn, int player_x, int player_y) {
-    float turn_f = static_cast<float>(current_turn);
-    Vector2i player_pos(player_x, player_y);
-
-    //UtilityFunctions::print("=== NPC Turn ", current_turn, " (player at ", player_x, ",", player_y, ") ===");
-
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return;
-
-    std::vector<Vector2i> blocking_positions;
-    blocking_positions.reserve(entity_pool.living_count());
-    for (const auto& entity : entity_pool.get_all()) {
-        blocking_positions.push_back({entity.x, entity.y});
-    }
-
-    while (turn_scheduler.peek_time() <= turn_f) {
-        uint32_t entity_id = turn_scheduler.pop();
-        if (entity_id == 0) continue;
-
-        Entity* entity = entity_pool.get_entity(entity_id);
-        if (!entity) continue;
-
-        float base_time = entity->next_turn_time;
-        if (base_time + 1.0f < turn_f) {
-            base_time = turn_f;
-        }
-
-        auto loco_it = locomotion_data.find(entity_id);
-        if (loco_it == locomotion_data.end()) continue;
-        auto& loco = loco_it->second;
-
-        auto& mem = perception_memory[entity_id];
-        auto& ai = ai_data[entity_id];
-
-        switch (ai.perception_tier) {
-            case PerceptionTier::FULL_OCCLUSION:
-                Perception::tick_full(mem, *entity, bubble, player_pos);
-                break;
-            case PerceptionTier::RAYCAST:
-                Perception::tick_raycast(mem, *entity, player_pos, bubble, *tile_db);
-                break;
-            default:
-                break;
-        }
-
-        auto find_path = [&](const Vector2i& from, const Vector2i& to) -> PathResult {
-            std::vector<Vector2i> entity_blocking;
-            for (const auto& bp : blocking_positions) {
-                if (bp != from) entity_blocking.push_back(bp);
-            }
-            TraversalSnapshot traversal = bubble.build_traversal_snapshot(from, to, entity_blocking);
-            PathRequest request;
-            request.start = from;
-            request.goal = to;
-            request.flags = PATH_FLAG_ALLOW_DIAGONAL;
-            return pathfinder->find_path(request, traversal);
-        };
-
-        AIContext ctx{*entity, bubble, *tile_db, mem, player_pos, find_path};
-        Intent intent = AIController::tick(ai, loco, ctx);
-
-        /*
-        UtilityFunctions::print(
-            "NPC ", entity_id,
-            " pos=(", entity->x, ",", entity->y, ")",
-            " state=", ai.state == AIState::CHASE ? "CHASE" : "WANDER",
-            " player_seen=", mem.player_seen,
-            " intent=", intent.type == IntentType::MOVE ? "MOVE" : "NONE",
-            intent.type == IntentType::MOVE ? " target=(" + String::num_int64(intent.target.x) + "," + String::num_int64(intent.target.y) + ")" : "",
-            " stuck=", ai.stuck_counter
-        );
-        */
-
-        float cost = 1.0f;
-        if (intent.type == IntentType::MOVE) {
-            float move_cost = ActionResolver::resolve_move(intent, *entity, bubble, loco);
-            if (move_cost > 0.0f) {
-                //UtilityFunctions::print("  -> moved to (", intent.target.x, ",", intent.target.y, ") cost=", move_cost);
-                cost = move_cost / loco.speed;
-                for (auto& bp : blocking_positions) {
-                    Vector2i old_pos(entity->x - (intent.target.x - entity->x),
-                                     entity->y - (intent.target.y - entity->y));
-                    if (bp == old_pos) {
-                        bp = Vector2i(entity->x, entity->y);
-                        break;
-                    }
-                }
-            } else {
-                //UtilityFunctions::print("  -> blocked");
-                Locomotion::clear_path(loco);
-                ai.stuck_counter++;
-            }
-        } else {
-            //UtilityFunctions::print("  -> no action (stuck=", ai.stuck_counter, ")");
-            ai.stuck_counter++;
-        }
-
-        if (cost <= 0.0f) cost = 1.0f / loco.speed;
-        entity->next_turn_time = base_time + cost;
-        turn_scheduler.push(entity_id, entity->next_turn_time);
-    }
+Vector2i GameWorld::get_player_position() const {
+    return get_entity_position(player_entity_id);
 }
+
+Vector2i GameWorld::get_player_chunk() const {
+    return get_entity_chunk(player_entity_id);
+}
+
+// --- Entity inventory wrappers ---
+
+void GameWorld::initialize_entity_inventory(uint32_t entity_id) {
+    entity_ledger.init_inventory(entity_id);
+}
+
+bool GameWorld::add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount) {
+    return entity_ledger.add_inventory_item(entity_id, item_id, amount);
+}
+
+bool GameWorld::remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount) {
+    return entity_ledger.remove_inventory_item(entity_id, item_id, amount);
+}
+
+int GameWorld::get_entity_inventory_item_amount(uint32_t entity_id, const String& item_id) const {
+    return entity_ledger.get_inventory_item_amount(entity_id, item_id);
+}
+
+Dictionary GameWorld::get_entity_inventory(uint32_t entity_id) const {
+    return entity_ledger.get_inventory(entity_id);
+}
+
+float GameWorld::get_entity_inventory_weight(uint32_t entity_id) const {
+    return entity_ledger.get_inventory_weight(entity_id);
+}
+
+float GameWorld::get_entity_inventory_volume(uint32_t entity_id) const {
+    return entity_ledger.get_inventory_volume(entity_id);
+}
+
+void GameWorld::initialize_entity_anatomy(uint32_t entity_id, const String& race_id) {
+    entity_ledger.init_anatomy(entity_id, race_id);
+}
+
+Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
+    return entity_ledger.get_anatomy(entity_id);
+}
+
+Dictionary GameWorld::get_entity_clothing(uint32_t entity_id) const {
+    return entity_ledger.get_clothing(entity_id);
+}
+
+String GameWorld::get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const {
+    return entity_ledger.get_anatomy_part_name(entity_id, part_index);
+}
+
+bool GameWorld::equip_entity_clothing(uint32_t entity_id, int part_index, const String& item_id, const String& layer) {
+    return entity_ledger.equip_clothing(entity_id, part_index, item_id, layer);
+}
+
+bool GameWorld::unequip_entity_clothing(uint32_t entity_id, const String& item_id) {
+    return entity_ledger.unequip_clothing(entity_id, item_id);
+}
+
+float GameWorld::get_entity_armor_rating(uint32_t entity_id) const {
+    return entity_ledger.get_armor_rating(entity_id);
+}
+
+bool GameWorld::unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id) {
+    return entity_ledger.unequip_clothing_by_string(entity_id, item_id);
+}
+
+float GameWorld::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
+    return sim_director.submit_player_intent(intent_type, target_x, target_y, param);
+}
+
+void GameWorld::process_game_turn(float current_time) {
+    sim_director.process_game_turn(current_time);
+}
+
+void GameWorld::on_entity_moved(uint32_t entity_id, const Vector2i& new_pos, const Vector2i& new_chunk) {
+    emit_signal("entity_moved", entity_id, new_pos, new_chunk);
+}
+
+void GameWorld::on_entity_died(uint32_t entity_id, const String& cause) {
+    emit_signal("entity_died", entity_id, cause);
+}
+
+void GameWorld::on_player_turn_ready(uint32_t entity_id) {
+    emit_signal("player_turn_ready", entity_id);
+}
+
+void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) {
+    emit_signal("player_action_resolved", entity_id, cost, next_turn_time);
+}
+
+void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) {
+    emit_signal("combat_event", attacker_id, defender_id, damage, result);
+}
+
+// --- Save / Load ---
 
 Dictionary GameWorld::get_save_data() const {
     Dictionary data;
@@ -420,50 +502,12 @@ Dictionary GameWorld::get_save_data() const {
     data["dropped_items"] = bubble.serialize_ground_items();
     data["tile_id_cache"] = bubble.get_tile_id_cache(WorldBubble::LAYER_TILE);
     data["seen_cells"] = bubble.get_seen_cells();
-    data["entities"] = entity_pool.serialize();
-    data["entity_positions"] = bubble.serialize_entity_positions();
 
-    Dictionary loco_data;
-    for (const auto& [id, ld] : locomotion_data) {
-        Dictionary d;
-        d["speed"] = ld.speed;
-        Array path_arr;
-        for (const auto& p : ld.path) path_arr.push_back(Vector2i(p.x, p.y));
-        d["path"] = path_arr;
-        d["path_index"] = ld.path_index;
-        loco_data[static_cast<int64_t>(id)] = d;
-    }
-    data["locomotion_data"] = loco_data;
+    // Entity positions are not serialized; they are derived from the EntityPool
+    // on load (the pool is the single source of truth for entity coordinates).
 
-    Dictionary mem_data;
-    for (const auto& [id, pm] : perception_memory) {
-        Dictionary d;
-        Array known_tiles;
-        for (uint64_t k : pm.known_tiles) known_tiles.push_back(static_cast<int64_t>(k));
-        d["known_tiles"] = known_tiles;
-        Array known_entities;
-        for (uint64_t e : pm.known_entities) known_entities.push_back(static_cast<int64_t>(e));
-        d["known_entities"] = known_entities;
-        d["last_known_player_x"] = pm.last_known_player_pos.x;
-        d["last_known_player_y"] = pm.last_known_player_pos.y;
-        d["player_seen"] = pm.player_seen;
-        mem_data[static_cast<int64_t>(id)] = d;
-    }
-    data["perception_memory"] = mem_data;
-
-    Dictionary ai_save;
-    for (const auto& [id, ad] : ai_data) {
-        Dictionary d;
-        d["state"] = static_cast<int>(ad.state);
-        d["perception_tier"] = static_cast<int>(ad.perception_tier);
-        d["wander_center_x"] = ad.wander_center.x;
-        d["wander_center_y"] = ad.wander_center.y;
-        d["wander_radius"] = ad.wander_radius;
-        d["wander_cooldown"] = ad.wander_cooldown;
-        d["stuck_counter"] = ad.stuck_counter;
-        ai_save[static_cast<int64_t>(id)] = d;
-    }
-    data["ai_data"] = ai_save;
+    // Delegate entity component data to ledger
+    data["entity_ledger"] = entity_ledger.serialize();
 
     return data;
 }
@@ -489,67 +533,16 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
     bubble.deserialize_ground_items(p_data.get("dropped_items", Dictionary()));
     bubble.set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), WorldBubble::LAYER_TILE);
     bubble.set_seen_cells(p_data.get("seen_cells", Array()));
-    entity_pool.deserialize(p_data.get("entities", Dictionary()));
-    bubble.deserialize_entity_positions(p_data.get("entity_positions", Dictionary()));
 
-    locomotion_data.clear();
-    Dictionary loco_data = p_data.get("locomotion_data", Dictionary());
-    Array loco_ids = loco_data.keys();
-    for (int i = 0; i < loco_ids.size(); i++) {
-        Dictionary d = loco_data[loco_ids[i]];
-        LocomotionData ld;
-        ld.speed = static_cast<float>(static_cast<double>(d.get("speed", 1.0)));
-        Array path_arr = d.get("path", Array());
-        for (int j = 0; j < path_arr.size(); j++) {
-            ld.path.push_back(path_arr[j]);
-        }
-        ld.path_index = static_cast<int>(d.get("path_index", 0));
-        locomotion_data[static_cast<uint32_t>(static_cast<int64_t>(loco_ids[i]))] = ld;
-    }
+    // Load entity data from ledger
+    entity_ledger.deserialize(p_data.get("entity_ledger", Dictionary()));
 
-    perception_memory.clear();
-    Dictionary mem_data = p_data.get("perception_memory", Dictionary());
-    Array mem_ids = mem_data.keys();
-    for (int i = 0; i < mem_ids.size(); i++) {
-        Dictionary d = mem_data[mem_ids[i]];
-        PerceptionMemory pm;
-        Array known_tiles = d.get("known_tiles", Array());
-        for (int j = 0; j < known_tiles.size(); j++) {
-            pm.known_tiles.insert(static_cast<uint64_t>(static_cast<int64_t>(known_tiles[j])));
-        }
-        Array known_entities = d.get("known_entities", Array());
-        for (int j = 0; j < known_entities.size(); j++) {
-            pm.known_entities.insert(static_cast<uint64_t>(static_cast<int64_t>(known_entities[j])));
-        }
-        pm.last_known_player_pos = Vector2i(
-            static_cast<int>(d.get("last_known_player_x", 0)),
-            static_cast<int>(d.get("last_known_player_y", 0))
-        );
-        pm.player_seen = d.get("player_seen", false);
-        perception_memory[static_cast<uint32_t>(static_cast<int64_t>(mem_ids[i]))] = pm;
-    }
+    bubble.rebuild_from_pool();
 
-    ai_data.clear();
-    Dictionary ai_save = p_data.get("ai_data", Dictionary());
-    Array ai_ids = ai_save.keys();
-    for (int i = 0; i < ai_ids.size(); i++) {
-        Dictionary d = ai_save[ai_ids[i]];
-        AIData ad;
-        ad.state = static_cast<AIState>(static_cast<int>(d.get("state", 0)));
-        ad.perception_tier = static_cast<PerceptionTier>(static_cast<int>(d.get("perception_tier", 0)));
-        ad.wander_center = Vector2i(
-            static_cast<int>(d.get("wander_center_x", 0)),
-            static_cast<int>(d.get("wander_center_y", 0))
-        );
-        ad.wander_radius = static_cast<float>(static_cast<double>(d.get("wander_radius", 10.0)));
-        ad.wander_cooldown = static_cast<int>(d.get("wander_cooldown", 0));
-        ad.stuck_counter = static_cast<int>(d.get("stuck_counter", 0));
-        ai_data[static_cast<uint32_t>(static_cast<int64_t>(ai_ids[i]))] = ad;
-    }
-
+    // Rebuild turn scheduler from loaded entities
     turn_scheduler.clear();
-    for (const auto& entity : entity_pool.get_all()) {
-        if (ai_data.count(entity.id) > 0) {
+    for (const auto& entity : entity_ledger.get_entity_pool().get_all()) {
+        if (entity_ledger.ai_data.count(entity.id) > 0 || entity.id == player_entity_id) {
             turn_scheduler.push(entity.id, entity.next_turn_time);
         }
     }

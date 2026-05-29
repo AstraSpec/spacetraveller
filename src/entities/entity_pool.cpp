@@ -21,7 +21,23 @@ uint32_t EntityPool::create_entity(int x, int y, uint16_t atlas_x, uint16_t atla
     return id;
 }
 
+uint32_t EntityPool::create_player_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y) {
+    uint32_t slot;
+
+    auto it = id_to_slot.find(PLAYER_ID);
+    if (it != id_to_slot.end()) {
+        slot = it->second;
+        entities[slot] = {PLAYER_ID, x, y, 0, 0.0f, atlas_x, atlas_y};
+    } else {
+        slot = static_cast<uint32_t>(entities.size());
+        entities.push_back({PLAYER_ID, x, y, 0, 0.0f, atlas_x, atlas_y});
+        id_to_slot[PLAYER_ID] = slot;
+    }
+    return PLAYER_ID;
+}
+
 void EntityPool::destroy_entity(uint32_t id) {
+    if (id == PLAYER_ID) return;
     auto it = id_to_slot.find(id);
     if (it != id_to_slot.end()) {
         free_slots.push_back(it->second);

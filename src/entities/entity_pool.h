@@ -12,11 +12,13 @@ namespace godot {
 
 class EntityPool {
 public:
-    static constexpr uint32_t INVALID_ID = 0;
+    static constexpr uint32_t INVALID_ID = INVALID_ENTITY_ID;
+    static constexpr uint32_t PLAYER_ID = PLAYER_ENTITY_ID;
 
     EntityPool() = default;
 
     uint32_t create_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
+    uint32_t create_player_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
     Entity* get_entity(uint32_t id);

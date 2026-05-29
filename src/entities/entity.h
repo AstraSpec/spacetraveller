@@ -5,6 +5,9 @@
 
 namespace godot {
 
+static constexpr uint32_t INVALID_ENTITY_ID = UINT32_MAX;
+static constexpr uint32_t PLAYER_ENTITY_ID = 0;
+
 struct Entity {
     uint32_t id;
     int x, y;

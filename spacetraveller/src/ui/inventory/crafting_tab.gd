@@ -1,5 +1,6 @@
 extends BaseListTab
 
+@export var _GameWorld :GameWorld
 @export var CraftButton :Button
 @export var InsufficientLabel :Label
 
@@ -22,7 +23,6 @@ func _on_refresh() -> void:
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
 	
-	# Clear old children
 	for child in detailsContainer.get_children():
 		child.queue_free()
 		
@@ -30,7 +30,6 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	var reqs = RecipeDb.get_recipe_requirements(recipe_id)
 	var results = RecipeDb.get_recipe_results(recipe_id)
 	
-	# Show Requirements
 	var req_header = Label.new()
 	req_header.text = "Requirements:"
 	detailsContainer.add_child(req_header)
@@ -38,7 +37,7 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	var can_craft = true
 	for req in reqs:
 		var label = Label.new()
-		var has_item = Player._Inventory.has_item(req["id"], req["amount"])
+		var has_item = _GameWorld.get_entity_inventory_item_amount(0, req["id"]) >= req["amount"]
 		var item_name = ItemDb.get_item_name(req["id"])
 		label.text = "  - %s x%d" % [item_name, req["amount"]]
 		
@@ -50,7 +49,6 @@ func _update_details_ui(item_data: Dictionary) -> void:
 			
 		detailsContainer.add_child(label)
 	
-	# Show Results
 	var res_header = Label.new()
 	res_header.text = "\nProduces:"
 	detailsContainer.add_child(res_header)
@@ -61,7 +59,6 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		label.text = "  - %s x%d" % [item_name, res["amount"]]
 		detailsContainer.add_child(label)
 
-	# Add Craft Button
 	if can_craft:
 		CraftButton.visible = true
 		InsufficientLabel.visible = false
@@ -81,24 +78,19 @@ func _craft_recipe(recipe_id: String):
 	var results = RecipeDb.get_recipe_results(recipe_id)
 	var craft_time = RecipeDb.get_recipe_time(recipe_id)
 	
-	# Final check
 	for req in reqs:
-		if not Player._Inventory.has_item(req["id"], req["amount"]):
+		if _GameWorld.get_entity_inventory_item_amount(0, req["id"]) < req["amount"]:
 			return
 			
-	# Consume
 	for req in reqs:
-		Player._Inventory.remove_item(req["id"], req["amount"])
+		_GameWorld.remove_entity_inventory_item(0, req["id"], req["amount"])
 		
-	# Produce
 	for res in results:
-		Player._Inventory.add_item(res["id"], res["amount"])
+		_GameWorld.add_entity_inventory_item(0, res["id"], res["amount"])
 		
-	# Advance time
 	var turns_to_advance = max(1, int(craft_time))
 	TimeManager.advance_turn(turns_to_advance)
 	
-	# Feedback
 	refresh_view()
 
 func _on_craft_button_pressed() -> void:

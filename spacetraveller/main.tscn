@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=28 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -24,7 +24,6 @@
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="23_kbw_scene"]
 [ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="24_opt_scene"]
-[ext_resource type="Script" uid="uid://bwvnix5mygmpt" path="res://src/player/equipment_component.gd" id="27_equip"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -63,9 +62,9 @@ sources/2 = SubResource("TileSetAtlasSource_o6ht7")
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("WorldGen", "Player", "Canvas")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("_GameWorld", "Player", "Canvas")]
 script = ExtResource("1_14wn1")
-WorldGen = NodePath("WorldGen")
+_GameWorld = NodePath("GameWorld")
 Player = NodePath("Player")
 Canvas = NodePath("Canvas")
 
@@ -89,33 +88,20 @@ tile_set = SubResource("TileSet_3mine")
 [node name="Camera" type="Camera2D" parent="MapView"]
 script = ExtResource("4_8p67s")
 
-[node name="WorldGen" type="GameWorld" parent="." node_paths=PackedStringArray("Player")]
+[node name="GameWorld" type="GameWorld" parent="." node_paths=PackedStringArray("Player")]
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 Player = NodePath("../Player")
 
-[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer", "_Inventory", "_Anatomy", "_Clothing", "_Equipment")]
+[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer")]
 texture = ExtResource("2_hj8l7")
 centered = false
 region_enabled = true
 region_rect = Rect2(1353, 378, 12, 12)
 script = ExtResource("4_yn2v7")
 Camera = NodePath("Camera")
-World = NodePath("../WorldGen")
+World = NodePath("../GameWorld")
 PathfindingTimer = NodePath("PathfindingTimer")
-_Inventory = NodePath("Inventory")
-_Anatomy = NodePath("Anatomy")
-_Clothing = NodePath("Clothing")
-_Equipment = NodePath("Equipment")
-
-[node name="Inventory" type="Inventory" parent="Player"]
-
-[node name="Clothing" type="Clothing" parent="Player"]
-
-[node name="Anatomy" type="Anatomy" parent="Player"]
-
-[node name="Equipment" type="Node" parent="Player"]
-script = ExtResource("27_equip")
 
 [node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(7, 7)
@@ -158,13 +144,14 @@ current_tab = 0
 clip_tabs = false
 tab_focus_mode = 0
 
-[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("weightVolumeLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "weightVolumeLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("12_invt")
+_GameWorld = NodePath("../../../../../GameWorld")
 weightVolumeLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightVolumeLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
@@ -252,7 +239,7 @@ text = "Weight:
 Volume:"
 fit_content = true
 
-[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("CraftButton", "InsufficientLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "CraftButton", "InsufficientLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
@@ -260,6 +247,7 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("13_crft")
+_GameWorld = NodePath("../../../../../GameWorld")
 CraftButton = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton")
 InsufficientLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/InsufficientLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
@@ -350,7 +338,7 @@ visible = false
 layout_mode = 2
 text = "Craft Item"
 
-[node name="Clothing" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("armorLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Clothing" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "armorLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
@@ -358,6 +346,7 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("19_clot")
+_GameWorld = NodePath("../../../../../GameWorld")
 armorLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/ArmorLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
@@ -464,7 +453,7 @@ script = ExtResource("16_menu")
 menu_id = "nearby"
 single_tab = NodePath("Nearby")
 
-[node name="Nearby" type="MarginContainer" parent="Canvas/Window/NearbyUI" node_paths=PackedStringArray("world", "itemDetailsLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Nearby" type="MarginContainer" parent="Canvas/Window/NearbyUI" node_paths=PackedStringArray("_GameWorld", "itemDetailsLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -475,7 +464,7 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("17_near")
-world = NodePath("../../../../WorldGen")
+_GameWorld = NodePath("../../../../GameWorld")
 itemDetailsLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/ItemDetailsLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
@@ -721,6 +710,6 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[connection signal="generated" from="WorldGen" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
+[connection signal="generated" from="GameWorld" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="timeout" from="Player/PathfindingTimer" to="Player" method="_on_pathfinding_timer_timeout"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]

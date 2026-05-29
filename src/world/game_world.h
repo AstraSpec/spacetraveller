@@ -8,26 +8,22 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
 #include <godot_cpp/variant/string.hpp>
-#include <unordered_map>
 #include <memory>
 #include "core/world_coords.h"
 #include "data/item_db.h"
 #include "data/race_db.h"
-#include "components/inventory.h"
-#include "entities/entity_pool.h"
 #include "fast_tilemap.h"
 #include "world_bubble.h"
 #include "world_generator.h"
 #include "path/a_star_grid.h"
 #include "turn_scheduler.h"
-#include "components/locomotion.h"
-#include "components/perception.h"
-#include "components/action_resolver.h"
-#include "components/ai_controller.h"
+#include "entities/entity_ledger.h"
+#include "sim/simulation_event_sink.h"
+#include "sim/simulation_director.h"
 
 namespace godot {
 
-class GameWorld : public Node2D {
+class GameWorld : public Node2D, public ISimulationEventSink {
     GDCLASS(GameWorld, Node2D)
 
 public:
@@ -37,12 +33,22 @@ public:
         LAYER_MAX = WorldBubble::LAYER_MAX
     };
 
+    // Intent type constants exposed to GDScript
+    enum IntentConst {
+        INTENT_NONE = 0,
+        INTENT_MOVE = 1,
+        INTENT_ATTACK = 2,
+        INTENT_SMASH = 3,
+        INTENT_PICKUP = 4
+    };
+
 private:
     FastTileMap* renderer = nullptr;
     WorldBubble bubble;
-    EntityPool entity_pool;
     std::unique_ptr<WorldGenerator> generator;
     std::unique_ptr<AStarGridPathfinder> pathfinder;
+    EntityLedger entity_ledger;
+    SimulationDirector sim_director;
 
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
@@ -59,9 +65,7 @@ public:
     WorldBubble* get_bubble() { return &bubble; }
     const WorldBubble* get_bubble() const { return &bubble; }
 
-    std::unordered_map<uint32_t, LocomotionData> locomotion_data;
-    std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
-    std::unordered_map<uint32_t, AIData> ai_data;
+    uint32_t player_entity_id = PLAYER_ENTITY_ID;
     TurnScheduler turn_scheduler;
 
     static int get_region_size() { return WorldCoords::REGION_SIZE; }
@@ -69,6 +73,8 @@ public:
 
     static uint64_t pack_coords(int x, int y) { return WorldCoords::pack_coords(x, y); }
     static Vector2i unpack_coords(uint64_t key) { return WorldCoords::unpack_coords(key); }
+
+    bool is_player(uint32_t id) const { return id == player_entity_id; }
 
     void set_biome_noise(const Ref<FastNoiseLite>& noise);
     Ref<FastNoiseLite> get_biome_noise() const;
@@ -94,28 +100,59 @@ public:
 
     void drop_item(const Vector2i& pos, const String& item_id, int amount);
     Array get_items_at(const Vector2i& pos) const;
-    bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, Inventory* p_inventory);
+    bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id);
     bool has_item(const Vector2i& pos) const;
 
     bool is_cell_seen(const Vector2i& pos) const;
+    bool has_entity_at_cell(int x, int y) const;
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
     Array find_path(const Vector2i& start, const Vector2i& goal);
 
+    uint32_t spawn_player(int x, int y, const String& race_id);
     uint32_t spawn_entity(int x, int y, const String& race_id, const String& ai_tier = "raycast");
     void despawn_entity(uint32_t entity_id);
-    EntityPool* get_entity_pool() { return &entity_pool; }
-    const EntityPool* get_entity_pool() const { return &entity_pool; }
+    Vector2i get_entity_position(uint32_t entity_id) const;
+    Vector2i get_entity_chunk(uint32_t entity_id) const;
+    Vector2i get_player_position() const;
+    Vector2i get_player_chunk() const;
+    float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
 
-    void process_npcs(int current_turn, int player_x, int player_y);
+    void initialize_entity_inventory(uint32_t entity_id);
+    bool add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
+    bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
+    int get_entity_inventory_item_amount(uint32_t entity_id, const String& item_id) const;
+    Dictionary get_entity_inventory(uint32_t entity_id) const;
+    float get_entity_inventory_weight(uint32_t entity_id) const;
+    float get_entity_inventory_volume(uint32_t entity_id) const;
+
+    void initialize_entity_anatomy(uint32_t entity_id, const String& race_id);
+    Dictionary get_entity_anatomy(uint32_t entity_id) const;
+    Dictionary get_entity_clothing(uint32_t entity_id) const;
+    String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;
+    bool equip_entity_clothing(uint32_t entity_id, int part_index, const String& item_id, const String& layer);
+    bool unequip_entity_clothing(uint32_t entity_id, const String& item_id);
+    float get_entity_armor_rating(uint32_t entity_id) const;
+    bool unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
+
+    void process_game_turn(float current_time);
+
+    void on_entity_moved(uint32_t entity_id, const Vector2i& new_pos, const Vector2i& new_chunk) override;
+    void on_entity_died(uint32_t entity_id, const String& cause) override;
+    void on_player_turn_ready(uint32_t entity_id) override;
+    void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) override;
+    void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) override;
 
     Dictionary get_save_data() const;
 
-    Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
     void load_save_data(const Dictionary &p_data);
+
+private:
+    Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
 };
 
 }
 
 VARIANT_ENUM_CAST(GameWorld::BubbleLayer);
+VARIANT_ENUM_CAST(GameWorld::IntentConst);
 
 #endif // ! SPACETRAVELLER_GAME_WORLD_H

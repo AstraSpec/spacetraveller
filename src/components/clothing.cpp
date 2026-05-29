@@ -1,60 +1,36 @@
 #include "clothing.h"
-#include "data/item_db.h"
 #include "anatomy.h"
-#include <godot_cpp/core/class_db.hpp>
+#include "data/item_db.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
 
-void Clothing::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("equip_item", "item_id", "part_index"), &Clothing::equip_item);
-    ClassDB::bind_method(D_METHOD("unequip_item", "item_id"), &Clothing::unequip_item);
-    ClassDB::bind_method(D_METHOD("is_equipped", "item_id"), &Clothing::is_equipped);
-    ClassDB::bind_method(D_METHOD("get_total_armor"), &Clothing::get_total_armor);
-    ClassDB::bind_method(D_METHOD("get_equipped_items_list"), &Clothing::get_equipped_items_list);
-    ClassDB::bind_method(D_METHOD("get_equipped_at", "part_index", "layer"), &Clothing::get_equipped_at);
-
-    ClassDB::bind_method(D_METHOD("get_save_data"), &Clothing::get_save_data);
-    ClassDB::bind_method(D_METHOD("load_save_data", "data"), &Clothing::load_save_data);
+void Clothing::init(ClothingData& data) {
+    data.equipped.clear();
 }
 
-Clothing::Clothing() {}
-Clothing::~Clothing() {}
+bool Clothing::equip(ClothingData& data, const AnatomyData& anatomy, int part_index, const String& item_id, const String& layer) {
+    if (!Anatomy::is_functional(anatomy, part_index)) return false;
 
-bool Clothing::equip_item(const String &p_item_id, int p_part_index) {
-    ItemDb *db = ItemDb::get_singleton();
+    ItemDb* db = ItemDb::get_singleton();
     if (!db) return false;
 
-    Dictionary data = db->get_clothing_data(p_item_id);
-    if (data.is_empty()) return false;
+    Dictionary item_data = db->get_clothing_data(item_id);
+    if (item_data.is_empty()) return false;
 
-    // 1. Check if the part index is valid and functional
-    Anatomy *anatomy = nullptr;
-    Node *parent = get_parent();
-    if (parent) {
-        anatomy = parent->get_node<Anatomy>("Anatomy");
-    }
-
-    if (!anatomy) return false;
-    if (!anatomy->is_part_functional(p_part_index)) return false;
-
-    // 2. Check if the item supports this part type
-    String part_type_needed = data.get("part", "");
-    if (part_type_needed != "" && anatomy->get_part_type_id(p_part_index) != part_type_needed) {
+    String part_type_needed = item_data.get("part", "");
+    if (part_type_needed != "" && Anatomy::get_type_id(anatomy, part_index) != part_type_needed) {
         return false;
     }
 
-    String layer = data.get("layer", "middle");
-
-    // 3. Equip!
-    equipped_items[p_part_index][layer] = p_item_id;
+    data.equipped[part_index][layer] = item_id;
     return true;
 }
 
-bool Clothing::unequip_item(const String &p_item_id) {
-    for (auto &part_pair : equipped_items) {
+bool Clothing::unequip(ClothingData& data, const String& item_id) {
+    for (auto& part_pair : data.equipped) {
         for (auto it = part_pair.second.begin(); it != part_pair.second.end(); ++it) {
-            if (it->second == p_item_id) {
+            if (it->second == item_id) {
                 part_pair.second.erase(it);
                 return true;
             }
@@ -63,67 +39,52 @@ bool Clothing::unequip_item(const String &p_item_id) {
     return false;
 }
 
-bool Clothing::is_equipped(const String &p_item_id) const {
-    for (const auto &part_pair : equipped_items) {
-        for (const auto &layer_pair : part_pair.second) {
-            if (layer_pair.second == p_item_id) {
-                return true;
-            }
+bool Clothing::is_equipped(const ClothingData& data, const String& item_id) {
+    for (const auto& part_pair : data.equipped) {
+        for (const auto& layer_pair : part_pair.second) {
+            if (layer_pair.second == item_id) return true;
         }
     }
     return false;
 }
 
-float Clothing::get_total_armor() const {
+float Clothing::get_armor(const ClothingData& data, const AnatomyData& anatomy) {
     float total = 0.0f;
-    ItemDb *db = ItemDb::get_singleton();
+    ItemDb* db = ItemDb::get_singleton();
     if (!db) return 0.0f;
 
-    Anatomy *anatomy = nullptr;
-    Node *parent = get_parent();
-    if (parent) {
-        anatomy = parent->get_node<Anatomy>("Anatomy");
-    }
+    for (const auto& part_pair : data.equipped) {
+        if (!Anatomy::is_functional(anatomy, part_pair.first)) continue;
 
-    for (const auto &part_pair : equipped_items) {
-        // Only sum armor from functional parts
-        if (anatomy && !anatomy->is_part_functional(part_pair.first)) {
-            continue;
-        }
-
-        for (const auto &layer_pair : part_pair.second) {
-            Dictionary data = db->get_clothing_data(layer_pair.second);
-            total += (float)data.get("armor", 0.0f);
+        for (const auto& layer_pair : part_pair.second) {
+            Dictionary item_data = db->get_clothing_data(layer_pair.second);
+            total += (float)item_data.get("armor", 0.0f);
         }
     }
     return total;
 }
 
-Array Clothing::get_equipped_items_list() const {
+Dictionary Clothing::get_list(const ClothingData& data, const AnatomyData& anatomy) {
     Array list;
-    Anatomy *anatomy = nullptr;
-    Node *parent = get_parent();
-    if (parent) {
-        anatomy = parent->get_node<Anatomy>("Anatomy");
-    }
-
-    for (const auto &part_pair : equipped_items) {
-        for (const auto &layer_pair : part_pair.second) {
+    for (const auto& part_pair : data.equipped) {
+        for (const auto& layer_pair : part_pair.second) {
             Dictionary item;
             item["id"] = layer_pair.second;
             item["part_index"] = part_pair.first;
-            item["part_name"] = anatomy ? anatomy->get_part_name(part_pair.first) : "Unknown Part";
+            item["part_name"] = Anatomy::get_name(anatomy, part_pair.first);
             item["layer"] = layer_pair.first;
             list.push_back(item);
         }
     }
-    return list;
+    Dictionary result;
+    result["items"] = list;
+    return result;
 }
 
-Dictionary Clothing::get_equipped_at(int p_part_index, const String &p_layer) const {
-    auto part_it = equipped_items.find(p_part_index);
-    if (part_it != equipped_items.end()) {
-        auto layer_it = part_it->second.find(p_layer);
+Dictionary Clothing::get_at(const ClothingData& data, int part_index, const String& layer) {
+    auto part_it = data.equipped.find(part_index);
+    if (part_it != data.equipped.end()) {
+        auto layer_it = part_it->second.find(layer);
         if (layer_it != part_it->second.end()) {
             Dictionary d;
             d["id"] = layer_it->second;
@@ -133,23 +94,23 @@ Dictionary Clothing::get_equipped_at(int p_part_index, const String &p_layer) co
     return Dictionary();
 }
 
-Dictionary Clothing::get_save_data() const {
-    Dictionary data;
+Dictionary Clothing::serialize(const ClothingData& data) {
+    Dictionary result;
     Dictionary parts;
-    for (const auto& part_pair : equipped_items) {
+    for (const auto& part_pair : data.equipped) {
         Dictionary layers;
         for (const auto& layer_pair : part_pair.second) {
             layers[layer_pair.first] = layer_pair.second;
         }
         parts[part_pair.first] = layers;
     }
-    data["equipped"] = parts;
-    return data;
+    result["equipped"] = parts;
+    return result;
 }
 
-void Clothing::load_save_data(const Dictionary &p_data) {
-    equipped_items.clear();
-    Dictionary parts = p_data.get("equipped", Dictionary());
+void Clothing::deserialize(ClothingData& data, const Dictionary& dict) {
+    data.equipped.clear();
+    Dictionary parts = dict.get("equipped", Dictionary());
     Array part_keys = parts.keys();
     for (int i = 0; i < part_keys.size(); i++) {
         Variant key_var = part_keys[i];
@@ -164,7 +125,7 @@ void Clothing::load_save_data(const Dictionary &p_data) {
         for (int j = 0; j < layer_keys.size(); j++) {
             String layer = layer_keys[j];
             String item_id = layers[layer_keys[j]];
-            equipped_items[part_idx][layer] = item_id;
+            data.equipped[part_idx][layer] = item_id;
         }
     }
 }

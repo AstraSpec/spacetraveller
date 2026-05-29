@@ -17,6 +17,7 @@ struct RaceInfo {
     String name;
     Vector2i atlas;
     String perception_tier;
+    float base_hp = 100.0f;
     std::vector<RacePartDefinition> parts;
 };
 

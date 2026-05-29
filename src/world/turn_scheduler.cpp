@@ -1,4 +1,5 @@
 #include "turn_scheduler.h"
+#include "entities/entity.h"
 #include <algorithm>
 #include <cmath>
 
@@ -22,7 +23,7 @@ uint32_t TurnScheduler::pop() {
             return e.entity_id;
         }
     }
-    return 0;
+    return INVALID_ENTITY_ID;
 }
 
 void TurnScheduler::remove(uint32_t entity_id) {

@@ -7,9 +7,6 @@
 #include "data/chunk_db.h"
 #include "data/item_db.h"
 #include "data/recipe_db.h"
-#include "components/inventory.h"
-#include "components/clothing.h"
-#include "components/anatomy.h"
 #include "data/structure_db.h"
 #include "core/id_registry.h"
 #include "core/tag_registry.h"
@@ -31,9 +28,6 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_RUNTIME_CLASS(FastTileMap);
 	GDREGISTER_RUNTIME_CLASS(GameWorld);
 	GDREGISTER_RUNTIME_CLASS(StructureEditor);
-	GDREGISTER_RUNTIME_CLASS(Inventory);
-	GDREGISTER_RUNTIME_CLASS(Clothing);
-	GDREGISTER_RUNTIME_CLASS(Anatomy);
 	GDREGISTER_CLASS(TileDb);
 	GDREGISTER_CLASS(ChunkDb);
 	GDREGISTER_CLASS(ItemDb);

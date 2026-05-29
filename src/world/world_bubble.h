@@ -103,6 +103,7 @@ public:
     void remove_entity(int x, int y);
     void update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id);
     void clear_entities();
+    void rebuild_from_pool();
     const CellEntity* get_entity_at(int x, int y) const;
     Dictionary serialize_entity_positions() const;
     void deserialize_entity_positions(const Dictionary& data);
