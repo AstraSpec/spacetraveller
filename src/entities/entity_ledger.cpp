@@ -49,15 +49,6 @@ void EntityLedger::destroy_entity(uint32_t id) {
     entity_pool.destroy_entity(id);
 }
 
-void EntityLedger::init_inventory(uint32_t id) {
-    Inventory::init(inventory_data[id]);
-}
-
-void EntityLedger::init_anatomy(uint32_t id, const String& race_id) {
-    Anatomy::init(anatomy_data[id], race_id);
-    Clothing::init(clothing_data[id]);
-}
-
 int EntityLedger::get_inventory_item_amount(uint32_t id, const String& item_id) const {
     IdRegistry* reg = IdRegistry::get_singleton();
     if (!reg) return 0;
@@ -84,6 +75,16 @@ Dictionary EntityLedger::get_inventory(uint32_t id) const {
     auto it = inventory_data.find(id);
     if (it == inventory_data.end()) return Dictionary();
     return Inventory::serialize(it->second);
+}
+
+Dictionary EntityLedger::get_health(uint32_t id) const {
+    Dictionary d;
+    auto it = health_data.find(id);
+    if (it == health_data.end()) return d;
+    d["current_hp"] = it->second.current_hp;
+    d["max_hp"] = it->second.max_hp;
+    d["alive"] = it->second.alive;
+    return d;
 }
 
 float EntityLedger::get_inventory_weight(uint32_t id) const {
@@ -173,191 +174,139 @@ bool EntityLedger::unequip_clothing_by_string(uint32_t id, const String& item_id
 
 Dictionary EntityLedger::serialize() const {
     Dictionary data;
-    
-    data["pool"] = entity_pool.serialize();
-    
-    Dictionary anat_data;
-    for (const auto& [id, ad] : anatomy_data) {
-        anat_data[static_cast<int64_t>(id)] = Anatomy::serialize(ad);
+    Array entities;
+    for (const auto& e : entity_pool.get_all()) {
+        entities.push_back(serialize_entity(e.id));
     }
-    data["anatomy"] = anat_data;
-    
-    Dictionary cloth_data;
-    for (const auto& [id, cd] : clothing_data) {
-        cloth_data[static_cast<int64_t>(id)] = Clothing::serialize(cd);
-    }
-    data["clothing"] = cloth_data;
-    
-    Dictionary inv_data;
-    for (const auto& [id, idata] : inventory_data) {
-        inv_data[static_cast<int64_t>(id)] = Inventory::serialize(idata);
-    }
-    data["inventory"] = inv_data;
-    
-    Dictionary hp_data;
-    for (const auto& [id, hd] : health_data) {
-        Dictionary d;
-        d["current_hp"] = hd.current_hp;
-        d["max_hp"] = hd.max_hp;
-        d["alive"] = hd.alive;
-        hp_data[static_cast<int64_t>(id)] = d;
-    }
-    data["health"] = hp_data;
-    
-    Dictionary eq_data;
-    for (const auto& [id, ed] : equipment_data) {
-        eq_data[static_cast<int64_t>(id)] = Equipment::serialize(ed);
-    }
-    data["equipment"] = eq_data;
-    
-    Dictionary loco_data;
-    for (const auto& [id, ld] : locomotion_data) {
-        Dictionary d;
-        d["speed"] = ld.speed;
-        Array path_arr;
-        for (const auto& p : ld.path) path_arr.push_back(Vector2i(p.x, p.y));
-        d["path"] = path_arr;
-        d["path_index"] = ld.path_index;
-        loco_data[static_cast<int64_t>(id)] = d;
-    }
-    data["locomotion"] = loco_data;
-    
-    Dictionary mem_data;
-    for (const auto& [id, pm] : perception_memory) {
-        Dictionary d;
-        Array known_tiles;
-        for (uint64_t k : pm.known_tiles) known_tiles.push_back(static_cast<int64_t>(k));
-        d["known_tiles"] = known_tiles;
-        Array known_entities;
-        for (uint64_t e : pm.known_entities) known_entities.push_back(static_cast<int64_t>(e));
-        d["known_entities"] = known_entities;
-        d["last_known_player_x"] = pm.last_known_player_pos.x;
-        d["last_known_player_y"] = pm.last_known_player_pos.y;
-        d["player_seen"] = pm.player_seen;
-        mem_data[static_cast<int64_t>(id)] = d;
-    }
-    data["perception"] = mem_data;
-    
-    Dictionary ai_save;
-    for (const auto& [id, ad] : ai_data) {
-        Dictionary d;
-        d["state"] = static_cast<int>(ad.state);
-        d["perception_tier"] = static_cast<int>(ad.perception_tier);
-        d["wander_center_x"] = ad.wander_center.x;
-        d["wander_center_y"] = ad.wander_center.y;
-        d["wander_radius"] = ad.wander_radius;
-        d["wander_cooldown"] = ad.wander_cooldown;
-        d["stuck_counter"] = ad.stuck_counter;
-        ai_save[static_cast<int64_t>(id)] = d;
-    }
-    data["ai"] = ai_save;
-    
+    data["entities"] = entities;
     return data;
 }
 
 void EntityLedger::deserialize(const Dictionary& data) {
-    entity_pool.deserialize(data.get("pool", Dictionary()));
-    
+    entity_pool.clear();
     anatomy_data.clear();
-    Dictionary anat_data = data.get("anatomy", Dictionary());
-    Array anat_ids = anat_data.keys();
-    for (int i = 0; i < anat_ids.size(); i++) {
-        AnatomyData ad;
-        Anatomy::deserialize(ad, anat_data[anat_ids[i]]);
-        anatomy_data[static_cast<uint32_t>(static_cast<int64_t>(anat_ids[i]))] = ad;
-    }
-    
     clothing_data.clear();
-    Dictionary cloth_data = data.get("clothing", Dictionary());
-    Array cloth_ids = cloth_data.keys();
-    for (int i = 0; i < cloth_ids.size(); i++) {
-        ClothingData cd;
-        Clothing::deserialize(cd, cloth_data[cloth_ids[i]]);
-        clothing_data[static_cast<uint32_t>(static_cast<int64_t>(cloth_ids[i]))] = cd;
-    }
-    
     inventory_data.clear();
-    Dictionary inv_data = data.get("inventory", Dictionary());
-    Array inv_ids = inv_data.keys();
-    for (int i = 0; i < inv_ids.size(); i++) {
-        InventoryData idata;
-        Inventory::deserialize(idata, inv_data[inv_ids[i]]);
-        inventory_data[static_cast<uint32_t>(static_cast<int64_t>(inv_ids[i]))] = idata;
-    }
-    
     health_data.clear();
-    Dictionary hp_data = data.get("health", Dictionary());
-    Array hp_ids = hp_data.keys();
-    for (int i = 0; i < hp_ids.size(); i++) {
-        Dictionary d = hp_data[hp_ids[i]];
-        HealthData hd;
-        hd.current_hp = static_cast<float>(static_cast<double>(d.get("current_hp", 100.0)));
-        hd.max_hp = static_cast<float>(static_cast<double>(d.get("max_hp", 100.0)));
-        hd.alive = d.get("alive", true);
-        health_data[static_cast<uint32_t>(static_cast<int64_t>(hp_ids[i]))] = hd;
-    }
-    
     equipment_data.clear();
-    Dictionary eq_data = data.get("equipment", Dictionary());
-    Array eq_ids = eq_data.keys();
-    for (int i = 0; i < eq_ids.size(); i++) {
-        EquipmentData ed;
-        Equipment::deserialize(ed, eq_data[eq_ids[i]]);
-        equipment_data[static_cast<uint32_t>(static_cast<int64_t>(eq_ids[i]))] = ed;
-    }
-    
     locomotion_data.clear();
-    Dictionary loco_data = data.get("locomotion", Dictionary());
-    Array loco_ids = loco_data.keys();
-    for (int i = 0; i < loco_ids.size(); i++) {
-        Dictionary d = loco_data[loco_ids[i]];
-        LocomotionData ld;
-        ld.speed = static_cast<float>(static_cast<double>(d.get("speed", 1.0)));
-        Array path_arr = d.get("path", Array());
-        for (int j = 0; j < path_arr.size(); j++) {
-            ld.path.push_back(path_arr[j]);
-        }
-        ld.path_index = static_cast<int>(d.get("path_index", 0));
-        locomotion_data[static_cast<uint32_t>(static_cast<int64_t>(loco_ids[i]))] = ld;
-    }
-    
     perception_memory.clear();
-    Dictionary mem_data = data.get("perception", Dictionary());
-    Array mem_ids = mem_data.keys();
-    for (int i = 0; i < mem_ids.size(); i++) {
-        Dictionary d = mem_data[mem_ids[i]];
-        PerceptionMemory pm;
-        Array known_tiles = d.get("known_tiles", Array());
-        for (int j = 0; j < known_tiles.size(); j++) {
-            pm.known_tiles.insert(static_cast<uint64_t>(static_cast<int64_t>(known_tiles[j])));
-        }
-        Array known_entities = d.get("known_entities", Array());
-        for (int j = 0; j < known_entities.size(); j++) {
-            pm.known_entities.insert(static_cast<uint64_t>(static_cast<int64_t>(known_entities[j])));
-        }
-        pm.last_known_player_pos = Vector2i(
-            static_cast<int>(d.get("last_known_player_x", 0)),
-            static_cast<int>(d.get("last_known_player_y", 0))
-        );
-        pm.player_seen = d.get("player_seen", false);
-        perception_memory[static_cast<uint32_t>(static_cast<int64_t>(mem_ids[i]))] = pm;
-    }
-    
     ai_data.clear();
-    Dictionary ai_save = data.get("ai", Dictionary());
-    Array ai_ids = ai_save.keys();
-    for (int i = 0; i < ai_ids.size(); i++) {
-        Dictionary d = ai_save[ai_ids[i]];
-        AIData ad;
-        ad.state = static_cast<AIState>(static_cast<int>(d.get("state", 0)));
-        ad.perception_tier = static_cast<PerceptionTier>(static_cast<int>(d.get("perception_tier", 0)));
-        ad.wander_center = Vector2i(
-            static_cast<int>(d.get("wander_center_x", 0)),
-            static_cast<int>(d.get("wander_center_y", 0))
-        );
-        ad.wander_radius = static_cast<float>(static_cast<double>(d.get("wander_radius", 10.0)));
-        ad.wander_cooldown = static_cast<int>(d.get("wander_cooldown", 0));
-        ad.stuck_counter = static_cast<int>(d.get("stuck_counter", 0));
-        ai_data[static_cast<uint32_t>(static_cast<int64_t>(ai_ids[i]))] = ad;
+
+    Array entities = data.get("entities", Array());
+    for (int i = 0; i < entities.size(); i++) {
+        deserialize_entity(entities[i]);
     }
+}
+
+Dictionary EntityLedger::serialize_entity(uint32_t id) const {
+    Dictionary data;
+    const Entity* e = entity_pool.get_entity(id);
+    if (!e) return data;
+
+    data["id"] = static_cast<int64_t>(id);
+    data["x"] = e->x;
+    data["y"] = e->y;
+    data["atlas_x"] = static_cast<int>(e->atlas_x);
+    data["atlas_y"] = static_cast<int>(e->atlas_y);
+    data["next_turn_time"] = e->next_turn_time;
+
+    auto anat_it = anatomy_data.find(id);
+    if (anat_it != anatomy_data.end()) {
+        data["anatomy"] = Anatomy::serialize(anat_it->second);
+    }
+
+    auto cloth_it = clothing_data.find(id);
+    if (cloth_it != clothing_data.end()) {
+        data["clothing"] = Clothing::serialize(cloth_it->second);
+    }
+
+    auto inv_it = inventory_data.find(id);
+    if (inv_it != inventory_data.end()) {
+        data["inventory"] = Inventory::serialize(inv_it->second);
+    }
+
+    auto hp_it = health_data.find(id);
+    if (hp_it != health_data.end()) {
+        data["health"] = Health::serialize(hp_it->second);
+    }
+
+    auto eq_it = equipment_data.find(id);
+    if (eq_it != equipment_data.end()) {
+        data["equipment"] = Equipment::serialize(eq_it->second);
+    }
+
+    auto loco_it = locomotion_data.find(id);
+    if (loco_it != locomotion_data.end()) {
+        data["locomotion"] = Locomotion::serialize(loco_it->second);
+    }
+
+    auto mem_it = perception_memory.find(id);
+    if (mem_it != perception_memory.end()) {
+        data["perception"] = Perception::serialize(mem_it->second);
+    }
+
+    auto ai_it = ai_data.find(id);
+    if (ai_it != ai_data.end()) {
+        data["ai"] = AIController::serialize(ai_it->second);
+    }
+
+    return data;
+}
+
+uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
+    uint32_t id = static_cast<uint32_t>(static_cast<int64_t>(data.get("id", static_cast<int64_t>(0))));
+    int x = data.get("x", 0);
+    int y = data.get("y", 0);
+    uint16_t atlas_x = static_cast<uint16_t>(static_cast<int>(data.get("atlas_x", 0)));
+    uint16_t atlas_y = static_cast<uint16_t>(static_cast<int>(data.get("atlas_y", 0)));
+
+    entity_pool.create_entity_with_id(id, x, y, atlas_x, atlas_y);
+
+    Entity* e = entity_pool.get_entity(id);
+    if (e) {
+        e->next_turn_time = static_cast<float>(static_cast<double>(data.get("next_turn_time", 0.0)));
+    }
+
+    if (data.has("anatomy")) {
+        AnatomyData ad;
+        Anatomy::deserialize(ad, data["anatomy"]);
+        anatomy_data[id] = ad;
+    }
+
+    if (data.has("clothing")) {
+        ClothingData cd;
+        Clothing::deserialize(cd, data["clothing"]);
+        clothing_data[id] = cd;
+    }
+
+    if (data.has("inventory")) {
+        InventoryData idata;
+        Inventory::deserialize(idata, data["inventory"]);
+        inventory_data[id] = idata;
+    }
+
+    if (data.has("health")) {
+        Health::deserialize(health_data[id], data["health"]);
+    }
+
+    if (data.has("equipment")) {
+        EquipmentData ed;
+        Equipment::deserialize(ed, data["equipment"]);
+        equipment_data[id] = ed;
+    }
+
+    if (data.has("locomotion")) {
+        Locomotion::deserialize(locomotion_data[id], data["locomotion"]);
+    }
+
+    if (data.has("perception")) {
+        Perception::deserialize(perception_memory[id], data["perception"]);
+    }
+
+    if (data.has("ai")) {
+        AIController::deserialize(ai_data[id], data["ai"]);
+    }
+
+    return id;
 }

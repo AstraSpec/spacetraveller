@@ -21,6 +21,28 @@ uint32_t EntityPool::create_entity(int x, int y, uint16_t atlas_x, uint16_t atla
     return id;
 }
 
+uint32_t EntityPool::create_entity_with_id(uint32_t id, int x, int y, uint16_t atlas_x, uint16_t atlas_y) {
+    uint32_t slot;
+
+    auto it = id_to_slot.find(id);
+    if (it != id_to_slot.end()) {
+        slot = it->second;
+        entities[slot] = {id, x, y, 0, 0.0f, atlas_x, atlas_y};
+    } else if (!free_slots.empty()) {
+        slot = free_slots.back();
+        free_slots.pop_back();
+        entities[slot] = {id, x, y, 0, 0.0f, atlas_x, atlas_y};
+        id_to_slot[id] = slot;
+    } else {
+        slot = static_cast<uint32_t>(entities.size());
+        entities.push_back({id, x, y, 0, 0.0f, atlas_x, atlas_y});
+        id_to_slot[id] = slot;
+    }
+
+    if (id >= next_id) next_id = id + 1;
+    return id;
+}
+
 uint32_t EntityPool::create_player_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y) {
     uint32_t slot;
 

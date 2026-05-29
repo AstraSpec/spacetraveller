@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_HEALTH_H
 
 #include <cstdint>
+#include <godot_cpp/variant/dictionary.hpp>
 
 namespace godot {
 
@@ -17,6 +18,8 @@ namespace Health {
     void heal(HealthData& data, float amount);
     inline bool is_alive(const HealthData& data);
     inline float get_percent(const HealthData& data);
+    Dictionary serialize(const HealthData& data);
+    void deserialize(HealthData& data, const Dictionary& dict);
 }
 
 }

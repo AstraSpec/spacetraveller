@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_AI_CONTROLLER_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <functional>
 #include "action_resolver.h"
 #include "perception.h"
@@ -37,6 +38,8 @@ struct AIContext {
 
 namespace AIController {
     Intent tick(AIData& ai, LocomotionData& loco, const AIContext& ctx);
+    Dictionary serialize(const AIData& data);
+    void deserialize(AIData& data, const Dictionary& dict);
 }
 
 }

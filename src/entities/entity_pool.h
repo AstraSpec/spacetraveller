@@ -18,6 +18,7 @@ public:
     EntityPool() = default;
 
     uint32_t create_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
+    uint32_t create_entity_with_id(uint32_t id, int x, int y, uint16_t atlas_x, uint16_t atlas_y);
     uint32_t create_player_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
@@ -30,6 +31,7 @@ public:
 
     Dictionary serialize() const;
     void deserialize(const Dictionary& data);
+    void clear() { entities.clear(); free_slots.clear(); id_to_slot.clear(); next_id = 1; }
 
 private:
     std::vector<Entity> entities;

@@ -4,6 +4,7 @@
 #include "world/world_bubble.h"
 #include "data/tile_db.h"
 #include "path/path_result.h"
+#include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
@@ -111,4 +112,28 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
 
     ai.stuck_counter++;
     return Intent{IntentType::NONE};
+}
+
+Dictionary AIController::serialize(const AIData& data) {
+    Dictionary d;
+    d["state"] = static_cast<int>(data.state);
+    d["perception_tier"] = static_cast<int>(data.perception_tier);
+    d["wander_center_x"] = data.wander_center.x;
+    d["wander_center_y"] = data.wander_center.y;
+    d["wander_radius"] = data.wander_radius;
+    d["wander_cooldown"] = data.wander_cooldown;
+    d["stuck_counter"] = data.stuck_counter;
+    return d;
+}
+
+void AIController::deserialize(AIData& data, const Dictionary& dict) {
+    data.state = static_cast<AIState>(static_cast<int>(dict.get("state", 0)));
+    data.perception_tier = static_cast<PerceptionTier>(static_cast<int>(dict.get("perception_tier", 0)));
+    data.wander_center = Vector2i(
+        static_cast<int>(dict.get("wander_center_x", 0)),
+        static_cast<int>(dict.get("wander_center_y", 0))
+    );
+    data.wander_radius = static_cast<float>(static_cast<double>(dict.get("wander_radius", 10.0)));
+    data.wander_cooldown = static_cast<int>(dict.get("wander_cooldown", 0));
+    data.stuck_counter = static_cast<int>(dict.get("stuck_counter", 0));
 }

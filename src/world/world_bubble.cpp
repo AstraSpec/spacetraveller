@@ -319,6 +319,58 @@ uint16_t WorldBubble::query_tile_id(int x, int y) {
     return resolve_tile_id(LAYER_TILE, cell_key, x, y);
 }
 
+void WorldBubble::freeze_entity(uint64_t packed_pos, const Dictionary& entity_data) {
+    frozen_entities[packed_pos] = entity_data;
+}
+
+Dictionary WorldBubble::get_frozen_entity_at(uint64_t packed_pos) const {
+    auto it = frozen_entities.find(packed_pos);
+    if (it != frozen_entities.end()) return it->second;
+    return Dictionary();
+}
+
+bool WorldBubble::has_frozen_entity(uint64_t packed_pos) const {
+    return frozen_entities.find(packed_pos) != frozen_entities.end();
+}
+
+void WorldBubble::remove_frozen_entity(uint64_t packed_pos) {
+    frozen_entities.erase(packed_pos);
+}
+
+std::vector<uint64_t> WorldBubble::get_frozen_keys_in_range(const Vector2i& center, int radius) const {
+    std::vector<uint64_t> result;
+    for (const auto& [key, data] : frozen_entities) {
+        Vector2i pos = WorldCoords::unpack_coords(key);
+        if (abs(pos.x - center.x) <= radius && abs(pos.y - center.y) <= radius) {
+            result.push_back(key);
+        }
+    }
+    return result;
+}
+
+Dictionary WorldBubble::serialize_frozen_entities() const {
+    Dictionary data;
+    for (const auto& [key, entity_data] : frozen_entities) {
+        data[static_cast<int64_t>(key)] = entity_data;
+    }
+    return data;
+}
+
+void WorldBubble::deserialize_frozen_entities(const Dictionary& data) {
+    frozen_entities.clear();
+    Array keys = data.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Variant key_var = keys[i];
+        uint64_t key;
+        if (key_var.get_type() == Variant::STRING) {
+            key = ((String)key_var).to_int();
+        } else {
+            key = static_cast<uint64_t>(static_cast<int64_t>(key_var));
+        }
+        frozen_entities[key] = data[key_var];
+    }
+}
+
 TraversalSnapshot WorldBubble::build_traversal_snapshot(
     const Vector2i& start,
     const Vector2i& goal,

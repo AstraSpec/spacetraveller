@@ -109,7 +109,7 @@ public:
     Array find_path(const Vector2i& start, const Vector2i& goal);
 
     uint32_t spawn_player(int x, int y, const String& race_id);
-    uint32_t spawn_entity(int x, int y, const String& race_id, const String& ai_tier = "raycast");
+    uint32_t spawn_entity(int x, int y, const String& race_id);
     void despawn_entity(uint32_t entity_id);
     Vector2i get_entity_position(uint32_t entity_id) const;
     Vector2i get_entity_chunk(uint32_t entity_id) const;
@@ -117,7 +117,6 @@ public:
     Vector2i get_player_chunk() const;
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
 
-    void initialize_entity_inventory(uint32_t entity_id);
     bool add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     int get_entity_inventory_item_amount(uint32_t entity_id, const String& item_id) const;
@@ -125,7 +124,6 @@ public:
     float get_entity_inventory_weight(uint32_t entity_id) const;
     float get_entity_inventory_volume(uint32_t entity_id) const;
 
-    void initialize_entity_anatomy(uint32_t entity_id, const String& race_id);
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
     Dictionary get_entity_clothing(uint32_t entity_id) const;
     String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;
@@ -149,6 +147,8 @@ public:
     Dictionary get_save_data() const;
 
     void load_save_data(const Dictionary &p_data);
+
+    void sync_entity_streaming(const Vector2i& player_pos);
 
 private:
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);

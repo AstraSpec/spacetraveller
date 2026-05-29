@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_LOCOMOTION_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <cstdint>
 #include <vector>
 
@@ -24,6 +25,8 @@ namespace Locomotion {
     bool has_path(const LocomotionData& data);
     void clear_path(LocomotionData& data);
     float get_step_cost(int from_x, int from_y, int to_x, int to_y);
+    Dictionary serialize(const LocomotionData& data);
+    void deserialize(LocomotionData& data, const Dictionary& dict);
 }
 
 }

@@ -38,13 +38,12 @@ public:
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
-    void init_inventory(uint32_t id);
-    void init_anatomy(uint32_t id, const String& race_id);
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
 
     Dictionary get_anatomy(uint32_t id) const;
     Dictionary get_clothing(uint32_t id) const;
     Dictionary get_inventory(uint32_t id) const;
+    Dictionary get_health(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
     float get_inventory_volume(uint32_t id) const;
     float get_armor_rating(uint32_t id) const;
@@ -59,6 +58,9 @@ public:
 
     Dictionary serialize() const;
     void deserialize(const Dictionary& data);
+
+    Dictionary serialize_entity(uint32_t id) const;
+    uint32_t deserialize_entity(const Dictionary& data);
 };
 
 }

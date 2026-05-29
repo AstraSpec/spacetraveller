@@ -4,6 +4,7 @@
 #include "data/structure_db.h"
 #include "data/tile_db.h"
 #include "core/id_registry.h"
+#include "entities/entity_factory.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
@@ -62,7 +63,6 @@ void GameWorld::_bind_methods() {
     BIND_ENUM_CONSTANT(LAYER_INDICATOR);
     BIND_ENUM_CONSTANT(LAYER_MAX);
 
-    ClassDB::bind_method(D_METHOD("initialize_entity_inventory", "entity_id"), &GameWorld::initialize_entity_inventory);
     ClassDB::bind_method(D_METHOD("add_entity_inventory_item", "entity_id", "item_id", "amount"), &GameWorld::add_entity_inventory_item);
     ClassDB::bind_method(D_METHOD("remove_entity_inventory_item", "entity_id", "item_id", "amount"), &GameWorld::remove_entity_inventory_item);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_item_amount", "entity_id", "item_id"), &GameWorld::get_entity_inventory_item_amount);
@@ -83,10 +83,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_save_data"), &GameWorld::get_save_data);
     ClassDB::bind_method(D_METHOD("load_save_data", "data"), &GameWorld::load_save_data);
 
-    ClassDB::bind_method(D_METHOD("spawn_entity", "x", "y", "race_id", "ai_tier"), &GameWorld::spawn_entity, DEFVAL("raycast"));
+    ClassDB::bind_method(D_METHOD("spawn_entity", "x", "y", "race_id"), &GameWorld::spawn_entity);
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
 
-    ClassDB::bind_method(D_METHOD("initialize_entity_anatomy", "entity_id", "race_id"), &GameWorld::initialize_entity_anatomy);
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
     ClassDB::bind_method(D_METHOD("get_entity_clothing", "entity_id"), &GameWorld::get_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
@@ -197,6 +196,7 @@ void GameWorld::update_world_bubble(const Vector2i& playerPos) {
     if (renderer) {
         renderer->update_visuals(playerPos);
     }
+    sync_entity_streaming(playerPos);
 }
 
 void GameWorld::place_tile(int x, int y, const String& tile_id, BubbleLayer p_layer) {
@@ -311,76 +311,11 @@ Array GameWorld::find_path(const Vector2i& start, const Vector2i& goal) {
 
 
 uint32_t GameWorld::spawn_player(int x, int y, const String& race_id) {
-    RaceDb* race_db = RaceDb::get_singleton();
-    if (!race_db) return PLAYER_ENTITY_ID;
-
-    Vector2i atlas = race_db->get_atlas_coords(race_id);
-    uint32_t id = entity_ledger.spawn_player(Vector2i(x, y), atlas.x, atlas.y);
-
-    // Register in bubble
-    bubble.set_entity(x, y, id);
-
-    LocomotionData& loco = entity_ledger.locomotion_data[id];
-    Locomotion::init(loco, 1.0f);
-
-    // Schedule the player's first turn so the scheduler state matches a loaded game
-    Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
-    if (entity) {
-        turn_scheduler.push(id, entity->next_turn_time);
-    }
-
-    return id;
+    return EntityFactory::create_player(race_id, Vector2i(x, y), entity_ledger, bubble, turn_scheduler);
 }
 
-uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id, const String& ai_tier) {
-    RaceDb* race_db = RaceDb::get_singleton();
-    if (!race_db) return EntityPool::INVALID_ID;
-
-    Vector2i atlas = race_db->get_atlas_coords(race_id);
-    uint32_t id = entity_ledger.spawn_entity(Vector2i(x, y), atlas.x, atlas.y, race_id);
-
-    bubble.set_entity(x, y, id);
-
-    float entity_speed = 0.8f;
-    if (race_db) {
-        const RaceInfo* race = race_db->get_race_info(race_id);
-        if (race) entity_speed = race->speed;
-    }
-    LocomotionData& loco = entity_ledger.locomotion_data[id];
-    Locomotion::init(loco, entity_speed);
-
-    AIData& ai = entity_ledger.ai_data[id];
-    ai.state = AIState::WANDER;
-    ai.wander_center = Vector2i(x, y);
-    ai.wander_radius = 4.0f;
-    ai.stuck_counter = 0;
-
-    if (ai_tier == "full_occlusion") {
-        ai.perception_tier = PerceptionTier::FULL_OCCLUSION;
-    } else {
-        ai.perception_tier = PerceptionTier::RAYCAST;
-    }
-
-    entity_ledger.perception_memory[id] = PerceptionMemory{};
-
-    // Give a random starting item
-    ItemDb* item_db = ItemDb::get_singleton();
-    if (item_db) {
-        Array item_ids = item_db->get_ids();
-        if (item_ids.size() > 0) {
-            int rand_idx = abs((int)(id * 7 + x * 13 + y * 31)) % item_ids.size();
-            String random_item = item_ids[rand_idx];
-            entity_ledger.add_inventory_item(id, random_item, 1);
-        }
-    }
-
-    // Schedule first turn
-    Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
-    if (entity) {
-        turn_scheduler.push(id, entity->next_turn_time);
-    }
-
-    return id;
+uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
+    return EntityFactory::create_npc(race_id, Vector2i(x, y), entity_ledger, bubble, turn_scheduler);
 }
 
 void GameWorld::despawn_entity(uint32_t entity_id) {
@@ -419,10 +354,6 @@ Vector2i GameWorld::get_player_chunk() const {
 
 // --- Entity inventory wrappers ---
 
-void GameWorld::initialize_entity_inventory(uint32_t entity_id) {
-    entity_ledger.init_inventory(entity_id);
-}
-
 bool GameWorld::add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount) {
     return entity_ledger.add_inventory_item(entity_id, item_id, amount);
 }
@@ -445,10 +376,6 @@ float GameWorld::get_entity_inventory_weight(uint32_t entity_id) const {
 
 float GameWorld::get_entity_inventory_volume(uint32_t entity_id) const {
     return entity_ledger.get_inventory_volume(entity_id);
-}
-
-void GameWorld::initialize_entity_anatomy(uint32_t entity_id, const String& race_id) {
-    entity_ledger.init_anatomy(entity_id, race_id);
 }
 
 Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
@@ -512,18 +439,45 @@ void GameWorld::on_player_died(const String& cause) {
 }
 
 Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
-    Dictionary d;
-    auto it = entity_ledger.health_data.find(entity_id);
-    if (it != entity_ledger.health_data.end()) {
-        d["current_hp"] = it->second.current_hp;
-        d["max_hp"] = it->second.max_hp;
-        d["alive"] = it->second.alive;
-    }
-    return d;
+    return entity_ledger.get_health(entity_id);
 }
 
 Dictionary GameWorld::get_player_health() const {
     return get_entity_health(player_entity_id);
+}
+
+void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
+    int radius = bubble.get_world_bubble_radius();
+
+    std::vector<uint32_t> to_freeze;
+    for (const auto& entity : entity_ledger.get_entity_pool().get_all()) {
+        if (entity.id == player_entity_id) continue;
+        if (abs(entity.x - player_pos.x) > radius || abs(entity.y - player_pos.y) > radius) {
+            to_freeze.push_back(entity.id);
+        }
+    }
+
+    for (uint32_t id : to_freeze) {
+        Entity* e = entity_ledger.get_entity_pool().get_entity(id);
+        if (!e) continue;
+        uint64_t packed = WorldCoords::pack_coords(e->x, e->y);
+        Dictionary data = entity_ledger.serialize_entity(id);
+        bubble.freeze_entity(packed, data);
+        bubble.remove_entity(e->x, e->y);
+        entity_ledger.destroy_entity(id);
+    }
+
+    std::vector<uint64_t> thaw_keys = bubble.get_frozen_keys_in_range(player_pos, radius);
+    for (uint64_t key : thaw_keys) {
+        Dictionary data = bubble.get_frozen_entity_at(key);
+        uint32_t new_id = entity_ledger.deserialize_entity(data);
+        Entity* e = entity_ledger.get_entity_pool().get_entity(new_id);
+        if (e) {
+            bubble.set_entity(e->x, e->y, new_id);
+            turn_scheduler.push(new_id, e->next_turn_time);
+        }
+        bubble.remove_frozen_entity(key);
+    }
 }
 
 // --- Save / Load ---
@@ -543,11 +497,8 @@ Dictionary GameWorld::get_save_data() const {
     data["tile_id_cache"] = bubble.get_tile_id_cache(WorldBubble::LAYER_TILE);
     data["seen_cells"] = bubble.get_seen_cells();
 
-    // Entity positions are not serialized; they are derived from the EntityPool
-    // on load (the pool is the single source of truth for entity coordinates).
-
-    // Delegate entity component data to ledger
     data["entity_ledger"] = entity_ledger.serialize();
+    data["frozen_entities"] = bubble.serialize_frozen_entities();
 
     return data;
 }
@@ -576,6 +527,8 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
 
     // Load entity data from ledger
     entity_ledger.deserialize(p_data.get("entity_ledger", Dictionary()));
+
+    bubble.deserialize_frozen_entities(p_data.get("frozen_entities", Dictionary()));
 
     bubble.rebuild_from_pool();
 

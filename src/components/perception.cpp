@@ -4,6 +4,8 @@
 #include "data/tile_db.h"
 #include "core/world_coords.h"
 #include "occlusion.h"
+#include <godot_cpp/variant/variant.hpp>
+#include <godot_cpp/variant/array.hpp>
 
 using namespace godot;
 
@@ -97,4 +99,36 @@ bool Perception::has_line_of_sight(int x1, int y1, int x2, int y2,
         }
     }
     return true;
+}
+
+Dictionary Perception::serialize(const PerceptionMemory& mem) {
+    Dictionary d;
+    Array known_tiles;
+    for (uint64_t k : mem.known_tiles) known_tiles.push_back(static_cast<int64_t>(k));
+    d["known_tiles"] = known_tiles;
+    Array known_entities;
+    for (uint64_t ent : mem.known_entities) known_entities.push_back(static_cast<int64_t>(ent));
+    d["known_entities"] = known_entities;
+    d["last_known_player_x"] = mem.last_known_player_pos.x;
+    d["last_known_player_y"] = mem.last_known_player_pos.y;
+    d["player_seen"] = mem.player_seen;
+    return d;
+}
+
+void Perception::deserialize(PerceptionMemory& mem, const Dictionary& dict) {
+    mem.known_tiles.clear();
+    Array known_tiles = dict.get("known_tiles", Array());
+    for (int i = 0; i < known_tiles.size(); i++) {
+        mem.known_tiles.insert(static_cast<uint64_t>(static_cast<int64_t>(known_tiles[i])));
+    }
+    mem.known_entities.clear();
+    Array known_entities = dict.get("known_entities", Array());
+    for (int i = 0; i < known_entities.size(); i++) {
+        mem.known_entities.insert(static_cast<uint64_t>(static_cast<int64_t>(known_entities[i])));
+    }
+    mem.last_known_player_pos = Vector2i(
+        static_cast<int>(dict.get("last_known_player_x", 0)),
+        static_cast<int>(dict.get("last_known_player_y", 0))
+    );
+    mem.player_seen = dict.get("player_seen", false);
 }

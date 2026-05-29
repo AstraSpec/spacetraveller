@@ -57,6 +57,7 @@ private:
     std::unordered_map<uint64_t, CellEntity> entity_positions;
 
     EntityPool* entity_pool_source = nullptr;
+    std::unordered_map<uint64_t, Dictionary> frozen_entities;
 
     int world_bubble_radius = 32;
     TileSource tile_source = nullptr;
@@ -107,6 +108,14 @@ public:
     const CellEntity* get_entity_at(int x, int y) const;
     Dictionary serialize_entity_positions() const;
     void deserialize_entity_positions(const Dictionary& data);
+
+    void freeze_entity(uint64_t packed_pos, const Dictionary& entity_data);
+    Dictionary get_frozen_entity_at(uint64_t packed_pos) const;
+    bool has_frozen_entity(uint64_t packed_pos) const;
+    void remove_frozen_entity(uint64_t packed_pos);
+    std::vector<uint64_t> get_frozen_keys_in_range(const Vector2i& center, int radius) const;
+    Dictionary serialize_frozen_entities() const;
+    void deserialize_frozen_entities(const Dictionary& data);
 
     uint16_t query_tile_id(int x, int y);
     TraversalSnapshot build_traversal_snapshot(

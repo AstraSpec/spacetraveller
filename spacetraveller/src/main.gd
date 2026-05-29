@@ -34,9 +34,6 @@ func _ready() -> void:
 	_initialize_windows()
 
 func _initialize_new_game():
-	_GameWorld.initialize_entity_anatomy(0, "human")
-	_GameWorld.initialize_entity_inventory(0)
-
 	_GameWorld.add_entity_inventory_item(0, "stick", 5)
 	_GameWorld.add_entity_inventory_item(0, "rope", 2)
 	_GameWorld.add_entity_inventory_item(0, "flint", 1)
