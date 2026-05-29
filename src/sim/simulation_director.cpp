@@ -33,6 +33,11 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     Entity* entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
     if (!entity) return 0.0f;
 
+    auto pl_hp_it = d.ledger->health_data.find(d.player_entity_id);
+    if (pl_hp_it != d.ledger->health_data.end() && !pl_hp_it->second.alive) {
+        return 0.0f;
+    }
+
     if (intent.type == IntentType::MOVE) {
         const WorldBubble::CellEntity* occupant = d.bubble->get_entity_at(intent.target.x, intent.target.y);
         if (occupant && occupant->entity_id != d.player_entity_id) {
@@ -52,7 +57,7 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
         auto def_hp_it = d.ledger->health_data.find(defender_id);
         if (def_hp_it == d.ledger->health_data.end() || !def_hp_it->second.alive) return 0.0f;
 
-        cost = ActionResolver::resolve_attack(d.player_entity_id, defender_id, *d.bubble, def_hp_it->second, d.ledger->equipment_data[d.player_entity_id]);
+        cost = ActionResolver::resolve_attack(d.player_entity_id, defender_id, *d.bubble, def_hp_it->second, d.ledger->equipment_data[d.player_entity_id], 10.0f);
 
         if (cost > 0.0f) {
             float dmg = def_hp_it->second.max_hp - def_hp_it->second.current_hp;
@@ -160,6 +165,38 @@ void SimulationDirector::process_game_turn(float current_time) {
 
         float cost = 1.0f;
         if (intent.type == IntentType::MOVE) {
+            // If the NPC tries to step onto the player's cell, attack instead
+            if (player_entity && player_entity->id == d.player_entity_id &&
+                intent.target.x == player_entity->x && intent.target.y == player_entity->y) {
+                auto pl_hp_it = d.ledger->health_data.find(d.player_entity_id);
+                if (pl_hp_it != d.ledger->health_data.end() && pl_hp_it->second.alive) {
+                    // Look up attacker's race base damage
+                    float atk_damage = 10.0f;
+                    auto atk_anat_it = d.ledger->anatomy_data.find(entity_id);
+                    if (atk_anat_it != d.ledger->anatomy_data.end()) {
+                        RaceDb* race_db = RaceDb::get_singleton();
+                        if (race_db) {
+                            const RaceInfo* race = race_db->get_race_info(atk_anat_it->second.race_id);
+                            if (race) atk_damage = race->base_damage;
+                        }
+                    }
+                    cost = ActionResolver::resolve_attack(entity_id, d.player_entity_id, *d.bubble,
+                                                          pl_hp_it->second, d.ledger->equipment_data[entity_id], atk_damage);
+                    if (cost > 0.0f) {
+                        float dmg = pl_hp_it->second.max_hp - pl_hp_it->second.current_hp;
+                        d.sink->on_combat_event(entity_id, d.player_entity_id, dmg,
+                                                pl_hp_it->second.alive ? "hit" : "kill");
+                        if (!pl_hp_it->second.alive) {
+                            d.sink->on_player_died("combat");
+                        }
+                    }
+                }
+                if (cost <= 0.0f) cost = 1.0f;
+                entity->next_turn_time = base_time + cost;
+                d.scheduler->push(entity_id, entity->next_turn_time);
+                continue;
+            }
+
             float move_cost = ActionResolver::resolve_move(intent, *entity, *d.bubble, loco);
             if (move_cost > 0.0f) {
                 cost = move_cost / loco.speed;

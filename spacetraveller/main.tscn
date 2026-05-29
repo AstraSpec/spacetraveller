@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=29 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="23_kbw_scene"]
 [ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="24_opt_scene"]
+[ext_resource type="Script" uid="uid://cmeu5jthdi5wm" path="res://src/ui/death_screen.gd" id="25_death"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -660,7 +661,7 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 4.0
 mouse_filter = 2
 
-[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI" node_paths=PackedStringArray("DayLabel", "TimeLabel", "SunLabel")]
+[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI" node_paths=PackedStringArray("_GameWorld", "DayLabel", "TimeLabel", "SunLabel", "HealthLabel")]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -668,9 +669,11 @@ theme_override_constants/side_margin = 0
 theme_override_styles/panel = ExtResource("15_yaehf")
 current_tab = 0
 script = ExtResource("15_2cqfq")
+_GameWorld = NodePath("../../../GameWorld")
 DayLabel = NodePath("Vitals/VBoxContainer/DayLabel")
 TimeLabel = NodePath("Vitals/VBoxContainer/TimeLabel")
 SunLabel = NodePath("Vitals/VBoxContainer/SunLabel")
+HealthLabel = NodePath("Vitals/VBoxContainer/HealthLabel")
 
 [node name="Vitals" type="MarginContainer" parent="Canvas/ScreenUI/ScreenUI"]
 layout_mode = 2
@@ -705,10 +708,63 @@ label1_font_size = 12
 label1_text = "Sun:"
 label2_font_size = 12
 
+[node name="HealthLabel" parent="Canvas/ScreenUI/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+layout_mode = 2
+label1_color = Color(0.85, 0.4, 0.4, 1)
+label1_font_size = 12
+label1_text = "Health:"
+label2_font_size = 12
+
 [node name="Log" type="Control" parent="Canvas/ScreenUI/ScreenUI"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="DeathScreen" type="Control" parent="Canvas" node_paths=PackedStringArray("_GameWorld", "PlayAgainButton")]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("25_death")
+_GameWorld = NodePath("../../GameWorld")
+PlayAgainButton = NodePath("CenterContainer/VBoxContainer/PlayAgainButton")
+
+[node name="Background" type="ColorRect" parent="Canvas/DeathScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="CenterContainer" type="CenterContainer" parent="Canvas/DeathScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/DeathScreen/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="YouDiedLabel" type="Label" parent="Canvas/DeathScreen/CenterContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.85, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 64
+text = "You Died"
+horizontal_alignment = 1
+
+[node name="PlayAgainButton" type="Button" parent="Canvas/DeathScreen/CenterContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Play Again?"
 
 [connection signal="generated" from="GameWorld" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="timeout" from="Player/PathfindingTimer" to="Player" method="_on_pathfinding_timer_timeout"]

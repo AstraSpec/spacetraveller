@@ -18,6 +18,8 @@ struct RaceInfo {
     Vector2i atlas;
     String perception_tier;
     float base_hp = 100.0f;
+    float speed = 1.0f;
+    float base_damage = 10.0f;
     String corpse_item;
     std::vector<RacePartDefinition> parts;
 };

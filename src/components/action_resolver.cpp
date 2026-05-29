@@ -37,10 +37,9 @@ float ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBu
     return Locomotion::get_step_cost(old_x, old_y, intent.target.x, intent.target.y);
 }
 
-float ActionResolver::resolve_attack(uint32_t attacker_id, uint32_t defender_id, WorldBubble& bubble, HealthData& defender_health, EquipmentData& attacker_equip) {
+float ActionResolver::resolve_attack(uint32_t attacker_id, uint32_t defender_id, WorldBubble& bubble, HealthData& defender_health, EquipmentData& attacker_equip, float base_damage) {
     if (!defender_health.alive) return 0.0f;
 
-    float base_damage = 10.0f;
     float attack_power = Equipment::get_attack_power(attacker_equip);
     float damage = base_damage + attack_power;
 

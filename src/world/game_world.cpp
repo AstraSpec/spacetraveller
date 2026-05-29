@@ -95,6 +95,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_armor_rating", "entity_id"), &GameWorld::get_entity_armor_rating);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing_by_string);
 
+    ClassDB::bind_method(D_METHOD("get_entity_health", "entity_id"), &GameWorld::get_entity_health);
+    ClassDB::bind_method(D_METHOD("get_player_health"), &GameWorld::get_player_health);
+
     ClassDB::bind_method(D_METHOD("spawn_player", "x", "y", "race_id"), &GameWorld::spawn_player);
     ClassDB::bind_method(D_METHOD("get_entity_position", "entity_id"), &GameWorld::get_entity_position);
     ClassDB::bind_method(D_METHOD("get_entity_chunk", "entity_id"), &GameWorld::get_entity_chunk);
@@ -120,6 +123,8 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::INT, "defender_id"),
         PropertyInfo(Variant::FLOAT, "damage"),
         PropertyInfo(Variant::STRING, "result")));
+    ADD_SIGNAL(MethodInfo("player_died",
+        PropertyInfo(Variant::STRING, "cause")));
 }
 
 GameWorld::GameWorld() {
@@ -336,8 +341,13 @@ uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id, const Stri
 
     bubble.set_entity(x, y, id);
 
+    float entity_speed = 0.8f;
+    if (race_db) {
+        const RaceInfo* race = race_db->get_race_info(race_id);
+        if (race) entity_speed = race->speed;
+    }
     LocomotionData& loco = entity_ledger.locomotion_data[id];
-    Locomotion::init(loco, 1.0f);
+    Locomotion::init(loco, entity_speed);
 
     AIData& ai = entity_ledger.ai_data[id];
     ai.state = AIState::WANDER;
@@ -495,6 +505,25 @@ void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float 
 
 void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) {
     emit_signal("combat_event", attacker_id, defender_id, damage, result);
+}
+
+void GameWorld::on_player_died(const String& cause) {
+    emit_signal("player_died", cause);
+}
+
+Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
+    Dictionary d;
+    auto it = entity_ledger.health_data.find(entity_id);
+    if (it != entity_ledger.health_data.end()) {
+        d["current_hp"] = it->second.current_hp;
+        d["max_hp"] = it->second.max_hp;
+        d["alive"] = it->second.alive;
+    }
+    return d;
+}
+
+Dictionary GameWorld::get_player_health() const {
+    return get_entity_health(player_entity_id);
 }
 
 // --- Save / Load ---

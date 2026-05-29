@@ -25,6 +25,9 @@ class DirectionalProcessor:
 		# Get digital vector (rounded to handle potential analog floating precision)
 		var current_raw_dir = Input.get_vector("left", "right", "up", "down").round()
 		
+		var center_held = Input.is_action_pressed("center")
+		var center_just_pressed = Input.is_action_just_pressed("center")
+		
 		# Detect if any relevant action was JUST pressed this frame
 		var just_pressed_dir = Vector2.ZERO
 		if Input.is_action_just_pressed("up"): just_pressed_dir.y -= 1
@@ -32,30 +35,44 @@ class DirectionalProcessor:
 		if Input.is_action_just_pressed("left"): just_pressed_dir.x -= 1
 		if Input.is_action_just_pressed("right"): just_pressed_dir.x += 1
 		
-		var new_pressed = just_pressed_dir != Vector2.ZERO
+		var new_pressed = just_pressed_dir != Vector2.ZERO or center_just_pressed
+		var has_input = current_raw_dir != Vector2.ZERO or center_held
 		
-		if current_raw_dir == Vector2.ZERO:
+		var effective_dir = current_raw_dir  # directional keys take priority
+		
+		if not has_input:
 			last_input_direction = Vector2.ZERO
 			key_held = false
 			time_since_move = move_timer if is_shift_pressed else 0.0
-			return Vector2.ZERO
+			return Vector2.INF  # sentinel: no input at all
 		
-		elif current_raw_dir != last_input_direction and !is_shift_pressed and new_pressed:
-			# New direction
+		if current_raw_dir == Vector2.ZERO and center_held:
+			effective_dir = Vector2.ZERO
+			if center_just_pressed:
+				just_pressed_dir = Vector2.ZERO
+				new_pressed = true
+		
+		if effective_dir != last_input_direction and !is_shift_pressed and new_pressed:
+			# New direction (or first center press)
 			time_since_move = 0.0
-			last_input_direction = current_raw_dir
+			last_input_direction = effective_dir
 			key_held = false
-			return just_pressed_dir
+			return effective_dir
+		
+		elif effective_dir == Vector2.ZERO and center_just_pressed and !is_shift_pressed:
+			time_since_move = 0.0
+			key_held = false
+			return Vector2.ZERO
 			
 		else:
-			# Repeated direction
+			# Repeated direction / held center
 			var threshold = hold_move_timer if key_held else move_timer
 			if time_since_move > threshold:
 				time_since_move = 0.0
 				key_held = true
-				return current_raw_dir
+				return effective_dir
 		
-		return Vector2.ZERO
+		return Vector2.INF  # sentinel: input held but not yet time to repeat
 
 class ViewProcessor:
 	var manager: Node
@@ -86,9 +103,7 @@ class ExplorationContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
 	func handle_input(event: InputEvent) -> bool:
-		if event.is_action_pressed("end_turn"):
-			manager.directional_input.emit(Vector2.ZERO)
-		elif event.is_action_pressed("action_smash"):
+		if event.is_action_pressed("action_smash"):
 			manager.action_smash_requested.emit()
 			return true
 		elif event.is_action_pressed("action_pickup"):
@@ -102,7 +117,7 @@ class ExplorationContext extends InputContext:
 
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
-		if step != Vector2.ZERO:
+		if step != Vector2.INF:
 			manager.directional_input.emit(step)
 
 class MapContext extends InputContext:
@@ -124,7 +139,7 @@ class MapContext extends InputContext:
 
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
-		if step != Vector2.ZERO:
+		if step != Vector2.INF and step != Vector2.ZERO:
 			manager.view_panned.emit(-step * FastTileMap.get_tile_size())
 
 class StructureContext extends InputContext:
@@ -208,7 +223,7 @@ class StructureContext extends InputContext:
 
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
-		if step != Vector2.ZERO:
+		if step != Vector2.INF and step != Vector2.ZERO:
 			manager.view_panned.emit(-step * FastTileMap.get_tile_size())
 
 class MenuContext extends InputContext:
@@ -240,5 +255,5 @@ class MenuContext extends InputContext:
 
 	func process(delta: float) -> void:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
-		if step != Vector2.ZERO:
+		if step != Vector2.INF and step != Vector2.ZERO:
 			manager.ui_directional_input.emit(step)

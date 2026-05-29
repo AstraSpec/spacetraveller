@@ -34,7 +34,7 @@ namespace ActionCost {
 
 namespace ActionResolver {
     float resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco);
-    float resolve_attack(uint32_t attacker_id, uint32_t defender_id, WorldBubble& bubble, HealthData& defender_health, EquipmentData& attacker_equip);
+    float resolve_attack(uint32_t attacker_id, uint32_t defender_id, WorldBubble& bubble, HealthData& defender_health, EquipmentData& attacker_equip, float base_damage = 10.0f);
     float resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
     float resolve_pickup(const Intent& intent, Entity& entity, WorldBubble& bubble, void* inventory = nullptr);
     float resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco);

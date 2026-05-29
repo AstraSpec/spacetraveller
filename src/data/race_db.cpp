@@ -21,6 +21,8 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.perception_tier = p_data.get("perception_tier", "raycast");
     info.base_hp = static_cast<float>(static_cast<double>(p_data.get("base_hp", 100.0)));
+    info.speed = static_cast<float>(static_cast<double>(p_data.get("speed", 1.0)));
+    info.base_damage = static_cast<float>(static_cast<double>(p_data.get("base_damage", 10.0)));
     info.corpse_item = p_data.get("corpse_item", "");
 
     Array parts = p_data.get("parts", Array());

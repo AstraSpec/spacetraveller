@@ -4,6 +4,8 @@
   "atlas": [15, 14],
   "perception_tier": "full_occlusion",
   "base_hp": 300,
+  "speed": 0.8,
+  "base_damage": 20,
   "corpse_item": "corpse_bear",
   "parts": [
     { "id": "torso", "parent": "", "count": 1 },

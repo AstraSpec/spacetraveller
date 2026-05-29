@@ -4,6 +4,8 @@
   "atlas": [3, 14],
   "perception_tier": "raycast",
   "base_hp": 10,
+  "speed": 1.5,
+  "base_damage": 4,
   "corpse_item": "corpse_mouse",
   "parts": [
     { "id": "torso", "parent": "", "count": 1 },

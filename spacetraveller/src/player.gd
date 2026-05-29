@@ -145,8 +145,13 @@ func _on_movement_triggered(dir: Vector2):
 		currentAction = null
 		_clear_interaction_cells()
 	else:
-		_submit_move(dir)
-		World.update_world_bubble(cellPos())
+		if dir == Vector2.ZERO:
+			var pos = Vector2i(cellPos())
+			World.submit_player_intent(World.INTENT_PICKUP, int(pos.x), int(pos.y), "")
+			World.update_world_bubble(cellPos())
+		else:
+			_submit_move(dir)
+			World.update_world_bubble(cellPos())
 
 func _submit_move(dir: Vector2):
 	var pos = Vector2i(cellPos())

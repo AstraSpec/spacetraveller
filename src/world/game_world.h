@@ -141,6 +141,10 @@ public:
     void on_player_turn_ready(uint32_t entity_id) override;
     void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) override;
     void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) override;
+    void on_player_died(const String& cause) override;
+
+    Dictionary get_entity_health(uint32_t entity_id) const;
+    Dictionary get_player_health() const;
 
     Dictionary get_save_data() const;
 
