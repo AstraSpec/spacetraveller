@@ -3,7 +3,9 @@
 #include "path/path_request.h"
 #include "path/path_result.h"
 #include "data/tile_db.h"
+#include "data/race_db.h"
 #include "core/world_coords.h"
+#include "core/id_registry.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
 #include "components/perception.h"
@@ -217,6 +219,36 @@ void SimulationDirector::despawn_entity(uint32_t entity_id) {
 
     Entity* entity = d.ledger->get_entity_pool().get_entity(entity_id);
     if (entity) {
+        Vector2i pos(entity->x, entity->y);
+
+        // Drop all inventory items to the ground
+        auto inv_it = d.ledger->inventory_data.find(entity_id);
+        if (inv_it != d.ledger->inventory_data.end()) {
+            for (const auto& item : inv_it->second.items) {
+                if (item.amount > 0) {
+                    d.bubble->drop_item(pos, item.id, item.amount);
+                }
+            }
+        }
+
+        // Drop the race-specific corpse
+        auto anat_it = d.ledger->anatomy_data.find(entity_id);
+        if (anat_it != d.ledger->anatomy_data.end()) {
+            RaceDb* race_db = RaceDb::get_singleton();
+            if (race_db) {
+                const RaceInfo* race = race_db->get_race_info(anat_it->second.race_id);
+                if (race && !race->corpse_item.is_empty()) {
+                    IdRegistry* reg = IdRegistry::get_singleton();
+                    if (reg) {
+                        uint16_t corpse_id = reg->get_id(race->corpse_item);
+                        if (corpse_id != 0) {
+                            d.bubble->drop_item(pos, corpse_id, 1);
+                        }
+                    }
+                }
+            }
+        }
+
         d.bubble->remove_entity(entity->x, entity->y);
     }
 

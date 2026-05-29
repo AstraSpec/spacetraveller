@@ -29,5 +29,8 @@ func generate_world(playerPos :Vector2i) -> void:
 	spawn_player(playerPos.x, playerPos.y, "human")
 	init_world_bubble(playerPos)
 	spawn_entity(playerPos.x + 10, playerPos.y, "human")
+	spawn_entity(playerPos.x + 5, playerPos.y + 3, "mouse")
+	spawn_entity(playerPos.x - 4, playerPos.y + 6, "mouse")
+	spawn_entity(playerPos.x + 8, playerPos.y - 5, "bear")
 	update_world_bubble(playerPos)
 	generated.emit(regionChunks)

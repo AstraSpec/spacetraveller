@@ -1,5 +1,6 @@
 #include "cell_data.h"
 #include "core/id_registry.h"
+#include "data/item_db.h"
 #include <algorithm>
 
 using namespace godot;
@@ -12,7 +13,26 @@ void CellData::add_item(uint64_t key, uint16_t item_id, int amount) {
             return;
         }
     }
-    stack.push_back({item_id, amount});
+
+    // Items tagged ALWAYS_TOP are inserted at the front so get_top_item returns them
+    bool insert_front = false;
+    ItemDb* db = ItemDb::get_singleton();
+    if (db) {
+        const ItemInfo* info = db->get_item_info(item_id);
+        if (info) {
+            TagRegistry* reg = TagRegistry::get_singleton();
+            if (reg) {
+                uint16_t tag_id = reg->get_tag_id("ALWAYS_TOP");
+                insert_front = TagRegistry::has_tag(tag_id, info->tags);
+            }
+        }
+    }
+
+    if (insert_front) {
+        stack.insert(stack.begin(), {item_id, amount});
+    } else {
+        stack.push_back({item_id, amount});
+    }
 }
 
 int CellData::remove_item(uint64_t key, uint16_t item_id, int amount) {

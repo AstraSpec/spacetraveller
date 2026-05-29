@@ -11,5 +11,7 @@
   { "id": "eye", "name": "Eye", "tags": ["SENSE", "SIGHT"] },
   { "id": "nose", "name": "Nose", "tags": ["SENSE", "SMELL"] },
   { "id": "mouth", "name": "Mouth", "tags": ["SENSE", "TASTE", "EAT"] },
-  { "id": "ear", "name": "Ear", "tags": ["SENSE", "HEARING"] }
+  { "id": "ear", "name": "Ear", "tags": ["SENSE", "HEARING"] },
+  { "id": "paw", "name": "Paw", "tags": ["GRASP", "STANCE"] },
+  { "id": "tail", "name": "Tail", "tags": ["BALANCE"] }
 ]

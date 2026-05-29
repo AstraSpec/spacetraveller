@@ -11,7 +11,15 @@ uint32_t EntityLedger::spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint1
     Anatomy::init(anatomy_data[id], race_id);
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
-    Health::init(health_data[id], 100.0f);
+
+    float hp = 100.0f;
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (race_db) {
+        const RaceInfo* race = race_db->get_race_info(race_id);
+        if (race) hp = race->base_hp;
+    }
+    Health::init(health_data[id], hp);
+
     Equipment::init(equipment_data[id]);
     return id;
 }

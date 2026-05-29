@@ -353,6 +353,17 @@ uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id, const Stri
 
     entity_ledger.perception_memory[id] = PerceptionMemory{};
 
+    // Give a random starting item
+    ItemDb* item_db = ItemDb::get_singleton();
+    if (item_db) {
+        Array item_ids = item_db->get_ids();
+        if (item_ids.size() > 0) {
+            int rand_idx = abs((int)(id * 7 + x * 13 + y * 31)) % item_ids.size();
+            String random_item = item_ids[rand_idx];
+            entity_ledger.add_inventory_item(id, random_item, 1);
+        }
+    }
+
     // Schedule first turn
     Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
     if (entity) {

@@ -1,0 +1,19 @@
+{
+  "id": "mouse",
+  "name": "Mouse",
+  "atlas": [3, 14],
+  "perception_tier": "raycast",
+  "base_hp": 10,
+  "corpse_item": "corpse_mouse",
+  "parts": [
+    { "id": "torso", "parent": "", "count": 1 },
+    { "id": "head", "parent": "torso", "count": 1 },
+    { "id": "leg", "parent": "torso", "count": 4 },
+    { "id": "eye", "parent": "head", "count": 2 },
+    { "id": "nose", "parent": "head", "count": 1 },
+    { "id": "mouth", "parent": "head", "count": 1 },
+    { "id": "ear", "parent": "head", "count": 2 },
+    { "id": "paw", "parent": "leg", "count": 1 },
+    { "id": "tail", "parent": "torso", "count": 1 }
+  ]
+}

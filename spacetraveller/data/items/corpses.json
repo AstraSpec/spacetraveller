@@ -1,0 +1,32 @@
+[
+  {
+    "id": "corpse_human",
+    "name": "Human Corpse",
+    "description": "The remains of a fallen human.",
+    "type": "misc",
+    "atlas": [ 201, 17 ],
+    "weight": 30.0,
+    "volume": 20.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_mouse",
+    "name": "Mouse Corpse",
+    "description": "A tiny dead mouse.",
+    "type": "misc",
+    "atlas": [ 4, 14 ],
+    "weight": 0.1,
+    "volume": 0.05,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_bear",
+    "name": "Bear Corpse",
+    "description": "The massive carcass of a bear.",
+    "type": "misc",
+    "atlas": [ 16, 14 ],
+    "weight": 150.0,
+    "volume": 80.0,
+    "tags": ["ALWAYS_TOP"]
+  }
+]

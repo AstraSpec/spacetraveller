@@ -4,6 +4,7 @@
   "atlas": [104, 17],
   "perception_tier": "raycast",
   "base_hp": 100,
+  "corpse_item": "corpse_human",
   "parts": [
     { "id": "torso", "parent": "", "count": 1 },
     { "id": "head", "parent": "torso", "count": 1 },
