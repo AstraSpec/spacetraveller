@@ -1,0 +1,13 @@
+{
+  "id": "boxer",
+  "name": "Boxer",
+  "damage_mult": 1.25,
+  "accuracy_mod": 0.1,
+  "crit_chance_mod": 0.05,
+  "requires_unarmed": true,
+  "target_heights": ["HIGH", "MID"],
+  "abilities": [
+    { "id": "punch", "weight": 3.0 },
+    { "id": "slap", "weight": 0.5 }
+  ]
+}

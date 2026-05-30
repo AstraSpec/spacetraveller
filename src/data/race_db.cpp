@@ -23,7 +23,9 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.base_hp = static_cast<float>(static_cast<double>(p_data.get("base_hp", 100.0)));
     info.speed = static_cast<float>(static_cast<double>(p_data.get("speed", 1.0)));
     info.base_damage = static_cast<float>(static_cast<double>(p_data.get("base_damage", 10.0)));
+    info.base_stamina = static_cast<float>(static_cast<double>(p_data.get("base_stamina", 100.0)));
     info.corpse_item = p_data.get("corpse_item", "");
+    info.combat_style = p_data.get("combat_style", "default");
 
     Array parts = p_data.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {
@@ -32,6 +34,7 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
         def.part_id = p.get("id", "");
         def.parent_part_id = p.get("parent", "");
         def.count = p.get("count", 1);
+        def.height = p.get("height", "MID");
         info.parts.push_back(def);
     }
 

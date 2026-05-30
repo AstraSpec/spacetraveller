@@ -35,6 +35,7 @@ public:
     String get_tag_name(uint16_t p_id) const;
 
     static bool has_tag(uint16_t p_id, const std::vector<uint16_t> &p_tags);
+    static bool has_tag_any(const std::vector<uint16_t> &p_tags, const std::vector<uint16_t> &p_query);
 };
 
 }

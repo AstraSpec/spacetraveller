@@ -139,11 +139,14 @@ public:
     void on_entity_died(uint32_t entity_id, const String& cause) override;
     void on_player_turn_ready(uint32_t entity_id) override;
     void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) override;
-    void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) override;
+    void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) override;
+    void on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) override;
     void on_player_died(const String& cause) override;
 
     Dictionary get_entity_health(uint32_t entity_id) const;
     Dictionary get_player_health() const;
+    Dictionary get_entity_stamina(uint32_t entity_id) const;
+    Dictionary get_player_stamina() const;
 
     void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime);
     void remove_overlay(int x, int y);

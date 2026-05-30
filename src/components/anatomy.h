@@ -4,6 +4,7 @@
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <vector>
+#include <cstdint>
 
 namespace godot {
 
@@ -12,6 +13,7 @@ struct BodyPart {
     int parent_index = -1;
     float integrity = 1.0f;
     int local_index = 0;
+    String height = "MID";
 };
 
 struct AnatomyData {
@@ -25,11 +27,14 @@ namespace Anatomy {
     bool is_functional(const AnatomyData& data, int index);
     String get_type_id(const AnatomyData& data, int index);
     String get_name(const AnatomyData& data, int index);
-    inline int get_parent(const AnatomyData& data, int index);
-    inline float get_integrity(const AnatomyData& data, int index);
-    inline void set_integrity(AnatomyData& data, int index, float integrity);
-    inline int get_count(const AnatomyData& data);
+    int get_parent(const AnatomyData& data, int index);
+    float get_integrity(const AnatomyData& data, int index);
+    void set_integrity(AnatomyData& data, int index, float integrity);
+    int get_count(const AnatomyData& data);
     Dictionary get_functional_list(const AnatomyData& data);
+    bool has_functional_limbs(const AnatomyData& data, const std::vector<String>& required);
+    float min_required_integrity(const AnatomyData& data, const std::vector<String>& required);
+    int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights = std::vector<String>());
     Dictionary serialize(const AnatomyData& data);
     void deserialize(AnatomyData& data, const Dictionary& dict);
 }

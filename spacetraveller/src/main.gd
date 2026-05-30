@@ -19,6 +19,8 @@ func _ready() -> void:
 	ItemDb.initialize_data()
 	RecipeDb.initialize_data()
 	StructureDb.initialize_data()
+	StyleDb.initialize_data()
+	AbilityDb.initialize_data()
 
 	SaveManager.register_world(_GameWorld)
 	_GameWorld.generate_world(Vector2i(2899, 2899))

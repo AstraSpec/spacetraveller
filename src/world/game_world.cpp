@@ -97,6 +97,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_health", "entity_id"), &GameWorld::get_entity_health);
     ClassDB::bind_method(D_METHOD("get_player_health"), &GameWorld::get_player_health);
 
+    ClassDB::bind_method(D_METHOD("get_entity_stamina", "entity_id"), &GameWorld::get_entity_stamina);
+    ClassDB::bind_method(D_METHOD("get_player_stamina"), &GameWorld::get_player_stamina);
+
     ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
     ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
@@ -125,9 +128,15 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::INT, "attacker_id"),
         PropertyInfo(Variant::INT, "defender_id"),
         PropertyInfo(Variant::FLOAT, "damage"),
-        PropertyInfo(Variant::STRING, "result")));
+        PropertyInfo(Variant::STRING, "result"),
+        PropertyInfo(Variant::STRING, "verb"),
+        PropertyInfo(Variant::STRING, "part")));
     ADD_SIGNAL(MethodInfo("player_died",
         PropertyInfo(Variant::STRING, "cause")));
+    ADD_SIGNAL(MethodInfo("smash_event",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::STRING, "tile_id"),
+        PropertyInfo(Variant::STRING, "result")));
 }
 
 GameWorld::GameWorld() {
@@ -434,14 +443,20 @@ void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float 
     emit_signal("player_action_resolved", entity_id, cost, next_turn_time);
 }
 
-void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result) {
-    Vector2i pos = get_entity_position(defender_id);
-    bubble.add_overlay(pos.x, pos.y, 19, 0, Color(1, 1, 1, 1), 0.1f);
-    emit_signal("combat_event", attacker_id, defender_id, damage, result);
+void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) {
+    if (result != "miss") {
+        Vector2i pos = get_entity_position(defender_id);
+        bubble.add_overlay(pos.x, pos.y, 19, 0, Color(1, 1, 1, 1), 0.1f);
+    }
+    emit_signal("combat_event", attacker_id, defender_id, damage, result, verb, part);
 }
 
 void GameWorld::on_player_died(const String& cause) {
     emit_signal("player_died", cause);
+}
+
+void GameWorld::on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) {
+    emit_signal("smash_event", entity_id, tile_id, result);
 }
 
 Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
@@ -450,6 +465,14 @@ Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
 
 Dictionary GameWorld::get_player_health() const {
     return get_entity_health(player_entity_id);
+}
+
+Dictionary GameWorld::get_entity_stamina(uint32_t entity_id) const {
+    return entity_ledger.get_stamina(entity_id);
+}
+
+Dictionary GameWorld::get_player_stamina() const {
+    return get_entity_stamina(player_entity_id);
 }
 
 void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime) {
@@ -486,11 +509,16 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     }
 
     std::vector<uint64_t> thaw_keys = bubble.get_frozen_keys_in_range(player_pos, radius);
+    float player_time = 0.0f;
+    const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (player_e) player_time = player_e->next_turn_time;
+
     for (uint64_t key : thaw_keys) {
         Dictionary data = bubble.get_frozen_entity_at(key);
         uint32_t new_id = entity_ledger.deserialize_entity(data);
         Entity* e = entity_ledger.get_entity_pool().get_entity(new_id);
         if (e) {
+            if (e->next_turn_time < player_time) e->next_turn_time = player_time;
             bubble.set_entity(e->x, e->y, new_id);
             turn_scheduler.push(new_id, e->next_turn_time);
         }

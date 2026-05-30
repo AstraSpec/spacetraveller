@@ -1,0 +1,13 @@
+{
+  "id": "skitter",
+  "name": "Skitter",
+  "damage_mult": 0.9,
+  "accuracy_mod": 0.1,
+  "crit_chance_mod": 0.05,
+  "requires_unarmed": false,
+  "target_heights": ["LOW"],
+  "abilities": [
+    { "id": "bite", "weight": 3.0 },
+    { "id": "claw", "weight": 1.0 }
+  ]
+}

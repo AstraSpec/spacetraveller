@@ -9,6 +9,7 @@ namespace godot {
 struct BodyPartInfo {
     String name;
     std::vector<uint16_t> tags;
+    float size = 1.0f;
 };
 
 class BodyPartDb : public Object, public DataBase<BodyPartInfo, BodyPartDb> {
@@ -27,6 +28,7 @@ public:
 
     const BodyPartInfo* get_body_part_info(const String &p_id) const;
     String get_body_part_name(const String &p_id) const;
+    float get_body_part_size(const String &p_id) const;
 };
 
 }

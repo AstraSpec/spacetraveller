@@ -1,0 +1,10 @@
+[
+  { "id": "slap", "name": "Slap", "verb": "slap", "required_limbs": ["hand"], "damage_mult": 0.6, "accuracy": 0.9, "speed": 1.3, "stamina_cost": 4 },
+  { "id": "scratch", "name": "Scratch", "verb": "scratch", "required_limbs": ["hand"], "damage_mult": 0.7, "accuracy": 0.85, "speed": 1.2, "stamina_cost": 5 },
+  { "id": "shove", "name": "Shove", "verb": "shove", "required_limbs": ["hand", "hand"], "damage_mult": 0.5, "accuracy": 0.95, "speed": 1.0, "stamina_cost": 8 },
+  { "id": "punch", "name": "Punch", "verb": "punch", "required_limbs": ["hand"], "damage_mult": 1.0, "accuracy": 0.8, "speed": 1.0, "stamina_cost": 10 },
+  { "id": "kick", "name": "Kick", "verb": "kick", "required_limbs": ["foot"], "damage_mult": 1.2, "accuracy": 0.7, "speed": 0.8, "stamina_cost": 15 },
+  { "id": "bite", "name": "Bite", "verb": "bite", "required_limbs": ["mouth"], "damage_mult": 1.0, "accuracy": 0.8, "speed": 0.9, "stamina_cost": 8 },
+  { "id": "claw", "name": "Claw", "verb": "claw", "required_limbs": ["paw"], "damage_mult": 0.9, "accuracy": 0.8, "speed": 1.0, "stamina_cost": 8 },
+  { "id": "maul_swipe", "name": "Maul", "verb": "maul", "required_limbs": ["paw", "paw"], "damage_mult": 1.5, "accuracy": 0.7, "speed": 0.7, "stamina_cost": 20 }
+]

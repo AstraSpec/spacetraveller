@@ -6,6 +6,7 @@
 #include "components/clothing.h"
 #include "components/inventory.h"
 #include "components/health.h"
+#include "components/stamina.h"
 #include "components/equipment.h"
 #include "components/locomotion.h"
 #include "components/perception.h"
@@ -29,10 +30,12 @@ public:
     std::unordered_map<uint32_t, ClothingData> clothing_data;
     std::unordered_map<uint32_t, InventoryData> inventory_data;
     std::unordered_map<uint32_t, HealthData> health_data;
+    std::unordered_map<uint32_t, StaminaData> stamina_data;
     std::unordered_map<uint32_t, EquipmentData> equipment_data;
     std::unordered_map<uint32_t, LocomotionData> locomotion_data;
     std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
     std::unordered_map<uint32_t, AIData> ai_data;
+    std::unordered_map<uint32_t, String> combat_style;
 
     uint32_t spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y, const String& race_id);
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
@@ -44,6 +47,7 @@ public:
     Dictionary get_clothing(uint32_t id) const;
     Dictionary get_inventory(uint32_t id) const;
     Dictionary get_health(uint32_t id) const;
+    Dictionary get_stamina(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
     float get_inventory_volume(uint32_t id) const;
     float get_armor_rating(uint32_t id) const;

@@ -12,6 +12,8 @@
 #include "core/tag_registry.h"
 #include "data/body_part_db.h"
 #include "data/race_db.h"
+#include "data/style_db.h"
+#include "data/ability_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -37,6 +39,8 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(TagRegistry);
 	GDREGISTER_CLASS(BodyPartDb);
 	GDREGISTER_CLASS(RaceDb);
+	GDREGISTER_CLASS(StyleDb);
+	GDREGISTER_CLASS(AbilityDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -64,6 +68,12 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	RaceDb::create_singleton();
 	Engine::get_singleton()->register_singleton("RaceDb", RaceDb::get_singleton());
+
+	StyleDb::create_singleton();
+	Engine::get_singleton()->register_singleton("StyleDb", StyleDb::get_singleton());
+
+	AbilityDb::create_singleton();
+	Engine::get_singleton()->register_singleton("AbilityDb", AbilityDb::get_singleton());
 }
 
 void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
@@ -97,6 +107,12 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("RaceDb");
 	RaceDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("StyleDb");
+	StyleDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("AbilityDb");
+	AbilityDb::delete_singleton();
 }
 
 extern "C" {

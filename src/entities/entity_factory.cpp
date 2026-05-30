@@ -34,6 +34,8 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
     LocomotionData& loco = ledger.locomotion_data[id];
     Locomotion::init(loco, 1.0f);
 
+    ledger.combat_style[id] = "default";
+
     register_and_schedule(id, pos, ledger, bubble, scheduler);
     return id;
 }
@@ -51,6 +53,8 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos,
 
     LocomotionData& loco = ledger.locomotion_data[id];
     Locomotion::init(loco, race->speed);
+
+    ledger.combat_style[id] = race->combat_style;
 
     AIData& ai = ledger.ai_data[id];
     ai.state = AIState::WANDER;

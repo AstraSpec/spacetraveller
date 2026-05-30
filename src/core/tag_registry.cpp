@@ -62,4 +62,13 @@ bool TagRegistry::has_tag(uint16_t p_id, const std::vector<uint16_t> &p_tags) {
     return std::binary_search(p_tags.begin(), p_tags.end(), p_id);
 }
 
+bool TagRegistry::has_tag_any(const std::vector<uint16_t> &p_tags, const std::vector<uint16_t> &p_query) {
+    for (uint16_t q : p_query) {
+        if (q != 0 && std::binary_search(p_tags.begin(), p_tags.end(), q)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }

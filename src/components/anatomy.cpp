@@ -1,6 +1,10 @@
 #include "anatomy.h"
 #include "data/race_db.h"
 #include "data/body_part_db.h"
+#include "core/tag_registry.h"
+#include "core/string_hasher.h"
+#include <godot_cpp/variant/utility_functions.hpp>
+#include <unordered_map>
 
 namespace godot {
 
@@ -18,10 +22,11 @@ void Anatomy::init(AnatomyData& data, const String& race_id) {
         String type_id;
         String parent_type_id;
         int count;
+        String height;
     };
     std::vector<Pending> pending;
     for (const auto& def : race->parts) {
-        pending.push_back({def.part_id, def.parent_part_id, def.count});
+        pending.push_back({def.part_id, def.parent_part_id, def.count, def.height});
     }
 
     auto build_recursive = [&](auto self, String parent_type, int parent_instance_idx) -> void {
@@ -33,6 +38,7 @@ void Anatomy::init(AnatomyData& data, const String& race_id) {
                     part.parent_index = parent_instance_idx;
                     part.integrity = 1.0f;
                     part.local_index = i;
+                    part.height = p.height;
 
                     int my_idx = static_cast<int>(data.parts.size());
                     data.parts.push_back(part);
@@ -120,6 +126,81 @@ Dictionary Anatomy::get_functional_list(const AnatomyData& data) {
     return result;
 }
 
+bool Anatomy::has_functional_limbs(const AnatomyData& data, const std::vector<String>& required) {
+    // Count how many of each required type are needed.
+    std::unordered_map<String, int, StringHasher> needed;
+    for (const String& r : required) needed[r]++;
+
+    for (const auto& pair : needed) {
+        int available = 0;
+        for (int i = 0; i < data.parts.size(); i++) {
+            if (data.parts[i].type_id == pair.first && is_functional(data, i)) {
+                available++;
+            }
+        }
+        if (available < pair.second) return false;
+    }
+    return true;
+}
+
+float Anatomy::min_required_integrity(const AnatomyData& data, const std::vector<String>& required) {
+    float worst = 1.0f;
+    bool any = false;
+    for (const String& r : required) {
+        // Use the best functional instance of this type, but track the worst across required types.
+        float best_for_type = 0.0f;
+        for (int i = 0; i < data.parts.size(); i++) {
+            if (data.parts[i].type_id == r && is_functional(data, i)) {
+                best_for_type = MAX(best_for_type, get_integrity(data, i));
+            }
+        }
+        if (best_for_type > 0.0f) {
+            worst = MIN(worst, best_for_type);
+            any = true;
+        }
+    }
+    return any ? worst : 1.0f;
+}
+
+int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    if (!db) return -1;
+
+    auto height_match = [&](int i) -> bool {
+        if (preferred_heights.empty()) return true;
+        for (const String& h : preferred_heights) {
+            if (data.parts[i].height == h) return true;
+        }
+        return false;
+    };
+
+    // First pass: only parts matching preferred heights. If none match, fall back to all.
+    float total = 0.0f;
+    for (int i = 0; i < data.parts.size(); i++) {
+        if (!is_functional(data, i)) continue;
+        if (!height_match(i)) continue;
+        total += db->get_body_part_size(data.parts[i].type_id);
+    }
+
+    bool use_height_filter = total > 0.0f;
+    if (!use_height_filter) {
+        for (int i = 0; i < data.parts.size(); i++) {
+            if (!is_functional(data, i)) continue;
+            total += db->get_body_part_size(data.parts[i].type_id);
+        }
+    }
+    if (total <= 0.0f) return -1;
+
+    float roll = static_cast<float>(UtilityFunctions::randf()) * total;
+    for (int i = 0; i < data.parts.size(); i++) {
+        if (!is_functional(data, i)) continue;
+        if (use_height_filter && !height_match(i)) continue;
+        roll -= db->get_body_part_size(data.parts[i].type_id);
+        if (roll <= 0.0f) return i;
+    }
+    return -1;
+}
+
 Dictionary Anatomy::serialize(const AnatomyData& data) {
     Dictionary result;
     result["race_id"] = data.race_id;
@@ -130,6 +211,7 @@ Dictionary Anatomy::serialize(const AnatomyData& data) {
         d["parent_index"] = part.parent_index;
         d["integrity"] = part.integrity;
         d["local_index"] = part.local_index;
+        d["height"] = part.height;
         parts.push_back(d);
     }
     result["parts"] = parts;
@@ -147,6 +229,7 @@ void Anatomy::deserialize(AnatomyData& data, const Dictionary& dict) {
         part.parent_index = d.get("parent_index", -1);
         part.integrity = d.get("integrity", 1.0f);
         part.local_index = d.get("local_index", 0);
+        part.height = d.get("height", "MID");
         data.parts.push_back(part);
     }
 }

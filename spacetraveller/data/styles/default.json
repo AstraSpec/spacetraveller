@@ -1,0 +1,16 @@
+{
+  "id": "default",
+  "name": "Default",
+  "damage_mult": 1.0,
+  "accuracy_mod": 0.0,
+  "crit_chance_mod": 0.0,
+  "requires_unarmed": false,
+  "target_heights": [],
+  "abilities": [
+    { "id": "punch", "weight": 1.5 },
+    { "id": "slap", "weight": 1.0 },
+    { "id": "scratch", "weight": 1.0 },
+    { "id": "shove", "weight": 1.0 },
+    { "id": "kick", "weight": 0.5 }
+  ]
+}

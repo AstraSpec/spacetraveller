@@ -1,0 +1,14 @@
+{
+  "id": "maul",
+  "name": "Maul",
+  "damage_mult": 1.3,
+  "accuracy_mod": -0.05,
+  "crit_chance_mod": 0.1,
+  "requires_unarmed": false,
+  "target_heights": ["HIGH", "MID"],
+  "abilities": [
+    { "id": "maul_swipe", "weight": 2.0 },
+    { "id": "claw", "weight": 2.0 },
+    { "id": "bite", "weight": 1.0 }
+  ]
+}

@@ -11,6 +11,7 @@ struct RacePartDefinition {
     String part_id;
     String parent_part_id;
     int count;
+    String height = "MID";
 };
 
 struct RaceInfo {
@@ -20,7 +21,9 @@ struct RaceInfo {
     float base_hp = 100.0f;
     float speed = 1.0f;
     float base_damage = 10.0f;
+    float base_stamina = 100.0f;
     String corpse_item;
+    String combat_style = "default";
     std::vector<RacePartDefinition> parts;
 };
 

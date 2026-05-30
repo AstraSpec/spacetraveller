@@ -20,6 +20,13 @@ uint32_t EntityLedger::spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint1
     }
     Health::init(health_data[id], hp);
 
+    float stam = 100.0f;
+    if (race_db) {
+        const RaceInfo* race = race_db->get_race_info(race_id);
+        if (race) stam = race->base_stamina;
+    }
+    Stamina::init(stamina_data[id], stam);
+
     Equipment::init(equipment_data[id]);
     return id;
 }
@@ -31,6 +38,7 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
     Health::init(health_data[id], 100.0f);
+    Stamina::init(stamina_data[id], 60.0f);
     Equipment::init(equipment_data[id]);
     
     return id;
@@ -41,10 +49,12 @@ void EntityLedger::destroy_entity(uint32_t id) {
     clothing_data.erase(id);
     inventory_data.erase(id);
     health_data.erase(id);
+    stamina_data.erase(id);
     equipment_data.erase(id);
     locomotion_data.erase(id);
     perception_memory.erase(id);
     ai_data.erase(id);
+    combat_style.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -85,6 +95,12 @@ Dictionary EntityLedger::get_health(uint32_t id) const {
     d["max_hp"] = it->second.max_hp;
     d["alive"] = it->second.alive;
     return d;
+}
+
+Dictionary EntityLedger::get_stamina(uint32_t id) const {
+    auto it = stamina_data.find(id);
+    if (it == stamina_data.end()) return Dictionary();
+    return Stamina::serialize(it->second);
 }
 
 float EntityLedger::get_inventory_weight(uint32_t id) const {
@@ -188,10 +204,12 @@ void EntityLedger::deserialize(const Dictionary& data) {
     clothing_data.clear();
     inventory_data.clear();
     health_data.clear();
+    stamina_data.clear();
     equipment_data.clear();
     locomotion_data.clear();
     perception_memory.clear();
     ai_data.clear();
+    combat_style.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -231,6 +249,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["health"] = Health::serialize(hp_it->second);
     }
 
+    auto stam_it = stamina_data.find(id);
+    if (stam_it != stamina_data.end()) {
+        data["stamina"] = Stamina::serialize(stam_it->second);
+    }
+
     auto eq_it = equipment_data.find(id);
     if (eq_it != equipment_data.end()) {
         data["equipment"] = Equipment::serialize(eq_it->second);
@@ -249,6 +272,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
     auto ai_it = ai_data.find(id);
     if (ai_it != ai_data.end()) {
         data["ai"] = AIController::serialize(ai_it->second);
+    }
+
+    auto style_it = combat_style.find(id);
+    if (style_it != combat_style.end()) {
+        data["combat_style"] = style_it->second;
     }
 
     return data;
@@ -290,6 +318,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         Health::deserialize(health_data[id], data["health"]);
     }
 
+    if (data.has("stamina")) {
+        Stamina::deserialize(stamina_data[id], data["stamina"]);
+    }
+
     if (data.has("equipment")) {
         EquipmentData ed;
         Equipment::deserialize(ed, data["equipment"]);
@@ -306,6 +338,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
 
     if (data.has("ai")) {
         AIController::deserialize(ai_data[id], data["ai"]);
+    }
+
+    if (data.has("combat_style")) {
+        combat_style[id] = data["combat_style"];
     }
 
     return id;
