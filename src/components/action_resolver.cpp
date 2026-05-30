@@ -55,12 +55,10 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     bool unarmed = attack_power <= 0.0f;
     bool style_active = style && (!style->requires_unarmed || unarmed);
 
-    // Build the weighted pool of abilities this attacker can actually perform.
-    // An ability is usable if its limbs are functional AND the attacker can afford its stamina.
     std::vector<const AbilityInfo*> pool;
     std::vector<float> weights;
     float total_weight = 0.0f;
-    bool limb_capable = false; // could perform some ability if stamina allowed
+    bool limb_capable = false;
 
     if (style) {
         for (const auto& entry : style->abilities) {
@@ -86,7 +84,6 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     }
 
     if (!chosen) {
-        // Could attack but lacks stamina -> flag exhaustion so the caller can skip the turn.
         if (limb_capable && attacker_stamina) result.exhausted = true;
         return result;
     }
@@ -123,13 +120,20 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     Health::damage(defender_health, damage);
     result.killed = !defender_health.alive;
 
+    result.effect_type = chosen->effect_type;
+    result.effect_mode = chosen->effect_mode;
+    result.effect_magnitude = chosen->effect_magnitude;
+    result.effect_duration = chosen->effect_duration;
+
     std::vector<String> target_heights;
     if (style_active) target_heights = style->target_heights;
 
     int loc_idx = Anatomy::pick_hit_location(defender_anatomy, target_heights);
     if (loc_idx >= 0) {
-        result.part_name = db->get_body_part_name(Anatomy::get_type_id(defender_anatomy, loc_idx));
-        float part_size = db->get_body_part_size(Anatomy::get_type_id(defender_anatomy, loc_idx));
+        result.hit_part_index = loc_idx;
+        result.hit_part_type = Anatomy::get_type_id(defender_anatomy, loc_idx);
+        result.part_name = db->get_body_part_name(result.hit_part_type);
+        float part_size = db->get_body_part_size(result.hit_part_type);
         float durability = part_size * 10.0f;
         float integrity_loss = (durability > 0.0f) ? (damage / durability) : 1.0f;
         float current = Anatomy::get_integrity(defender_anatomy, loc_idx);

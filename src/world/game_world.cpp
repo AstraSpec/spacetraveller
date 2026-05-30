@@ -100,6 +100,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_stamina", "entity_id"), &GameWorld::get_entity_stamina);
     ClassDB::bind_method(D_METHOD("get_player_stamina"), &GameWorld::get_player_stamina);
 
+    ClassDB::bind_method(D_METHOD("get_entity_effects", "entity_id"), &GameWorld::get_entity_effects);
+    ClassDB::bind_method(D_METHOD("get_player_effects"), &GameWorld::get_player_effects);
+
     ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
     ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
@@ -137,6 +140,11 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::INT, "entity_id"),
         PropertyInfo(Variant::STRING, "tile_id"),
         PropertyInfo(Variant::STRING, "result")));
+    ADD_SIGNAL(MethodInfo("effect_event",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::STRING, "effect_type"),
+        PropertyInfo(Variant::STRING, "note"),
+        PropertyInfo(Variant::STRING, "part")));
 }
 
 GameWorld::GameWorld() {
@@ -459,6 +467,10 @@ void GameWorld::on_smash_event(uint32_t entity_id, const String& tile_id, const 
     emit_signal("smash_event", entity_id, tile_id, result);
 }
 
+void GameWorld::on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) {
+    emit_signal("effect_event", entity_id, effect_type, note, part);
+}
+
 Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
     return entity_ledger.get_health(entity_id);
 }
@@ -473,6 +485,14 @@ Dictionary GameWorld::get_entity_stamina(uint32_t entity_id) const {
 
 Dictionary GameWorld::get_player_stamina() const {
     return get_entity_stamina(player_entity_id);
+}
+
+Dictionary GameWorld::get_entity_effects(uint32_t entity_id) const {
+    return entity_ledger.get_effects(entity_id);
+}
+
+Dictionary GameWorld::get_player_effects() const {
+    return get_entity_effects(player_entity_id);
 }
 
 void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime) {

@@ -10,6 +10,7 @@ const CATEGORY_COLORS = {
 	"combat_enemy": "ff5555",
 	"ground": "aaaaaa",
 	"smash": "d8a04a",
+	"effect": "c77dff",
 }
 const DEFAULT_COLOR = "cccccc"
 

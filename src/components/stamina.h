@@ -11,7 +11,7 @@ struct StaminaData {
 };
 
 namespace StaminaTuning {
-    inline constexpr float REGEN_PER_TIME = 0.05f;
+    inline constexpr float REGEN_PER_TIME = 0.15f;
     inline constexpr float MOVE_PENALTY_THRESHOLD = 0.5f;
     inline constexpr float MOVE_PENALTY_MAX = 3.0f;
     inline constexpr float SMASH_COST = 5.0f;

@@ -8,6 +8,7 @@
   "target_heights": ["LOW", "MID"],
   "abilities": [
     { "id": "kick", "weight": 3.0 },
+    { "id": "leg_sweep", "weight": 1.5 },
     { "id": "punch", "weight": 1.0 },
     { "id": "scratch", "weight": 1.0 }
   ]

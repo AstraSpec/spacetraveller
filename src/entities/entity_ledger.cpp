@@ -38,7 +38,7 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
     Health::init(health_data[id], 100.0f);
-    Stamina::init(stamina_data[id], 60.0f);
+    Stamina::init(stamina_data[id], 80.0f);
     Equipment::init(equipment_data[id]);
     
     return id;
@@ -50,6 +50,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     inventory_data.erase(id);
     health_data.erase(id);
     stamina_data.erase(id);
+    effects_data.erase(id);
     equipment_data.erase(id);
     locomotion_data.erase(id);
     perception_memory.erase(id);
@@ -101,6 +102,12 @@ Dictionary EntityLedger::get_stamina(uint32_t id) const {
     auto it = stamina_data.find(id);
     if (it == stamina_data.end()) return Dictionary();
     return Stamina::serialize(it->second);
+}
+
+Dictionary EntityLedger::get_effects(uint32_t id) const {
+    auto it = effects_data.find(id);
+    if (it == effects_data.end()) return Dictionary();
+    return Effects::serialize(it->second);
 }
 
 float EntityLedger::get_inventory_weight(uint32_t id) const {
@@ -205,6 +212,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     inventory_data.clear();
     health_data.clear();
     stamina_data.clear();
+    effects_data.clear();
     equipment_data.clear();
     locomotion_data.clear();
     perception_memory.clear();
@@ -252,6 +260,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
     auto stam_it = stamina_data.find(id);
     if (stam_it != stamina_data.end()) {
         data["stamina"] = Stamina::serialize(stam_it->second);
+    }
+
+    auto fx_it = effects_data.find(id);
+    if (fx_it != effects_data.end() && !fx_it->second.effects.empty()) {
+        data["effects"] = Effects::serialize(fx_it->second);
     }
 
     auto eq_it = equipment_data.find(id);
@@ -320,6 +333,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
 
     if (data.has("stamina")) {
         Stamina::deserialize(stamina_data[id], data["stamina"]);
+    }
+
+    if (data.has("effects")) {
+        Effects::deserialize(effects_data[id], data["effects"]);
     }
 
     if (data.has("equipment")) {

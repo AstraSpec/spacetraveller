@@ -33,17 +33,18 @@ struct AttackResult {
     float speed = 1.0f;
     String verb;
     String part_name;
+    int hit_part_index = -1; 
+    String hit_part_type;
+    String effect_type;
+    String effect_mode;
+    float effect_magnitude = 0.0f;
+    float effect_duration = 0.0f;
 };
 
-// Action duration costs, expressed in in-game seconds.
-// Convention: TimeManager treats 1 cost unit == 1 in-game second; an entity with
-// speed s consumes (cost / s) seconds of simulated time per action.
-// These replace the previous 150/200/100 literals (a deliberate gameplay rebalance,
-// reducing the attack/smash/pickup durations by a factor of 100).
 namespace ActionCost {
-    inline constexpr float ATTACK = 1.5f; // in-game seconds (was 150)
-    inline constexpr float SMASH  = 2.0f; // in-game seconds (was 200)
-    inline constexpr float PICKUP = 1.0f; // in-game seconds (was 100)
+    inline constexpr float ATTACK = 1.5f;
+    inline constexpr float SMASH  = 2.0f;
+    inline constexpr float PICKUP = 1.0f;
 }
 
 namespace CombatTuning {

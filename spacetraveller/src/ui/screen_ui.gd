@@ -13,6 +13,7 @@ func _ready() -> void:
 		_GameWorld.player_action_resolved.connect(_on_player_action_resolved)
 		_GameWorld.combat_event.connect(_on_combat_event)
 		_GameWorld.smash_event.connect(_on_smash_event)
+		_GameWorld.effect_event.connect(_on_effect_event)
 	_update_display()
 	call_deferred("_update_vitals")
 
@@ -53,12 +54,36 @@ func _possessive(entity_id: int, part: String) -> String:
 		return _entity_name(entity_id)
 	if entity_id == 0:
 		return "your %s" % part
-	return "the %s's %s" % [_entity_name(entity_id), part]
+	return "their %s" % part
+
+func _on_effect_event(entity_id: int, effect_type: String, note: String, part: String) -> void:
+	_update_vitals()
+	var actor = "You" if entity_id == 0 else _entity_name(entity_id)
+	var subj_be = "are" if entity_id == 0 else "is"
+	var possessive = "your" if entity_id == 0 else "their"
+	var msg = ""
+	if effect_type == "stun" and note == "frozen":
+		msg = "[b]%s %s stunned and cannot move![/b]" % [actor, subj_be]
+	elif effect_type == "stun" and note == "onset":
+		msg = "%s %s stunned!" % [actor, subj_be]
+	elif effect_type == "bleed" and note == "onset":
+		if part.is_empty():
+			msg = "%s %s bleeding." % [actor, subj_be]
+		else:
+			msg = "%s %s bleeding from %s %s." % [actor, subj_be, possessive, part]
+	elif effect_type == "bleed" and note == "stopped":
+		if part.is_empty():
+			msg = "%s %s stopped bleeding." % [actor, "have" if entity_id == 0 else "has"]
+		else:
+			msg = "%s %s %s stopped bleeding." % [possessive.capitalize(), part, "has"]
+	else:
+		return
+	EventBus.post("effect", msg, {"entity": entity_id, "effect": effect_type, "part": part})
 
 func _on_smash_event(entity_id: int, tile_id: String, result: String) -> void:
 	_update_vitals()
 	var actor = "You" if entity_id == 0 else _entity_name(entity_id)
-	var tile_name = tile_id.replace("_", " ")
+	var tile_name = TileDb.get_tile_name(tile_id)
 	if result == "exhausted":
 		var verb_be = "are" if entity_id == 0 else "is"
 		EventBus.post("smash", "%s %s too exhausted to smash." % [actor, verb_be], {})

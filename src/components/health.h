@@ -12,6 +12,10 @@ struct HealthData {
     bool alive = true;
 };
 
+namespace HealthTuning {
+    inline constexpr float REGEN_PER_TIME = 0.003f;
+}
+
 namespace Health {
     void init(HealthData& data, float max_hp);
     void damage(HealthData& data, float amount);

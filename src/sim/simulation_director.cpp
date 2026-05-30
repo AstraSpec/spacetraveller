@@ -12,7 +12,10 @@
 #include "components/perception.h"
 #include "components/locomotion.h"
 #include "components/stamina.h"
+#include "components/effects.h"
 #include "components/equipment.h"
+#include "components/anatomy.h"
+#include "data/body_part_db.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <cmath>
@@ -22,6 +25,70 @@ using namespace godot;
 
 void SimulationDirector::configure(const SimulationDirectorDeps& deps) {
     d = deps;
+}
+
+void SimulationDirector::apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const AttackResult& atk) {
+    if (!atk.hit) return;
+    EffectsData& fx = d.ledger->effects_data[defender_id];
+
+    if (atk.hit_part_type == "head") {
+        bool was_stunned = Effects::is_stunned(fx);
+        Effects::add(fx, Effects::make_stun_decay(EffectTuning::STUN_PER_HEAD_HIT));
+        if (!was_stunned && Effects::is_stunned(fx)) {
+            d.sink->on_effect_event(defender_id, "stun", "onset", "");
+        }
+    }
+
+    if (!atk.effect_type.is_empty() && atk.effect_magnitude > 0.0f) {
+        if (atk.effect_type == "bleed" && atk.hit_part_index >= 0) {
+            Effects::add(fx, Effects::make_bleed(atk.hit_part_index, atk.effect_magnitude));
+            d.sink->on_effect_event(defender_id, "bleed", "onset", atk.part_name);
+        } else if (atk.effect_type == "stun") {
+            if (atk.effect_mode == "timer") {
+                Effects::add(fx, Effects::make_stun_timer(atk.effect_duration, atk.effect_magnitude));
+            } else {
+                Effects::add(fx, Effects::make_stun_decay(atk.effect_magnitude));
+            }
+            d.sink->on_effect_event(defender_id, "stun", "onset", "");
+        }
+    }
+}
+
+void SimulationDirector::advance_entity_time(uint32_t entity_id, float dt) {
+    if (dt <= 0.0f) return;
+
+    auto hp_regen_it = d.ledger->health_data.find(entity_id);
+    if (hp_regen_it != d.ledger->health_data.end()) {
+        Health::heal(hp_regen_it->second, HealthTuning::REGEN_PER_TIME * dt);
+    }
+
+    auto fx_it = d.ledger->effects_data.find(entity_id);
+    if (fx_it == d.ledger->effects_data.end() || fx_it->second.effects.empty()) return;
+
+    float bleed = Effects::total_bleed(fx_it->second);
+    if (bleed > 0.0f) {
+        auto hp_it = d.ledger->health_data.find(entity_id);
+        if (hp_it != d.ledger->health_data.end() && hp_it->second.alive) {
+            Health::damage(hp_it->second, bleed * EffectTuning::BLEED_HP_PER_MAG * dt);
+            if (!hp_it->second.alive) {
+                if (entity_id == d.player_entity_id) d.sink->on_player_died("bleed");
+                else { d.sink->on_entity_died(entity_id, "bleed"); despawn_entity(entity_id); return; }
+            }
+        }
+    }
+
+    std::vector<int> expired_bleeds;
+    Effects::tick(fx_it->second, dt, &expired_bleeds);
+
+    for (int part_index : expired_bleeds) {
+        String part_name = "";
+        auto anat_it = d.ledger->anatomy_data.find(entity_id);
+        if (anat_it != d.ledger->anatomy_data.end()) {
+            BodyPartDb* bpd = BodyPartDb::get_singleton();
+            if (bpd) part_name = bpd->get_body_part_name(Anatomy::get_type_id(anat_it->second, part_index));
+        }
+        d.sink->on_effect_event(entity_id, "bleed", "stopped", part_name);
+    }
 }
 
 float SimulationDirector::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
@@ -40,6 +107,22 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     auto pl_hp_it = d.ledger->health_data.find(d.player_entity_id);
     if (pl_hp_it != d.ledger->health_data.end() && !pl_hp_it->second.alive) {
         return 0.0f;
+    }
+
+    // Stun freeze: while heavily stunned the player can't act; any input is a forced wait
+    {
+        auto fx_it = d.ledger->effects_data.find(d.player_entity_id);
+        if (fx_it != d.ledger->effects_data.end() && Effects::is_stunned(fx_it->second)) {
+            float wait = EffectTuning::STUN_WAIT_STEP;
+            advance_entity_time(d.player_entity_id, wait);
+            float next_time = entity->next_turn_time + wait;
+            entity->next_turn_time = next_time;
+            d.scheduler->push(d.player_entity_id, next_time);
+            process_game_turn(next_time);
+            d.sink->on_effect_event(d.player_entity_id, "stun", "frozen", "");
+            d.sink->on_player_action_resolved(d.player_entity_id, wait, next_time);
+            return wait;
+        }
     }
 
     if (intent.type == IntentType::MOVE) {
@@ -91,6 +174,8 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             if (atk.killed) {
                 d.sink->on_entity_died(defender_id, "combat");
                 despawn_entity(defender_id);
+            } else {
+                apply_attack_effects(d.player_entity_id, defender_id, atk);
             }
         }
     } else if (intent.type == IntentType::SMASH) {
@@ -133,6 +218,8 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
         if (stam_it != d.ledger->stamina_data.end()) {
             Stamina::regen(stam_it->second, cost * StaminaTuning::REGEN_PER_TIME);
         }
+
+        advance_entity_time(d.player_entity_id, cost);
 
         if (entity->x != old_x || entity->y != old_y) {
             Vector2i new_pos(entity->x, entity->y);
@@ -184,6 +271,17 @@ void SimulationDirector::process_game_turn(float current_time) {
         if (!entity) continue;
 
         float base_time = entity->next_turn_time;
+
+        // Stunned NPCs skip their turn: tick effects over a wait step and reschedule.
+        auto fx_it = d.ledger->effects_data.find(entity_id);
+        if (fx_it != d.ledger->effects_data.end() && Effects::is_stunned(fx_it->second)) {
+            float wait = EffectTuning::STUN_WAIT_STEP;
+            advance_entity_time(entity_id, wait);
+            if (!pool.get_entity(entity_id)) continue; // died to bleed during tick
+            entity->next_turn_time = base_time + wait;
+            d.scheduler->push(entity_id, entity->next_turn_time);
+            continue;
+        }
 
         auto loco_it = d.ledger->locomotion_data.find(entity_id);
         if (loco_it == d.ledger->locomotion_data.end()) continue;
@@ -272,9 +370,13 @@ void SimulationDirector::process_game_turn(float current_time) {
                     d.sink->on_combat_event(entity_id, d.player_entity_id, atk.damage, result_str, atk.verb, atk.part_name);
                     if (atk.killed) {
                         d.sink->on_player_died("combat");
+                    } else {
+                        apply_attack_effects(entity_id, d.player_entity_id, atk);
                     }
                 }
                 if (cost <= 0.0f) cost = 1.0f;
+                advance_entity_time(entity_id, cost);
+                if (!pool.get_entity(entity_id)) continue;
                 entity->next_turn_time = base_time + cost;
                 d.scheduler->push(entity_id, entity->next_turn_time);
                 continue;
@@ -305,6 +407,8 @@ void SimulationDirector::process_game_turn(float current_time) {
         }
 
         if (cost <= 0.0f) cost = 1.0f / loco.speed;
+        advance_entity_time(entity_id, cost);
+        if (!pool.get_entity(entity_id)) continue;
         entity->next_turn_time = base_time + cost;
         d.scheduler->push(entity_id, entity->next_turn_time);
     }

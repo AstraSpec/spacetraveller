@@ -58,7 +58,7 @@ func _update_buttons() -> void:
 func _on_load_pressed() -> void:
 	if selectedID == "": return
 	
-	if not SaveManager.Player:
+	if not SaveManager._GameWorld:
 		# We are on title screen
 		if SaveManager.load_save_to_memory(selectedID):
 			get_tree().change_scene_to_file("res://main.tscn")

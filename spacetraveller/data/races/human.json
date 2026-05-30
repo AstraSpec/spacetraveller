@@ -6,7 +6,7 @@
   "base_hp": 100,
   "speed": 0.8,
   "base_damage": 10,
-  "base_stamina": 60,
+  "base_stamina": 80,
   "corpse_item": "corpse_human",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

@@ -27,6 +27,14 @@ AbilityInfo AbilityDb::_parse_row(const Dictionary &p_data) {
     for (int i = 0; i < limbs.size(); i++) {
         info.required_limbs.push_back(limbs[i]);
     }
+
+    if (p_data.has("effect")) {
+        Dictionary fx = p_data["effect"];
+        info.effect_type = fx.get("type", "");
+        info.effect_mode = fx.get("mode", "decay");
+        info.effect_magnitude = static_cast<float>(static_cast<double>(fx.get("magnitude", 0.0)));
+        info.effect_duration = static_cast<float>(static_cast<double>(fx.get("duration", 0.0)));
+    }
     return info;
 }
 

@@ -7,6 +7,7 @@
 namespace godot {
 
 struct TileInfo {
+    String name;
     std::vector<Vector2i> atlas_variants;
     bool solid;
     std::vector<uint16_t> tags;
@@ -36,6 +37,7 @@ public:
     Vector2i get_atlas_coords(const String &p_id) const;
     bool is_solid(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
+    String get_tile_name(const String &p_id) const;
 };
 
 }

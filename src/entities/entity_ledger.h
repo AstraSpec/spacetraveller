@@ -7,6 +7,7 @@
 #include "components/inventory.h"
 #include "components/health.h"
 #include "components/stamina.h"
+#include "components/effects.h"
 #include "components/equipment.h"
 #include "components/locomotion.h"
 #include "components/perception.h"
@@ -31,6 +32,7 @@ public:
     std::unordered_map<uint32_t, InventoryData> inventory_data;
     std::unordered_map<uint32_t, HealthData> health_data;
     std::unordered_map<uint32_t, StaminaData> stamina_data;
+    std::unordered_map<uint32_t, EffectsData> effects_data;
     std::unordered_map<uint32_t, EquipmentData> equipment_data;
     std::unordered_map<uint32_t, LocomotionData> locomotion_data;
     std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
@@ -48,6 +50,7 @@ public:
     Dictionary get_inventory(uint32_t id) const;
     Dictionary get_health(uint32_t id) const;
     Dictionary get_stamina(uint32_t id) const;
+    Dictionary get_effects(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
     float get_inventory_volume(uint32_t id) const;
     float get_armor_rating(uint32_t id) const;

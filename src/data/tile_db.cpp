@@ -13,6 +13,7 @@ void TileDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &TileDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("is_solid", "id"), &TileDb::is_solid);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &TileDb::has_tag);
+    ClassDB::bind_method(D_METHOD("get_tile_name", "id"), &TileDb::get_tile_name);
     ClassDB::bind_method(D_METHOD("get_ids"), &TileDb::get_ids);
 }
 
@@ -24,7 +25,9 @@ TileDb::~TileDb() {
 
 TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     TileInfo info;
-    
+
+    info.name = p_data.get("name", "");
+
     Variant atlas_data = p_data.get("atlas", Array());
     if (atlas_data.get_type() == Variant::ARRAY) {
         Array arr = atlas_data;
@@ -84,6 +87,11 @@ bool TileDb::has_tag(const String &p_id, const String &p_tag) const {
     
     uint16_t tag_id = reg->get_tag_id(p_tag);
     return TagRegistry::has_tag(tag_id, info->tags);
+}
+
+String TileDb::get_tile_name(const String &p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return (info && !info->name.is_empty()) ? info->name : p_id;
 }
 
 }
