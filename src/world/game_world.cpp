@@ -145,6 +145,9 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::STRING, "effect_type"),
         PropertyInfo(Variant::STRING, "note"),
         PropertyInfo(Variant::STRING, "part")));
+    ADD_SIGNAL(MethodInfo("interact_event",
+        PropertyInfo(Variant::INT, "entity_id"),
+        PropertyInfo(Variant::INT, "target_id")));
 }
 
 GameWorld::GameWorld() {
@@ -469,6 +472,10 @@ void GameWorld::on_smash_event(uint32_t entity_id, const String& tile_id, const 
 
 void GameWorld::on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) {
     emit_signal("effect_event", entity_id, effect_type, note, part);
+}
+
+void GameWorld::on_interact_event(uint32_t entity_id, uint32_t target_id) {
+    emit_signal("interact_event", entity_id, target_id);
 }
 
 Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {

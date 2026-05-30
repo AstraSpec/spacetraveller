@@ -42,6 +42,8 @@ private:
     Vector2i entity_chunk(uint32_t entity_id) const;
     void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const struct AttackResult& atk);
     void advance_entity_time(uint32_t entity_id, float dt);
+    String entity_faction(uint32_t entity_id) const;
+    uint32_t find_nearest_hostile(uint32_t entity_id, int radius) const;
 
     SimulationDirectorDeps d;
 };

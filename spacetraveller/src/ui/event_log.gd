@@ -11,6 +11,7 @@ const CATEGORY_COLORS = {
 	"ground": "aaaaaa",
 	"smash": "d8a04a",
 	"effect": "c77dff",
+	"interact": "5bc0eb",
 }
 const DEFAULT_COLOR = "cccccc"
 

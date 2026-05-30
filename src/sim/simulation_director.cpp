@@ -7,6 +7,7 @@
 #include "data/style_db.h"
 #include "core/world_coords.h"
 #include "core/id_registry.h"
+#include "core/faction.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
 #include "components/perception.h"
@@ -25,6 +26,44 @@ using namespace godot;
 
 void SimulationDirector::configure(const SimulationDirectorDeps& deps) {
     d = deps;
+}
+
+String SimulationDirector::entity_faction(uint32_t entity_id) const {
+    auto anat_it = d.ledger->anatomy_data.find(entity_id);
+    if (anat_it == d.ledger->anatomy_data.end()) return String();
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (!race_db) return String();
+    const RaceInfo* race = race_db->get_race_info(anat_it->second.race_id);
+    return race ? race->faction : String();
+}
+
+uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius) const {
+    const Entity* self = d.ledger->get_entity_pool().get_entity(entity_id);
+    if (!self) return EntityPool::INVALID_ID;
+
+    String my_faction = entity_faction(entity_id);
+    if (my_faction.is_empty()) return EntityPool::INVALID_ID;
+
+    uint32_t best_id = EntityPool::INVALID_ID;
+    long best_dist_sq = -1;
+
+    for (const auto& other : d.ledger->get_entity_pool().get_all()) {
+        if (other.id == entity_id) continue;
+
+        // Cheap bounding-box reject before any distance math.
+        int dx = other.x - self->x;
+        int dy = other.y - self->y;
+        if (dx > radius || dx < -radius || dy > radius || dy < -radius) continue;
+
+        if (!Faction::are_hostile(my_faction, entity_faction(other.id))) continue;
+
+        long dist_sq = static_cast<long>(dx) * dx + static_cast<long>(dy) * dy;
+        if (best_dist_sq < 0 || dist_sq < best_dist_sq) {
+            best_dist_sq = dist_sq;
+            best_id = other.id;
+        }
+    }
+    return best_id;
 }
 
 void SimulationDirector::apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const AttackResult& atk) {
@@ -128,7 +167,13 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     if (intent.type == IntentType::MOVE) {
         const WorldBubble::CellEntity* occupant = d.bubble->get_entity_at(intent.target.x, intent.target.y);
         if (occupant && occupant->entity_id != d.player_entity_id) {
-            intent.type = IntentType::ATTACK;
+            // Hostile occupant -> attack. Friendly occupant -> interact (no turn spent).
+            if (Faction::are_hostile(entity_faction(d.player_entity_id), entity_faction(occupant->entity_id))) {
+                intent.type = IntentType::ATTACK;
+            } else {
+                d.sink->on_interact_event(d.player_entity_id, occupant->entity_id);
+                return 0.0f;
+            }
         }
     }
 
@@ -248,8 +293,6 @@ void SimulationDirector::process_game_turn(float current_time) {
     if (!tile_db) return;
 
     EntityPool& pool = d.ledger->get_entity_pool();
-    Entity* player_entity = pool.get_entity(d.player_entity_id);
-    Vector2i player_pos(player_entity ? player_entity->x : 0, player_entity ? player_entity->y : 0);
 
     std::vector<Vector2i> blocking_positions;
     blocking_positions.reserve(pool.living_count());
@@ -293,12 +336,19 @@ void SimulationDirector::process_game_turn(float current_time) {
         auto& mem = mem_it->second;
         auto& ai = ai_it->second;
 
+        // Acquire the nearest hostile target (faction-based). Falls back to wandering if none.
+        int acquire_radius = d.bubble->get_world_bubble_radius();
+        uint32_t target_id = find_nearest_hostile(entity_id, acquire_radius);
+        Entity* target_entity = (target_id != EntityPool::INVALID_ID) ? pool.get_entity(target_id) : nullptr;
+        Vector2i target_pos = target_entity ? Vector2i(target_entity->x, target_entity->y)
+                                            : Vector2i(entity->x, entity->y);
+
         switch (ai.perception_tier) {
             case PerceptionTier::FULL_OCCLUSION:
-                Perception::tick_full(mem, *entity, *d.bubble, player_pos);
+                Perception::tick_full(mem, *entity, *d.bubble, target_pos);
                 break;
             case PerceptionTier::RAYCAST:
-                Perception::tick_raycast(mem, *entity, player_pos, *d.bubble, *tile_db);
+                Perception::tick_raycast(mem, *entity, target_pos, *d.bubble, *tile_db);
                 break;
             default:
                 break;
@@ -317,16 +367,16 @@ void SimulationDirector::process_game_turn(float current_time) {
             return d.pathfinder->find_path(request, traversal);
         };
 
-        AIContext ctx{*entity, *d.bubble, *tile_db, mem, player_pos, find_path_fn};
+        AIContext ctx{*entity, *d.bubble, *tile_db, mem, target_pos, find_path_fn};
         Intent intent = AIController::tick(ai, loco, ctx);
 
         float cost = 1.0f;
         if (intent.type == IntentType::MOVE) {
-            // If the NPC tries to step onto the player's cell, attack instead
-            if (player_entity && player_entity->id == d.player_entity_id &&
-                intent.target.x == player_entity->x && intent.target.y == player_entity->y) {
-                auto pl_hp_it = d.ledger->health_data.find(d.player_entity_id);
-                if (pl_hp_it != d.ledger->health_data.end() && pl_hp_it->second.alive) {
+            // If the NPC tries to step onto its target's cell, attack that target instead.
+            if (target_entity && intent.target.x == target_entity->x && intent.target.y == target_entity->y) {
+                bool target_is_player = (target_id == d.player_entity_id);
+                auto def_hp_it = d.ledger->health_data.find(target_id);
+                if (def_hp_it != d.ledger->health_data.end() && def_hp_it->second.alive) {
                     // Look up attacker's race base damage
                     float atk_damage = 10.0f;
                     auto atk_anat_it = d.ledger->anatomy_data.find(entity_id);
@@ -345,8 +395,8 @@ void SimulationDirector::process_game_turn(float current_time) {
                     }
                     AttackResult atk = ActionResolver::resolve_attack(
                         d.ledger->anatomy_data[entity_id],
-                        d.ledger->anatomy_data[d.player_entity_id],
-                        pl_hp_it->second,
+                        d.ledger->anatomy_data[target_id],
+                        def_hp_it->second,
                         d.ledger->equipment_data[entity_id],
                         atk_damage,
                         style,
@@ -367,11 +417,16 @@ void SimulationDirector::process_game_turn(float current_time) {
                     if (!atk.hit) result_str = "miss";
                     else if (atk.killed) result_str = atk.crit ? "crit_kill" : "kill";
                     else result_str = atk.crit ? "crit" : "hit";
-                    d.sink->on_combat_event(entity_id, d.player_entity_id, atk.damage, result_str, atk.verb, atk.part_name);
+                    d.sink->on_combat_event(entity_id, target_id, atk.damage, result_str, atk.verb, atk.part_name);
                     if (atk.killed) {
-                        d.sink->on_player_died("combat");
+                        if (target_is_player) {
+                            d.sink->on_player_died("combat");
+                        } else {
+                            d.sink->on_entity_died(target_id, "combat");
+                            despawn_entity(target_id);
+                        }
                     } else {
-                        apply_attack_effects(entity_id, d.player_entity_id, atk);
+                        apply_attack_effects(entity_id, target_id, atk);
                     }
                 }
                 if (cost <= 0.0f) cost = 1.0f;

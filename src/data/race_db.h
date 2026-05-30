@@ -24,6 +24,7 @@ struct RaceInfo {
     float base_stamina = 100.0f;
     String corpse_item;
     String combat_style = "default";
+    String faction;
     std::vector<RacePartDefinition> parts;
 };
 

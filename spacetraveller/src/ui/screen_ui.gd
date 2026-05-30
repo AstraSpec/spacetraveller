@@ -14,6 +14,7 @@ func _ready() -> void:
 		_GameWorld.combat_event.connect(_on_combat_event)
 		_GameWorld.smash_event.connect(_on_smash_event)
 		_GameWorld.effect_event.connect(_on_effect_event)
+		_GameWorld.interact_event.connect(_on_interact_event)
 	_update_display()
 	call_deferred("_update_vitals")
 
@@ -55,6 +56,10 @@ func _possessive(entity_id: int, part: String) -> String:
 	if entity_id == 0:
 		return "your %s" % part
 	return "their %s" % part
+
+func _on_interact_event(_entity_id: int, target_id: int) -> void:
+	var target_name = _entity_name(target_id)
+	EventBus.post("interact", "%s: Hello!" % target_name, {"target": target_id})
 
 func _on_effect_event(entity_id: int, effect_type: String, note: String, part: String) -> void:
 	_update_vitals()

@@ -26,6 +26,7 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.base_stamina = static_cast<float>(static_cast<double>(p_data.get("base_stamina", 100.0)));
     info.corpse_item = p_data.get("corpse_item", "");
     info.combat_style = p_data.get("combat_style", "default");
+    info.faction = p_data.get("faction", "");
 
     Array parts = p_data.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {

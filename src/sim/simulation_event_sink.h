@@ -18,6 +18,7 @@ public:
     virtual void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) = 0;
     virtual void on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) = 0;
     virtual void on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) = 0;
+    virtual void on_interact_event(uint32_t entity_id, uint32_t target_id) = 0;
     virtual void on_player_died(const String& cause) = 0;
 };
 
