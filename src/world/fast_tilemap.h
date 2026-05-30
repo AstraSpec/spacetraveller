@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include "data/tile_db.h"
 #include "world_bubble.h"
+#include "core/rng.h"
 
 namespace godot {
 
@@ -57,11 +58,7 @@ protected:
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
 
     uint32_t _get_variant_index(int x, int y, int variant_count) const {
-        if (variant_count <= 1) return 0;
-        uint32_t h = (static_cast<uint32_t>(x) * 1597334677U) ^
-                     (static_cast<uint32_t>(y) * 3812015801U) ^
-                     (static_cast<uint32_t>(world_seed));
-        return h % variant_count;
+        return Rng::variant_index(static_cast<uint32_t>(world_seed), x, y, static_cast<uint32_t>(variant_count));
     }
 
 public:

@@ -4,6 +4,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
 #include "core/id_registry.h"
+#include "core/rng.h"
 #include <unordered_set>
 #include <algorithm>
 
@@ -189,10 +190,8 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         if (!info) return;
         atlas_coords = info->atlas_variants.empty() ? Vector2i(-1, -1) : info->atlas_variants[0];
         if (info->atlas_variants.size() > 1 && tilemap) {
-            uint32_t h = (static_cast<uint32_t>(pos.x) * 1597334677U) ^ 
-                         (static_cast<uint32_t>(pos.y) * 3812015801U) ^ 
-                         (static_cast<uint32_t>(tilemap->get_world_seed()));
-            atlas_coords = info->atlas_variants[h % info->atlas_variants.size()];
+            uint32_t idx = Rng::variant_index(static_cast<uint32_t>(tilemap->get_world_seed()), pos.x, pos.y, info->atlas_variants.size());
+            atlas_coords = info->atlas_variants[idx];
         }
     }
 

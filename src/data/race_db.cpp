@@ -1,5 +1,6 @@
 #include "race_db.h"
 #include "core/id_registry.h"
+#include "core/tag_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 
 namespace godot {
@@ -27,6 +28,7 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.corpse_item = p_data.get("corpse_item", "");
     info.combat_style = p_data.get("combat_style", "default");
     info.faction = p_data.get("faction", "");
+    info.tags = _parse_tags(p_data.get("tags", Array()));
 
     Array parts = p_data.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {
@@ -59,6 +61,17 @@ const RaceInfo* RaceDb::get_race_info(uint16_t p_id) const {
         return &fast_cache[p_id];
     }
     return nullptr;
+}
+
+bool RaceDb::has_tag(const String &p_id, const String &p_tag) const {
+    const RaceInfo* info = get_race_info(p_id);
+    if (!info) return false;
+
+    TagRegistry *reg = TagRegistry::get_singleton();
+    if (!reg) return false;
+
+    uint16_t tag_id = reg->get_tag_id(p_tag);
+    return TagRegistry::has_tag(tag_id, info->tags);
 }
 
 Vector2i RaceDb::get_atlas_coords(const String &p_id) const {

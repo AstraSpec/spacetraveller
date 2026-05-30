@@ -87,6 +87,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
 
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
+    ClassDB::bind_method(D_METHOD("get_entity_gender", "entity_id"), &GameWorld::get_entity_gender);
+    ClassDB::bind_method(D_METHOD("get_entity_name", "entity_id"), &GameWorld::get_entity_name);
     ClassDB::bind_method(D_METHOD("get_entity_clothing", "entity_id"), &GameWorld::get_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
     ClassDB::bind_method(D_METHOD("equip_entity_clothing", "entity_id", "part_index", "item_id", "layer"), &GameWorld::equip_entity_clothing);
@@ -339,7 +341,7 @@ uint32_t GameWorld::spawn_player(int x, int y, const String& race_id) {
 }
 
 uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
-    return EntityFactory::create_npc(race_id, Vector2i(x, y), entity_ledger, bubble, turn_scheduler);
+    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, bubble, turn_scheduler);
 }
 
 void GameWorld::despawn_entity(uint32_t entity_id) {
@@ -404,6 +406,18 @@ float GameWorld::get_entity_inventory_volume(uint32_t entity_id) const {
 
 Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
     return entity_ledger.get_anatomy(entity_id);
+}
+
+String GameWorld::get_entity_gender(uint32_t entity_id) const {
+    auto it = entity_ledger.gender.find(entity_id);
+    if (it != entity_ledger.gender.end()) return it->second;
+    return "";
+}
+
+String GameWorld::get_entity_name(uint32_t entity_id) const {
+    auto it = entity_ledger.entity_name.find(entity_id);
+    if (it != entity_ledger.entity_name.end()) return it->second;
+    return "";
 }
 
 Dictionary GameWorld::get_entity_clothing(uint32_t entity_id) const {

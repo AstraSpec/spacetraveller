@@ -58,8 +58,7 @@ func _possessive(entity_id: int, part: String) -> String:
 	return "their %s" % part
 
 func _on_interact_event(_entity_id: int, target_id: int) -> void:
-	var target_name = _entity_name(target_id)
-	EventBus.post("interact", "%s: Hello!" % target_name, {"target": target_id})
+	InputManager.toggle_menu("conversation", {"target": target_id})
 
 func _on_effect_event(entity_id: int, effect_type: String, note: String, part: String) -> void:
 	_update_vitals()

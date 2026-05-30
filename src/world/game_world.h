@@ -126,6 +126,8 @@ public:
     float get_entity_inventory_volume(uint32_t entity_id) const;
 
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
+    String get_entity_gender(uint32_t entity_id) const;
+    String get_entity_name(uint32_t entity_id) const;
     Dictionary get_entity_clothing(uint32_t entity_id) const;
     String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;
     bool equip_entity_clothing(uint32_t entity_id, int part_index, const String& item_id, const String& layer);

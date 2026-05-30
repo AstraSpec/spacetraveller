@@ -1,0 +1,22 @@
+{
+  "id": "human",
+  "male": [
+    "James", "John", "William", "Henry", "Thomas", "Edward", "Arthur", "Walter",
+    "George", "Frederick", "Albert", "Charles", "Ernest", "Frank", "Samuel",
+    "Oscar", "Leonard", "Victor", "Harold", "Cecil", "Roland", "Marcus", "Felix",
+    "Julian", "Desmond", "Conrad", "Silas", "Ambrose", "Hugo", "Reuben"
+  ],
+  "female": [
+    "Mary", "Eleanor", "Alice", "Edith", "Florence", "Beatrice", "Clara", "Agnes",
+    "Margaret", "Helena", "Rosalind", "Vivian", "Cordelia", "Mabel", "Estelle",
+    "Iris", "Lillian", "Maud", "Ada", "Winifred", "Constance", "Geneva", "Opal",
+    "Sybil", "Verity", "Wilhelmina", "Cora", "Hazel", "Loretta", "Adelaide"
+  ],
+  "surname": [
+    "Ashby", "Blackwood", "Carrow", "Davenport", "Ellsworth", "Fairbanks",
+    "Grimshaw", "Hawthorne", "Ironwood", "Jessop", "Kingsley", "Lockhart",
+    "Merriweather", "Northcott", "Oakley", "Prescott", "Quill", "Radcliffe",
+    "Sterling", "Thorne", "Underwood", "Vance", "Whitlock", "Yardley",
+    "Ackerman", "Bellamy", "Crane", "Dunmore", "Everhart", "Fenwick"
+  ]
+}

@@ -21,6 +21,7 @@ func _ready() -> void:
 	StructureDb.initialize_data()
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()
+	NameDb.initialize_data()
 
 	SaveManager.register_world(_GameWorld)
 	_GameWorld.generate_world(Vector2i(2899, 2899))

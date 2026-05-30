@@ -5,7 +5,9 @@
 #include "world/turn_scheduler.h"
 #include "data/race_db.h"
 #include "data/item_db.h"
+#include "data/name_db.h"
 #include "core/id_registry.h"
+#include "core/rng.h"
 #include "components/locomotion.h"
 #include "components/perception.h"
 #include "components/ai_controller.h"
@@ -40,7 +42,7 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
     return id;
 }
 
-uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos,
+uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, int world_seed,
                                     EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
     RaceDb* race_db = RaceDb::get_singleton();
     if (!race_db) return EntityPool::INVALID_ID;
@@ -55,6 +57,19 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos,
     Locomotion::init(loco, race->speed);
 
     ledger.combat_style[id] = race->combat_style;
+
+    if (race_db->has_tag(race_id, "GENDER")) {
+        Rng::Seeded rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::GENDER);
+        String g = rng.chance(0.5f) ? "male" : "female";
+        ledger.gender[id] = g;
+
+        NameDb* name_db = NameDb::get_singleton();
+        if (name_db) {
+            Rng::Seeded name_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::NAME);
+            String full_name = name_db->generate(race_id, g, name_rng);
+            if (!full_name.is_empty()) ledger.entity_name[id] = full_name;
+        }
+    }
 
     AIData& ai = ledger.ai_data[id];
     ai.state = AIState::WANDER;

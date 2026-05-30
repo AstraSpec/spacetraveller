@@ -38,6 +38,8 @@ public:
     std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
     std::unordered_map<uint32_t, AIData> ai_data;
     std::unordered_map<uint32_t, String> combat_style;
+    std::unordered_map<uint32_t, String> gender;
+    std::unordered_map<uint32_t, String> entity_name;
 
     uint32_t spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y, const String& race_id);
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);

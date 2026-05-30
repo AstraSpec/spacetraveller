@@ -25,6 +25,7 @@ struct RaceInfo {
     String corpse_item;
     String combat_style = "default";
     String faction;
+    std::vector<uint16_t> tags;
     std::vector<RacePartDefinition> parts;
 };
 
@@ -46,6 +47,8 @@ public:
 
     const RaceInfo* get_race_info(const String &p_id) const;
     const RaceInfo* get_race_info(uint16_t p_id) const;
+
+    bool has_tag(const String &p_id, const String &p_tag) const;
 
     Vector2i get_atlas_coords(const String &p_id) const;
     Vector2i get_atlas_coords(uint16_t p_id) const;

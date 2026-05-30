@@ -56,6 +56,8 @@ void EntityLedger::destroy_entity(uint32_t id) {
     perception_memory.erase(id);
     ai_data.erase(id);
     combat_style.erase(id);
+    gender.erase(id);
+    entity_name.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -218,6 +220,8 @@ void EntityLedger::deserialize(const Dictionary& data) {
     perception_memory.clear();
     ai_data.clear();
     combat_style.clear();
+    gender.clear();
+    entity_name.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -292,6 +296,16 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["combat_style"] = style_it->second;
     }
 
+    auto gender_it = gender.find(id);
+    if (gender_it != gender.end()) {
+        data["gender"] = gender_it->second;
+    }
+
+    auto name_it = entity_name.find(id);
+    if (name_it != entity_name.end()) {
+        data["name"] = name_it->second;
+    }
+
     return data;
 }
 
@@ -359,6 +373,14 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
 
     if (data.has("combat_style")) {
         combat_style[id] = data["combat_style"];
+    }
+
+    if (data.has("gender")) {
+        gender[id] = data["gender"];
+    }
+
+    if (data.has("name")) {
+        entity_name[id] = data["name"];
     }
 
     return id;

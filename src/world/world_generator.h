@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdint>
 #include "core/world_coords.h"
+#include "core/rng.h"
 
 namespace godot {
 
@@ -58,9 +59,7 @@ public:
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);
     
     uint32_t get_hash(int x, int y, uint32_t seed) const {
-        return (static_cast<uint32_t>(x) * 1597334677U) ^ 
-               (static_cast<uint32_t>(y) * 3812015801U) ^ 
-               (seed);
+        return static_cast<uint32_t>(Rng::hash_pos(seed, Vector2i(x, y), Rng::BIOME) >> 32);
     }
 
     // Accessors for GameWorld to handle saving/loading
