@@ -127,6 +127,11 @@ public:
 
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
     String get_entity_gender(uint32_t entity_id) const;
+    bool entity_has_sapient(uint32_t entity_id) const;
+    int get_entity_friendship(uint32_t entity_id) const;
+    int get_entity_romance(uint32_t entity_id) const;
+    void set_entity_friendship(uint32_t entity_id, int value);
+    void set_entity_romance(uint32_t entity_id, int value);
     String get_entity_name(uint32_t entity_id) const;
     Dictionary get_entity_clothing(uint32_t entity_id) const;
     String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;

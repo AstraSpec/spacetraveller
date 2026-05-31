@@ -8,6 +8,7 @@ signal item_activated(index: int, data: Variant)
 @export var menu_separation_scene: PackedScene = preload("res://src/ui/menu_seperation.tscn")
 @export var columns: int = 2
 @export var button_left_margin: int = 0
+@export var button_separation: int = 0
 
 var selected_index: int = 0
 var buttons: Array = []
@@ -71,7 +72,7 @@ func _update_grid_layout():
 	for c in range(columns):
 		var column_vbox = VBoxContainer.new()
 		column_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		column_vbox.add_theme_constant_override("separation", 0)
+		column_vbox.add_theme_constant_override("separation", button_separation)
 		Hbox.add_child(column_vbox)
 		
 		for i in range(_items_per_column):

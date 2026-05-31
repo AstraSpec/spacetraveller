@@ -58,6 +58,8 @@ void EntityLedger::destroy_entity(uint32_t id) {
     combat_style.erase(id);
     gender.erase(id);
     entity_name.erase(id);
+    friendship.erase(id);
+    romance.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -70,6 +72,38 @@ int EntityLedger::get_inventory_item_amount(uint32_t id, const String& item_id) 
     if (it == inventory_data.end()) return 0;
 
     return Inventory::get_item_amount(it->second, reg->get_id(item_id));
+}
+
+void EntityLedger::init_relationship(uint32_t id) {
+    if (friendship.find(id) != friendship.end() || romance.find(id) != romance.end()) {
+        return; // already initialized; leave existing values unchanged
+    }
+    friendship[id] = RelationshipTuning::FRIENDSHIP_INITIAL;
+    romance[id] = RelationshipTuning::ROMANCE_INITIAL;
+}
+
+bool EntityLedger::has_relationship(uint32_t id) const {
+    return friendship.find(id) != friendship.end() || romance.find(id) != romance.end();
+}
+
+int EntityLedger::get_friendship(uint32_t id) const {
+    auto it = friendship.find(id);
+    if (it == friendship.end()) return RELATIONSHIP_SENTINEL;
+    return it->second;
+}
+
+int EntityLedger::get_romance(uint32_t id) const {
+    auto it = romance.find(id);
+    if (it == romance.end()) return RELATIONSHIP_SENTINEL;
+    return it->second;
+}
+
+void EntityLedger::set_friendship(uint32_t id, int value) {
+    friendship[id] = CLAMP(value, RelationshipTuning::MIN_VALUE, RelationshipTuning::MAX_VALUE);
+}
+
+void EntityLedger::set_romance(uint32_t id, int value) {
+    romance[id] = CLAMP(value, RelationshipTuning::MIN_VALUE, RelationshipTuning::MAX_VALUE);
 }
 
 Dictionary EntityLedger::get_anatomy(uint32_t id) const {
@@ -222,6 +256,8 @@ void EntityLedger::deserialize(const Dictionary& data) {
     combat_style.clear();
     gender.clear();
     entity_name.clear();
+    friendship.clear();
+    romance.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -306,6 +342,16 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["name"] = name_it->second;
     }
 
+    auto fr_it = friendship.find(id);
+    if (fr_it != friendship.end()) {
+        data["friendship"] = fr_it->second;
+    }
+
+    auto ro_it = romance.find(id);
+    if (ro_it != romance.end()) {
+        data["romance"] = ro_it->second;
+    }
+
     return data;
 }
 
@@ -381,6 +427,13 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
 
     if (data.has("name")) {
         entity_name[id] = data["name"];
+    }
+
+    if (data.has("friendship") || data.has("romance")) {
+        int f = static_cast<int>(data.get("friendship", RelationshipTuning::FRIENDSHIP_INITIAL));
+        int r = static_cast<int>(data.get("romance", RelationshipTuning::ROMANCE_INITIAL));
+        friendship[id] = CLAMP(f, RelationshipTuning::MIN_VALUE, RelationshipTuning::MAX_VALUE);
+        romance[id]    = CLAMP(r, RelationshipTuning::MIN_VALUE, RelationshipTuning::MAX_VALUE);
     }
 
     return id;

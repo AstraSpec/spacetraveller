@@ -57,7 +57,15 @@ func _possessive(entity_id: int, part: String) -> String:
 		return "your %s" % part
 	return "their %s" % part
 
-func _on_interact_event(_entity_id: int, target_id: int) -> void:
+func _on_interact_event(entity_id: int, target_id: int) -> void:
+	if InputManager.current_mode == InputManager.InputMode.MENU and InputManager.active_menu_id == "conversation":
+		return
+	if target_id == entity_id:
+		return
+	if not _GameWorld or not _GameWorld.entity_has_sapient(target_id):
+		return
+	if not ConversationService.is_ready():
+		return
 	InputManager.toggle_menu("conversation", {"target": target_id})
 
 func _on_effect_event(entity_id: int, effect_type: String, note: String, part: String) -> void:

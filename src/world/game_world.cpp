@@ -88,6 +88,11 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
     ClassDB::bind_method(D_METHOD("get_entity_gender", "entity_id"), &GameWorld::get_entity_gender);
+    ClassDB::bind_method(D_METHOD("entity_has_sapient", "entity_id"), &GameWorld::entity_has_sapient);
+    ClassDB::bind_method(D_METHOD("get_entity_friendship", "entity_id"), &GameWorld::get_entity_friendship);
+    ClassDB::bind_method(D_METHOD("get_entity_romance", "entity_id"), &GameWorld::get_entity_romance);
+    ClassDB::bind_method(D_METHOD("set_entity_friendship", "entity_id", "value"), &GameWorld::set_entity_friendship);
+    ClassDB::bind_method(D_METHOD("set_entity_romance", "entity_id", "value"), &GameWorld::set_entity_romance);
     ClassDB::bind_method(D_METHOD("get_entity_name", "entity_id"), &GameWorld::get_entity_name);
     ClassDB::bind_method(D_METHOD("get_entity_clothing", "entity_id"), &GameWorld::get_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
@@ -412,6 +417,31 @@ String GameWorld::get_entity_gender(uint32_t entity_id) const {
     auto it = entity_ledger.gender.find(entity_id);
     if (it != entity_ledger.gender.end()) return it->second;
     return "";
+}
+
+bool GameWorld::entity_has_sapient(uint32_t entity_id) const {
+    Dictionary anat = entity_ledger.get_anatomy(entity_id);
+    if (anat.is_empty()) return false;
+    String race_id = anat.get("race_id", "");
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (!race_db) return false;
+    return race_db->has_tag(race_id, "SAPIENT");
+}
+
+int GameWorld::get_entity_friendship(uint32_t entity_id) const {
+    return entity_ledger.get_friendship(entity_id);
+}
+
+int GameWorld::get_entity_romance(uint32_t entity_id) const {
+    return entity_ledger.get_romance(entity_id);
+}
+
+void GameWorld::set_entity_friendship(uint32_t entity_id, int value) {
+    entity_ledger.set_friendship(entity_id, value);
+}
+
+void GameWorld::set_entity_romance(uint32_t entity_id, int value) {
+    entity_ledger.set_romance(entity_id, value);
 }
 
 String GameWorld::get_entity_name(uint32_t entity_id) const {

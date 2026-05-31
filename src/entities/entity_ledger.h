@@ -12,6 +12,7 @@
 #include "components/locomotion.h"
 #include "components/perception.h"
 #include "components/ai_controller.h"
+#include "components/relationship_tuning.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -40,12 +41,23 @@ public:
     std::unordered_map<uint32_t, String> combat_style;
     std::unordered_map<uint32_t, String> gender;
     std::unordered_map<uint32_t, String> entity_name;
+    std::unordered_map<uint32_t, int> friendship;
+    std::unordered_map<uint32_t, int> romance;
+
+    static constexpr int RELATIONSHIP_SENTINEL = -1;
 
     uint32_t spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y, const String& race_id);
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
+
+    void init_relationship(uint32_t id);
+    bool has_relationship(uint32_t id) const;
+    int get_friendship(uint32_t id) const;
+    int get_romance(uint32_t id) const;
+    void set_friendship(uint32_t id, int value);
+    void set_romance(uint32_t id, int value);
 
     Dictionary get_anatomy(uint32_t id) const;
     Dictionary get_clothing(uint32_t id) const;

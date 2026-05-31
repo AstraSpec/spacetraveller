@@ -71,6 +71,10 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         }
     }
 
+    if (race_db->has_tag(race_id, "SAPIENT")) {
+        ledger.init_relationship(id);
+    }
+
     AIData& ai = ledger.ai_data[id];
     ai.state = AIState::WANDER;
     ai.wander_center = pos;
