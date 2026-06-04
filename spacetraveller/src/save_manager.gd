@@ -19,7 +19,7 @@ func save_game(slot_name: String = "") -> void:
 	var data = {
 		"version": 1,
 		"time": TimeManager.total_turns,
-		"world": _GameWorld.get_save_data()
+		"world": _GameWorld.get_save_data(),
 	}
 	
 	var file = FileAccess.open(full_path, FileAccess.WRITE)

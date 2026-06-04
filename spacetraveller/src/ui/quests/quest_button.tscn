@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://d240jhymvw2v1"]
+
+[node name="QuestButton" type="Button"]
+offset_right = 206.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+text = "Quest"
+alignment = 0

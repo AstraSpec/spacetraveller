@@ -112,17 +112,23 @@ func _update_grid_layout():
 func _setup_button(btn: Control, index: int, item: Variant):
 	var left_text = ""
 	var right_text = ""
-	
+
 	if item is Dictionary:
 		left_text = str(item.get("left", item.get("display_name", "")))
 		right_text = str(item.get("right", item.get("quantity_text", "")))
 	elif item is String:
 		left_text = item
-	
+
 	if btn.has_method("setup"):
 		btn.setup(index, left_text, right_text)
 	elif btn is Button:
 		btn.text = left_text
+
+	# Optional per-row font color, used to tint quest-offer buttons etc.
+	if item is Dictionary and item.has("font_color") and btn.has_method("set_font_color"):
+		var c = item["font_color"]
+		if c is Color:
+			btn.set_font_color(c)
 
 func _update_selection_visuals() -> void:
 	for i in range(buttons.size()):
@@ -133,6 +139,10 @@ func _update_selection_visuals() -> void:
 		elif btn is Button:
 			if is_selected:
 				btn.grab_focus()
+
+func deselect() -> void:
+	selected_index = -1
+	_update_selection_visuals()
 
 func _on_button_hovered(index: int) -> void:
 	selected_index = index

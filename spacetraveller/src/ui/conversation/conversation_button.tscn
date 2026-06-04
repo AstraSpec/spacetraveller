@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c0nv7btn0answ"]
 
-[ext_resource type="Script" path="res://src/ui/conversation/conversation_button.gd" id="1_cbtn"]
+[ext_resource type="Script" uid="uid://d3iyndfmj2mm5" path="res://src/ui/conversation/conversation_button.gd" id="1_cbtn"]
 
 [node name="ConversationButton" type="Button"]
 offset_right = 206.0

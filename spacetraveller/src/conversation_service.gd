@@ -16,7 +16,6 @@ const DEFAULT_MODEL := "llama3.2:3b-instruct-q4_K_M"
 const GROQ_URL := "https://api.groq.com/openai/v1/chat/completions"
 const DEFAULT_CLOUD_MODEL := "llama-3.3-70b-versatile"
 
-# Curated free-tier Groq models
 const CLOUD_MODELS := [
 	"llama-3.3-70b-versatile",
 	"llama-3.1-8b-instant",
@@ -82,25 +81,22 @@ func generate(messages: Array, tag: String, min_segments: int = 1) -> void:
 	_tag = tag
 	_min_segments = max(1, min_segments)
 	_attempt = 0
-	_send()
+	_attempt_once()
 
-func _send() -> void:
+func _attempt_once() -> void:
 	_attempt += 1
 	var req := _build_request()
 	if req.is_empty():
 		generation_failed.emit("Cloud provider needs an API key (check AI setup)", _tag)
 		return
-	var http := HTTPRequest.new()
-	http.use_threads = true
-	add_child(http)
-	http.timeout = 60.0
-	http.set_meta("t_start_us", Time.get_ticks_usec())
-	http.request_completed.connect(_on_done.bind(http))
 	print("[ConversationService] POST provider=", get_provider(), " tag=", _tag, " attempt=", _attempt, " min_segments=", _min_segments)
-	var err := http.request(req["url"], req["headers"], HTTPClient.METHOD_POST, req["body"])
+	var client = preload("res://src/ai_http_client.gd").new()
+	add_child(client)
+	client.text_received.connect(_on_text_received.bind(client))
+	client.failed.connect(_on_http_failed.bind(client))
+	var err = client.post(req["url"], req["headers"], req["body"])
 	if err != OK:
-		print("[ConversationService] request() error: ", err)
-		http.queue_free()
+		client.queue_free()
 		generation_failed.emit("Could not reach the AI server", _tag)
 
 func _build_request() -> Dictionary:
@@ -129,25 +125,20 @@ func _build_request() -> Dictionary:
 	}
 	return { "url": get_server_url() + "/api/chat", "headers": headers, "body": JSON.stringify(local_payload) }
 
-func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
-	var wall_ms := 0.0
-	if http.has_meta("t_start_us"):
-		wall_ms = (Time.get_ticks_usec() - http.get_meta("t_start_us")) / 1000.0
-	http.queue_free()
-	print("[ConversationService] done tag=", _tag, " result=", result, " code=", code, " wall=", wall_ms, "ms")
-	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-		print("[ConversationService] body: ", body.get_string_from_utf8())
-		generation_failed.emit(_http_error_reason(code), _tag)
-		return
-	var envelope = JSON.parse_string(body.get_string_from_utf8())
+func _on_http_failed(reason: String, client) -> void:
+	client.queue_free()
+	generation_failed.emit(reason, _tag)
+
+func _on_text_received(raw: String, client) -> void:
+	client.queue_free()
+	var envelope = JSON.parse_string(raw)
 	if not envelope is Dictionary:
-		print("[ConversationService] bad envelope: ", body.get_string_from_utf8())
+		print("[ConversationService] bad envelope: ", raw)
 		generation_failed.emit("Malformed response from server", _tag)
 		return
-	_print_timings(envelope, wall_ms)
 	var content := _extract_content(envelope)
 	if content.is_empty():
-		print("[ConversationService] no content in: ", body.get_string_from_utf8())
+		print("[ConversationService] no content in: ", raw)
 		generation_failed.emit("Malformed response from server", _tag)
 		return
 	print("[ConversationService] model output (", _tag, "): ", content)
@@ -155,12 +146,11 @@ func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedB
 		print("[ConversationService] insufficient segments (attempt ", _attempt, "/", MAX_ATTEMPTS, ")")
 		if _attempt < MAX_ATTEMPTS:
 			print("[ConversationService] retrying...")
-			_send()
+			_attempt_once()
 			return
 		generation_failed.emit("Model did not return a usable reply", _tag)
 		return
 	generation_completed.emit(content, _tag)
-
 
 func _extract_content(envelope: Dictionary) -> String:
 	if envelope.has("message"):
@@ -173,14 +163,6 @@ func _extract_content(envelope: Dictionary) -> String:
 				return str(msg.get("content", "")).strip_edges()
 	return ""
 
-func _http_error_reason(code: int) -> String:
-	if get_provider() == PROVIDER_CLOUD:
-		match code:
-			401: return "Cloud key rejected (check your API key)"
-			429: return "Rate limit reached, wait a moment"
-			_: return "Cloud request failed (code %d)" % code
-	return "No response from model (check AI setup)"
-
 func _usable_segments(text: String) -> int:
 	var parts := text.split("|", false)
 	var count := 0
@@ -188,20 +170,3 @@ func _usable_segments(text: String) -> int:
 		if not str(p).strip_edges().is_empty():
 			count += 1
 	return count
-
-func _print_timings(envelope: Dictionary, wall_ms: float) -> void:
-	var to_ms := func(ns): return float(ns) / 1_000_000.0
-	var total_ms: float = to_ms.call(envelope.get("total_duration", 0))
-	var load_ms: float = to_ms.call(envelope.get("load_duration", 0))
-	var prompt_ms: float = to_ms.call(envelope.get("prompt_eval_duration", 0))
-	var gen_ms: float = to_ms.call(envelope.get("eval_duration", 0))
-	var prompt_tokens: int = int(envelope.get("prompt_eval_count", 0))
-	var gen_tokens: int = int(envelope.get("eval_count", 0))
-	var gen_tps := (gen_tokens / (gen_ms / 1000.0)) if gen_ms > 0.0 else 0.0
-	var unaccounted_ms := wall_ms - total_ms
-	print("[ConversationService] timings ms: wall=", wall_ms,
-		" ollama_total=", total_ms,
-		" load=", load_ms,
-		" prompt_eval=", prompt_ms, " (", prompt_tokens, " tok)",
-		" generation=", gen_ms, " (", gen_tokens, " tok, ", gen_tps, " tok/s)",
-		" unaccounted=", unaccounted_ms)

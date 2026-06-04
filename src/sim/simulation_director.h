@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "sim/simulation_event_sink.h"
+#include "sim/game_event.h"
 #include "entities/entity.h"
 #include "entities/entity_ledger.h"
 #include "world/world_bubble.h"
@@ -21,6 +22,7 @@ struct SimulationDirectorDeps {
     AStarGridPathfinder* pathfinder = nullptr;
     TurnScheduler* scheduler = nullptr;
     ISimulationEventSink* sink = nullptr;
+    IGameEventListener* event_listener = nullptr;
     uint32_t player_entity_id = PLAYER_ENTITY_ID;
 };
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=35 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -22,7 +22,9 @@
 [ext_resource type="Script" uid="uid://bmgye7kyg0mjc" path="res://src/ui/inventory/stats_tab.gd" id="20_stats"]
 [ext_resource type="Script" uid="uid://deddxv13sbvc2" path="res://src/ui/esc_ui.gd" id="21_esct"]
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
+[ext_resource type="Script" uid="uid://nukwdjbvhnub" path="res://src/ui/quests/quest_tab.gd" id="22_seu75"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="23_kbw_scene"]
+[ext_resource type="PackedScene" uid="uid://d240jhymvw2v1" path="res://src/ui/quests/quest_button.tscn" id="23_seu75"]
 [ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="24_opt_scene"]
 [ext_resource type="Script" uid="uid://cmeu5jthdi5wm" path="res://src/ui/death_screen.gd" id="25_death"]
 [ext_resource type="PackedScene" uid="uid://b2v3w5x7y81aa" path="res://src/ui/event_log.tscn" id="26_evlog"]
@@ -649,6 +651,7 @@ oversampling_override = 1.0
 title = "Conversation"
 initial_position = 1
 size = Vector2i(930, 560)
+visible = false
 unfocusable = true
 script = ExtResource("16_menu")
 menu_id = "conversation"
@@ -742,15 +745,13 @@ layout_mode = 2
 button_scene = ExtResource("28_convbtn")
 button_separation = 8
 
-[node name="Actions" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld")]
+[node name="Actions" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer"]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
-script = ExtResource("27_convt")
-_GameWorld = NodePath("../../../../../GameWorld")
 metadata/_tab_index = 1
 
 [node name="Placeholder" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Actions"]
@@ -765,6 +766,118 @@ offset_left = -102.0
 offset_bottom = 31.0
 grow_horizontal = 0
 text = "AI Setup"
+
+[node name="QuestUI" type="Window" parent="Canvas/Window"]
+oversampling_override = 1.0
+title = "Quests"
+initial_position = 1
+size = Vector2i(930, 560)
+unfocusable = true
+script = ExtResource("16_menu")
+menu_id = "quests"
+
+[node name="TabContainer" type="TabContainer" parent="Canvas/Window/QuestUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("15_yaehf")
+current_tab = 0
+clip_tabs = false
+tab_focus_mode = 0
+
+[node name="Active" type="MarginContainer" parent="Canvas/Window/QuestUI/TabContainer" node_paths=PackedStringArray("stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("22_seu75")
+stripContainer = NodePath("HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonListContainer")
+titleLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Description")
+detailsContainer = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/RewardsContainer")
+metadata/_tab_index = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/QuestUI/TabContainer/Active"]
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ButtonListContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+button_scene = ExtResource("23_seu75")
+
+[node name="PanelContainer2" type="PanelContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Quest Name"
+
+[node name="HSeparator1" type="HSeparator" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Description"
+autowrap_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ProgressLabel" type="Label" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Progress"
+
+[node name="ProgressBar" type="ProgressBar" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="ProgressText" type="Label" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "0 / 0"
+
+[node name="HSeparator3" type="HSeparator" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="RewardsLabel" type="Label" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Rewards"
+
+[node name="RewardsContainer" type="VBoxContainer" parent="Canvas/Window/QuestUI/TabContainer/Active/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="LoadGameUI" parent="Canvas/Window" instance=ExtResource("22_load_scene")]
 

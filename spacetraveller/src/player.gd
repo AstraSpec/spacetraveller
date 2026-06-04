@@ -147,8 +147,7 @@ func _on_movement_triggered(dir: Vector2):
 		_clear_interaction_cells()
 	else:
 		if dir == Vector2.ZERO:
-			var pos = Vector2i(cellPos())
-			World.submit_player_intent(World.INTENT_PICKUP, int(pos.x), int(pos.y), "")
+			World.submit_player_intent(World.INTENT_NONE, 0, 0, "")
 			World.update_world_bubble(cellPos())
 		else:
 			_submit_move(dir)

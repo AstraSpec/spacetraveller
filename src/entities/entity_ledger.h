@@ -13,6 +13,7 @@
 #include "components/perception.h"
 #include "components/ai_controller.h"
 #include "components/relationship_tuning.h"
+#include "components/social_memory.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -43,6 +44,7 @@ public:
     std::unordered_map<uint32_t, String> entity_name;
     std::unordered_map<uint32_t, int> friendship;
     std::unordered_map<uint32_t, int> romance;
+    std::unordered_map<uint32_t, SocialMemoryData> social_data;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -58,6 +60,12 @@ public:
     int get_romance(uint32_t id) const;
     void set_friendship(uint32_t id, int value);
     void set_romance(uint32_t id, int value);
+
+    int get_social_cooldown(uint32_t id) const;
+    void set_social_cooldown(uint32_t id, int turn);
+    String get_social_state_json(uint32_t id) const;
+    void set_social_state_json(uint32_t id, const String& json);
+    void clear_social_state(uint32_t id);
 
     Dictionary get_anatomy(uint32_t id) const;
     Dictionary get_clothing(uint32_t id) const;

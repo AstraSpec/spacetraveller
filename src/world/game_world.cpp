@@ -3,9 +3,12 @@
 #include "path/path_result.h"
 #include "data/structure_db.h"
 #include "data/tile_db.h"
+#include "data/quest_db.h"
+#include "components/action_resolver.h"
 #include "core/id_registry.h"
 #include "entities/entity_factory.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/json.hpp>
 
 using namespace godot;
 
@@ -93,6 +96,11 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_romance", "entity_id"), &GameWorld::get_entity_romance);
     ClassDB::bind_method(D_METHOD("set_entity_friendship", "entity_id", "value"), &GameWorld::set_entity_friendship);
     ClassDB::bind_method(D_METHOD("set_entity_romance", "entity_id", "value"), &GameWorld::set_entity_romance);
+    ClassDB::bind_method(D_METHOD("get_entity_social_cooldown", "entity_id"), &GameWorld::get_entity_social_cooldown);
+    ClassDB::bind_method(D_METHOD("set_entity_social_cooldown", "entity_id", "turn"), &GameWorld::set_entity_social_cooldown);
+    ClassDB::bind_method(D_METHOD("get_entity_social_state", "entity_id"), &GameWorld::get_entity_social_state);
+    ClassDB::bind_method(D_METHOD("set_entity_social_state", "entity_id", "state"), &GameWorld::set_entity_social_state);
+    ClassDB::bind_method(D_METHOD("clear_entity_social_state", "entity_id"), &GameWorld::clear_entity_social_state);
     ClassDB::bind_method(D_METHOD("get_entity_name", "entity_id"), &GameWorld::get_entity_name);
     ClassDB::bind_method(D_METHOD("get_entity_clothing", "entity_id"), &GameWorld::get_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
@@ -113,6 +121,22 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
     ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
+
+    ClassDB::bind_method(D_METHOD("generate_quest_offers", "giver_entity_id", "count"), &GameWorld::generate_quest_offers, DEFVAL(1));
+    ClassDB::bind_method(D_METHOD("accept_quest", "quest_id"), &GameWorld::accept_quest);
+    ClassDB::bind_method(D_METHOD("decline_quest", "quest_id"), &GameWorld::decline_quest);
+    ClassDB::bind_method(D_METHOD("can_complete_quest", "quest_id"), &GameWorld::can_complete_quest);
+    ClassDB::bind_method(D_METHOD("complete_quest", "quest_id"), &GameWorld::complete_quest);
+    ClassDB::bind_method(D_METHOD("get_quest_offers_for_giver", "giver_entity_id"), &GameWorld::get_quest_offers_for_giver);
+    ClassDB::bind_method(D_METHOD("get_active_quests"), &GameWorld::get_active_quests);
+    ClassDB::bind_method(D_METHOD("get_completed_quests"), &GameWorld::get_completed_quests);
+    ClassDB::bind_method(D_METHOD("get_offered_quests"), &GameWorld::get_offered_quests);
+    ClassDB::bind_method(D_METHOD("get_quest", "quest_id"), &GameWorld::get_quest);
+    ClassDB::bind_method(D_METHOD("is_quest_active", "quest_id"), &GameWorld::is_quest_active);
+    ClassDB::bind_method(D_METHOD("is_quest_completed", "quest_id"), &GameWorld::is_quest_completed);
+
+    ADD_SIGNAL(MethodInfo("quest_updated",
+        PropertyInfo(Variant::STRING, "quest_id")));
 
     ClassDB::bind_method(D_METHOD("spawn_player", "x", "y", "race_id"), &GameWorld::spawn_player);
     ClassDB::bind_method(D_METHOD("get_entity_position", "entity_id"), &GameWorld::get_entity_position);
@@ -160,7 +184,11 @@ void GameWorld::_bind_methods() {
 GameWorld::GameWorld() {
     generator = std::make_unique<WorldGenerator>();
     pathfinder = std::make_unique<AStarGridPathfinder>();
+    quest_tracker = std::make_unique<QuestTracker>();
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
+
+    quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id);
+    quest_tracker->set_emit_callback(&GameWorld::_quest_updated_trampoline, this);
 
     SimulationDirectorDeps deps;
     deps.ledger = &entity_ledger;
@@ -168,8 +196,17 @@ GameWorld::GameWorld() {
     deps.pathfinder = pathfinder.get();
     deps.scheduler = &turn_scheduler;
     deps.sink = static_cast<ISimulationEventSink*>(this);
+    deps.event_listener = quest_tracker.get();
     deps.player_entity_id = player_entity_id;
     sim_director.configure(deps);
+}
+
+void GameWorld::_quest_updated_trampoline(void* userdata, const String& quest_id) {
+    if (!userdata) return;
+    GameWorld* self = static_cast<GameWorld*>(userdata);
+    if (self->is_inside_tree()) {
+        self->emit_signal("quest_updated", quest_id);
+    }
 }
 
 GameWorld::~GameWorld() = default;
@@ -302,26 +339,69 @@ Array GameWorld::get_items_at(const Vector2i& pos) const {
 }
 
 bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id) {
-    IdRegistry* reg = IdRegistry::get_singleton();
-    if (!reg) return false;
-
-    uint16_t numeric_id = reg->get_id(item_id);
-    int available = bubble.peek_item_amount(pos, numeric_id);
-    if (available <= 0) return false;
-
-    int to_pickup = MIN(amount, available);
-
     auto inv_it = entity_ledger.inventory_data.find(entity_id);
     if (inv_it == entity_ledger.inventory_data.end()) return false;
 
-    if (!Inventory::add_item(inv_it->second, numeric_id, to_pickup)) return false;
-
-    bubble.remove_item(pos, numeric_id, to_pickup);
-    return true;
+    PickupResult r = ActionResolver::resolve_pickup(
+        entity_id, pos, item_id, amount, bubble, inv_it->second, quest_tracker.get());
+    return r.success;
 }
 
 bool GameWorld::has_item(const Vector2i& pos) const {
     return bubble.has_items(pos);
+}
+
+Array GameWorld::generate_quest_offers(int giver_entity_id, int count) {
+    if (!quest_tracker) return Array();
+    return quest_tracker->generate_offers((uint32_t)giver_entity_id, count);
+}
+
+bool GameWorld::accept_quest(const String& quest_id) {
+    return quest_tracker ? quest_tracker->accept(quest_id) : false;
+}
+
+bool GameWorld::decline_quest(const String& quest_id) {
+    return quest_tracker ? quest_tracker->decline(quest_id) : false;
+}
+
+bool GameWorld::can_complete_quest(const String& quest_id) const {
+    return quest_tracker ? quest_tracker->can_complete(quest_id) : false;
+}
+
+bool GameWorld::complete_quest(const String& quest_id) {
+    return quest_tracker ? quest_tracker->complete(quest_id) : false;
+}
+
+Array GameWorld::get_quest_offers_for_giver(int giver_entity_id) const {
+    return quest_tracker ? quest_tracker->get_offers_for((uint32_t)giver_entity_id) : Array();
+}
+
+Array GameWorld::get_active_quests() const {
+    return quest_tracker ? quest_tracker->get_active() : Array();
+}
+
+Array GameWorld::get_completed_quests() const {
+    return quest_tracker ? quest_tracker->get_completed() : Array();
+}
+
+Array GameWorld::get_offered_quests() const {
+    return quest_tracker ? quest_tracker->get_offered() : Array();
+}
+
+Dictionary GameWorld::get_quest(const String& quest_id) const {
+    return quest_tracker ? quest_tracker->get_quest(quest_id) : Dictionary();
+}
+
+bool GameWorld::is_quest_active(const String& quest_id) const {
+    if (!quest_tracker) return false;
+    Dictionary q = quest_tracker->get_quest(quest_id);
+    return String(q.get("status", "")) == "active";
+}
+
+bool GameWorld::is_quest_completed(const String& quest_id) const {
+    if (!quest_tracker) return false;
+    Dictionary q = quest_tracker->get_quest(quest_id);
+    return String(q.get("status", "")) == "completed";
 }
 
 bool GameWorld::is_cell_seen(const Vector2i& pos) const {
@@ -442,6 +522,31 @@ void GameWorld::set_entity_friendship(uint32_t entity_id, int value) {
 
 void GameWorld::set_entity_romance(uint32_t entity_id, int value) {
     entity_ledger.set_romance(entity_id, value);
+}
+
+int GameWorld::get_entity_social_cooldown(uint32_t entity_id) const {
+    return entity_ledger.get_social_cooldown(entity_id);
+}
+
+void GameWorld::set_entity_social_cooldown(uint32_t entity_id, int turn) {
+    entity_ledger.set_social_cooldown(entity_id, turn);
+}
+
+Dictionary GameWorld::get_entity_social_state(uint32_t entity_id) const {
+    String json = entity_ledger.get_social_state_json(entity_id);
+    if (json.is_empty()) return Dictionary();
+    Variant v = JSON::parse_string(json);
+    if (v.get_type() != Variant::DICTIONARY) return Dictionary();
+    return v;
+}
+
+void GameWorld::set_entity_social_state(uint32_t entity_id, const Dictionary& state) {
+    String json = JSON::stringify(state);
+    entity_ledger.set_social_state_json(entity_id, json);
+}
+
+void GameWorld::clear_entity_social_state(uint32_t entity_id) {
+    entity_ledger.clear_social_state(entity_id);
 }
 
 String GameWorld::get_entity_name(uint32_t entity_id) const {
@@ -617,6 +722,10 @@ Dictionary GameWorld::get_save_data() const {
     data["entity_ledger"] = entity_ledger.serialize();
     data["frozen_entities"] = bubble.serialize_frozen_entities();
 
+    if (quest_tracker) {
+        data["quest_tracker"] = quest_tracker->serialize();
+    }
+
     return data;
 }
 
@@ -655,6 +764,10 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
         if (entity_ledger.ai_data.count(entity.id) > 0 || entity.id == player_entity_id) {
             turn_scheduler.push(entity.id, entity.next_turn_time);
         }
+    }
+
+    if (quest_tracker) {
+        quest_tracker->deserialize(p_data.get("quest_tracker", Dictionary()));
     }
 
     if (renderer) {

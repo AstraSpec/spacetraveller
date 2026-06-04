@@ -28,6 +28,7 @@ uint32_t EntityLedger::spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint1
     Stamina::init(stamina_data[id], stam);
 
     Equipment::init(equipment_data[id]);
+    SocialMemory::init(social_data[id]);
     return id;
 }
 
@@ -60,6 +61,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     entity_name.erase(id);
     friendship.erase(id);
     romance.erase(id);
+    social_data.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -258,6 +260,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     entity_name.clear();
     friendship.clear();
     romance.clear();
+    social_data.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -352,6 +355,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["romance"] = ro_it->second;
     }
 
+    auto soc_it = social_data.find(id);
+    if (soc_it != social_data.end()) {
+        data["social"] = SocialMemory::serialize(soc_it->second);
+    }
+
     return data;
 }
 
@@ -436,5 +444,37 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         romance[id]    = CLAMP(r, RelationshipTuning::MIN_VALUE, RelationshipTuning::MAX_VALUE);
     }
 
+    if (data.has("social")) {
+        SocialMemoryData sd;
+        SocialMemory::deserialize(sd, data["social"]);
+        social_data[id] = sd;
+    }
+
     return id;
+}
+
+int EntityLedger::get_social_cooldown(uint32_t id) const {
+    auto it = social_data.find(id);
+    if (it == social_data.end()) return 0;
+    return it->second.cooldown_available_at;
+}
+
+void EntityLedger::set_social_cooldown(uint32_t id, int turn) {
+    social_data[id].cooldown_available_at = turn;
+}
+
+String EntityLedger::get_social_state_json(uint32_t id) const {
+    auto it = social_data.find(id);
+    if (it == social_data.end()) return "";
+    return it->second.conversation_state_json;
+}
+
+void EntityLedger::set_social_state_json(uint32_t id, const String& json) {
+    social_data[id].conversation_state_json = json;
+}
+
+void EntityLedger::clear_social_state(uint32_t id) {
+    auto it = social_data.find(id);
+    if (it == social_data.end()) return;
+    it->second.conversation_state_json = "";
 }

@@ -1,6 +1,9 @@
 #include "action_resolver.h"
 #include "entities/entity.h"
 #include "world/world_bubble.h"
+#include "sim/game_event.h"
+#include "components/inventory.h"
+#include "core/id_registry.h"
 #include "locomotion.h"
 #include "health.h"
 #include "stamina.h"
@@ -153,12 +156,37 @@ float ActionResolver::resolve_smash(const Intent& intent, Entity& entity, WorldB
     return ActionCost::SMASH;
 }
 
-float ActionResolver::resolve_pickup(const Intent& intent, Entity& entity, WorldBubble& bubble, void* inventory) {
-    int dx = abs(intent.target.x - entity.x);
-    int dy = abs(intent.target.y - entity.y);
-    if (dx > 1 || dy > 1) return 0.0f;
+PickupResult ActionResolver::resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener) {
+    PickupResult result;
+    if (requested_amount <= 0 || item_id.is_empty()) return result;
 
-    return ActionCost::PICKUP;
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (!reg) return result;
+    uint16_t numeric_id = reg->get_id(item_id);
+    if (numeric_id == 0) return result;
+
+    int available = bubble.peek_item_amount(pos, numeric_id);
+    if (available <= 0) return result;
+
+    int to_pickup = MIN(requested_amount, available);
+    if (!Inventory::add_item(inv, numeric_id, to_pickup)) return result;
+
+    bubble.remove_item(pos, numeric_id, to_pickup);
+
+    result.amount_picked = to_pickup;
+    result.success = true;
+
+    if (listener) {
+        GameEvent e;
+        e.type = GameEventType::ITEM_PICKED_UP;
+        e.subject_id = picker_id;
+        e.item_id = numeric_id;
+        e.amount = to_pickup;
+        e.position = pos;
+        listener->on_game_event(e);
+    }
+
+    return result;
 }
 
 float ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco) {
@@ -170,10 +198,11 @@ float ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBub
             return resolve_smash(intent, entity, bubble);
 
         case IntentType::PICKUP:
-            return resolve_pickup(intent, entity, bubble);
-
+            return 0.0f;
+        
         case IntentType::ATTACK:
         case IntentType::NONE:
+            return ActionCost::WAIT;
         default:
             return 0.0f;
     }

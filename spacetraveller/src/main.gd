@@ -22,6 +22,7 @@ func _ready() -> void:
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()
 	NameDb.initialize_data()
+	QuestDb.initialize_data()
 
 	SaveManager.register_world(_GameWorld)
 	_GameWorld.generate_world(Vector2i(2899, 2899))
@@ -35,6 +36,7 @@ func _ready() -> void:
 	InputManager.reset_stack(InputManager.InputMode.EXPLORATION)
 	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
 	_initialize_windows()
+	QuestService.bind_game_world(_GameWorld)
 
 func _initialize_new_game():
 	_GameWorld.add_entity_inventory_item(0, "stick", 5)

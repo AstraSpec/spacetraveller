@@ -66,7 +66,33 @@ func _on_interact_event(entity_id: int, target_id: int) -> void:
 		return
 	if not ConversationService.is_ready():
 		return
+	var friendship := int(_GameWorld.get_entity_friendship(target_id)) if _GameWorld else 0
+	var has_saved_state := not _GameWorld.get_entity_social_state(target_id).is_empty()
+	if not has_saved_state and not _can_talk_now(target_id, friendship):
+		var cooldown_turn: int = _GameWorld.get_entity_social_cooldown(target_id)
+		var remaining: int = max(0, cooldown_turn - TimeManager.total_turns)
+		var hours := snappedf(float(remaining) / 3600.0, 0.1)
+		var name := _npc_real_name(target_id)
+		var msg: String
+		if hours < 0.5:
+			msg = "%s isn't ready to talk again just yet." % name
+		else:
+			msg = "%s isn't ready to talk again for about %.1f hours." % [name, hours]
+		EventBus.post("cooldown", msg, {"entity": target_id})
+		return
 	InputManager.toggle_menu("conversation", {"target": target_id})
+
+func _can_talk_now(entity_id: int, _friendship: int) -> bool:
+	var cooldown_turn: int = _GameWorld.get_entity_social_cooldown(entity_id) if _GameWorld else 0
+	if cooldown_turn <= 0:
+		return true
+	return TimeManager.total_turns >= cooldown_turn
+
+func _npc_real_name(target_id: int) -> String:
+	if not _GameWorld:
+		return "Someone"
+	var n := _GameWorld.get_entity_name(target_id)
+	return n if not n.is_empty() else "A stranger"
 
 func _on_effect_event(entity_id: int, effect_type: String, note: String, part: String) -> void:
 	_update_vitals()

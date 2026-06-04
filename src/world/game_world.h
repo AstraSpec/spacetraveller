@@ -16,6 +16,7 @@
 #include "fast_tilemap.h"
 #include "world_bubble.h"
 #include "world_generator.h"
+#include "quest_tracker.h"
 #include "path/a_star_grid.h"
 #include "turn_scheduler.h"
 #include "entities/entity_ledger.h"
@@ -48,11 +49,14 @@ private:
     WorldBubble bubble;
     std::unique_ptr<WorldGenerator> generator;
     std::unique_ptr<AStarGridPathfinder> pathfinder;
+    std::unique_ptr<QuestTracker> quest_tracker;
     EntityLedger entity_ledger;
     SimulationDirector sim_director;
 
     Ref<FastNoiseLite> biome_noise;
     int world_seed = 0;
+
+    static void _quest_updated_trampoline(void* userdata, const String& quest_id);
 
 protected:
     static void _bind_methods();
@@ -104,6 +108,19 @@ public:
     bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id);
     bool has_item(const Vector2i& pos) const;
 
+    Array generate_quest_offers(int giver_entity_id, int count);
+    bool  accept_quest(const String& quest_id);
+    bool  decline_quest(const String& quest_id);
+    bool  can_complete_quest(const String& quest_id) const;
+    bool  complete_quest(const String& quest_id);
+    Array get_quest_offers_for_giver(int giver_entity_id) const;
+    Array get_active_quests() const;
+    Array get_completed_quests() const;
+    Array get_offered_quests() const;
+    Dictionary get_quest(const String& quest_id) const;
+    bool is_quest_active(const String& quest_id) const;
+    bool is_quest_completed(const String& quest_id) const;
+
     bool is_cell_seen(const Vector2i& pos) const;
     bool has_entity_at_cell(int x, int y) const;
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
@@ -132,6 +149,11 @@ public:
     int get_entity_romance(uint32_t entity_id) const;
     void set_entity_friendship(uint32_t entity_id, int value);
     void set_entity_romance(uint32_t entity_id, int value);
+    int get_entity_social_cooldown(uint32_t entity_id) const;
+    void set_entity_social_cooldown(uint32_t entity_id, int turn);
+    Dictionary get_entity_social_state(uint32_t entity_id) const;
+    void set_entity_social_state(uint32_t entity_id, const Dictionary& state);
+    void clear_entity_social_state(uint32_t entity_id);
     String get_entity_name(uint32_t entity_id) const;
     Dictionary get_entity_clothing(uint32_t entity_id) const;
     String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;

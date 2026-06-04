@@ -109,10 +109,24 @@ void SimulationDirector::advance_entity_time(uint32_t entity_id, float dt) {
         auto hp_it = d.ledger->health_data.find(entity_id);
         if (hp_it != d.ledger->health_data.end() && hp_it->second.alive) {
             Health::damage(hp_it->second, bleed * EffectTuning::BLEED_HP_PER_MAG * dt);
-            if (!hp_it->second.alive) {
-                if (entity_id == d.player_entity_id) d.sink->on_player_died("bleed");
-                else { d.sink->on_entity_died(entity_id, "bleed"); despawn_entity(entity_id); return; }
-            }
+                if (!hp_it->second.alive) {
+                    if (entity_id == d.player_entity_id) d.sink->on_player_died("bleed");
+                    else {
+                        d.sink->on_entity_died(entity_id, "bleed");
+                        if (d.event_listener) {
+                            GameEvent e;
+                            e.type = GameEventType::ENTITY_KILLED;
+                            e.subject_id = 0;
+                            e.target_id = entity_id;
+                            if (auto ep = d.ledger->get_entity_pool().get_entity(entity_id)) {
+                                e.position = Vector2i(ep->x, ep->y);
+                            }
+                            d.event_listener->on_game_event(e);
+                        }
+                        despawn_entity(entity_id);
+                        return;
+                    }
+                }
         }
     }
 
@@ -218,6 +232,15 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             d.sink->on_combat_event(d.player_entity_id, defender_id, atk.damage, result_str, atk.verb, atk.part_name);
             if (atk.killed) {
                 d.sink->on_entity_died(defender_id, "combat");
+                if (d.event_listener) {
+                    GameEvent e;
+                    e.type = GameEventType::ENTITY_KILLED;
+                    e.subject_id = d.player_entity_id;
+                    e.target_id = defender_id;
+                    auto* dead = d.ledger->get_entity_pool().get_entity(defender_id);
+                    if (dead) e.position = Vector2i(dead->x, dead->y);
+                    d.event_listener->on_game_event(e);
+                }
                 despawn_entity(defender_id);
             } else {
                 apply_attack_effects(d.player_entity_id, defender_id, atk);
@@ -270,6 +293,13 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             Vector2i new_pos(entity->x, entity->y);
             Vector2i new_chunk = entity_chunk(d.player_entity_id);
             d.sink->on_entity_moved(d.player_entity_id, new_pos, new_chunk);
+            if (d.event_listener) {
+                GameEvent e;
+                e.type = GameEventType::ENTITY_MOVED;
+                e.subject_id = d.player_entity_id;
+                e.position = new_pos;
+                d.event_listener->on_game_event(e);
+            }
         }
 
         float player_next_time = entity->next_turn_time + cost;
@@ -423,6 +453,15 @@ void SimulationDirector::process_game_turn(float current_time) {
                             d.sink->on_player_died("combat");
                         } else {
                             d.sink->on_entity_died(target_id, "combat");
+                            if (d.event_listener) {
+                                GameEvent e;
+                                e.type = GameEventType::ENTITY_KILLED;
+                                e.subject_id = entity_id;
+                                e.target_id = target_id;
+                                auto* dead = d.ledger->get_entity_pool().get_entity(target_id);
+                                if (dead) e.position = Vector2i(dead->x, dead->y);
+                                d.event_listener->on_game_event(e);
+                            }
                             despawn_entity(target_id);
                         }
                     } else {

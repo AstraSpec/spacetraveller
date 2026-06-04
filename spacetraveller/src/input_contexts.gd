@@ -38,13 +38,13 @@ class DirectionalProcessor:
 		var new_pressed = just_pressed_dir != Vector2.ZERO or center_just_pressed
 		var has_input = current_raw_dir != Vector2.ZERO or center_held
 		
-		var effective_dir = current_raw_dir  # directional keys take priority
+		var effective_dir = current_raw_dir
 		
 		if not has_input:
 			last_input_direction = Vector2.ZERO
 			key_held = false
 			time_since_move = move_timer if is_shift_pressed else 0.0
-			return Vector2.INF  # sentinel: no input at all
+			return Vector2.INF
 		
 		if current_raw_dir == Vector2.ZERO and center_held:
 			effective_dir = Vector2.ZERO
@@ -53,7 +53,6 @@ class DirectionalProcessor:
 				new_pressed = true
 		
 		if effective_dir != last_input_direction and !is_shift_pressed and new_pressed:
-			# New direction (or first center press)
 			time_since_move = 0.0
 			last_input_direction = effective_dir
 			key_held = false
@@ -65,14 +64,13 @@ class DirectionalProcessor:
 			return Vector2.ZERO
 			
 		else:
-			# Repeated direction / held center
 			var threshold = hold_move_timer if key_held else move_timer
 			if time_since_move > threshold:
 				time_since_move = 0.0
 				key_held = true
 				return effective_dir
 		
-		return Vector2.INF  # sentinel: input held but not yet time to repeat
+		return Vector2.INF
 
 class ViewProcessor:
 	var manager: Node

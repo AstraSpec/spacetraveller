@@ -124,6 +124,12 @@ func _unhandled_input(event: InputEvent):
 			get_viewport().set_input_as_handled()
 			return
 
+	if event.is_action_pressed("open_quests"):
+		if current_mode == InputMode.EXPLORATION or current_mode == InputMode.MENU:
+			toggle_menu("quests")
+			get_viewport().set_input_as_handled()
+			return
+
 	if event.is_action_pressed("open_actions"):
 		if current_mode == InputMode.EXPLORATION or current_mode == InputMode.MENU:
 			toggle_menu("actions")
