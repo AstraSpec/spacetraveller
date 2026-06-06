@@ -16,8 +16,8 @@ class QuestDb;
 
 struct QuestInstance {
     String id;
-    String template_kind;  // "gather" | "kill" | "reach"
-    String status;         // "offered" | "active" | "completed" | "declined"
+    String template_kind;  // "gather" | "*_gather" | "kill" | "reach"
+    String status;         // "offered" | "active" | "completed" | "declined" | "failed"
     uint32_t giver_entity_id = 0;
     int     target = 0;
     int     progress = 0;
@@ -47,8 +47,10 @@ public:
     void on_game_event(const GameEvent& p_event) override;
 
     Array generate_offers(uint32_t p_giver_entity_id, int p_count = 1);
+    Dictionary generate_offer(uint32_t p_giver_entity_id, const String& p_kind);
     bool  accept(const String& p_quest_id);
     bool  decline(const String& p_quest_id);
+    bool  fail_for_dead_giver(uint32_t p_giver_entity_id);
     bool  can_complete(const String& p_quest_id) const;
     bool  complete(const String& p_quest_id);
 
@@ -63,6 +65,9 @@ public:
 
 private:
     QuestInstance _sample_one(const String& p_kind, uint32_t p_giver_entity_id);
+    bool          _is_gather_kind(const String& p_kind) const;
+    bool          _giver_can_offer(const String& p_kind, uint32_t p_giver_entity_id) const;
+    void          _fail(const String& p_quest_id, const String& p_reason);
     void          _advance(const String& p_quest_id, int p_delta);
     bool          _has_required_items(const QuestInstance& p_q) const;
     bool          _remove_required_items(const QuestInstance& p_q);

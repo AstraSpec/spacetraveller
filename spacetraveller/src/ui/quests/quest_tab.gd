@@ -19,6 +19,8 @@ func _ready() -> void:
 		QuestService.quest_completed.connect(_on_quest_completed)
 	if QuestService.quest_declined.is_connected(_on_quest_declined) == false:
 		QuestService.quest_declined.connect(_on_quest_declined)
+	if QuestService.quest_failed.is_connected(_on_quest_failed) == false:
+		QuestService.quest_failed.connect(_on_quest_failed)
 	if QuestService.objective_progressed.is_connected(_on_objective_progressed) == false:
 		QuestService.objective_progressed.connect(_on_objective_progressed)
 
@@ -107,6 +109,9 @@ func _on_quest_completed(_quest_id: String) -> void:
 	refresh_view()
 
 func _on_quest_declined(_quest_id: String) -> void:
+	refresh_view()
+
+func _on_quest_failed(_quest_id: String) -> void:
 	refresh_view()
 
 func _on_objective_progressed(quest_id: String, _progress: int, _target: int) -> void:

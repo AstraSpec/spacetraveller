@@ -1,0 +1,16 @@
+{
+  "blacksmith": {
+    "display_name": "Blacksmith",
+    "dialogue_profile": "blacksmith",
+    "spawn_weight": 1,
+    "traits": [],
+    "quest_kinds": ["blacksmith_gather"]
+  },
+  "scavenger": {
+    "display_name": "Scavenger",
+    "dialogue_profile": "scavenger",
+    "spawn_weight": 1,
+    "traits": [],
+    "quest_kinds": ["scavenger_gather"]
+  }
+}

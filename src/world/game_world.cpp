@@ -117,12 +117,14 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("get_entity_effects", "entity_id"), &GameWorld::get_entity_effects);
     ClassDB::bind_method(D_METHOD("get_player_effects"), &GameWorld::get_player_effects);
+    ClassDB::bind_method(D_METHOD("get_entity_social_profile", "entity_id"), &GameWorld::get_entity_social_profile);
 
     ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
     ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
 
     ClassDB::bind_method(D_METHOD("generate_quest_offers", "giver_entity_id", "count"), &GameWorld::generate_quest_offers, DEFVAL(1));
+    ClassDB::bind_method(D_METHOD("generate_quest_offer", "giver_entity_id", "kind"), &GameWorld::generate_quest_offer);
     ClassDB::bind_method(D_METHOD("accept_quest", "quest_id"), &GameWorld::accept_quest);
     ClassDB::bind_method(D_METHOD("decline_quest", "quest_id"), &GameWorld::decline_quest);
     ClassDB::bind_method(D_METHOD("can_complete_quest", "quest_id"), &GameWorld::can_complete_quest);
@@ -354,6 +356,11 @@ bool GameWorld::has_item(const Vector2i& pos) const {
 Array GameWorld::generate_quest_offers(int giver_entity_id, int count) {
     if (!quest_tracker) return Array();
     return quest_tracker->generate_offers((uint32_t)giver_entity_id, count);
+}
+
+Dictionary GameWorld::generate_quest_offer(int giver_entity_id, const String& kind) {
+    if (!quest_tracker) return Dictionary();
+    return quest_tracker->generate_offer((uint32_t)giver_entity_id, kind);
 }
 
 bool GameWorld::accept_quest(const String& quest_id) {
@@ -649,6 +656,10 @@ Dictionary GameWorld::get_entity_effects(uint32_t entity_id) const {
 
 Dictionary GameWorld::get_player_effects() const {
     return get_entity_effects(player_entity_id);
+}
+
+Dictionary GameWorld::get_entity_social_profile(uint32_t entity_id) const {
+    return entity_ledger.get_social_profile(entity_id);
 }
 
 void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime) {

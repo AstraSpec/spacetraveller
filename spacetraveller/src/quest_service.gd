@@ -5,11 +5,13 @@ signal quest_started(quest_id: String)
 signal objective_progressed(quest_id: String, progress: int, target: int)
 signal quest_completed(quest_id: String)
 signal quest_declined(quest_id: String)
+signal quest_failed(quest_id: String)
 
 const STATUS_OFFERED := "offered"
 const STATUS_ACTIVE := "active"
 const STATUS_COMPLETED := "completed"
 const STATUS_DECLINED := "declined"
+const STATUS_FAILED := "failed"
 
 var _game_world: Node = null
 
@@ -59,6 +61,8 @@ func _on_quest_updated(quest_id: String) -> void:
 			quest_completed.emit(quest_id)
 		STATUS_DECLINED:
 			quest_declined.emit(quest_id)
+		STATUS_FAILED:
+			quest_failed.emit(quest_id)
 
 	q["__last_emitted_progress"] = progress
 
@@ -82,9 +86,12 @@ func get_all_offers() -> Array:
 		return []
 	return _game_world.get_offered_quests()
 
-func offer(giver_entity_id: int) -> String:
+func offer(giver_entity_id: int, kind: String = "") -> String:
 	if not _game_world:
 		return ""
+	if not kind.is_empty() and _game_world.has_method("generate_quest_offer"):
+		var offer_data: Dictionary = _game_world.generate_quest_offer(giver_entity_id, kind)
+		return str(offer_data.get("quest_id", ""))
 	var offers: Array = _game_world.generate_quest_offers(giver_entity_id, 1)
 	if offers.is_empty():
 		return ""

@@ -109,6 +109,7 @@ public:
     bool has_item(const Vector2i& pos) const;
 
     Array generate_quest_offers(int giver_entity_id, int count);
+    Dictionary generate_quest_offer(int giver_entity_id, const String& kind);
     bool  accept_quest(const String& quest_id);
     bool  decline_quest(const String& quest_id);
     bool  can_complete_quest(const String& quest_id) const;
@@ -180,6 +181,7 @@ public:
     Dictionary get_player_stamina() const;
     Dictionary get_entity_effects(uint32_t entity_id) const;
     Dictionary get_player_effects() const;
+    Dictionary get_entity_social_profile(uint32_t entity_id) const;
 
     void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime);
     void remove_overlay(int x, int y);

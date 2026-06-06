@@ -15,6 +15,9 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_description_template", "kind"), &QuestDb::get_description_template);
     ClassDB::bind_method(D_METHOD("get_target_range", "kind"), &QuestDb::get_target_range);
     ClassDB::bind_method(D_METHOD("get_item_type_filter", "kind"), &QuestDb::get_item_type_filter);
+    ClassDB::bind_method(D_METHOD("get_target_item_pool", "kind"), &QuestDb::get_target_item_pool);
+    ClassDB::bind_method(D_METHOD("get_target_item_tags", "kind"), &QuestDb::get_target_item_tags);
+    ClassDB::bind_method(D_METHOD("get_giver_jobs", "kind"), &QuestDb::get_giver_jobs);
     ClassDB::bind_method(D_METHOD("get_race_exclude", "kind"), &QuestDb::get_race_exclude);
     ClassDB::bind_method(D_METHOD("get_tier_names", "kind"), &QuestDb::get_tier_names);
     ClassDB::bind_method(D_METHOD("get_tier_item_pool", "kind", "tier"), &QuestDb::get_tier_item_pool);
@@ -55,6 +58,15 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     Array itf = p_data.get("item_type_filter", Array());
     for (int i = 0; i < itf.size(); i++) {
         t.item_type_filter.emplace_back(String(itf[i]));
+    }
+
+    Array target_pool = p_data.get("target_item_pool", Array());
+    t.target_item_pool = resolve_item_ids(target_pool);
+    t.target_item_tags = _parse_tags(p_data.get("target_item_tags", Array()));
+
+    Array giver_jobs = p_data.get("giver_jobs", Array());
+    for (int i = 0; i < giver_jobs.size(); i++) {
+        t.giver_jobs.emplace_back(String(giver_jobs[i]));
     }
 
     // kill-only filter
@@ -123,6 +135,27 @@ Array QuestDb::get_item_type_filter(const String &p_kind) const {
     return arr;
 }
 
+Array QuestDb::get_target_item_pool(const String &p_kind) const {
+    Array arr;
+    const QuestTemplate* t = get_info(p_kind);
+    if (t) for (uint16_t v : t->target_item_pool) arr.push_back((int)v);
+    return arr;
+}
+
+Array QuestDb::get_target_item_tags(const String &p_kind) const {
+    Array arr;
+    const QuestTemplate* t = get_info(p_kind);
+    if (t) for (uint16_t v : t->target_item_tags) arr.push_back((int)v);
+    return arr;
+}
+
+Array QuestDb::get_giver_jobs(const String &p_kind) const {
+    Array arr;
+    const QuestTemplate* t = get_info(p_kind);
+    if (t) for (const String& v : t->giver_jobs) arr.push_back(v);
+    return arr;
+}
+
 Array QuestDb::get_race_exclude(const String &p_kind) const {
     Array arr;
     const QuestTemplate* t = get_info(p_kind);
@@ -180,6 +213,30 @@ bool QuestDb::get_tier_amount_range_vec(const String &p_kind, const String &p_ti
     r_max = ar.back();
     if (r_min > r_max) std::swap(r_min, r_max);
     return true;
+}
+
+bool QuestDb::get_target_item_pool_vec(const String &p_kind, std::vector<uint16_t> &r_out) const {
+    r_out.clear();
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return false;
+    r_out = t->target_item_pool;
+    return !r_out.empty();
+}
+
+bool QuestDb::get_target_item_tags_vec(const String &p_kind, std::vector<uint16_t> &r_out) const {
+    r_out.clear();
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return false;
+    r_out = t->target_item_tags;
+    return !r_out.empty();
+}
+
+bool QuestDb::get_giver_jobs_vec(const String &p_kind, std::vector<String> &r_out) const {
+    r_out.clear();
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return false;
+    r_out = t->giver_jobs;
+    return !r_out.empty();
 }
 
 int QuestDb::get_tier_friendship(const String &p_kind, const String &p_tier) const {

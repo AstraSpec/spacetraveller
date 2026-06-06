@@ -14,6 +14,7 @@
 #include "components/ai_controller.h"
 #include "components/relationship_tuning.h"
 #include "components/social_memory.h"
+#include "components/social_profile.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -45,6 +46,7 @@ public:
     std::unordered_map<uint32_t, int> friendship;
     std::unordered_map<uint32_t, int> romance;
     std::unordered_map<uint32_t, SocialMemoryData> social_data;
+    std::unordered_map<uint32_t, SocialProfileData> social_profiles;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -55,6 +57,7 @@ public:
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
 
     void init_relationship(uint32_t id);
+    void init_social_profile(uint32_t id, const String& job = "drifter", const String& dialogue_profile = "default");
     bool has_relationship(uint32_t id) const;
     int get_friendship(uint32_t id) const;
     int get_romance(uint32_t id) const;
@@ -73,6 +76,7 @@ public:
     Dictionary get_health(uint32_t id) const;
     Dictionary get_stamina(uint32_t id) const;
     Dictionary get_effects(uint32_t id) const;
+    Dictionary get_social_profile(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
     float get_inventory_volume(uint32_t id) const;
     float get_armor_rating(uint32_t id) const;

@@ -1,0 +1,109 @@
+{
+  "id": "scavenger",
+  "priority": 140,
+  "start": "start",
+  "selector": { "job": "scavenger" },
+  "nodes": {
+    "start": {
+      "npc": "I've been searching this rubble for hours, haven't found much of value yet, just a few scraps of metal and some broken glass. What brings you to this place, you're not from around here, that's for sure. I'm keeping an eye on you, so don't even think about trying to take what's mine.",
+      "options": [
+        {
+          "text": "I'm happy to help you search, maybe together we can find something worthwhile.",
+          "next": "try_search",
+          "effects": { "friendship_delta": 5, "romance_delta": 1 }
+        },
+        {
+          "text": "I'm just looking for anything that can aid in my survival, this place seems as good as any to scavenge.",
+          "next": "scavenger_quest",
+          "constraints": { "quest_status": "none" },
+          "effects": { "quest_offer": "scavenger_gather" }
+        },
+        {
+          "text": "Back off, I can take care of myself and I won't hesitate to defend what I find.",
+          "next": "threat",
+          "constraints": { "quest_status": "none" },
+          "effects": { "friendship_delta": -8 }
+        },
+        {
+          "text": "About that salvage job...",
+          "next": "turn_in",
+          "constraints": { "quest_status": "active" }
+        },
+        {
+          "text": "About that salvage you mentioned...",
+          "next": "scavenger_quest",
+          "constraints": { "quest_status": "offered" }
+        }
+      ]
+    },
+    "try_search": {
+      "npc": "I'm not sure I need your help, but I suppose an extra pair of eyes couldn't hurt, just don't think you're getting a cut of anything I've already found. I've been over this rubble a dozen times, but maybe you'll get lucky and spot something I missed. Just remember, I was here first, so don't get any ideas about taking what's mine.",
+      "options": [
+        {
+          "text": "That's fine. Just my one good deed of the day.",
+          "next": "scavenger_quest_positive",
+          "effects": { "quest_offer": "scavenger_gather", "friendship_delta": 5 }
+        },
+        {
+          "text": "You're not exactly filling me with confidence about sharing, how about we make this a fair split or I'm walking.",
+          "next": "scavenger_quest_negative",
+          "constraints": { "quest_status": "none" },
+          "effects": { "quest_offer": "scavenger_gather", "friendship_delta": -5 }
+        }
+      ]
+    },
+    "scavenger_quest_positive": {
+      "npc": "Perfect. {quest_description} Bring it back clean enough to use and I'll cut you in.",
+      "options": []
+    },
+    "scavenger_quest": {
+      "npc": "I'm not sure I need your help, but I suppose an extra pair of eyes couldn't hurt, just don't think you're getting a cut of anything I've already found. I've been over this rubble a dozen times, but maybe you'll get lucky and spot something I missed. Just remember, I was here first, so don't get any ideas about taking what's mine. {quest_description} Bring it back clean enough to use and I'll cut you in.",
+      "options": []
+    },
+    "scavenger_quest_negative": {
+      "npc": "Look, you're the one butting into my business. It's either my way or the highway. {quest_description} Bring it back clean enough and maybe I'll cut you in.",
+      "options": []
+    },
+    "turn_in": {
+      "npc": "Back already? Tell me you found something useful for {quest_label}.",
+      "options": [
+        {
+          "text": "I found what you asked for.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true }
+        },
+        {
+          "text": "Not yet. I am still looking.",
+          "next": "not_done",
+          "constraints": { "quest_status": "active", "can_complete_quest": false }
+        }
+      ]
+    },
+    "complete": {
+      "npc": "Good eye. Most people walk over value and call it dirt. Take your share.",
+      "options": []
+    },
+    "not_done": {
+      "npc": "Then keep your eyes low and your hands ready. {quest_description}",
+      "options": []
+    },
+    "accepted": {
+      "npc": "Good. {quest_label}, and do not let someone else see you carrying it.",
+      "options": []
+    },
+    "declined": {
+      "npc": "Then stop blocking the light. I have better scraps to sort.",
+      "options": []
+    },
+    "threat": {
+      "npc": "Great, I guess this makes things faster. You're dead meat.",
+      "options": [
+        {
+          "text": "Start the fight.",
+          "effects": { "start_fight": true, "end_conversation": true }
+        }
+      ]
+    }
+  }
+}

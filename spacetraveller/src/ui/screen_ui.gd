@@ -15,6 +15,10 @@ func _ready() -> void:
 		_GameWorld.smash_event.connect(_on_smash_event)
 		_GameWorld.effect_event.connect(_on_effect_event)
 		_GameWorld.interact_event.connect(_on_interact_event)
+	if QuestService.quest_completed.is_connected(_on_quest_completed) == false:
+		QuestService.quest_completed.connect(_on_quest_completed)
+	if QuestService.quest_failed.is_connected(_on_quest_failed) == false:
+		QuestService.quest_failed.connect(_on_quest_failed)
 	_update_display()
 	call_deferred("_update_vitals")
 
@@ -64,29 +68,19 @@ func _on_interact_event(entity_id: int, target_id: int) -> void:
 		return
 	if not _GameWorld or not _GameWorld.entity_has_sapient(target_id):
 		return
-	if not ConversationService.is_ready():
-		return
-	var friendship := int(_GameWorld.get_entity_friendship(target_id)) if _GameWorld else 0
-	var has_saved_state := not _GameWorld.get_entity_social_state(target_id).is_empty()
-	if not has_saved_state and not _can_talk_now(target_id, friendship):
-		var cooldown_turn: int = _GameWorld.get_entity_social_cooldown(target_id)
-		var remaining: int = max(0, cooldown_turn - TimeManager.total_turns)
-		var hours := snappedf(float(remaining) / 3600.0, 0.1)
-		var name := _npc_real_name(target_id)
-		var msg: String
-		if hours < 0.5:
-			msg = "%s isn't ready to talk again just yet." % name
-		else:
-			msg = "%s isn't ready to talk again for about %.1f hours." % [name, hours]
-		EventBus.post("cooldown", msg, {"entity": target_id})
+	if not DialogueService.has_dialogue_for(_GameWorld, target_id):
 		return
 	InputManager.toggle_menu("conversation", {"target": target_id})
 
-func _can_talk_now(entity_id: int, _friendship: int) -> bool:
-	var cooldown_turn: int = _GameWorld.get_entity_social_cooldown(entity_id) if _GameWorld else 0
-	if cooldown_turn <= 0:
-		return true
-	return TimeManager.total_turns >= cooldown_turn
+func _on_quest_completed(quest_id: String) -> void:
+	var q: Dictionary = QuestService.get_quest(quest_id)
+	var label := str(q.get("label", "quest"))
+	EventBus.post("quest", "Quest completed: %s" % label, {"quest_id": quest_id, "status": "completed"})
+
+func _on_quest_failed(quest_id: String) -> void:
+	var q: Dictionary = QuestService.get_quest(quest_id)
+	var label := str(q.get("label", "quest"))
+	EventBus.post("quest_failed", "Quest failed: %s. The quest giver died." % label, {"quest_id": quest_id, "status": "failed"})
 
 func _npc_real_name(target_id: int) -> String:
 	if not _GameWorld:

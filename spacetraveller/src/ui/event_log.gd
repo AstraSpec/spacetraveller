@@ -12,6 +12,8 @@ const CATEGORY_COLORS = {
 	"smash": "d8a04a",
 	"effect": "c77dff",
 	"interact": "5bc0eb",
+	"quest": "7cff7a",
+	"quest_failed": "ff5555",
 }
 const DEFAULT_COLOR = "cccccc"
 

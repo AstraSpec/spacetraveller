@@ -5,6 +5,7 @@
 #include "world/turn_scheduler.h"
 #include "data/race_db.h"
 #include "data/item_db.h"
+#include "data/job_db.h"
 #include "data/name_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
@@ -73,6 +74,27 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
 
     if (race_db->has_tag(race_id, "SAPIENT")) {
         ledger.init_relationship(id);
+        Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
+        JobDb* job_db = JobDb::get_singleton();
+        const JobInfo* job_info = job_db ? job_db->pick_weighted_job(profile_rng) : nullptr;
+
+        String job = job_info ? job_info->id : String("scavenger");
+        String dialogue_profile = job_info ? job_info->dialogue_profile : String("scavenger");
+        ledger.init_social_profile(id, job, dialogue_profile);
+
+        SocialProfileData& profile = ledger.social_profiles[id];
+        if (job_info) {
+            for (const String& trait : job_info->traits) {
+                profile.traits.push_back(trait);
+            }
+            for (const String& tag : job_info->context_tags) {
+                profile.context_tags.push_back(tag);
+            }
+        }
+
+        if (profile.traits.is_empty()) {
+            profile.traits.push_back(profile_rng.chance(0.5f) ? String("wary") : String("plainspoken"));
+        }
     }
 
     AIData& ai = ledger.ai_data[id];

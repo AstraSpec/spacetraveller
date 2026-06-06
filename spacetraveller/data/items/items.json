@@ -7,7 +7,7 @@
     "atlas": [ 8, 23 ],
     "weight": 0.2,
     "volume": 0.1,
-    "tags": []
+    "tags": ["JOB_SCAVENGER"]
   },
   {
     "id": "rope",
@@ -17,7 +17,7 @@
     "atlas": [ 8, 48 ],
     "weight": 0.5,
     "volume": 0.3,
-    "tags": []
+    "tags": ["JOB_SCAVENGER"]
   },
   {
     "id": "flint",
@@ -27,7 +27,7 @@
     "atlas": [ 14, 31 ],
     "weight": 0.1,
     "volume": 0.05,
-    "tags": []
+    "tags": ["JOB_SCAVENGER"]
   },
   {
     "id": "bone",
@@ -37,7 +37,7 @@
     "atlas": [ 9, 38 ],
     "weight": 0.3,
     "volume": 0.15,
-    "tags": []
+    "tags": ["JOB_SCAVENGER"]
   },
   {
     "id": "spider_silk",
@@ -47,7 +47,7 @@
     "atlas": [ 4, 39 ],
     "weight": 0.05,
     "volume": 0.02,
-    "tags": []
+    "tags": ["JOB_SCAVENGER"]
   },
   {
     "id": "iron_shard",
@@ -57,7 +57,7 @@
     "atlas": [ 7, 21 ],
     "weight": 0.4,
     "volume": 0.1,
-    "tags": []
+    "tags": ["JOB_BLACKSMITH"]
   },
   {
     "id": "wooden_sword",
@@ -67,7 +67,7 @@
     "atlas": [ 26, 6 ],
     "weight": 0.8,
     "volume": 0.4,
-    "tags": []
+    "tags": ["JOB_BLACKSMITH"]
   },
   {
     "id": "torch",
@@ -77,7 +77,7 @@
     "atlas": [ 8, 45 ],
     "weight": 0.3,
     "volume": 0.15,
-    "tags": []
+    "tags": ["JOB_BLACKSMITH", "JOB_SCAVENGER"]
   },
   {
     "id": "fire_starter",
@@ -87,7 +87,7 @@
     "atlas": [ 6, 45 ],
     "weight": 0.35,
     "volume": 0.2,
-    "tags": []
+    "tags": ["JOB_BLACKSMITH"]
   },
   {
     "id": "bone_needle",
@@ -97,6 +97,6 @@
     "atlas": [ 10, 38 ],
     "weight": 0.1,
     "volume": 0.05,
-    "tags": []
+    "tags": ["JOB_BLACKSMITH"]
   }
 ]

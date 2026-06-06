@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=34 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -30,7 +30,6 @@
 [ext_resource type="PackedScene" uid="uid://b2v3w5x7y81aa" path="res://src/ui/event_log.tscn" id="26_evlog"]
 [ext_resource type="Script" uid="uid://bxig5terglyd" path="res://src/ui/conversation/conversation_tab.gd" id="27_convt"]
 [ext_resource type="PackedScene" uid="uid://c0nv7btn0answ" path="res://src/ui/conversation/conversation_button.tscn" id="28_convbtn"]
-[ext_resource type="PackedScene" uid="uid://i5etupwin01a" path="res://src/ui/ai_setup_window.tscn" id="29_aisetup"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
 texture = ExtResource("2_hj8l7")
@@ -758,15 +757,6 @@ metadata/_tab_index = 1
 layout_mode = 2
 text = "Actions"
 
-[node name="SetupButton" type="Button" parent="Canvas/Window/ConversationUI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -102.0
-offset_bottom = 31.0
-grow_horizontal = 0
-text = "AI Setup"
-
 [node name="QuestUI" type="Window" parent="Canvas/Window"]
 oversampling_override = 1.0
 title = "Quests"
@@ -884,8 +874,6 @@ theme_override_constants/separation = 6
 [node name="KeybindWindow" parent="Canvas/Window" instance=ExtResource("23_kbw_scene")]
 
 [node name="OptionsWindow" parent="Canvas/Window" instance=ExtResource("24_opt_scene")]
-
-[node name="AiSetupWindow" parent="Canvas/Window" instance=ExtResource("29_aisetup")]
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15
@@ -1028,4 +1016,3 @@ text = "Play Again?"
 [connection signal="generated" from="GameWorld" to="Canvas/Window/MapUI/Map" method="_on_world_generated"]
 [connection signal="timeout" from="Player/PathfindingTimer" to="Player" method="_on_pathfinding_timer_timeout"]
 [connection signal="pressed" from="Canvas/Window/InventoryUI/TabContainer/Crafting/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/CraftButton" to="Canvas/Window/InventoryUI/TabContainer/Crafting" method="_on_craft_button_pressed"]
-[connection signal="pressed" from="Canvas/Window/ConversationUI/SetupButton" to="Canvas/Window/ConversationUI/TabContainer/Talk" method="open_setup"]

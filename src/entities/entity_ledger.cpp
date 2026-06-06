@@ -62,6 +62,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     friendship.erase(id);
     romance.erase(id);
     social_data.erase(id);
+    social_profiles.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -82,6 +83,18 @@ void EntityLedger::init_relationship(uint32_t id) {
     }
     friendship[id] = RelationshipTuning::FRIENDSHIP_INITIAL;
     romance[id] = RelationshipTuning::ROMANCE_INITIAL;
+}
+
+void EntityLedger::init_social_profile(uint32_t id, const String& job, const String& dialogue_profile) {
+    SocialProfileData& profile = social_profiles[id];
+    SocialProfile::init(profile);
+    profile.job = job.is_empty() ? String("drifter") : job;
+    profile.dialogue_profile = dialogue_profile.is_empty() ? String("default") : dialogue_profile;
+
+    auto anat_it = anatomy_data.find(id);
+    if (anat_it != anatomy_data.end()) {
+        profile.faction = anat_it->second.race_id;
+    }
 }
 
 bool EntityLedger::has_relationship(uint32_t id) const {
@@ -146,6 +159,12 @@ Dictionary EntityLedger::get_effects(uint32_t id) const {
     auto it = effects_data.find(id);
     if (it == effects_data.end()) return Dictionary();
     return Effects::serialize(it->second);
+}
+
+Dictionary EntityLedger::get_social_profile(uint32_t id) const {
+    auto it = social_profiles.find(id);
+    if (it == social_profiles.end()) return Dictionary();
+    return SocialProfile::serialize(it->second);
 }
 
 float EntityLedger::get_inventory_weight(uint32_t id) const {
@@ -261,6 +280,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     friendship.clear();
     romance.clear();
     social_data.clear();
+    social_profiles.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -360,6 +380,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["social"] = SocialMemory::serialize(soc_it->second);
     }
 
+    auto profile_it = social_profiles.find(id);
+    if (profile_it != social_profiles.end()) {
+        data["social_profile"] = SocialProfile::serialize(profile_it->second);
+    }
+
     return data;
 }
 
@@ -448,6 +473,12 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         SocialMemoryData sd;
         SocialMemory::deserialize(sd, data["social"]);
         social_data[id] = sd;
+    }
+
+    if (data.has("social_profile")) {
+        SocialProfileData sp;
+        SocialProfile::deserialize(sp, data["social_profile"]);
+        social_profiles[id] = sp;
     }
 
     return id;

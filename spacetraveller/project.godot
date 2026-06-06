@@ -24,7 +24,7 @@ InputManager="*res://src/input_manager.gd"
 TimeManager="*res://src/time_manager.gd"
 SaveManager="*res://src/save_manager.gd"
 EventBus="*res://src/event_bus.gd"
-ConversationService="*res://src/conversation_service.gd"
+DialogueService="*res://src/dialogue_service.gd"
 QuestService="*res://src/quest_service.gd"
 
 [debug]

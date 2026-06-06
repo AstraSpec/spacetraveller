@@ -1,0 +1,75 @@
+{
+  "id": "default_stranger",
+  "priority": 0,
+  "start": "start",
+  "selector": {},
+  "nodes": {
+    "start": {
+      "npc": "{npc_name} studies you for a moment, then gives a guarded nod. \"Road's been rough on everyone. Say what you came to say.\"",
+      "options": [
+        {
+          "text": "I mean no trouble. How are you holding up?",
+          "next": "warm_reply",
+          "effects": { "friendship_delta": 5, "romance_delta": 1 }
+        },
+        {
+          "text": "Do you have work for me?",
+          "next": "quest_offer",
+          "effects": { "quest_offer": true }
+        },
+        {
+          "text": "I have strength enough for hard work, if you need it.",
+          "next": "stamina_offer",
+          "constraints": { "min_player_stamina": 60 },
+          "effects": { "friendship_delta": 3, "quest_offer": true }
+        },
+        {
+          "text": "Move aside before this gets ugly.",
+          "next": "hostile_reply",
+          "effects": { "friendship_delta": -10, "romance_delta": -3 }
+        }
+      ]
+    },
+    "warm_reply": {
+      "npc": "\"Better for the asking. Most folk only come close when they want blood or coin.\"",
+      "options": [
+        {
+          "text": "Then let us keep this civil.",
+          "next": "start",
+          "effects": { "friendship_delta": 2 }
+        },
+        {
+          "text": "Maybe one day you'll trust me more than most.",
+          "next": "start",
+          "constraints": { "min_romance": 10 },
+          "effects": { "friendship_delta": 2, "romance_delta": 3 }
+        }
+      ]
+    },
+    "quest_offer": {
+      "npc": "\"There is something. {quest_description} Do that, and I will remember it.\"",
+      "options": []
+    },
+    "stamina_offer": {
+      "npc": "\"Good. Then you may be able to handle this: {quest_label}. {quest_description}\"",
+      "options": []
+    },
+    "accepted": {
+      "npc": "\"Then we understand each other. Come back when {quest_label} is done.\"",
+      "options": []
+    },
+    "declined": {
+      "npc": "\"Then I have nothing more for you.\"",
+      "options": []
+    },
+    "hostile_reply": {
+      "npc": "\"Try it, then.\"",
+      "options": [
+        {
+          "text": "Start the fight.",
+          "effects": { "start_fight": true, "friendship_delta": -10, "end_conversation": true }
+        }
+      ]
+    }
+  }
+}

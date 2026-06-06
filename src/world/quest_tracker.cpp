@@ -5,6 +5,7 @@
 #include "data/race_db.h"
 #include "data/tile_db.h"
 #include "core/id_registry.h"
+#include "core/tag_registry.h"
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -30,9 +31,14 @@ void QuestTracker::_emit(const String& p_quest_id) {
     if (emit_quest_updated) emit_quest_updated(emit_userdata, p_quest_id);
 }
 
+bool QuestTracker::_is_gather_kind(const String& p_kind) const {
+    return p_kind == "gather" || p_kind.ends_with("_gather");
+}
+
 void QuestTracker::on_game_event(const GameEvent& p_event) {
     switch (p_event.type) {
         case GameEventType::ENTITY_KILLED: {
+            fail_for_dead_giver(p_event.target_id);
             if (p_event.subject_id != player_entity_id) return;
             if (!ledger) return;
             Dictionary anatomy = ledger->get_anatomy(p_event.target_id);
@@ -58,7 +64,7 @@ void QuestTracker::on_game_event(const GameEvent& p_event) {
             for (auto& pair : instances) {
                 QuestInstance& q = pair.second;
                 if (q.status != "active") continue;
-                if (q.template_kind != "gather") continue;
+                if (!_is_gather_kind(q.template_kind)) continue;
                 if (String(q.params.get("item_id", "")) != item_id_str) continue;
                 _advance(pair.first, p_event.amount);
             }
@@ -134,21 +140,37 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
     int friendship_delta = db->get_tier_friendship(p_kind, tier) * scale;
     int romance_delta    = db->get_tier_romance(p_kind, tier) * scale;
 
-    if (p_kind == "gather") {
+    if (_is_gather_kind(p_kind)) {
         Array type_filter = db->get_item_type_filter(p_kind);
         std::vector<String> candidates;
         ItemDb* idb = ItemDb::get_singleton();
+        std::vector<uint16_t> target_pool;
+        std::vector<uint16_t> target_tags;
+        db->get_target_item_pool_vec(p_kind, target_pool);
+        db->get_target_item_tags_vec(p_kind, target_tags);
         if (idb) {
-            Array ids = idb->get_ids();
-            for (int i = 0; i < ids.size(); i++) {
-                String id = String(ids[i]);
-                if (type_filter.is_empty()) {
-                    candidates.push_back(id);
-                } else {
-                    String t = idb->get_item_type(id);
-                    for (int j = 0; j < type_filter.size(); j++) {
-                        if (t == String(type_filter[j])) { candidates.push_back(id); break; }
+            IdRegistry* reg = IdRegistry::get_singleton();
+            if (!target_pool.empty() && reg) {
+                for (uint16_t item_id : target_pool) {
+                    String id = reg->get_string(item_id);
+                    if (!id.is_empty()) candidates.push_back(id);
+                }
+            } else {
+                Array ids = idb->get_ids();
+                for (int i = 0; i < ids.size(); i++) {
+                    String id = String(ids[i]);
+                    const ItemInfo* info = idb->get_item_info(id);
+                    if (!info) continue;
+                    bool type_ok = type_filter.is_empty();
+                    if (!type_ok) {
+                        String t = idb->get_item_type(id);
+                        for (int j = 0; j < type_filter.size(); j++) {
+                            if (t == String(type_filter[j])) { type_ok = true; break; }
+                        }
                     }
+                    if (!type_ok) continue;
+                    if (!target_tags.empty() && !TagRegistry::has_tag_any(info->tags, target_tags)) continue;
+                    candidates.push_back(id);
                 }
             }
         }
@@ -238,6 +260,30 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
     return inst;
 }
 
+bool QuestTracker::_giver_can_offer(const String& p_kind, uint32_t p_giver_entity_id) const {
+    if (!db) return false;
+    std::vector<String> jobs;
+    if (!db->get_giver_jobs_vec(p_kind, jobs)) return true;
+    if (!ledger) return false;
+    Dictionary profile = ledger->get_social_profile(p_giver_entity_id);
+    String job = String(profile.get("job", ""));
+    for (const String& allowed : jobs) {
+        if (allowed == job) return true;
+    }
+    return false;
+}
+
+Dictionary QuestTracker::generate_offer(uint32_t p_giver_entity_id, const String& p_kind) {
+    if (!db || p_kind.is_empty()) return Dictionary();
+    if (!_giver_can_offer(p_kind, p_giver_entity_id)) return Dictionary();
+    QuestInstance inst = _sample_one(p_kind, p_giver_entity_id);
+    if (inst.params.has("__unfilled")) return Dictionary();
+    instances[inst.id] = inst;
+    Dictionary view = _view(inst.id, inst);
+    _emit(inst.id);
+    return view;
+}
+
 Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
     Array out;
     if (!db) return out;
@@ -257,6 +303,7 @@ Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
         bool filled = false;
         for (int j = 0; j < order.size(); j++) {
             String kind = String(order[j]);
+            if (!_giver_can_offer(kind, p_giver_entity_id)) continue;
             QuestInstance inst = _sample_one(kind, p_giver_entity_id);
             if (!inst.params.has("__unfilled")) {
                 instances[inst.id] = inst;
@@ -298,8 +345,34 @@ bool QuestTracker::decline(const String& p_quest_id) {
     return true;
 }
 
+bool QuestTracker::fail_for_dead_giver(uint32_t p_giver_entity_id) {
+    bool changed = false;
+    std::vector<String> to_fail;
+    for (const auto& pair : instances) {
+        const QuestInstance& q = pair.second;
+        if (q.giver_entity_id != p_giver_entity_id) continue;
+        if (q.status != "offered" && q.status != "active") continue;
+        to_fail.push_back(pair.first);
+    }
+    for (const String& quest_id : to_fail) {
+        _fail(quest_id, "giver_died");
+        changed = true;
+    }
+    return changed;
+}
+
+void QuestTracker::_fail(const String& p_quest_id, const String& p_reason) {
+    auto it = instances.find(p_quest_id);
+    if (it == instances.end()) return;
+    QuestInstance& q = it->second;
+    if (q.status != "offered" && q.status != "active") return;
+    q.status = "failed";
+    q.params["__failure_reason"] = p_reason;
+    _emit(p_quest_id);
+}
+
 bool QuestTracker::_has_required_items(const QuestInstance& p_q) const {
-    if (p_q.template_kind != "gather") return true;
+    if (!_is_gather_kind(p_q.template_kind)) return true;
     if (!ledger) return false;
     String item_id = String(p_q.params.get("item_id", ""));
     if (item_id.is_empty() || p_q.target <= 0) return false;
@@ -307,7 +380,7 @@ bool QuestTracker::_has_required_items(const QuestInstance& p_q) const {
 }
 
 bool QuestTracker::_remove_required_items(const QuestInstance& p_q) {
-    if (p_q.template_kind != "gather") return true;
+    if (!_is_gather_kind(p_q.template_kind)) return true;
     if (!ledger) return false;
     String item_id = String(p_q.params.get("item_id", ""));
     if (item_id.is_empty() || p_q.target <= 0) return false;
@@ -320,7 +393,7 @@ bool QuestTracker::can_complete(const String& p_quest_id) const {
     if (it == instances.end()) return false;
     const QuestInstance& q = it->second;
     if (q.status != "active") return false;
-    if (q.template_kind != "gather" && q.progress < q.target) return false;
+    if (!_is_gather_kind(q.template_kind) && q.progress < q.target) return false;
     return _has_required_items(q);
 }
 
@@ -329,7 +402,7 @@ bool QuestTracker::complete(const String& p_quest_id) {
     if (it == instances.end()) return false;
     QuestInstance& q = it->second;
     if (q.status != "active") return false;
-    if (q.template_kind != "gather" && q.progress < q.target) return false;
+    if (!_is_gather_kind(q.template_kind) && q.progress < q.target) return false;
     if (!_remove_required_items(q)) return false;
     _mark_completed(p_quest_id);
     return true;
@@ -388,11 +461,10 @@ Dictionary QuestTracker::_view(const String& p_quest_id, const QuestInstance& p_
     d["status"]          = p_q.status;
     d["target"]          = p_q.target;
     d["progress"]        = p_q.progress;
-    bool objective_ready = p_q.template_kind == "gather" ? _has_required_items(p_q) : p_q.progress >= p_q.target;
+    bool objective_ready = _is_gather_kind(p_q.template_kind) ? _has_required_items(p_q) : p_q.progress >= p_q.target;
     d["can_complete"]    = p_q.status == "active" && objective_ready;
     d["params"]          = p_q.params;
     d["rewards"]         = p_q.rewards;
-    UtilityFunctions::print("[QuestTracker] _view id=", p_quest_id, " kind=", p_q.template_kind, " status=", p_q.status);
     return d;
 }
 

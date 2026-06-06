@@ -23,6 +23,9 @@ struct QuestTier {
 struct QuestTemplate {
     String kind;                // "gather" | "kill" | "reach"
     std::vector<String> item_type_filter; // gather
+    std::vector<uint16_t> target_item_pool; // gather target items
+    std::vector<uint16_t> target_item_tags; // gather target item tags
+    std::vector<String> giver_jobs;
     std::vector<String> race_exclude;     // kill
     std::vector<int>    target_range;
     String label_template;
@@ -52,6 +55,9 @@ public:
     String get_description_template(const String &p_kind) const;
     Array  get_target_range(const String &p_kind) const;
     Array  get_item_type_filter(const String &p_kind) const;
+    Array  get_target_item_pool(const String &p_kind) const;
+    Array  get_target_item_tags(const String &p_kind) const;
+    Array  get_giver_jobs(const String &p_kind) const;
     Array  get_race_exclude(const String &p_kind) const;
     Array  get_tier_names(const String &p_kind) const;
 
@@ -62,6 +68,9 @@ public:
 
     bool get_tier_item_pool_vec(const String &p_kind, const String &p_tier, std::vector<uint16_t> &r_out) const;
     bool get_tier_amount_range_vec(const String &p_kind, const String &p_tier, int &r_min, int &r_max) const;
+    bool get_target_item_pool_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
+    bool get_target_item_tags_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
+    bool get_giver_jobs_vec(const String &p_kind, std::vector<String> &r_out) const;
 };
 
 }
