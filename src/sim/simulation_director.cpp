@@ -48,6 +48,7 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
     long best_dist_sq = -1;
 
     for (const auto& other : d.ledger->get_entity_pool().get_all()) {
+        if (!d.ledger->get_entity_pool().contains(other.id)) continue;
         if (other.id == entity_id) continue;
 
         // Cheap bounding-box reject before any distance math.
@@ -282,6 +283,9 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     }
 
     if (cost > 0.0f) {
+        entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+        if (!entity) return cost;
+
         auto stam_it = d.ledger->stamina_data.find(d.player_entity_id);
         if (stam_it != d.ledger->stamina_data.end()) {
             Stamina::regen(stam_it->second, cost * StaminaTuning::REGEN_PER_TIME);
@@ -300,6 +304,9 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
                 e.position = new_pos;
                 d.event_listener->on_game_event(e);
             }
+
+            entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+            if (!entity) return cost;
         }
 
         float player_next_time = entity->next_turn_time + cost;
@@ -327,6 +334,7 @@ void SimulationDirector::process_game_turn(float current_time) {
     std::vector<Vector2i> blocking_positions;
     blocking_positions.reserve(pool.living_count());
     for (const auto& entity : pool.get_all()) {
+        if (!pool.contains(entity.id)) continue;
         if (entity.id != d.player_entity_id) {
             blocking_positions.push_back({entity.x, entity.y});
         }
@@ -470,7 +478,8 @@ void SimulationDirector::process_game_turn(float current_time) {
                 }
                 if (cost <= 0.0f) cost = 1.0f;
                 advance_entity_time(entity_id, cost);
-                if (!pool.get_entity(entity_id)) continue;
+                entity = pool.get_entity(entity_id);
+                if (!entity) continue;
                 entity->next_turn_time = base_time + cost;
                 d.scheduler->push(entity_id, entity->next_turn_time);
                 continue;

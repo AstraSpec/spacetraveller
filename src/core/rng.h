@@ -15,6 +15,9 @@ namespace Rng {
         NAME = 3,
         LOOT = 4,
         BIOME = 5,
+        SPAWN = 6,
+        SPAWN_RULE = 7,
+        SPAWN_LOOT = 8,
     };
 
     inline uint64_t mix64(uint64_t z) {

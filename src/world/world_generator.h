@@ -54,6 +54,9 @@ public:
     void setup_biome_rules();
     Dictionary init_region(const Vector2i& regionPos, int world_seed, const Ref<FastNoiseLite>& biome_noise);
     uint16_t get_tile(int x, int y, int world_seed);
+    uint16_t get_chunk_id_for_cell(int x, int y) const;
+    uint8_t get_chunk_rotation_for_cell(int x, int y) const;
+    String get_structure_id_for_chunk(uint16_t p_chunk_id) const;
     
     void apply_auto_tiling(const Vector2i& p_region_pos);
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);

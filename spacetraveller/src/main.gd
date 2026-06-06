@@ -23,6 +23,7 @@ func _ready() -> void:
 	AbilityDb.initialize_data()
 	NameDb.initialize_data()
 	JobDb.initialize_data()
+	SpawnDb.initialize_data()
 	QuestDb.initialize_data()
 
 	SaveManager.register_world(_GameWorld)

@@ -17,6 +17,7 @@
 #include "data/name_db.h"
 #include "data/quest_db.h"
 #include "data/job_db.h"
+#include "data/spawn_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -47,6 +48,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(NameDb);
 	GDREGISTER_CLASS(QuestDb);
 	GDREGISTER_CLASS(JobDb);
+	GDREGISTER_CLASS(SpawnDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -89,6 +91,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	JobDb::create_singleton();
 	Engine::get_singleton()->register_singleton("JobDb", JobDb::get_singleton());
+
+	SpawnDb::create_singleton();
+	Engine::get_singleton()->register_singleton("SpawnDb", SpawnDb::get_singleton());
 }
 
 void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
@@ -137,6 +142,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("JobDb");
 	JobDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("SpawnDb");
+	SpawnDb::delete_singleton();
 }
 
 extern "C" {

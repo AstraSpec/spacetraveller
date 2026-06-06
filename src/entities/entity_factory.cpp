@@ -17,11 +17,14 @@
 
 using namespace godot;
 
-static void register_and_schedule(uint32_t id, const Vector2i& pos,
+static void register_and_schedule(uint32_t id, const Vector2i& pos, float p_initial_turn_time,
                                   EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
     bubble.set_entity(pos.x, pos.y, id);
     Entity* entity = ledger.get_entity_pool().get_entity(id);
     if (entity) {
+        if (entity->next_turn_time < p_initial_turn_time) {
+            entity->next_turn_time = p_initial_turn_time;
+        }
         scheduler.push(id, entity->next_turn_time);
     }
 }
@@ -39,12 +42,20 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
 
     ledger.combat_style[id] = "default";
 
-    register_and_schedule(id, pos, ledger, bubble, scheduler);
+    register_and_schedule(id, pos, 0.0f, ledger, bubble, scheduler);
     return id;
 }
 
 uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, int world_seed,
                                     EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
+    SpawnOverrides overrides;
+    return create_npc(race_id, pos, world_seed, ledger, bubble, scheduler, overrides, 0.0f);
+}
+
+uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, int world_seed,
+                                    EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler,
+                                    const SpawnOverrides& overrides,
+                                    float p_initial_turn_time) {
     RaceDb* race_db = RaceDb::get_singleton();
     if (!race_db) return EntityPool::INVALID_ID;
 
@@ -76,17 +87,31 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         ledger.init_relationship(id);
         Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
         JobDb* job_db = JobDb::get_singleton();
-        const JobInfo* job_info = job_db ? job_db->pick_weighted_job(profile_rng) : nullptr;
+        const JobInfo* job_info = nullptr;
+        if (job_db) {
+            job_info = overrides.job.is_empty() ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(overrides.job);
+        }
 
-        String job = job_info ? job_info->id : String("scavenger");
-        String dialogue_profile = job_info ? job_info->dialogue_profile : String("scavenger");
+        String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : String("scavenger"));
+        String dialogue_profile = !overrides.dialogue_profile.is_empty() ? overrides.dialogue_profile : (job_info ? job_info->dialogue_profile : String("scavenger"));
         ledger.init_social_profile(id, job, dialogue_profile);
 
         SocialProfileData& profile = ledger.social_profiles[id];
-        if (job_info) {
+        if (!overrides.traits.is_empty()) {
+            for (int i = 0; i < overrides.traits.size(); i++) {
+                profile.traits.push_back(String(overrides.traits[i]));
+            }
+        } else if (job_info) {
             for (const String& trait : job_info->traits) {
                 profile.traits.push_back(trait);
             }
+        }
+
+        if (!overrides.context_tags.is_empty()) {
+            for (int i = 0; i < overrides.context_tags.size(); i++) {
+                profile.context_tags.push_back(String(overrides.context_tags[i]));
+            }
+        } else if (job_info) {
             for (const String& tag : job_info->context_tags) {
                 profile.context_tags.push_back(tag);
             }
@@ -115,12 +140,13 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     if (item_db) {
         Array item_ids = item_db->get_ids();
         if (item_ids.size() > 0) {
-            int rand_idx = abs((int)(id * 7 + pos.x * 13 + pos.y * 31)) % item_ids.size();
+            Rng::Seeded loot_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::SPAWN_LOOT);
+            int rand_idx = loot_rng.range(0, item_ids.size() - 1);
             String random_item = item_ids[rand_idx];
             ledger.add_inventory_item(id, random_item, 1);
         }
     }
 
-    register_and_schedule(id, pos, ledger, bubble, scheduler);
+    register_and_schedule(id, pos, p_initial_turn_time, ledger, bubble, scheduler);
     return id;
 }

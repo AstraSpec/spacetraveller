@@ -1,0 +1,34 @@
+{
+  "forest_mouse": {
+    "chunk_ids": ["forest"],
+    "race_id": "mouse",
+    "spawn_weight": 5,
+    "chance": 0.0006,
+    "spawn_mode": "free_cell",
+    "tile_tags": ["GROUND"]
+  },
+  "forest_bear": {
+    "chunk_ids": ["forest"],
+    "race_id": "bear",
+    "spawn_weight": 1,
+    "chance": 0.00045,
+    "spawn_mode": "free_cell",
+    "tile_tags": ["GROUND"]
+  },
+  "plains_mouse": {
+    "chunk_ids": ["plains"],
+    "race_id": "mouse",
+    "spawn_weight": 1,
+    "chance": 0.0004,
+    "spawn_mode": "free_cell",
+    "tile_tags": ["GROUND"]
+  },
+  "house_resident": {
+    "chunk_ids": ["building"],
+    "race_id": "human",
+    "spawn_weight": 1,
+    "chance": 1.0,
+    "spawn_mode": "spawn_points",
+    "spawn_point_tags": ["HUMAN"]
+  }
+}

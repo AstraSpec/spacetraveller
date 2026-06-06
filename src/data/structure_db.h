@@ -7,10 +7,17 @@
 
 namespace godot {
 
+struct StructureSpawnPoint {
+    String id;
+    Vector2i pos;
+    std::vector<uint16_t> tags;
+};
+
 struct StructureInfo {
     std::vector<uint16_t> data;
     String blueprint;
     Array palette;
+    std::vector<StructureSpawnPoint> spawn_points;
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
@@ -34,6 +41,7 @@ public:
     Array get_palette(const String &p_id) const;
 
     // Fast C++ access
+    const StructureInfo* get_structure_info(const String &p_id) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
 };
 

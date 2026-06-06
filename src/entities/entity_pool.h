@@ -24,6 +24,7 @@ public:
 
     Entity* get_entity(uint32_t id);
     const Entity* get_entity(uint32_t id) const;
+    bool contains(uint32_t id) const;
 
     const std::vector<Entity>& get_all() const { return entities; }
 

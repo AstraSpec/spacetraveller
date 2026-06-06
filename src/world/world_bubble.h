@@ -66,6 +66,7 @@ private:
     std::unordered_map<uint64_t, uint16_t> tile_id_cache[LAYER_MAX];
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
+    std::vector<uint64_t> newly_seen_cells;
     std::unordered_map<uint64_t, CellEntity> entity_positions;
     std::unordered_map<uint64_t, Overlay> overlays;
 
@@ -111,6 +112,7 @@ public:
     Array get_seen_cells() const;
     void set_seen_cells(const Array& p_seen);
     bool is_cell_seen(int x, int y) const;
+    std::vector<uint64_t> consume_newly_seen_cells();
 
     void set_entity_pool(EntityPool* pool) { entity_pool_source = pool; }
     void set_entity(int x, int y, uint32_t entity_id);

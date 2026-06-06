@@ -38,7 +38,7 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Anatomy::init(anatomy_data[id], "human");
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
-    Health::init(health_data[id], 100.0f);
+    Health::init(health_data[id], 10000.0f);
     Stamina::init(stamina_data[id], 80.0f);
     Equipment::init(equipment_data[id]);
     
@@ -256,6 +256,7 @@ Dictionary EntityLedger::serialize() const {
     Dictionary data;
     Array entities;
     for (const auto& e : entity_pool.get_all()) {
+        if (!entity_pool.contains(e.id)) continue;
         entities.push_back(serialize_entity(e.id));
     }
     data["entities"] = entities;
@@ -389,6 +390,8 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
 }
 
 uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
+    if (!data.has("id")) return EntityPool::INVALID_ID;
+
     uint32_t id = static_cast<uint32_t>(static_cast<int64_t>(data.get("id", static_cast<int64_t>(0))));
     int x = data.get("x", 0);
     int y = data.get("y", 0);

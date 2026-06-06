@@ -5,6 +5,7 @@
 #include "data/tile_db.h"
 #include "data/quest_db.h"
 #include "components/action_resolver.h"
+#include "world_spawner.h"
 #include "core/id_registry.h"
 #include "entities/entity_factory.h"
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -433,7 +434,11 @@ uint32_t GameWorld::spawn_player(int x, int y, const String& race_id) {
 }
 
 uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
-    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, bubble, turn_scheduler);
+    float spawn_time = 0.0f;
+    const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (player_e) spawn_time = player_e->next_turn_time;
+    EntityFactory::SpawnOverrides overrides;
+    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, bubble, turn_scheduler, overrides, spawn_time);
 }
 
 void GameWorld::despawn_entity(uint32_t entity_id) {
@@ -679,6 +684,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
 
     std::vector<uint32_t> to_freeze;
     for (const auto& entity : entity_ledger.get_entity_pool().get_all()) {
+        if (!entity_ledger.get_entity_pool().contains(entity.id)) continue;
         if (entity.id == player_entity_id) continue;
         if (abs(entity.x - player_pos.x) > radius || abs(entity.y - player_pos.y) > radius) {
             to_freeze.push_back(entity.id);
@@ -711,6 +717,18 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         }
         bubble.remove_frozen_entity(key);
     }
+
+    std::vector<uint64_t> newly_seen = bubble.consume_newly_seen_cells();
+    WorldSpawner::spawn_for_newly_seen_cells(
+        static_cast<uint32_t>(world_seed),
+        player_time,
+        newly_seen,
+        *generator,
+        bubble,
+        entity_ledger,
+        turn_scheduler,
+        spawn_state
+    );
 }
 
 // --- Save / Load ---
@@ -732,6 +750,7 @@ Dictionary GameWorld::get_save_data() const {
 
     data["entity_ledger"] = entity_ledger.serialize();
     data["frozen_entities"] = bubble.serialize_frozen_entities();
+    data["world_spawn_state"] = spawn_state.serialize();
 
     if (quest_tracker) {
         data["quest_tracker"] = quest_tracker->serialize();
@@ -766,12 +785,18 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
     entity_ledger.deserialize(p_data.get("entity_ledger", Dictionary()));
 
     bubble.deserialize_frozen_entities(p_data.get("frozen_entities", Dictionary()));
+    Dictionary spawn_state_data = p_data.get("world_spawn_state", Dictionary());
+    if (spawn_state_data.is_empty()) {
+        spawn_state_data = p_data.get("entity_spawn_tracker", Dictionary());
+    }
+    spawn_state.deserialize(spawn_state_data);
 
     bubble.rebuild_from_pool();
 
     // Rebuild turn scheduler from loaded entities
     turn_scheduler.clear();
     for (const auto& entity : entity_ledger.get_entity_pool().get_all()) {
+        if (!entity_ledger.get_entity_pool().contains(entity.id)) continue;
         if (entity_ledger.ai_data.count(entity.id) > 0 || entity.id == player_entity_id) {
             turn_scheduler.push(entity.id, entity.next_turn_time);
         }

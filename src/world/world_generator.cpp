@@ -171,6 +171,29 @@ uint16_t WorldGenerator::pick_weighted_tile(const BiomeInfo& info, uint32_t roll
     return info.ground_tiles.empty() ? id_void : info.ground_tiles[0].id;
 }
 
+uint16_t WorldGenerator::get_chunk_id_for_cell(int x, int y) const {
+    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
+    auto it = region_chunks.find(chunk_key);
+    if (it == region_chunks.end()) return id_void;
+    return static_cast<uint16_t>(it->second & WorldCoords::ID_MASK);
+}
+
+uint8_t WorldGenerator::get_chunk_rotation_for_cell(int x, int y) const {
+    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
+    auto it = region_chunks.find(chunk_key);
+    if (it == region_chunks.end()) return WorldCoords::ROT_SOUTH;
+    return static_cast<uint8_t>((it->second >> WorldCoords::ORIENTATION_SHIFT) & WorldCoords::ROTATION_MASK);
+}
+
+String WorldGenerator::get_structure_id_for_chunk(uint16_t p_chunk_id) const {
+    if (p_chunk_id == id_building) return "house01";
+    return "";
+}
+
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
     int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);

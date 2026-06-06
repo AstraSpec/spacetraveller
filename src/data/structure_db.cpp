@@ -31,6 +31,15 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
 
     info.blueprint = p_data.get("blueprint", "");
     info.palette = p_data.get("palette", Array());
+    Array spawn_points = p_data.get("spawn_points", Array());
+    for (int i = 0; i < spawn_points.size(); i++) {
+        Dictionary point = spawn_points[i];
+        StructureSpawnPoint sp;
+        sp.id = String(point.get("id", ""));
+        sp.pos = variant_to_vector2i(point.get("pos", Array()), Vector2i());
+        sp.tags = _parse_tags(point.get("tags", Array()));
+        info.spawn_points.push_back(sp);
+    }
 
         std::vector<uint16_t> palette_ids;
     Array p_array = info.palette;
@@ -80,6 +89,10 @@ String StructureDb::get_blueprint(const String &p_id) const {
 Array StructureDb::get_palette(const String &p_id) const {
     const StructureInfo* info = get_info(p_id);
     return info ? info->palette : Array();
+}
+
+const StructureInfo* StructureDb::get_structure_info(const String &p_id) const {
+    return get_info(p_id);
 }
 
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {

@@ -6,6 +6,13 @@
             "void",
             "w_wall",
             "w_floor"
+        ],
+        "spawn_points": [
+            {
+                "id": "resident",
+                "pos": [5, 6],
+                "tags": ["NPC", "RESIDENT", "HUMAN"]
+            }
         ]
     },
     {

@@ -232,6 +232,7 @@ void WorldBubble::rebuild_from_pool() {
         return;
     }
     for (const Entity& e : entity_pool_source->get_all()) {
+        if (!entity_pool_source->contains(e.id)) continue;
         set_entity(e.x, e.y, e.id);
     }
 }
@@ -239,7 +240,9 @@ void WorldBubble::rebuild_from_pool() {
 const WorldBubble::CellEntity* WorldBubble::get_entity_at(int x, int y) const {
     uint64_t key = WorldCoords::pack_coords(x, y);
     auto it = entity_positions.find(key);
-    return (it != entity_positions.end()) ? &it->second : nullptr;
+    if (it == entity_positions.end()) return nullptr;
+    if (entity_pool_source && !entity_pool_source->contains(it->second.entity_id)) return nullptr;
+    return &it->second;
 }
 
 Dictionary WorldBubble::serialize_entity_positions() const {
@@ -312,6 +315,12 @@ void WorldBubble::set_seen_cells(const Array& p_seen) {
 bool WorldBubble::is_cell_seen(int x, int y) const {
     uint64_t cell_key = WorldCoords::pack_coords(x, y);
     return seen_cells.count(cell_key) > 0;
+}
+
+std::vector<uint64_t> WorldBubble::consume_newly_seen_cells() {
+    std::vector<uint64_t> out = newly_seen_cells;
+    newly_seen_cells.clear();
+    return out;
 }
 
 uint16_t WorldBubble::query_tile_id(int x, int y) {
@@ -459,6 +468,9 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 visual.occluded = visible_cells.find(cell_key) == visible_cells.end();
                 visual.seen = seen_cells.count(cell_key) > 0;
                 if (!visual.occluded) {
+                    if (!visual.seen) {
+                        newly_seen_cells.push_back(cell_key);
+                    }
                     seen_cells.insert(cell_key);
                     visual.seen = true;
                 }

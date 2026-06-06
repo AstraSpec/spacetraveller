@@ -13,7 +13,7 @@ struct HealthData {
 };
 
 namespace HealthTuning {
-    inline constexpr float REGEN_PER_TIME = 0.003f;
+    constexpr float REGEN_PER_TIME = 0.003f;
 }
 
 namespace Health {

@@ -77,6 +77,10 @@ const Entity* EntityPool::get_entity(uint32_t id) const {
     return (it != id_to_slot.end()) ? &entities[it->second] : nullptr;
 }
 
+bool EntityPool::contains(uint32_t id) const {
+    return id_to_slot.find(id) != id_to_slot.end();
+}
+
 size_t EntityPool::living_count() const {
     return id_to_slot.size();
 }
