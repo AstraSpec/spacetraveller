@@ -1,0 +1,13 @@
+[
+  {
+    "id": "tree_smashed",
+    "rolls_min": 1,
+    "rolls_max": 3,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 80, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "rope", "weight": 10, "amount_min": 1, "amount_max": 1, "chance": 0.35 },
+      { "item_id": "flint", "weight": 10, "amount_min": 1, "amount_max": 1, "chance": 0.2 }
+    ]
+  }
+]

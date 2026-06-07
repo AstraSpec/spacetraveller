@@ -4,13 +4,23 @@
     "dialogue_profile": "blacksmith",
     "spawn_weight": 1,
     "traits": [],
-    "quest_kinds": ["blacksmith_gather"]
+    "quest_kinds": ["blacksmith_gather"],
+    "vendor_loot_table": "blacksmith_vendor_stock",
+    "quest_loot_tables": {
+      "targets": "blacksmith_quest_targets",
+      "rewards": "blacksmith_quest_rewards"
+    }
   },
   "scavenger": {
     "display_name": "Scavenger",
     "dialogue_profile": "scavenger",
     "spawn_weight": 1,
     "traits": [],
-    "quest_kinds": ["scavenger_gather"]
+    "quest_kinds": ["scavenger_gather"],
+    "vendor_loot_table": "scavenger_vendor_stock",
+    "quest_loot_tables": {
+      "targets": "scavenger_quest_targets",
+      "rewards": "scavenger_quest_rewards"
+    }
   }
 }

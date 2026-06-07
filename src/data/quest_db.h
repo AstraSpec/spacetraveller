@@ -15,6 +15,7 @@ namespace godot {
 
 struct QuestTier {
     std::vector<uint16_t> item_pool;
+    uint16_t              reward_loot_table = 0;
     std::vector<int>      amount_range;
     int                   friendship = 0;
     int                   romance    = 0;
@@ -25,6 +26,7 @@ struct QuestTemplate {
     std::vector<String> item_type_filter; // gather
     std::vector<uint16_t> target_item_pool; // gather target items
     std::vector<uint16_t> target_item_tags; // gather target item tags
+    uint16_t target_loot_table = 0;
     std::vector<String> giver_jobs;
     std::vector<String> race_exclude;     // kill
     std::vector<int>    target_range;
@@ -57,11 +59,13 @@ public:
     Array  get_item_type_filter(const String &p_kind) const;
     Array  get_target_item_pool(const String &p_kind) const;
     Array  get_target_item_tags(const String &p_kind) const;
+    String get_target_loot_table(const String &p_kind) const;
     Array  get_giver_jobs(const String &p_kind) const;
     Array  get_race_exclude(const String &p_kind) const;
     Array  get_tier_names(const String &p_kind) const;
 
     Array  get_tier_item_pool(const String &p_kind, const String &p_tier) const;
+    String get_tier_reward_loot_table(const String &p_kind, const String &p_tier) const;
     Array  get_tier_amount_range(const String &p_kind, const String &p_tier) const;
     int    get_tier_friendship(const String &p_kind, const String &p_tier) const;
     int    get_tier_romance(const String &p_kind, const String &p_tier) const;
@@ -70,6 +74,8 @@ public:
     bool get_tier_amount_range_vec(const String &p_kind, const String &p_tier, int &r_min, int &r_max) const;
     bool get_target_item_pool_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
     bool get_target_item_tags_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
+    uint16_t get_target_loot_table_id(const String &p_kind) const;
+    uint16_t get_tier_reward_loot_table_id(const String &p_kind, const String &p_tier) const;
     bool get_giver_jobs_vec(const String &p_kind, std::vector<String> &r_out) const;
 };
 

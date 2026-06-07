@@ -23,6 +23,7 @@ struct RaceInfo {
     float base_damage = 10.0f;
     float base_stamina = 100.0f;
     String corpse_item;
+    uint16_t death_loot_table = 0;
     String combat_style = "default";
     String faction;
     std::vector<uint16_t> tags;

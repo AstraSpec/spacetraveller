@@ -18,7 +18,8 @@
     "name": "Tree",
     "atlas": [ 0, 8 ],
     "solid": true,
-    "tags": ["SMASHABLE", "VEGETATION"]
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
   },
   {
     "id": "grass",

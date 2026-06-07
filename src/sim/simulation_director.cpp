@@ -5,6 +5,7 @@
 #include "data/tile_db.h"
 #include "data/race_db.h"
 #include "data/style_db.h"
+#include "data/loot_db.h"
 #include "core/world_coords.h"
 #include "core/id_registry.h"
 #include "core/faction.h"
@@ -271,6 +272,20 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             cost = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, *entity, loco);
             if (cost > 0.0f) {
                 if (has_stam) Stamina::drain(stam_it->second, StaminaTuning::SMASH_COST);
+                TileDb* tile_db_singleton = TileDb::get_singleton();
+                const TileInfo* smashed_tile = tile_db_singleton ? tile_db_singleton->get_tile_info(tile_numeric) : nullptr;
+                LootDb* loot_db = LootDb::get_singleton();
+                if (smashed_tile && smashed_tile->smash_loot_table != 0 && loot_db) {
+                    uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
+                    Rng::Seeded loot_rng = Rng::at(seed, intent.target, Rng::TILE_LOOT);
+                    std::vector<LootStack> stacks;
+                    loot_db->roll_table(smashed_tile->smash_loot_table, loot_rng, stacks);
+                    for (const LootStack& stack : stacks) {
+                        if (stack.item_id != 0 && stack.amount > 0) {
+                            d.bubble->drop_item(intent.target, stack.item_id, stack.amount);
+                        }
+                    }
+                }
                 d.sink->on_smash_event(d.player_entity_id, tile_id, "smashed");
             }
         }
@@ -589,6 +604,20 @@ void SimulationDirector::despawn_entity(uint32_t entity_id) {
                         uint16_t corpse_id = reg->get_id(race->corpse_item);
                         if (corpse_id != 0) {
                             d.bubble->drop_item(pos, corpse_id, 1);
+                        }
+                    }
+                }
+                if (race && race->death_loot_table != 0) {
+                    LootDb* loot_db = LootDb::get_singleton();
+                    if (loot_db) {
+                        uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
+                        Rng::Seeded loot_rng = Rng::at(seed, pos, Rng::ENTITY_LOOT, entity_id);
+                        std::vector<LootStack> stacks;
+                        loot_db->roll_table(race->death_loot_table, loot_rng, stacks);
+                        for (const LootStack& stack : stacks) {
+                            if (stack.item_id != 0 && stack.amount > 0) {
+                                d.bubble->drop_item(pos, stack.item_id, stack.amount);
+                            }
                         }
                     }
                 }

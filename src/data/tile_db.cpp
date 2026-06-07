@@ -14,6 +14,7 @@ void TileDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("is_solid", "id"), &TileDb::is_solid);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &TileDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_tile_name", "id"), &TileDb::get_tile_name);
+    ClassDB::bind_method(D_METHOD("get_smash_loot_table", "id"), &TileDb::get_smash_loot_table);
     ClassDB::bind_method(D_METHOD("get_ids"), &TileDb::get_ids);
 }
 
@@ -44,6 +45,10 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     
     info.solid = p_data.get("solid", false);
     info.tags = _parse_tags(p_data.get("tags", Array()));
+    String smash_loot_table = String(p_data.get("smash_loot_table", ""));
+    if (!smash_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        info.smash_loot_table = IdRegistry::get_singleton()->register_string(smash_loot_table);
+    }
     
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
@@ -92,6 +97,12 @@ bool TileDb::has_tag(const String &p_id, const String &p_tag) const {
 String TileDb::get_tile_name(const String &p_id) const {
     const TileInfo* info = get_tile_info(p_id);
     return (info && !info->name.is_empty()) ? info->name : p_id;
+}
+
+String TileDb::get_smash_loot_table(const String &p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    IdRegistry* reg = IdRegistry::get_singleton();
+    return (info && reg && info->smash_loot_table != 0) ? reg->get_string(info->smash_loot_table) : String();
 }
 
 }

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "blacksmith_quest_rewards",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "iron_shard", "weight": 30, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "fire_starter", "weight": 20, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bone_needle", "weight": 20, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "wooden_sword", "weight": 20, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "torch", "weight": 10, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "scavenger_quest_rewards",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "stick", "weight": 25, "amount_min": 2, "amount_max": 5 },
+      { "item_id": "rope", "weight": 20, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "flint", "weight": 20, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "torch", "weight": 15, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "spider_silk", "weight": 20, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "generic_quest_rewards",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "flint", "weight": 25, "amount_min": 2, "amount_max": 4 },
+      { "item_id": "stick", "weight": 25, "amount_min": 2, "amount_max": 5 },
+      { "item_id": "bone", "weight": 20, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "iron_shard", "weight": 15, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "torch", "weight": 15, "amount_min": 1, "amount_max": 2 }
+    ]
+  }
+]

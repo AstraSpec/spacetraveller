@@ -8,6 +8,7 @@
   "base_damage": 20,
   "base_stamina": 200,
   "corpse_item": "corpse_bear",
+  "death_loot_table": "bear_death",
   "combat_style": "maul",
   "faction": "enemy",
   "parts": [

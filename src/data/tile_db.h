@@ -11,6 +11,7 @@ struct TileInfo {
     std::vector<Vector2i> atlas_variants;
     bool solid;
     std::vector<uint16_t> tags;
+    uint16_t smash_loot_table = 0;
 };
 
 class TileDb : public Object, public DataBase<TileInfo, TileDb> {
@@ -38,6 +39,7 @@ public:
     bool is_solid(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
     String get_tile_name(const String &p_id) const;
+    String get_smash_loot_table(const String &p_id) const;
 };
 
 }

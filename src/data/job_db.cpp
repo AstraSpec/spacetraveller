@@ -1,4 +1,5 @@
 #include "job_db.h"
+#include "core/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <algorithm>
 
@@ -34,6 +35,8 @@ void JobDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_traits", "id"), &JobDb::get_traits);
     ClassDB::bind_method(D_METHOD("get_context_tags", "id"), &JobDb::get_context_tags);
     ClassDB::bind_method(D_METHOD("get_quest_kinds", "id"), &JobDb::get_quest_kinds);
+    ClassDB::bind_method(D_METHOD("get_vendor_loot_table", "id"), &JobDb::get_vendor_loot_table);
+    ClassDB::bind_method(D_METHOD("get_quest_loot_tables", "id"), &JobDb::get_quest_loot_tables);
 }
 
 JobDb::JobDb() {}
@@ -49,6 +52,11 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     info.traits = parse_string_list(p_data.get("traits", Array()));
     info.context_tags = parse_string_list(p_data.get("context_tags", Array()));
     info.quest_kinds = parse_string_list(p_data.get("quest_kinds", Array()));
+    String vendor_loot_table = String(p_data.get("vendor_loot_table", ""));
+    if (!vendor_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        info.vendor_loot_table = IdRegistry::get_singleton()->register_string(vendor_loot_table);
+    }
+    info.quest_loot_tables = p_data.get("quest_loot_tables", Dictionary());
     return info;
 }
 
@@ -122,6 +130,17 @@ Array JobDb::get_context_tags(const String &p_id) const {
 Array JobDb::get_quest_kinds(const String &p_id) const {
     const JobInfo* info = get_job_info(p_id);
     return info ? to_array(info->quest_kinds) : Array();
+}
+
+String JobDb::get_vendor_loot_table(const String &p_id) const {
+    const JobInfo* info = get_job_info(p_id);
+    IdRegistry* reg = IdRegistry::get_singleton();
+    return (info && reg && info->vendor_loot_table != 0) ? reg->get_string(info->vendor_loot_table) : String();
+}
+
+Dictionary JobDb::get_quest_loot_tables(const String &p_id) const {
+    const JobInfo* info = get_job_info(p_id);
+    return info ? info->quest_loot_tables : Dictionary();
 }
 
 }

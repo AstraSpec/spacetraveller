@@ -195,7 +195,7 @@ GameWorld::GameWorld() {
     quest_tracker = std::make_unique<QuestTracker>();
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
 
-    quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id);
+    quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed);
     quest_tracker->set_emit_callback(&GameWorld::_quest_updated_trampoline, this);
 
     SimulationDirectorDeps deps;
@@ -206,6 +206,7 @@ GameWorld::GameWorld() {
     deps.sink = static_cast<ISimulationEventSink*>(this);
     deps.event_listener = quest_tracker.get();
     deps.player_entity_id = player_entity_id;
+    deps.world_seed = &world_seed;
     sim_director.configure(deps);
 }
 

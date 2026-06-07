@@ -8,6 +8,7 @@
   "base_damage": 4,
   "base_stamina": 40,
   "corpse_item": "corpse_mouse",
+  "death_loot_table": "mouse_death",
   "combat_style": "skitter",
   "faction": "enemy",
   "parts": [

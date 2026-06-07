@@ -24,6 +24,7 @@ struct SimulationDirectorDeps {
     ISimulationEventSink* sink = nullptr;
     IGameEventListener* event_listener = nullptr;
     uint32_t player_entity_id = PLAYER_ENTITY_ID;
+    const int* world_seed = nullptr;
 };
 
 class SimulationDirector {

@@ -18,6 +18,11 @@ namespace Rng {
         SPAWN = 6,
         SPAWN_RULE = 7,
         SPAWN_LOOT = 8,
+        TILE_LOOT = 9,
+        ENTITY_LOOT = 10,
+        CONTAINER_LOOT = 11,
+        VENDOR_LOOT = 12,
+        QUEST_LOOT = 13,
     };
 
     inline uint64_t mix64(uint64_t z) {
@@ -61,6 +66,10 @@ namespace Rng {
 
     inline Seeded at(uint32_t world_seed, const Vector2i& pos, Stream stream) {
         return Seeded{ hash_pos(world_seed, pos, stream) };
+    }
+
+    inline Seeded at(uint32_t world_seed, const Vector2i& pos, Stream stream, uint64_t salt) {
+        return Seeded{ mix64(hash_pos(world_seed, pos, stream) ^ salt) };
     }
 
     // Stateless variant index for callers that only need a single deterministic

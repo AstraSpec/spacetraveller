@@ -17,10 +17,12 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_item_type_filter", "kind"), &QuestDb::get_item_type_filter);
     ClassDB::bind_method(D_METHOD("get_target_item_pool", "kind"), &QuestDb::get_target_item_pool);
     ClassDB::bind_method(D_METHOD("get_target_item_tags", "kind"), &QuestDb::get_target_item_tags);
+    ClassDB::bind_method(D_METHOD("get_target_loot_table", "kind"), &QuestDb::get_target_loot_table);
     ClassDB::bind_method(D_METHOD("get_giver_jobs", "kind"), &QuestDb::get_giver_jobs);
     ClassDB::bind_method(D_METHOD("get_race_exclude", "kind"), &QuestDb::get_race_exclude);
     ClassDB::bind_method(D_METHOD("get_tier_names", "kind"), &QuestDb::get_tier_names);
     ClassDB::bind_method(D_METHOD("get_tier_item_pool", "kind", "tier"), &QuestDb::get_tier_item_pool);
+    ClassDB::bind_method(D_METHOD("get_tier_reward_loot_table", "kind", "tier"), &QuestDb::get_tier_reward_loot_table);
     ClassDB::bind_method(D_METHOD("get_tier_amount_range", "kind", "tier"), &QuestDb::get_tier_amount_range);
     ClassDB::bind_method(D_METHOD("get_tier_friendship", "kind", "tier"), &QuestDb::get_tier_friendship);
     ClassDB::bind_method(D_METHOD("get_tier_romance", "kind", "tier"), &QuestDb::get_tier_romance);
@@ -63,6 +65,10 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     Array target_pool = p_data.get("target_item_pool", Array());
     t.target_item_pool = resolve_item_ids(target_pool);
     t.target_item_tags = _parse_tags(p_data.get("target_item_tags", Array()));
+    String target_loot_table = String(p_data.get("target_loot_table", ""));
+    if (!target_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        t.target_loot_table = IdRegistry::get_singleton()->register_string(target_loot_table);
+    }
 
     Array giver_jobs = p_data.get("giver_jobs", Array());
     for (int i = 0; i < giver_jobs.size(); i++) {
@@ -87,6 +93,10 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
         QuestTier tier;
         Array pool = tier_data.get("item_pool", Array());
         tier.item_pool = resolve_item_ids(pool);
+        String reward_loot_table = String(tier_data.get("reward_loot_table", ""));
+        if (!reward_loot_table.is_empty() && IdRegistry::get_singleton()) {
+            tier.reward_loot_table = IdRegistry::get_singleton()->register_string(reward_loot_table);
+        }
 
         Array ar = tier_data.get("amount_range", Array());
         for (int j = 0; j < ar.size() && j < 2; j++) {
@@ -149,6 +159,12 @@ Array QuestDb::get_target_item_tags(const String &p_kind) const {
     return arr;
 }
 
+String QuestDb::get_target_loot_table(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    IdRegistry* reg = IdRegistry::get_singleton();
+    return (t && reg && t->target_loot_table != 0) ? reg->get_string(t->target_loot_table) : String();
+}
+
 Array QuestDb::get_giver_jobs(const String &p_kind) const {
     Array arr;
     const QuestTemplate* t = get_info(p_kind);
@@ -178,6 +194,14 @@ Array QuestDb::get_tier_item_pool(const String &p_kind, const String &p_tier) co
     if (it == t->tiers.end()) return arr;
     for (uint16_t v : it->second.item_pool) arr.push_back((int)v);
     return arr;
+}
+
+String QuestDb::get_tier_reward_loot_table(const String &p_kind, const String &p_tier) const {
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return String();
+    auto it = t->tiers.find(p_tier);
+    IdRegistry* reg = IdRegistry::get_singleton();
+    return (it != t->tiers.end() && reg && it->second.reward_loot_table != 0) ? reg->get_string(it->second.reward_loot_table) : String();
 }
 
 Array QuestDb::get_tier_amount_range(const String &p_kind, const String &p_tier) const {
@@ -229,6 +253,18 @@ bool QuestDb::get_target_item_tags_vec(const String &p_kind, std::vector<uint16_
     if (!t) return false;
     r_out = t->target_item_tags;
     return !r_out.empty();
+}
+
+uint16_t QuestDb::get_target_loot_table_id(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->target_loot_table : 0;
+}
+
+uint16_t QuestDb::get_tier_reward_loot_table_id(const String &p_kind, const String &p_tier) const {
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return 0;
+    auto it = t->tiers.find(p_tier);
+    return it == t->tiers.end() ? 0 : it->second.reward_loot_table;
 }
 
 bool QuestDb::get_giver_jobs_vec(const String &p_kind, std::vector<String> &r_out) const {

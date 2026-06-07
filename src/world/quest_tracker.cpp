@@ -4,8 +4,11 @@
 #include "data/item_db.h"
 #include "data/race_db.h"
 #include "data/tile_db.h"
+#include "data/loot_db.h"
 #include "core/id_registry.h"
+#include "core/rng.h"
 #include "core/tag_registry.h"
+#include "entities/entity.h"
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -16,10 +19,22 @@ static inline int _randi_index(int p_size) {
     return (int)((uint32_t)UtilityFunctions::randi() % (uint32_t)p_size);
 }
 
-void QuestTracker::configure(EntityLedger* p_ledger, QuestDb* p_db, uint32_t p_player_id) {
+void QuestTracker::configure(EntityLedger* p_ledger, QuestDb* p_db, uint32_t p_player_id, const int* p_world_seed) {
     ledger = p_ledger;
     db = p_db;
     player_entity_id = p_player_id;
+    world_seed = p_world_seed;
+}
+
+Rng::Seeded QuestTracker::_quest_rng(const String& p_kind, uint32_t p_giver_entity_id) const {
+    Vector2i pos;
+    if (ledger) {
+        const Entity* giver = ledger->get_entity_pool().get_entity(p_giver_entity_id);
+        if (giver) pos = Vector2i(giver->x, giver->y);
+    }
+    uint32_t seed = world_seed ? static_cast<uint32_t>(*world_seed) : 0;
+    uint64_t salt = (static_cast<uint64_t>(p_giver_entity_id) << 32) ^ static_cast<uint32_t>(p_kind.hash());
+    return Rng::at(seed, pos, Rng::QUEST_LOOT, salt);
 }
 
 void QuestTracker::set_emit_callback(EmitFn p_emit, void* p_userdata) {
@@ -88,6 +103,7 @@ void QuestTracker::on_game_event(const GameEvent& p_event) {
 
 QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_entity_id) {
     QuestInstance inst;
+    Rng::Seeded quest_rng = _quest_rng(p_kind, p_giver_entity_id);
 
     uint64_t ticks = 0;
     Time* time_singleton = Time::get_singleton();
@@ -111,25 +127,39 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
     Array target_range = db->get_target_range(p_kind);
     int target_min = target_range.size() > 0 ? int(target_range[0]) : 1;
     int target_max = target_range.size() > 1 ? int(target_range[1]) : target_min;
-    inst.target = (int)UtilityFunctions::randi_range(target_min, target_max);
+    inst.target = quest_rng.range(target_min, target_max);
 
     Array tier_names = db->get_tier_names(p_kind);
     if (tier_names.is_empty()) {
         inst.params["__unfilled"] = true;
         return inst;
     }
-    int tier_idx = _randi_index(tier_names.size());
+    int tier_idx = quest_rng.range(0, tier_names.size() - 1);
     String tier = String(tier_names[tier_idx]);
 
     int amt_min = 1, amt_max = 1;
     db->get_tier_amount_range_vec(p_kind, tier, amt_min, amt_max);
-    int reward_amount = (int)UtilityFunctions::randi_range(amt_min, amt_max);
+    int reward_amount = quest_rng.range(amt_min, amt_max);
 
     std::vector<uint16_t> pool_vec;
     db->get_tier_item_pool_vec(p_kind, tier, pool_vec);
     String reward_item_id;
-    if (!pool_vec.empty()) {
-        uint16_t pick = pool_vec[_randi_index((int)pool_vec.size())];
+    Array reward_items;
+    uint16_t reward_loot_table = db->get_tier_reward_loot_table_id(p_kind, tier);
+    LootDb* loot_db = LootDb::get_singleton();
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (reward_loot_table != 0 && loot_db && reg) {
+        std::vector<LootStack> stacks;
+        loot_db->roll_table(reward_loot_table, quest_rng, stacks);
+        for (const LootStack& stack : stacks) {
+            if (stack.item_id == 0 || stack.amount <= 0) continue;
+            Dictionary entry;
+            entry["id"] = reg->get_string(stack.item_id);
+            entry["amount"] = stack.amount;
+            reward_items.push_back(entry);
+        }
+    } else if (!pool_vec.empty()) {
+        uint16_t pick = pool_vec[quest_rng.range(0, (int)pool_vec.size() - 1)];
         IdRegistry* reg = IdRegistry::get_singleton();
         reward_item_id = reg ? reg->get_string(pick) : "";
     }
@@ -148,7 +178,19 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         std::vector<uint16_t> target_tags;
         db->get_target_item_pool_vec(p_kind, target_pool);
         db->get_target_item_tags_vec(p_kind, target_tags);
-        if (idb) {
+        uint16_t target_loot_table = db->get_target_loot_table_id(p_kind);
+        if (target_loot_table != 0 && loot_db && reg) {
+            std::vector<LootStack> stacks;
+            loot_db->roll_table(target_loot_table, quest_rng, stacks);
+            for (const LootStack& stack : stacks) {
+                String id = reg->get_string(stack.item_id);
+                if (!id.is_empty()) {
+                    candidates.push_back(id);
+                    break;
+                }
+            }
+        }
+        if (candidates.empty() && idb) {
             IdRegistry* reg = IdRegistry::get_singleton();
             if (!target_pool.empty() && reg) {
                 for (uint16_t item_id : target_pool) {
@@ -175,7 +217,7 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
             }
         }
         if (!candidates.empty()) {
-            String pick = candidates[_randi_index((int)candidates.size())];
+            String pick = candidates[quest_rng.range(0, (int)candidates.size() - 1)];
             inst.params["item_id"] = pick;
             String item_name = idb ? idb->get_item_name(pick) : "";
             if (item_name.is_empty()) item_name = pick;
@@ -205,7 +247,7 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
             }
         }
         if (!candidates.empty()) {
-            String pick = candidates[_randi_index((int)candidates.size())];
+            String pick = candidates[quest_rng.range(0, (int)candidates.size() - 1)];
             inst.params["race_id"] = pick;
             String race_name = pick.capitalize();
             String label_tmpl = db->get_label_template(p_kind);
@@ -232,7 +274,7 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
             }
         }
         if (!candidates.empty()) {
-            String pick = candidates[_randi_index((int)candidates.size())];
+            String pick = candidates[quest_rng.range(0, (int)candidates.size() - 1)];
             inst.params["tile_id"] = pick;
             String tile_name = tile_db_singleton ? tile_db_singleton->get_tile_name(pick) : String();
             String label_tmpl = db->get_label_template(p_kind);
@@ -244,7 +286,6 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         }
     }
 
-    Array reward_items;
     if (!reward_item_id.is_empty() && reward_amount > 0) {
         Dictionary entry;
         entry["id"] = reward_item_id;

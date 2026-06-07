@@ -26,6 +26,10 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.base_damage = static_cast<float>(static_cast<double>(p_data.get("base_damage", 10.0)));
     info.base_stamina = static_cast<float>(static_cast<double>(p_data.get("base_stamina", 100.0)));
     info.corpse_item = p_data.get("corpse_item", "");
+    String death_loot_table = String(p_data.get("death_loot_table", ""));
+    if (!death_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        info.death_loot_table = IdRegistry::get_singleton()->register_string(death_loot_table);
+    }
     info.combat_style = p_data.get("combat_style", "default");
     info.faction = p_data.get("faction", "");
     info.tags = _parse_tags(p_data.get("tags", Array()));

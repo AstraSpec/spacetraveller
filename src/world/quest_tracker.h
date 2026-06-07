@@ -13,6 +13,7 @@ namespace godot {
 
 class EntityLedger;
 class QuestDb;
+namespace Rng { struct Seeded; }
 
 struct QuestInstance {
     String id;
@@ -30,6 +31,7 @@ class QuestTracker : public IGameEventListener {
     EntityLedger* ledger = nullptr;
     QuestDb*      db     = nullptr;
     uint32_t      player_entity_id = 0;
+    const int*    world_seed = nullptr;
 
     using EmitFn = void(*)(void* userdata, const String& quest_id);
     EmitFn   emit_quest_updated = nullptr;
@@ -40,7 +42,7 @@ class QuestTracker : public IGameEventListener {
 public:
     QuestTracker() = default;
 
-    void configure(EntityLedger* p_ledger, QuestDb* p_db, uint32_t p_player_id);
+    void configure(EntityLedger* p_ledger, QuestDb* p_db, uint32_t p_player_id, const int* p_world_seed = nullptr);
 
     void set_emit_callback(EmitFn p_emit, void* p_userdata);
 
@@ -65,6 +67,7 @@ public:
 
 private:
     QuestInstance _sample_one(const String& p_kind, uint32_t p_giver_entity_id);
+    Rng::Seeded   _quest_rng(const String& p_kind, uint32_t p_giver_entity_id) const;
     bool          _is_gather_kind(const String& p_kind) const;
     bool          _giver_can_offer(const String& p_kind, uint32_t p_giver_entity_id) const;
     void          _fail(const String& p_quest_id, const String& p_reason);
