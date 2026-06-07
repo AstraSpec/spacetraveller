@@ -31,6 +31,20 @@ const EquipmentSlot* Equipment::get_slot(const EquipmentData& data, const String
     return nullptr;
 }
 
+std::vector<String> Equipment::get_wielded_weapon_ids(const EquipmentData& data) {
+    std::vector<String> result;
+    const EquipmentSlot* main = get_slot(data, MAIN_HAND_SLOT);
+    if (main && !main->item_id.is_empty()) result.push_back(main->item_id);
+
+    const EquipmentSlot* off = get_slot(data, OFF_HAND_SLOT);
+    if (off && !off->item_id.is_empty()) result.push_back(off->item_id);
+    return result;
+}
+
+int Equipment::get_wielded_weapon_count(const EquipmentData& data) {
+    return static_cast<int>(get_wielded_weapon_ids(data).size());
+}
+
 float Equipment::get_attack_power(const EquipmentData& data) {
     return 0.0f;
 }

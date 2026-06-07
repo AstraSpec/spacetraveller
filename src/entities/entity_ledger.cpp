@@ -133,6 +133,12 @@ Dictionary EntityLedger::get_clothing(uint32_t id) const {
     return Clothing::serialize(it->second);
 }
 
+Dictionary EntityLedger::get_equipment(uint32_t id) const {
+    auto it = equipment_data.find(id);
+    if (it == equipment_data.end()) return Dictionary();
+    return Equipment::serialize(it->second);
+}
+
 Dictionary EntityLedger::get_inventory(uint32_t id) const {
     auto it = inventory_data.find(id);
     if (it == inventory_data.end()) return Dictionary();
@@ -250,6 +256,65 @@ bool EntityLedger::equip_clothing_by_string(uint32_t id, const String& item_id) 
 
 bool EntityLedger::unequip_clothing_by_string(uint32_t id, const String& item_id) {
     return unequip_clothing(id, item_id);
+}
+
+static bool is_weapon_slot(const String& slot_name) {
+    return slot_name == Equipment::MAIN_HAND_SLOT || slot_name == Equipment::OFF_HAND_SLOT;
+}
+
+static int get_weapon_grasp_required(const String& item_id) {
+    ItemDb* db = ItemDb::get_singleton();
+    if (!db) return 0;
+    Dictionary weapon = db->get_weapon_data(item_id);
+    if (weapon.is_empty()) return 0;
+    return MAX(1, static_cast<int>(weapon.get("grasp_required", 1)));
+}
+
+bool EntityLedger::wield_weapon(uint32_t id, const String& slot_name, const String& item_id) {
+    if (!is_weapon_slot(slot_name)) return false;
+    if (get_inventory_item_amount(id, item_id) <= 0) return false;
+
+    ItemDb* db = ItemDb::get_singleton();
+    if (!db) return false;
+    if (db->get_item_type(item_id) != "weapon") return false;
+    Dictionary weapon = db->get_weapon_data(item_id);
+    if (weapon.is_empty()) return false;
+
+    auto anat_it = anatomy_data.find(id);
+    auto equip_it = equipment_data.find(id);
+    if (anat_it == anatomy_data.end() || equip_it == equipment_data.end()) return false;
+
+    int required = MAX(1, static_cast<int>(weapon.get("grasp_required", 1)));
+    int total_required = required;
+    for (const auto& pair : equip_it->second.slots) {
+        if (!is_weapon_slot(pair.first) || pair.first == slot_name) continue;
+        total_required += get_weapon_grasp_required(pair.second.item_id);
+    }
+
+    int functional_grasps = Anatomy::count_functional_parts_with_tag(anat_it->second, "GRASP");
+    if (total_required > functional_grasps) return false;
+
+    return Equipment::equip(equip_it->second, slot_name, item_id);
+}
+
+bool EntityLedger::unwield_weapon(uint32_t id, const String& slot_name) {
+    if (!is_weapon_slot(slot_name)) return false;
+    auto equip_it = equipment_data.find(id);
+    if (equip_it == equipment_data.end()) return false;
+    return Equipment::unequip(equip_it->second, slot_name);
+}
+
+bool EntityLedger::wield_weapon_by_string(uint32_t id, const String& item_id) {
+    auto equip_it = equipment_data.find(id);
+    if (equip_it == equipment_data.end()) return false;
+
+    if (!Equipment::is_slot_occupied(equip_it->second, Equipment::MAIN_HAND_SLOT)) {
+        return wield_weapon(id, Equipment::MAIN_HAND_SLOT, item_id);
+    }
+    if (!Equipment::is_slot_occupied(equip_it->second, Equipment::OFF_HAND_SLOT)) {
+        return wield_weapon(id, Equipment::OFF_HAND_SLOT, item_id);
+    }
+    return wield_weapon(id, Equipment::MAIN_HAND_SLOT, item_id);
 }
 
 Dictionary EntityLedger::serialize() const {

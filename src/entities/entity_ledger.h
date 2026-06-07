@@ -72,6 +72,7 @@ public:
 
     Dictionary get_anatomy(uint32_t id) const;
     Dictionary get_clothing(uint32_t id) const;
+    Dictionary get_equipment(uint32_t id) const;
     Dictionary get_inventory(uint32_t id) const;
     Dictionary get_health(uint32_t id) const;
     Dictionary get_stamina(uint32_t id) const;
@@ -88,6 +89,9 @@ public:
     bool unequip_clothing(uint32_t id, const String& item_id);
     bool equip_clothing_by_string(uint32_t id, const String& item_id);
     bool unequip_clothing_by_string(uint32_t id, const String& item_id);
+    bool wield_weapon(uint32_t id, const String& slot_name, const String& item_id);
+    bool unwield_weapon(uint32_t id, const String& slot_name);
+    bool wield_weapon_by_string(uint32_t id, const String& item_id);
 
     Dictionary serialize() const;
     void deserialize(const Dictionary& data);

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "wooden_sword",
+    "name": "Wooden Sword",
+    "description": "A crude blade of bound sticks. Better than bare hands.",
+    "type": "weapon",
+    "atlas": [26, 6],
+    "weight": 0.8,
+    "volume": 0.4,
+    "tags": ["JOB_BLACKSMITH"],
+    "weapon": {
+      "damage": 4.0,
+      "grasp_required": 1,
+      "reach": 1,
+      "style": "bash"
+    }
+  },
+  {
+    "id": "longsword",
+    "name": "Longsword",
+    "description": "A balanced steel blade for cutting strikes.",
+    "type": "weapon",
+    "atlas": [26, 6],
+    "weight": 1.4,
+    "volume": 0.6,
+    "tags": ["JOB_BLACKSMITH"],
+    "weapon": {
+      "damage": 8.0,
+      "grasp_required": 1,
+      "reach": 1,
+      "style": "cut"
+    }
+  },
+  {
+    "id": "iron_spear",
+    "name": "Iron Spear",
+    "description": "A long pointed blade for thrusts.",
+    "type": "weapon",
+    "atlas": [27, 6],
+    "weight": 0.5,
+    "volume": 0.2,
+    "tags": ["JOB_BLACKSMITH", "JOB_SCAVENGER"],
+    "weapon": {
+      "damage": 5.0,
+      "grasp_required": 2,
+      "reach": 2,
+      "style": "pierce"
+    }
+  }
+]

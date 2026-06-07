@@ -60,16 +60,6 @@
     "tags": ["JOB_BLACKSMITH"]
   },
   {
-    "id": "wooden_sword",
-    "name": "Wooden Sword",
-    "description": "A crude blade of bound sticks. Better than bare hands.",
-    "type": "weapon",
-    "atlas": [ 26, 6 ],
-    "weight": 0.8,
-    "volume": 0.4,
-    "tags": ["JOB_BLACKSMITH"]
-  },
-  {
     "id": "torch",
     "name": "Torch",
     "description": "A stick wrapped in spider silk, ready to light.",

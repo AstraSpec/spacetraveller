@@ -13,6 +13,7 @@
 #include "data/body_part_db.h"
 #include "data/style_db.h"
 #include "data/ability_db.h"
+#include "data/item_db.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <cmath>
 
@@ -54,66 +55,111 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     AbilityDb* ability_db = AbilityDb::get_singleton();
     if (!db || !ability_db) return result;
 
-    float attack_power = Equipment::get_attack_power(attacker_equip);
-    bool unarmed = attack_power <= 0.0f;
-    bool style_active = style && (!style->requires_unarmed || unarmed);
+    struct AttackCandidate {
+        const AbilityInfo* ability = nullptr;
+        const StyleInfo* style = nullptr;
+        float weight = 1.0f;
+        float weapon_damage = 0.0f;
+    };
 
-    std::vector<const AbilityInfo*> pool;
-    std::vector<float> weights;
+    std::vector<AttackCandidate> pool;
     float total_weight = 0.0f;
     bool limb_capable = false;
 
-    if (style) {
-        for (const auto& entry : style->abilities) {
+    auto add_style_candidates = [&](const StyleInfo* candidate_style, float weapon_damage) {
+        if (!candidate_style) return;
+        for (const auto& entry : candidate_style->abilities) {
             const AbilityInfo* ability = ability_db->get_ability_info(entry.ability_id);
             if (!ability) continue;
             if (!Anatomy::has_functional_limbs(attacker_anatomy, ability->required_limbs)) continue;
             limb_capable = true;
             if (attacker_stamina && !Stamina::can_afford(*attacker_stamina, ability->stamina_cost)) continue;
-            pool.push_back(ability);
-            weights.push_back(entry.weight);
+            pool.push_back({ability, candidate_style, entry.weight, weapon_damage});
             total_weight += entry.weight;
+        }
+    };
+
+    bool armed = false;
+    ItemDb* item_db = ItemDb::get_singleton();
+    StyleDb* style_db = StyleDb::get_singleton();
+    if (item_db && style_db) {
+        std::vector<String> weapons = Equipment::get_wielded_weapon_ids(attacker_equip);
+        int total_required_grasps = 0;
+        struct WieldedWeapon {
+            const StyleInfo* style = nullptr;
+            float damage = 0.0f;
+            int grasp_required = 1;
+        };
+        std::vector<WieldedWeapon> valid_weapons;
+
+        for (const String& item_id : weapons) {
+            Dictionary weapon = item_db->get_weapon_data(item_id);
+            if (weapon.is_empty()) continue;
+            String style_id = weapon.get("style", "");
+            const StyleInfo* weapon_style = style_db->get_style_info(style_id);
+            if (!weapon_style) continue;
+
+            WieldedWeapon wielded;
+            wielded.style = weapon_style;
+            wielded.damage = static_cast<float>(static_cast<double>(weapon.get("damage", 0.0)));
+            wielded.grasp_required = MAX(1, static_cast<int>(weapon.get("grasp_required", 1)));
+            total_required_grasps += wielded.grasp_required;
+            valid_weapons.push_back(wielded);
+        }
+
+        if (!valid_weapons.empty()) {
+            armed = true;
+            int functional_grasps = Anatomy::count_functional_parts_with_tag(attacker_anatomy, "GRASP");
+            if (total_required_grasps <= functional_grasps) {
+                for (const WieldedWeapon& weapon : valid_weapons) {
+                    add_style_candidates(weapon.style, weapon.damage);
+                }
+            }
         }
     }
 
-    const AbilityInfo* chosen = nullptr;
+    if (!armed) {
+        add_style_candidates(style, Equipment::get_attack_power(attacker_equip));
+    }
+
+    AttackCandidate chosen;
     if (total_weight > 0.0f) {
         float roll = static_cast<float>(UtilityFunctions::randf()) * total_weight;
         for (size_t i = 0; i < pool.size(); i++) {
-            roll -= weights[i];
+            roll -= pool[i].weight;
             if (roll <= 0.0f) { chosen = pool[i]; break; }
         }
-        if (!chosen) chosen = pool.back();
+        if (!chosen.ability) chosen = pool.back();
     }
 
-    if (!chosen) {
+    if (!chosen.ability) {
         if (limb_capable && attacker_stamina) result.exhausted = true;
         return result;
     }
 
-    if (attacker_stamina) Stamina::drain(*attacker_stamina, chosen->stamina_cost);
+    if (attacker_stamina) Stamina::drain(*attacker_stamina, chosen.ability->stamina_cost);
 
-    result.verb = chosen->verb;
-    result.speed = chosen->speed;
+    result.verb = chosen.ability->verb;
+    result.speed = chosen.ability->speed;
 
-    float limb_integrity = Anatomy::min_required_integrity(attacker_anatomy, chosen->required_limbs);
-    float effective_accuracy = chosen->accuracy * limb_integrity;
-    if (style_active) effective_accuracy += style->accuracy_mod;
+    float limb_integrity = Anatomy::min_required_integrity(attacker_anatomy, chosen.ability->required_limbs);
+    float effective_accuracy = chosen.ability->accuracy * limb_integrity;
+    if (chosen.style) effective_accuracy += chosen.style->accuracy_mod;
     if (UtilityFunctions::randf() > effective_accuracy) {
         result.hit = false;
         return result;
     }
     result.hit = true;
 
-    float damage = base_damage * chosen->damage_mult + attack_power;
-    if (style_active) damage *= style->damage_mult;
+    float damage = base_damage * chosen.ability->damage_mult + chosen.weapon_damage;
+    if (chosen.style) damage *= chosen.style->damage_mult;
 
     float variance = CombatTuning::DAMAGE_VARIANCE_MIN +
         static_cast<float>(UtilityFunctions::randf()) * (CombatTuning::DAMAGE_VARIANCE_MAX - CombatTuning::DAMAGE_VARIANCE_MIN);
     damage *= variance;
 
     float crit_chance = CombatTuning::CRIT_CHANCE;
-    if (style_active) crit_chance += style->crit_chance_mod;
+    if (chosen.style) crit_chance += chosen.style->crit_chance_mod;
     if (UtilityFunctions::randf() < crit_chance) {
         result.crit = true;
         damage *= CombatTuning::CRIT_MULT;
@@ -123,13 +169,13 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     Health::damage(defender_health, damage);
     result.killed = !defender_health.alive;
 
-    result.effect_type = chosen->effect_type;
-    result.effect_mode = chosen->effect_mode;
-    result.effect_magnitude = chosen->effect_magnitude;
-    result.effect_duration = chosen->effect_duration;
+    result.effect_type = chosen.ability->effect_type;
+    result.effect_mode = chosen.ability->effect_mode;
+    result.effect_magnitude = chosen.ability->effect_magnitude;
+    result.effect_duration = chosen.ability->effect_duration;
 
     std::vector<String> target_heights;
-    if (style_active) target_heights = style->target_heights;
+    if (chosen.style) target_heights = chosen.style->target_heights;
 
     int loc_idx = Anatomy::pick_hit_location(defender_anatomy, target_heights);
     if (loc_idx >= 0) {

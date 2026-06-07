@@ -71,6 +71,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("remove_entity_inventory_item", "entity_id", "item_id", "amount"), &GameWorld::remove_entity_inventory_item);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_item_amount", "entity_id", "item_id"), &GameWorld::get_entity_inventory_item_amount);
     ClassDB::bind_method(D_METHOD("get_entity_inventory", "entity_id"), &GameWorld::get_entity_inventory);
+    ClassDB::bind_method(D_METHOD("get_entity_equipment", "entity_id"), &GameWorld::get_entity_equipment);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_weight", "entity_id"), &GameWorld::get_entity_inventory_weight);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_volume", "entity_id"), &GameWorld::get_entity_inventory_volume);
 
@@ -109,6 +110,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_armor_rating", "entity_id"), &GameWorld::get_entity_armor_rating);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing_by_string);
+    ClassDB::bind_method(D_METHOD("wield_entity_weapon", "entity_id", "slot_name", "item_id"), &GameWorld::wield_entity_weapon);
+    ClassDB::bind_method(D_METHOD("unwield_entity_weapon", "entity_id", "slot_name"), &GameWorld::unwield_entity_weapon);
+    ClassDB::bind_method(D_METHOD("wield_entity_weapon_by_string", "entity_id", "item_id"), &GameWorld::wield_entity_weapon_by_string);
 
     ClassDB::bind_method(D_METHOD("get_entity_health", "entity_id"), &GameWorld::get_entity_health);
     ClassDB::bind_method(D_METHOD("get_player_health"), &GameWorld::get_player_health);
@@ -493,6 +497,10 @@ Dictionary GameWorld::get_entity_inventory(uint32_t entity_id) const {
     return entity_ledger.get_inventory(entity_id);
 }
 
+Dictionary GameWorld::get_entity_equipment(uint32_t entity_id) const {
+    return entity_ledger.get_equipment(entity_id);
+}
+
 float GameWorld::get_entity_inventory_weight(uint32_t entity_id) const {
     return entity_ledger.get_inventory_weight(entity_id);
 }
@@ -589,6 +597,18 @@ float GameWorld::get_entity_armor_rating(uint32_t entity_id) const {
 
 bool GameWorld::unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id) {
     return entity_ledger.unequip_clothing_by_string(entity_id, item_id);
+}
+
+bool GameWorld::wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id) {
+    return entity_ledger.wield_weapon(entity_id, slot_name, item_id);
+}
+
+bool GameWorld::unwield_entity_weapon(uint32_t entity_id, const String& slot_name) {
+    return entity_ledger.unwield_weapon(entity_id, slot_name);
+}
+
+bool GameWorld::wield_entity_weapon_by_string(uint32_t entity_id, const String& item_id) {
+    return entity_ledger.wield_weapon_by_string(entity_id, item_id);
 }
 
 float GameWorld::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {

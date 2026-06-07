@@ -143,6 +143,23 @@ bool Anatomy::has_functional_limbs(const AnatomyData& data, const std::vector<St
     return true;
 }
 
+int Anatomy::count_functional_parts_with_tag(const AnatomyData& data, const String& tag) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags) return 0;
+
+    uint16_t tag_id = tags->get_tag_id(tag);
+    if (tag_id == 0) return 0;
+
+    int count = 0;
+    for (int i = 0; i < data.parts.size(); i++) {
+        if (!is_functional(data, i)) continue;
+        const BodyPartInfo* info = db->get_body_part_info(data.parts[i].type_id);
+        if (info && TagRegistry::has_tag(tag_id, info->tags)) count++;
+    }
+    return count;
+}
+
 float Anatomy::min_required_integrity(const AnatomyData& data, const std::vector<String>& required) {
     float worst = 1.0f;
     bool any = false;

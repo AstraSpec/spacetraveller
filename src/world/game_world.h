@@ -142,6 +142,7 @@ public:
     bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     int get_entity_inventory_item_amount(uint32_t entity_id, const String& item_id) const;
     Dictionary get_entity_inventory(uint32_t entity_id) const;
+    Dictionary get_entity_equipment(uint32_t entity_id) const;
     float get_entity_inventory_weight(uint32_t entity_id) const;
     float get_entity_inventory_volume(uint32_t entity_id) const;
 
@@ -164,6 +165,9 @@ public:
     bool unequip_entity_clothing(uint32_t entity_id, const String& item_id);
     float get_entity_armor_rating(uint32_t entity_id) const;
     bool unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
+    bool wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id);
+    bool unwield_entity_weapon(uint32_t entity_id, const String& slot_name);
+    bool wield_entity_weapon_by_string(uint32_t entity_id, const String& item_id);
 
     void process_game_turn(float current_time);
 

@@ -14,6 +14,7 @@ struct ItemInfo {
     float volume = 0.0f;
     std::vector<uint16_t> tags;
     Dictionary clothing_data;
+    Dictionary weapon_data;
     String type = "misc";
 };
 
@@ -44,6 +45,7 @@ public:
     Dictionary get_item_modifiers(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
     Dictionary get_clothing_data(const String &p_id) const;
+    Dictionary get_weapon_data(const String &p_id) const;
     String get_item_type(const String &p_id) const;
 };
 

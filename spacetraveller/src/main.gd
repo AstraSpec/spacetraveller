@@ -47,7 +47,7 @@ func _initialize_new_game():
 	_GameWorld.add_entity_inventory_item(0, "spider_silk", 4)
 	_GameWorld.add_entity_inventory_item(0, "bone", 1)
 	_GameWorld.add_entity_inventory_item(0, "iron_shard", 1)
-	_GameWorld.add_entity_inventory_item(0, "wooden_sword", 1)
+	_GameWorld.add_entity_inventory_item(0, "longsword", 1)
 	_GameWorld.add_entity_inventory_item(0, "torch", 2)
 	_GameWorld.add_entity_inventory_item(0, "fire_starter", 1)
 	_GameWorld.add_entity_inventory_item(0, "bone_needle", 1)
@@ -58,6 +58,9 @@ func _initialize_new_game():
 	_GameWorld.add_entity_inventory_item(0, "linen_trousers", 1)
 	_GameWorld.add_entity_inventory_item(0, "silver_earrings", 2)
 	_GameWorld.add_entity_inventory_item(0, "gold_ring", 1)
+
+	if _GameWorld.wield_entity_weapon_by_string(0, "longsword"):
+		_GameWorld.remove_entity_inventory_item(0, "longsword", 1)
 
 	var anatomy = _GameWorld.get_entity_anatomy(0)
 	

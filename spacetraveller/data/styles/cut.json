@@ -1,0 +1,13 @@
+{
+  "id": "cut",
+  "name": "Cut",
+  "damage_mult": 1.05,
+  "accuracy_mod": 0.0,
+  "crit_chance_mod": 0.03,
+  "requires_unarmed": false,
+  "target_heights": ["HIGH", "MID"],
+  "abilities": [
+    { "id": "cut_slash", "weight": 3.0 },
+    { "id": "deep_cut", "weight": 1.0 }
+  ]
+}

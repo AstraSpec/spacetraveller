@@ -296,10 +296,10 @@ func _apply_effects(effects: Dictionary, state: Dictionary, result: Dictionary, 
 
 func _format_text(template: String, state: Dictionary, world, target_id: int) -> String:
 	var out := template
-	var name: String = str(world.get_entity_name(target_id)) if world else ""
-	if name.is_empty():
-		name = "stranger"
-	out = out.replace("{npc_name}", name)
+	var _name: String = str(world.get_entity_name(target_id)) if world else ""
+	if _name.is_empty():
+		_name = "stranger"
+	out = out.replace("{npc_name}", _name)
 	out = out.replace("{job}", str(_build_context(world, target_id).get("job", "drifter")))
 	var qid := str(state.get("pending_quest_id", ""))
 	if qid.is_empty():

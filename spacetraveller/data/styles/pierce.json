@@ -1,0 +1,13 @@
+{
+  "id": "pierce",
+  "name": "Pierce",
+  "damage_mult": 1.0,
+  "accuracy_mod": 0.06,
+  "crit_chance_mod": 0.04,
+  "requires_unarmed": false,
+  "target_heights": ["HIGH", "MID"],
+  "abilities": [
+    { "id": "pierce_thrust", "weight": 3.0 },
+    { "id": "precise_pierce", "weight": 1.0 }
+  ]
+}

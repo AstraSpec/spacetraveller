@@ -67,8 +67,8 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		var amount: int = int(entry.get("amount", 0))
 		if id.is_empty() or amount <= 0:
 			continue
-		var name: String = ItemDb.get_item_name(id) if id != "" else id
-		_add_detail(detailsContainer, "Item", "%d × %s" % [amount, name])
+		var _name: String = ItemDb.get_item_name(id) if id != "" else id
+		_add_detail(detailsContainer, "Item", "%d × %s" % [amount, _name])
 
 	var f_delta: int = int(rewards.get("friendship_delta", 0))
 	if f_delta != 0:

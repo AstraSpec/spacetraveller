@@ -54,6 +54,12 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		_add_spacer_label("Layer", clothing_data.get("layer", "middle").capitalize())
 		_add_spacer_label("Armor", str(clothing_data.get("armor", 0.0)))
 
+	var weapon_data = ItemDb.get_weapon_data(item_id)
+	if not weapon_data.is_empty():
+		_add_spacer_label("Damage", str(weapon_data.get("damage", 0.0)))
+		_add_spacer_label("Style", str(weapon_data.get("style", "")).capitalize())
+		_add_spacer_label("Hands", str(weapon_data.get("grasp_required", 1)))
+
 func _add_spacer_label(label: String, value: String):
 	var inst = SpacerLabelScene.instantiate()
 	detailsContainer.add_child(inst)

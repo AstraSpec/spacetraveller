@@ -33,6 +33,7 @@ namespace Anatomy {
     int get_count(const AnatomyData& data);
     Dictionary get_functional_list(const AnatomyData& data);
     bool has_functional_limbs(const AnatomyData& data, const std::vector<String>& required);
+    int count_functional_parts_with_tag(const AnatomyData& data, const String& tag);
     float min_required_integrity(const AnatomyData& data, const std::vector<String>& required);
     int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights = std::vector<String>());
     Dictionary serialize(const AnatomyData& data);

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "bash_strike",
+    "name": "Bash",
+    "verb": "bash",
+    "required_limbs": [],
+    "damage_mult": 1.0,
+    "accuracy": 0.78,
+    "speed": 0.9,
+    "stamina_cost": 12,
+    "effect": { "type": "stun", "mode": "decay", "magnitude": 0.35 }
+  },
+  {
+    "id": "heavy_bash",
+    "name": "Heavy Bash",
+    "verb": "smash",
+    "required_limbs": [],
+    "damage_mult": 1.25,
+    "accuracy": 0.65,
+    "speed": 0.75,
+    "stamina_cost": 18,
+    "effect": { "type": "stun", "mode": "timer", "magnitude": 1.0, "duration": 2.0 }
+  },
+  {
+    "id": "cut_slash",
+    "name": "Slash",
+    "verb": "slash",
+    "required_limbs": [],
+    "damage_mult": 1.0,
+    "accuracy": 0.8,
+    "speed": 1.0,
+    "stamina_cost": 12,
+    "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.45 }
+  },
+  {
+    "id": "deep_cut",
+    "name": "Deep Cut",
+    "verb": "cleave",
+    "required_limbs": [],
+    "damage_mult": 1.3,
+    "accuracy": 0.62,
+    "speed": 0.75,
+    "stamina_cost": 20,
+    "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.7 }
+  },
+  {
+    "id": "pierce_thrust",
+    "name": "Thrust",
+    "verb": "thrust",
+    "required_limbs": [],
+    "damage_mult": 1.05,
+    "accuracy": 0.82,
+    "speed": 1.0,
+    "stamina_cost": 12
+  },
+  {
+    "id": "precise_pierce",
+    "name": "Precise Pierce",
+    "verb": "stab",
+    "required_limbs": [],
+    "damage_mult": 1.2,
+    "accuracy": 0.72,
+    "speed": 0.9,
+    "stamina_cost": 16,
+    "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.35 }
+  }
+]
