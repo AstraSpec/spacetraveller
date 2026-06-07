@@ -10,21 +10,50 @@ const MODIFIER_NAMES = {
 	"volume": "Volume"
 }
 
+const EQUIPMENT_SLOT_ORDER = ["main_hand", "off_hand"]
+
 func _get_display_data() -> Array:
+	var formatted = []
+	var equipment = _GameWorld.get_entity_equipment(0)
+	for slot_name in EQUIPMENT_SLOT_ORDER:
+		if not equipment.has(slot_name):
+			continue
+		var slot_data = equipment[slot_name]
+		if not slot_data is Dictionary:
+			continue
+		var item_id = slot_data.get("item_id", "")
+		if item_id == "":
+			continue
+		formatted.append({
+			"id": item_id,
+			"amount": 1,
+			"display_name": ItemDb.get_item_name(item_id),
+			"description": ItemDb.get_item_description(item_id),
+			"quantity_text": "Wielded",
+			"type": ItemDb.get_item_type(item_id),
+			"separator_key": "Wielded",
+			"separator_sort": -1,
+			"is_wielded": true,
+			"slot_name": slot_name
+		})
+
 	var inv = _GameWorld.get_entity_inventory(0)
 	var items = inv.get("items", {})
-	var formatted = []
 	
 	var keys = items.keys()
 	for item_id in keys:
 		var amount = items[item_id]
+		var item_type = ItemDb.get_item_type(item_id)
 		formatted.append({
 			"id": item_id,
 			"amount": amount,
 			"display_name": ItemDb.get_item_name(item_id),
 			"description": ItemDb.get_item_description(item_id),
 			"quantity_text": "x" + str(amount),
-			"type": ItemDb.get_item_type(item_id)
+			"type": item_type,
+			"separator_key": item_type,
+			"separator_sort": TYPE_ORDER.find(item_type) if TYPE_ORDER.find(item_type) >= 0 else TYPE_ORDER.size(),
+			"is_wielded": false
 		})
 	return formatted
 
@@ -36,6 +65,10 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		
 	var item_id = item_data.get("id", "")
 	if item_id == "": return
+
+	if item_data.get("is_wielded", false):
+		_add_spacer_label("State", "Wielded")
+		_add_spacer_label("Slot", _format_slot_name(str(item_data.get("slot_name", ""))))
 	
 	var modifiers = ItemDb.get_item_modifiers(item_id)
 	
@@ -60,6 +93,9 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		_add_spacer_label("Style", str(weapon_data.get("style", "")).capitalize())
 		_add_spacer_label("Hands", str(weapon_data.get("grasp_required", 1)))
 
+func _format_slot_name(slot_name: String) -> String:
+	return slot_name.replace("_", " ").capitalize()
+
 func _add_spacer_label(label: String, value: String):
 	var inst = SpacerLabelScene.instantiate()
 	detailsContainer.add_child(inst)
@@ -83,20 +119,47 @@ func handle_action(action_name: String, params: Dictionary = {}):
 		_drop_selected_item(params.get("all", false))
 	elif action_name == "wear":
 		_wear_selected_item()
+	elif action_name == "wield":
+		_toggle_wield_selected_item()
 
 func _wear_selected_item():
 	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
-	var item_id = _items_cache[selected_index]["id"]
+	var item_data = _items_cache[selected_index]
+	if item_data.get("is_wielded", false):
+		return
+	var item_id = item_data["id"]
 	if _GameWorld.equip_entity_clothing_by_string(0, item_id):
+		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 		refresh_view()
+
+func _toggle_wield_selected_item():
+	if _items_cache.is_empty() or selected_index < 0:
+		return
+
+	var item_data = _items_cache[selected_index]
+	var item_id = item_data.get("id", "")
+	if item_id == "":
+		return
+
+	if item_data.get("is_wielded", false):
+		var slot_name = str(item_data.get("slot_name", ""))
+		if slot_name != "" and _GameWorld.unwield_entity_weapon(0, slot_name):
+			_GameWorld.add_entity_inventory_item(0, item_id, 1)
+			refresh_view()
+	else:
+		if _GameWorld.wield_entity_weapon_by_string(0, item_id):
+			_GameWorld.remove_entity_inventory_item(0, item_id, 1)
+			refresh_view()
 
 func _drop_selected_item(all: bool):
 	if _items_cache.is_empty() or selected_index < 0:
 		return
 	
 	var item_data = _items_cache[selected_index]
+	if item_data.get("is_wielded", false):
+		return
 	var item_id = item_data["id"]
 	var amount_to_remove = item_data["amount"] if all else 1
 	

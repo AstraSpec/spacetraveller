@@ -14,6 +14,7 @@ func _ready() -> void:
 	InputManager.ui_accept.connect(_on_accept_input)
 	InputManager.ui_drop_requested.connect(_on_drop_input)
 	InputManager.ui_wear_requested.connect(_on_wear_input)
+	InputManager.ui_wield_requested.connect(_on_wield_input)
 	InputManager.ui_next_tab.connect(_on_next_tab)
 	InputManager.ui_prev_tab.connect(_on_prev_tab)
 	
@@ -82,3 +83,8 @@ func _on_wear_input():
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
 		current_tab.handle_action("wear")
+
+func _on_wield_input():
+	if not visible or not current_tab: return
+	if current_tab.has_method("handle_action"):
+		current_tab.handle_action("wield")

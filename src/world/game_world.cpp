@@ -109,6 +109,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("equip_entity_clothing", "entity_id", "part_index", "item_id", "layer"), &GameWorld::equip_entity_clothing);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing);
     ClassDB::bind_method(D_METHOD("get_entity_armor_rating", "entity_id"), &GameWorld::get_entity_armor_rating);
+    ClassDB::bind_method(D_METHOD("equip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::equip_entity_clothing_by_string);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing_by_string);
     ClassDB::bind_method(D_METHOD("wield_entity_weapon", "entity_id", "slot_name", "item_id"), &GameWorld::wield_entity_weapon);
     ClassDB::bind_method(D_METHOD("unwield_entity_weapon", "entity_id", "slot_name"), &GameWorld::unwield_entity_weapon);
@@ -593,6 +594,10 @@ bool GameWorld::unequip_entity_clothing(uint32_t entity_id, const String& item_i
 
 float GameWorld::get_entity_armor_rating(uint32_t entity_id) const {
     return entity_ledger.get_armor_rating(entity_id);
+}
+
+bool GameWorld::equip_entity_clothing_by_string(uint32_t entity_id, const String& item_id) {
+    return entity_ledger.equip_clothing_by_string(entity_id, item_id);
 }
 
 bool GameWorld::unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id) {

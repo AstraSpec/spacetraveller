@@ -24,6 +24,11 @@ func _body_part_sort_key(part_str: String) -> int:
 	var idx = BODY_PART_ORDER.find(part_str.to_lower())
 	return idx if idx >= 0 else BODY_PART_ORDER.size()
 
+func _separator_sort_key(item: Dictionary) -> int:
+	if item.has("separator_sort"):
+		return int(item.get("separator_sort", 0))
+	return _body_part_sort_key(item.get("separator_key", "other"))
+
 func _build_strip_data_with_separators(items: Array, group_key: String, _sort_key_func: Callable) -> Array:
 	if items.is_empty(): return []
 	var strip_data: Array = []
@@ -69,7 +74,7 @@ func refresh_view() -> void:
 	
 	var data_to_send: Array = []
 	if _items_have_key("separator_key"):
-		_items_cache.sort_custom(func(a, b): return _body_part_sort_key(a.get("separator_key", "other")) < _body_part_sort_key(b.get("separator_key", "other")))
+		_items_cache.sort_custom(func(a, b): return _separator_sort_key(a) < _separator_sort_key(b))
 		data_to_send = _build_strip_data_with_separators(_items_cache, "separator_key", _body_part_sort_key)
 	elif _items_have_type():
 		_items_cache.sort_custom(func(a, b): return _type_sort_key(a.get("type", "misc")) < _type_sort_key(b.get("type", "misc")))

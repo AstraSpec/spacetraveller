@@ -164,6 +164,7 @@ public:
     bool equip_entity_clothing(uint32_t entity_id, int part_index, const String& item_id, const String& layer);
     bool unequip_entity_clothing(uint32_t entity_id, const String& item_id);
     float get_entity_armor_rating(uint32_t entity_id) const;
+    bool equip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
     bool unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
     bool wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id);
     bool unwield_entity_weapon(uint32_t entity_id, const String& slot_name);

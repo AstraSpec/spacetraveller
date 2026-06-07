@@ -77,4 +77,5 @@ func _unequip_selected_item():
 	
 	var item_id = _items_cache[selected_index]["id"]
 	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
+		_GameWorld.add_entity_inventory_item(0, item_id, 1)
 		refresh_view()

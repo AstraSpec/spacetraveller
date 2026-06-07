@@ -246,6 +246,9 @@ class MenuContext extends InputContext:
 		elif event.is_action_pressed("wear_item"):
 			manager.ui_wear_requested.emit()
 			return true
+		elif event.is_action_pressed("wield_item"):
+			manager.ui_wield_requested.emit()
+			return true
 		elif event.is_action_pressed("delete"):
 			manager.ui_delete.emit()
 			return true

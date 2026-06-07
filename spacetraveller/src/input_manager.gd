@@ -15,6 +15,7 @@ signal ui_next_tab
 signal ui_prev_tab
 signal ui_drop_requested(all: bool)
 signal ui_wear_requested
+signal ui_wield_requested
 signal inventory_item_dropped(item_id: String, amount: int)
 
 signal menu_toggled(id: String, is_open: bool, params: Dictionary)

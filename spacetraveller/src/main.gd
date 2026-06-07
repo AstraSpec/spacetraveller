@@ -59,9 +59,6 @@ func _initialize_new_game():
 	_GameWorld.add_entity_inventory_item(0, "silver_earrings", 2)
 	_GameWorld.add_entity_inventory_item(0, "gold_ring", 1)
 
-	if _GameWorld.wield_entity_weapon_by_string(0, "longsword"):
-		_GameWorld.remove_entity_inventory_item(0, "longsword", 1)
-
 	var anatomy = _GameWorld.get_entity_anatomy(0)
 	
 	var torso_idx = -1
