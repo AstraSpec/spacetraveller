@@ -67,6 +67,10 @@ func _update_armor_display() -> void:
 		var total_armor = _GameWorld.get_entity_armor_rating(0)
 		armorLabel.text = "Total Armor: [color=#66ff66]%.1f[/color]" % total_armor
 
+func _item_label(item_id: String) -> String:
+	var item_name := String(ItemDb.get_item_name(item_id))
+	return item_name if not item_name.is_empty() else item_id
+
 func handle_action(action_name: String, _params: Dictionary = {}):
 	if action_name == "wear":
 		_unequip_selected_item()
@@ -76,6 +80,12 @@ func _unequip_selected_item():
 		return
 	
 	var item_id = _items_cache[selected_index]["id"]
+	if not _GameWorld.add_entity_inventory_item(0, item_id, 1):
+		EventBus.post("inventory_warning", "You cannot take off %s. Carry weight or volume is over limit." % _item_label(item_id), {"item_id": item_id})
+		return
 	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
-		_GameWorld.add_entity_inventory_item(0, item_id, 1)
+		EventBus.post("inventory", "You take off %s." % _item_label(item_id), {"item_id": item_id})
 		refresh_view()
+	else:
+		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
+		EventBus.post("inventory_warning", "You cannot take off %s." % _item_label(item_id), {"item_id": item_id})

@@ -65,13 +65,17 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
     std::vector<AttackCandidate> pool;
     float total_weight = 0.0f;
     bool limb_capable = false;
+    bool limb_blocked = false;
 
     auto add_style_candidates = [&](const StyleInfo* candidate_style, float weapon_damage) {
         if (!candidate_style) return;
         for (const auto& entry : candidate_style->abilities) {
             const AbilityInfo* ability = ability_db->get_ability_info(entry.ability_id);
             if (!ability) continue;
-            if (!Anatomy::has_functional_limbs(attacker_anatomy, ability->required_limbs)) continue;
+            if (!Anatomy::has_functional_limbs(attacker_anatomy, ability->required_limbs)) {
+                limb_blocked = true;
+                continue;
+            }
             limb_capable = true;
             if (attacker_stamina && !Stamina::can_afford(*attacker_stamina, ability->stamina_cost)) continue;
             pool.push_back({ability, candidate_style, entry.weight, weapon_damage});
@@ -114,6 +118,8 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
                 for (const WieldedWeapon& weapon : valid_weapons) {
                     add_style_candidates(weapon.style, weapon.damage);
                 }
+            } else {
+                limb_blocked = true;
             }
         }
     }
@@ -134,6 +140,7 @@ AttackResult ActionResolver::resolve_attack(const AnatomyData& attacker_anatomy,
 
     if (!chosen.ability) {
         if (limb_capable && attacker_stamina) result.exhausted = true;
+        else if (limb_blocked) result.no_limbs = true;
         return result;
     }
 

@@ -39,6 +39,10 @@ func _on_combat_event(attacker_id: int, defender_id: int, damage: float, result:
 
 	if result == "exhausted":
 		msg = "%s %s too exhausted to attack." % [attacker_name, "are" if attacker_id == 0 else "is"]
+		category = "combat_player"
+	elif result == "no_limbs":
+		msg = "%s %s no functional limbs to strike with." % [attacker_name, "have" if attacker_id == 0 else "has"]
+		category = "combat_player"
 	elif result == "miss":
 		msg = "%s %s at %s and misses." % [attacker_name, verb_conj, defender_name]
 	elif is_kill:

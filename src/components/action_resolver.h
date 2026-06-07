@@ -31,6 +31,7 @@ struct AttackResult {
     bool killed = false;
     bool crit = false;
     bool exhausted = false;
+    bool no_limbs = false;
     float damage = 0.0f;
     float speed = 1.0f;
     String verb;

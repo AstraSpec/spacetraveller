@@ -13,6 +13,16 @@ func _on_refresh() -> void:
 	if itemDetailsLabel:
 		itemDetailsLabel.visible = !_items_cache.is_empty()
 
+func _item_label(item_id: String) -> String:
+	var item_name := String(ItemDb.get_item_name(item_id))
+	return item_name if not item_name.is_empty() else item_id
+
+func _format_item_amount(item_id: String, amount: int) -> String:
+	var label = _item_label(item_id)
+	if amount <= 1:
+		return label
+	return "%s x%d" % [label, amount]
+
 func set_params(params: Dictionary) -> void:
 	if params.has("filter_pos"):
 		filter_pos = params["filter_pos"]
@@ -80,7 +90,11 @@ func _pickup_selected_item(all: bool):
 			
 			if picked_up_so_far >= total_to_pickup:
 				break
+		elif to_get > 0:
+			EventBus.post("inventory_warning", "You cannot pick up %s. Carry weight or volume is over limit." % _format_item_amount(item_id, to_get), {"item_id": item_id, "amount": to_get})
+			break
 			
 	if picked_up_so_far > 0:
+		EventBus.post("inventory", "You pick up %s." % _format_item_amount(item_id, picked_up_so_far), {"item_id": item_id, "amount": picked_up_so_far})
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 		refresh_view()

@@ -20,6 +20,22 @@ func _get_display_data() -> Array:
 func _on_refresh() -> void:
 	pass
 
+func _item_label(item_id: String) -> String:
+	var item_name := String(ItemDb.get_item_name(item_id))
+	return item_name if not item_name.is_empty() else item_id
+
+func _format_item_amount(item_id: String, amount: int) -> String:
+	var label = _item_label(item_id)
+	if amount <= 1:
+		return label
+	return "%s x%d" % [label, amount]
+
+func _format_result_list(results: Array) -> String:
+	var labels: Array[String] = []
+	for res in results:
+		labels.append(_format_item_amount(res["id"], res["amount"]))
+	return ", ".join(labels)
+
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
 	
@@ -85,11 +101,22 @@ func _craft_recipe(recipe_id: String):
 	for req in reqs:
 		_GameWorld.remove_entity_inventory_item(0, req["id"], req["amount"])
 		
+	var added_results: Array[Dictionary] = []
 	for res in results:
-		_GameWorld.add_entity_inventory_item(0, res["id"], res["amount"])
+		if _GameWorld.add_entity_inventory_item(0, res["id"], res["amount"]):
+			added_results.append({"id": res["id"], "amount": res["amount"]})
+		else:
+			for added in added_results:
+				_GameWorld.remove_entity_inventory_item(0, added["id"], added["amount"])
+			for req in reqs:
+				_GameWorld.add_entity_inventory_item(0, req["id"], req["amount"])
+			EventBus.post("inventory_warning", "You cannot craft %s. Carry weight or volume is over limit." % RecipeDb.get_recipe_name(recipe_id), {"recipe_id": recipe_id})
+			refresh_view()
+			return
 		
 	var turns_to_advance = max(1, int(craft_time))
 	TimeManager.advance_turn(turns_to_advance)
+	EventBus.post("inventory", "You craft %s." % _format_result_list(results), {"recipe_id": recipe_id})
 	
 	refresh_view()
 

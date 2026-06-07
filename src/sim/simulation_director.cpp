@@ -220,7 +220,10 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             style,
             &d.ledger->stamina_data[d.player_entity_id]);
 
-        if (atk.exhausted) {
+        if (atk.no_limbs) {
+            d.sink->on_combat_event(d.player_entity_id, defender_id, 0.0f, "no_limbs", atk.verb, "");
+            cost = ActionCost::ATTACK;
+        } else if (atk.exhausted) {
             d.sink->on_combat_event(d.player_entity_id, defender_id, 0.0f, "exhausted", atk.verb, "");
             cost = ActionCost::ATTACK;
         } else {
@@ -439,6 +442,17 @@ void SimulationDirector::process_game_turn(float current_time) {
                         atk_damage,
                         style,
                         &d.ledger->stamina_data[entity_id]);
+
+                    if (atk.no_limbs) {
+                        cost = ActionCost::ATTACK;
+                        d.sink->on_combat_event(entity_id, target_id, 0.0f, "no_limbs", atk.verb, "");
+                        advance_entity_time(entity_id, cost);
+                        entity = pool.get_entity(entity_id);
+                        if (!entity) continue;
+                        entity->next_turn_time = base_time + cost;
+                        d.scheduler->push(entity_id, entity->next_turn_time);
+                        continue;
+                    }
 
                     if (atk.exhausted) {
                         // Too tired to attack; rest this turn and recover.

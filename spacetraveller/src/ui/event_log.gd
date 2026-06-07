@@ -14,6 +14,8 @@ const CATEGORY_COLORS = {
 	"interact": "5bc0eb",
 	"quest": "7cff7a",
 	"quest_failed": "ff5555",
+	"inventory": "ffffff",
+	"inventory_warning": "ffb347",
 }
 const DEFAULT_COLOR = "cccccc"
 
