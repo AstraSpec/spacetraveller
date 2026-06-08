@@ -2,11 +2,9 @@ extends GridContainer
 
 signal selection_changed(id: String, is_primary: bool)
 
-var spacing = 0
+var spacing = 1
 
 func start(_spacing :int, db: Object) -> void:
-	spacing = _spacing
-	
 	for child in get_children():
 		child.queue_free()
 		
