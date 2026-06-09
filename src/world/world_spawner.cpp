@@ -143,14 +143,19 @@ static uint64_t get_structure_rule_salt(const String& p_structure_id, const Stru
         ^ static_cast<uint32_t>(rule_id.hash());
 }
 
-static void apply_structure_loot_rule(
+static uint64_t get_tile_spawn_loot_salt(const String& p_structure_id, uint16_t p_tile_id) {
+    return (static_cast<uint64_t>(static_cast<uint32_t>(p_structure_id.hash())) << 32)
+        ^ static_cast<uint32_t>(p_tile_id);
+}
+
+static void roll_loot_table_at(
     uint32_t p_world_seed,
-    const String& p_structure_id,
-    const StructureRuleInfo& p_rule,
+    uint16_t p_loot_table,
+    uint64_t p_salt,
     const Vector2i& p_pos,
     WorldBubble& p_bubble
 ) {
-    if (p_rule.loot_table == 0) return;
+    if (p_loot_table == 0) return;
 
     LootDb* loot_db = LootDb::get_singleton();
     if (!loot_db) return;
@@ -159,17 +164,40 @@ static void apply_structure_loot_rule(
         p_world_seed,
         p_pos,
         Rng::CONTAINER_LOOT,
-        get_structure_rule_salt(p_structure_id, p_rule)
+        p_salt
     );
 
     std::vector<LootStack> stacks;
-    if (!loot_db->roll_table(p_rule.loot_table, loot_rng, stacks)) return;
+    if (!loot_db->roll_table(p_loot_table, loot_rng, stacks)) return;
 
     for (const LootStack& stack : stacks) {
         if (stack.item_id != 0 && stack.amount > 0) {
             p_bubble.drop_item(p_pos, stack.item_id, stack.amount);
         }
     }
+}
+
+static void apply_structure_loot_rule(
+    uint32_t p_world_seed,
+    const String& p_structure_id,
+    const StructureRuleInfo& p_rule,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble
+) {
+    roll_loot_table_at(p_world_seed, p_rule.loot_table, get_structure_rule_salt(p_structure_id, p_rule), p_pos, p_bubble);
+}
+
+static void apply_tile_spawn_loot(
+    uint32_t p_world_seed,
+    const String& p_structure_id,
+    uint16_t p_tile_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble
+) {
+    TileDb* tile_db = TileDb::get_singleton();
+    const TileInfo* tile = tile_db ? tile_db->get_tile_info(p_tile_id) : nullptr;
+    if (!tile || tile->spawn_loot_table == 0) return;
+    roll_loot_table_at(p_world_seed, tile->spawn_loot_table, get_tile_spawn_loot_salt(p_structure_id, p_tile_id), p_pos, p_bubble);
 }
 
 static bool apply_structure_spawn_rule(
@@ -214,7 +242,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         Vector2i pos = WorldCoords::unpack_coords(packed);
         uint16_t chunk_id = p_generator.get_chunk_id_for_cell(pos.x, pos.y);
 
-        String structure_id = p_generator.get_structure_id_for_chunk(chunk_id);
+        String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, static_cast<int>(p_world_seed));
         if (!structure_id.is_empty()) {
             if (p_spawn_state.has_attempted(packed)) continue;
 
@@ -230,15 +258,22 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                 uint8_t rotation = p_generator.get_chunk_rotation_for_cell(pos.x, pos.y);
 
                 bool spawned_from_rule = false;
+                bool custom_loot_rule_matched = false;
                 for (const StructureRuleInfo& rule : structure->rules) {
                     Vector2i rule_local = resolve_structure_rule_local(rule.pos, rotation);
                     if (rule_local != local_pos) continue;
 
                     if (rule.type == "loot_table") {
+                        custom_loot_rule_matched = true;
                         apply_structure_loot_rule(p_world_seed, structure_id, rule, pos, p_bubble);
                     } else if (!spawned_from_rule && rule.type == "spawn_point") {
                         spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_ledger, p_scheduler);
                     }
+                }
+
+                if (!custom_loot_rule_matched) {
+                    uint16_t tile_id = p_bubble.query_tile_id(pos.x, pos.y);
+                    apply_tile_spawn_loot(p_world_seed, structure_id, tile_id, pos, p_bubble);
                 }
 
                 p_spawn_state.mark_attempted(packed);

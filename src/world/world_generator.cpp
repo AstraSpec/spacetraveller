@@ -33,7 +33,7 @@ void WorldGenerator::setup_biome_rules() {
     };
 
     reg_biome("plains", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("forest", {{"tree", 30}, {"grass", 56}, {"dirt", 14}});
+    reg_biome("forest", {{"tree_oak", 30}, {"grass", 56}, {"dirt", 14}});
     reg_biome("building", {{"grass", 80}, {"dirt", 20}});
 
     auto reg_simple = [&](const String& name, const String& tile) {
@@ -194,6 +194,21 @@ String WorldGenerator::get_structure_id_for_chunk(uint16_t p_chunk_id) const {
     return "";
 }
 
+String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) const {
+    uint16_t chunk_id = get_chunk_id_for_cell(x, y);
+    if (chunk_id != id_building) return "";
+
+    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    static const char* STRUCTURE_IDS[] = {"house01", "house02", "tavern"};
+    static constexpr int STRUCTURE_COUNT = sizeof(STRUCTURE_IDS) / sizeof(STRUCTURE_IDS[0]);
+
+    uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(cx, cy), Rng::BIOME);
+    String selected = STRUCTURE_IDS[h % STRUCTURE_COUNT];
+    StructureDb* structure_db = StructureDb::get_singleton();
+    return structure_db && structure_db->get_structure_info(selected) ? selected : String("house01");
+}
+
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
     int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
@@ -245,7 +260,8 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
             case WorldCoords::ROT_NORTH: rx = max_coord - lx; ry = max_coord - ly; break;
             case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break;
         }
-        uint16_t tile_id = s_db->get_tile_at("house01", rx, ry);
+        String structure_id = get_structure_id_for_cell(x, y, world_seed);
+        uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry);
         if (tile_id != id_void) return tile_id;
     }
 

@@ -174,6 +174,9 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 	if current_mode == mode and mode != InputMode.MENU: return
 	
 	var old_mode = current_mode
+	var old_structure_active = _is_structure_mode_active(old_mode)
+	if old_mode == InputMode.MENU and mode == InputMode.STRUCTURE:
+		old_structure_active = true
 	current_mode = mode
 	active_context = contexts.get(current_mode)
 	
@@ -186,8 +189,14 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
 	
-	if old_mode == InputMode.STRUCTURE or current_mode == InputMode.STRUCTURE:
-		structure_editor_toggled.emit(current_mode == InputMode.STRUCTURE)
+	var new_structure_active = _is_structure_mode_active(current_mode)
+	if old_structure_active != new_structure_active:
+		structure_editor_toggled.emit(new_structure_active)
+
+func _is_structure_mode_active(mode: InputMode) -> bool:
+	if mode == InputMode.STRUCTURE:
+		return true
+	return mode == InputMode.MENU and not _mode_stack.is_empty() and _mode_stack[-1] == InputMode.STRUCTURE
 
 func toggle_menu(id: String, params: Dictionary = {}):
 	if current_mode == InputMode.MENU and active_menu_id == id and params.is_empty():

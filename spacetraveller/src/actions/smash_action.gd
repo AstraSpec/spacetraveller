@@ -6,10 +6,7 @@ func is_valid(cell_pos: Vector2i) -> bool:
 	return TileDb.has_tag(tile_id, "SMASHABLE")
 
 func execute(cell_pos: Vector2i) -> void:
-	var broken_tile := world.get_tile_at(cell_pos.x, cell_pos.y)
-	world.place_tile(cell_pos.x, cell_pos.y, "dirt")
-	if broken_tile == "tree":
-		world.get_item_db().spawn_item_at_cell(cell_pos, "stick", 8)
+	world.submit_player_intent(GameWorld.INTENT_SMASH, cell_pos.x, cell_pos.y, "")
 
 func get_action_name() -> String:
 	return "Smash"

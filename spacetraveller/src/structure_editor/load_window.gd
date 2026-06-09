@@ -10,9 +10,14 @@ var FastTilemap :FastTileMap
 
 var list_actions: ListActionsUI
 var selectedID : String = ""
+var _menu_mode_pushed: bool = false
+var _last_click_id: String = ""
+var _last_click_msec: int = 0
+const DOUBLE_CLICK_MSEC := 350
 
 func _ready() -> void:
 	structureEditor.open_load.connect(open)
+	LoadContainer.activate_on_single_click = false
 	
 	# Initialize ListActionsUI logic
 	list_actions = ListActionsUI.new()
@@ -24,6 +29,8 @@ func _ready() -> void:
 	list_actions.action_triggered.connect(func(_data): _on_load_pressed())
 	list_actions.delete_requested.connect(func(_data): _on_delete_pressed())
 	list_actions.selection_changed.connect(_on_structure_selected)
+	LoadContainer.item_clicked.connect(_on_structure_clicked)
+	InputManager.ui_cancel.connect(_on_cancel_input)
 	
 	_update_buttons()
 
@@ -31,10 +38,26 @@ func _on_structure_selected(id: Variant) -> void:
 	selectedID = str(id) if id != null else ""
 	_update_buttons()
 
+func _on_structure_clicked(_index: int, id: Variant) -> void:
+	var clicked_id: String = str(id) if id != null else ""
+	var now := Time.get_ticks_msec()
+	if clicked_id != "" and clicked_id == _last_click_id and now - _last_click_msec <= DOUBLE_CLICK_MSEC:
+		selectedID = clicked_id
+		_on_load_pressed()
+		_last_click_id = ""
+		_last_click_msec = 0
+	else:
+		_last_click_id = clicked_id
+		_last_click_msec = now
+
 func open() -> void:
-	call_deferred("set_visible", true)
+	popup_centered()
 	selectedID = ""
-	InputManager.push_mode(InputManager.InputMode.MENU)
+	_last_click_id = ""
+	_last_click_msec = 0
+	if not _menu_mode_pushed:
+		InputManager.push_mode(InputManager.InputMode.MENU)
+		_menu_mode_pushed = true
 	
 	var structures = StructureDb.get_ids()
 	if LoadContainer:
@@ -67,18 +90,37 @@ func _on_load_pressed() -> void:
 		World.update_world_bubble(structureEditor.playerOffset)
 	elif FastTilemap:
 		FastTilemap.update_visuals(structureEditor.playerOffset)
-	visible = false
-	InputManager.pop_mode()
+	_close_window()
 
 func _on_delete_pressed() -> void:
 	if selectedID == "": return
 	DbAccess.delete_structure(selectedID)
-	open()
+	selectedID = ""
+	_last_click_id = ""
+	_last_click_msec = 0
+	var structures = StructureDb.get_ids()
+	if LoadContainer:
+		LoadContainer.set_data(structures)
+		if LoadContainer.get_button_count() > 0:
+			LoadContainer.selected_index = 0
+			var data = LoadContainer._get_data_for_button_index(0)
+			_on_structure_selected(data)
+		else:
+			_update_buttons()
 
 func _on_close_pressed() -> void:
-	visible = false
-	InputManager.pop_mode()
+	_close_window()
 
 func _on_close_requested() -> void:
-	visible = false
-	InputManager.pop_mode()
+	_close_window()
+
+func _on_cancel_input() -> void:
+	if visible:
+		_close_window()
+
+func _close_window() -> void:
+	hide()
+	if _menu_mode_pushed:
+		if InputManager.current_mode == InputManager.InputMode.MENU:
+			InputManager.pop_mode()
+		_menu_mode_pushed = false

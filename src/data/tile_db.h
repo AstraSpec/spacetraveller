@@ -12,6 +12,7 @@ struct TileInfo {
     bool solid;
     std::vector<uint16_t> tags;
     uint16_t smash_loot_table = 0;
+    uint16_t spawn_loot_table = 0;
     bool hides_items = false;
 };
 
@@ -42,6 +43,7 @@ public:
     bool hides_items_at(uint16_t p_id) const;
     String get_tile_name(const String &p_id) const;
     String get_smash_loot_table(const String &p_id) const;
+    String get_spawn_loot_table(const String &p_id) const;
 };
 
 }

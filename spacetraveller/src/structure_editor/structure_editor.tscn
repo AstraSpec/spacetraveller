@@ -91,7 +91,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
-columns = 8
+columns = 7
 script = ExtResource("4_06qem")
 
 [node name="Items" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]

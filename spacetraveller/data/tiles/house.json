@@ -4,6 +4,106 @@
     "name": "Chest",
     "atlas": [ 26, 19 ],
     "solid": true,
-    "tags": ["HIDDEN_ITEMS", "CONTAINER"]
+    "tags": ["HIDDEN_ITEMS", "CONTAINER"],
+    "spawn_loot_table": "house_chest_basic"
+  },
+  {
+    "id": "toilet",
+    "name": "Toilet",
+    "atlas": [ 61, 13 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "bed",
+    "name": "Bed",
+    "atlas": [ 0, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "bed_double",
+    "name": "Double Bed",
+    "atlas": [ 1, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "bookcase",
+    "name": "Bookcase",
+    "atlas": [ 2, 36 ],
+    "solid": true,
+    "tags": []
+  },
+  {
+    "id": "dresser",
+    "name": "Dresser",
+    "atlas": [ 4, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "chair",
+    "name": "Chair",
+    "atlas": [ 5, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "table",
+    "name": "Table",
+    "atlas": [ 6, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "bar",
+    "name": "Bar",
+    "atlas": [ 7, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "barrel",
+    "name": "Barrel",
+    "atlas": [ 11, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "barrel_wine",
+    "name": "Wine Barrel",
+    "atlas": [ 12, 36 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "wardrobe",
+    "name": "Wardrobe",
+    "atlas": [ 13, 36 ],
+    "solid": true,
+    "tags": ["HIDDEN_ITEMS", "CONTAINER"],
+    "spawn_loot_table": "wardrobe_basic"
+  },
+  {
+    "id": "pot",
+    "name": "Pot",
+    "atlas": [ 26, 25 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "anvil",
+    "name": "Anvil",
+    "atlas": [ 28, 25 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "fireplace",
+    "name": "Fireplace",
+    "atlas": [ 30, 25 ],
+    "solid": false,
+    "tags": []
   }
 ]

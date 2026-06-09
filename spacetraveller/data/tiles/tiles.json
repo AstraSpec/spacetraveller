@@ -14,9 +14,57 @@
     "tags": ["GROUND"]
   },
   {
-    "id": "tree",
-    "name": "Tree",
+    "id": "tree_oak",
+    "name": "Oak Tree",
     "atlas": [ 0, 8 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_birch",
+    "name": "Birch Tree",
+    "atlas": [ 1, 8 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_willow",
+    "name": "Willow Tree",
+    "atlas": [ 2, 8 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_pine",
+    "name": "Pine Tree",
+    "atlas": [ 3, 8 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_poplar",
+    "name": "Poplar Tree",
+    "atlas": [ 4, 8 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_stump",
+    "name": "Tree Stump",
+    "atlas": [ 4, 10 ],
+    "solid": false,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "tree_smashed"
+  },
+  {
+    "id": "tree_dead",
+    "name": "Dead Tree",
+    "atlas": [ 5, 10 ],
     "solid": true,
     "tags": ["SMASHABLE", "VEGETATION"],
     "smash_loot_table": "tree_smashed"
@@ -34,6 +82,48 @@
     "atlas": [ 0, 4 ],
     "solid": true,
     "tags": ["SMASHABLE", "WALL"]
+  },
+  {
+    "id": "w_door",
+    "name": "Wooden Door",
+    "atlas": [ 4, 1 ],
+    "solid": true,
+    "tags": ["DOOR"]
+  },
+  {
+    "id": "w_door_open",
+    "name": "Open Wooden Door",
+    "atlas": [ 13, 1 ],
+    "solid": false,
+    "tags": ["DOOR"]
+  },
+  {
+    "id": "w_window",
+    "name": "Wooden Window",
+    "atlas": [ 12, 4 ],
+    "solid": false,
+    "tags": ["DOOR", "TRANSPARENT"]
+  },
+  {
+    "id": "w_window_open",
+    "name": "Open Wooden Window",
+    "atlas": [ 13, 4 ],
+    "solid": false,
+    "tags": ["DOOR", "TRANSPARENT"]
+  },
+  {
+    "id": "stairs_down",
+    "name": "Stairs Down",
+    "atlas": [ 23, 0 ],
+    "solid": false,
+    "tags": ["LEVEL_DOWN"]
+  },
+  {
+    "id": "stairs_up",
+    "name": "Stairs Up",
+    "atlas": [ 24, 0 ],
+    "solid": false,
+    "tags": ["LEVEL_UP"]
   },
   {
     "id": "w_floor",

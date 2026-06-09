@@ -3,12 +3,14 @@ class_name ButtonListContainer
 
 signal item_selected(index: int, data: Variant)
 signal item_activated(index: int, data: Variant)
+signal item_clicked(index: int, data: Variant)
 
 @export var button_scene: PackedScene = preload("res://src/ui/strip_container/strip_button.tscn")
 @export var menu_separation_scene: PackedScene = preload("res://src/ui/menu_seperation.tscn")
 @export var columns: int = 2
 @export var button_left_margin: int = 0
 @export var button_separation: int = 0
+@export var activate_on_single_click: bool = true
 
 var selected_index: int = 0
 var buttons: Array = []
@@ -153,7 +155,11 @@ func _on_button_pressed(index: int) -> void:
 	if not is_inside_tree(): return
 	selected_index = index
 	_update_selection_visuals()
-	item_activated.emit(selected_index, _get_data_for_button_index(selected_index))
+	var data = _get_data_for_button_index(selected_index)
+	item_clicked.emit(selected_index, data)
+	item_selected.emit(selected_index, data)
+	if activate_on_single_click:
+		item_activated.emit(selected_index, data)
 
 func _get_data_for_button_index(index: int) -> Variant:
 	var button_count = 0
