@@ -41,7 +41,6 @@ SpawnRuleInfo SpawnDb::_parse_row(const Dictionary &p_data) {
     if (info.chance > 1.0f) info.chance = 1.0f;
     info.spawn_mode = String(p_data.get("spawn_mode", "free_cell"));
     info.tile_tags = _parse_tags(p_data.get("tile_tags", Array()));
-    info.spawn_point_tags = _parse_tags(p_data.get("spawn_point_tags", Array()));
     info.job = String(p_data.get("job", ""));
     info.dialogue_profile = String(p_data.get("dialogue_profile", ""));
     return info;

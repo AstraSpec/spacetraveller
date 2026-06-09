@@ -9,7 +9,7 @@ static func save_structure(ID: String, RLE: Dictionary, filepath: String):
 	var found = false
 	for i in range(structures.size()):
 		if structures[i]["id"] == ID:
-			structures[i] = RLE
+			structures[i] = _preserve_rule_metadata(structures[i], RLE)
 			found = true
 			break
 	
@@ -18,6 +18,12 @@ static func save_structure(ID: String, RLE: Dictionary, filepath: String):
 		
 	_write_all(structures, filepath)
 	StructureDb.initialize_data()
+
+static func _preserve_rule_metadata(existing: Dictionary, replacement: Dictionary) -> Dictionary:
+	var merged: Dictionary = replacement.duplicate(true)
+	if existing.has("rules") and not merged.has("rules"):
+		merged["rules"] = existing["rules"]
+	return merged
 
 static func delete_structure(id: String, filepath: String = ""):
 	if filepath == "":

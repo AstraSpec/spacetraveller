@@ -9,5 +9,18 @@
       { "item_id": "rope", "weight": 10, "amount_min": 1, "amount_max": 1, "chance": 0.35 },
       { "item_id": "flint", "weight": 10, "amount_min": 1, "amount_max": 1, "chance": 0.2 }
     ]
+  },
+  {
+    "id": "house_chest_basic",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 35, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "rope", "weight": 20, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 20, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "torch", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_shard", "weight": 10, "amount_min": 1, "amount_max": 2 }
+    ]
   }
 ]

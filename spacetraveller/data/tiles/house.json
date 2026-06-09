@@ -1,0 +1,9 @@
+[
+  {
+    "id": "chest",
+    "name": "Chest",
+    "atlas": [ 26, 19 ],
+    "solid": true,
+    "tags": ["HIDDEN_ITEMS", "CONTAINER"]
+  }
+]

@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://cwk3pmyn0651a"]
+[gd_scene load_steps=5 format=3 uid="uid://cwk3pmyn0651a"]
 
 [ext_resource type="Texture2D" uid="uid://bquyxpx1t2ei8" path="res://gfx/tile.png" id="1_15ecy"]
 [ext_resource type="Script" uid="uid://b67dmhj4pemd3" path="res://src/structure_editor/standalone_structure_editor.gd" id="1_ijg4f"]
 [ext_resource type="Script" uid="uid://cuftphjy14qda" path="res://src/ui/view_camera.gd" id="2_tx6rs"]
 [ext_resource type="PackedScene" uid="uid://c7bpkfyb6qvuq" path="res://src/structure_editor/structure_editor.tscn" id="3_tx6rs"]
-[ext_resource type="Texture2D" uid="uid://co3cd22r88h1k" path="res://gfx/urizen.png" id="4_ulq57"]
 
 [node name="StandaloneStructureEditor" type="Node2D" node_paths=PackedStringArray("_StructureEditor", "World", "BG", "Camera")]
 script = ExtResource("1_ijg4f")

@@ -22,13 +22,5 @@
     "chance": 0.0004,
     "spawn_mode": "free_cell",
     "tile_tags": ["GROUND"]
-  },
-  "house_resident": {
-    "chunk_ids": ["building"],
-    "race_id": "human",
-    "spawn_weight": 1,
-    "chance": 1.0,
-    "spawn_mode": "spawn_points",
-    "spawn_point_tags": ["HUMAN"]
   }
 }

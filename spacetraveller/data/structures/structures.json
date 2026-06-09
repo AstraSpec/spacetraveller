@@ -1,26 +1,26 @@
 [
     {
-        "blueprint": "(74x0, 20x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 50x0)",
+        "blueprint": "(74x0, 20x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 2x2, 1x3, 2x2, 1x1, 4x0, 9x1, 3x2, 8x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 1x1, 6x2, 1x1, 5x2, 1x1, 5x2, 1x1, 4x0, 9x1, 3x2, 8x1, 50x0)",
         "id": "house01",
         "palette": [
             "void",
             "w_wall",
-            "w_floor"
+            "w_floor",
+            "chest"
         ],
-        "spawn_points": [
+        "rules": [
             {
-                "id": "resident",
-                "pos": [5, 6],
-                "tags": ["NPC", "RESIDENT", "HUMAN"]
+                "id": "house01_human_spawn_01",
+                "type": "spawn_point",
+                "pos": [ 5, 6 ],
+                "entity": "human"
+            },
+            {
+                "id": "house01_chest_loot_01",
+                "type": "loot_table",
+                "pos": [ 18, 11 ],
+                "loot_table": "house_chest_basic"
             }
-        ]
-    },
-    {
-        "blueprint": "(91x0, 1x1, 37x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 21x0, 3x1, 348x0)",
-        "id": "house02",
-        "palette": [
-            "void",
-            "road_bricks"
         ]
     }
 ]

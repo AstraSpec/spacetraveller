@@ -18,7 +18,6 @@ struct SpawnRuleInfo {
     float chance = 1.0f;
     String spawn_mode = "free_cell";
     std::vector<uint16_t> tile_tags;
-    std::vector<uint16_t> spawn_point_tags;
     String job;
     String dialogue_profile;
 };

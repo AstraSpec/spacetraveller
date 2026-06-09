@@ -23,61 +23,88 @@ StructureDb::~StructureDb() {}
 
 StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
-        StructureInfo info;
-        
+    StructureInfo info;
+    String structure_id = String(p_data.get("id", ""));
+
     if (id_reg) {
-        id_reg->register_string(p_data["id"]);
+        id_reg->register_string(structure_id);
     }
 
     info.blueprint = p_data.get("blueprint", "");
     info.palette = p_data.get("palette", Array());
-    Array spawn_points = p_data.get("spawn_points", Array());
-    for (int i = 0; i < spawn_points.size(); i++) {
-        Dictionary point = spawn_points[i];
-        StructureSpawnPoint sp;
-        sp.id = String(point.get("id", ""));
-        sp.pos = variant_to_vector2i(point.get("pos", Array()), Vector2i());
-        sp.tags = _parse_tags(point.get("tags", Array()));
-        info.spawn_points.push_back(sp);
+    Array rules = p_data.get("rules", Array());
+    for (int i = 0; i < rules.size(); i++) {
+        if (rules[i].get_type() != Variant::DICTIONARY) continue;
+        Dictionary rule_data = rules[i];
+
+        StructureRuleInfo rule;
+        rule.id = String(rule_data.get("id", ""));
+        rule.type = String(rule_data.get("type", ""));
+        rule.pos = variant_to_vector2i(rule_data.get("pos", Array()), Vector2i());
+        rule.entity = String(rule_data.get("entity", rule_data.get("race_id", "")));
+        rule.job = String(rule_data.get("job", ""));
+        rule.dialogue_profile = String(rule_data.get("dialogue_profile", ""));
+        rule.params = rule_data;
+
+        String loot_table = String(rule_data.get("loot_table", ""));
+        if (id_reg && !loot_table.is_empty()) {
+            rule.loot_table = id_reg->register_string(loot_table);
+        }
+
+        if (rule.id.is_empty()) {
+            UtilityFunctions::push_error("[StructureDb] Rule in structure ", structure_id, " is missing id");
+        }
+        if (rule.pos.x < 0 || rule.pos.x >= CHUNK_SIZE || rule.pos.y < 0 || rule.pos.y >= CHUNK_SIZE) {
+            UtilityFunctions::push_error("[StructureDb] Rule in structure ", structure_id, " has out-of-bounds pos: ", rule.id);
+        }
+        if (rule.type == "spawn_point" && rule.entity.is_empty()) {
+            UtilityFunctions::push_error("[StructureDb] spawn_point rule in structure ", structure_id, " is missing entity: ", rule.id);
+        } else if (rule.type == "loot_table" && loot_table.is_empty()) {
+            UtilityFunctions::push_error("[StructureDb] loot_table rule in structure ", structure_id, " is missing loot_table: ", rule.id);
+        } else if (rule.type != "spawn_point" && rule.type != "loot_table") {
+            UtilityFunctions::push_error("[StructureDb] Unknown rule type in structure ", structure_id, ": ", rule.type);
+        }
+
+        info.rules.push_back(rule);
     }
 
-        std::vector<uint16_t> palette_ids;
+    std::vector<uint16_t> palette_ids;
     Array p_array = info.palette;
-        for (int i = 0; i < p_array.size(); i++) {
-            if (id_reg) {
-                palette_ids.push_back(id_reg->register_string(p_array[i]));
-            } else {
-                palette_ids.push_back(0);
-            }
+    for (int i = 0; i < p_array.size(); i++) {
+        if (id_reg) {
+            palette_ids.push_back(id_reg->register_string(p_array[i]));
+        } else {
+            palette_ids.push_back(0);
         }
+    }
 
-        const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
-        info.data.assign(total_tiles, 0);
+    const int total_tiles = CHUNK_SIZE * CHUNK_SIZE;
+    info.data.assign(total_tiles, 0);
 
     String rle = info.blueprint;
-        rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
-        PackedStringArray parts = rle.split(",");
+    rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
+    PackedStringArray parts = rle.split(",");
 
-        int current_pos = 0;
-        for (int i = 0; i < parts.size(); i++) {
-            String part = parts[i].strip_edges();
-            if (part.is_empty()) continue;
+    int current_pos = 0;
+    for (int i = 0; i < parts.size(); i++) {
+        String part = parts[i].strip_edges();
+        if (part.is_empty()) continue;
 
-            PackedStringArray sub = part.split("x");
-            if (sub.size() != 2) continue;
+        PackedStringArray sub = part.split("x");
+        if (sub.size() != 2) continue;
 
-            int count = sub[0].to_int();
-            int palette_idx = sub[1].to_int();
+        int count = sub[0].to_int();
+        int palette_idx = sub[1].to_int();
 
         uint16_t tile_id = 0;
-            if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
-                tile_id = palette_ids[palette_idx];
-            }
-
-            for (int j = 0; j < count && current_pos < total_tiles; j++) {
-                info.data[current_pos++] = tile_id;
-            }
+        if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
+            tile_id = palette_ids[palette_idx];
         }
+
+        for (int j = 0; j < count && current_pos < total_tiles; j++) {
+            info.data[current_pos++] = tile_id;
+        }
+    }
     return info;
 }
 
@@ -98,6 +125,7 @@ const StructureInfo* StructureDb::get_structure_info(const String &p_id) const {
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {
     const StructureInfo* info = get_info(p_structure_id);
     if (!info) return 0;
+    if (p_x < 0 || p_x >= CHUNK_SIZE || p_y < 0 || p_y >= CHUNK_SIZE) return 0;
 
     int idx = p_y * CHUNK_SIZE + p_x;
     if (idx < 0 || idx >= (int)info->data.size()) return 0;

@@ -1,6 +1,7 @@
 #include "world_bubble.h"
 #include "entities/entity_pool.h"
 #include "core/id_registry.h"
+#include "data/tile_db.h"
 #include "core/world_coords.h"
 #include "occlusion.h"
 #include <queue>
@@ -20,6 +21,10 @@ uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x,
         }
     }
     return 0;
+}
+
+static bool is_adjacent_to_player(int ox, int oy) {
+    return ox >= -1 && ox <= 1 && oy >= -1 && oy <= 1 && !(ox == 0 && oy == 0);
 }
 
 void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer) {
@@ -452,6 +457,7 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
     }
 
     static const bool LAYER_HAS_ITEMS[LAYER_MAX] = { true, false };
+    TileDb* tile_db = TileDb::get_singleton();
 
     for (int l = 0; l < LAYER_MAX; l++) {
         for (uint64_t offset_key : offset_keys) {
@@ -476,9 +482,12 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 }
             }
 
+            visual.tile_id = resolve_tile_id(l, cell_key, cx, cy);
+
             if (LAYER_HAS_ITEMS[l]) {
                 const DroppedItem* top = cell_data.get_top_item(cell_key);
-                if (top) {
+                bool item_hidden_by_tile = tile_db && tile_db->hides_items_at(visual.tile_id) && !is_adjacent_to_player(ox, oy);
+                if (top && !item_hidden_by_tile) {
                     visual.draw_item = true;
                     visual.item_id = top->id;
 
@@ -498,8 +507,6 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                     continue;
                 }
             }
-
-            visual.tile_id = resolve_tile_id(l, cell_key, cx, cy);
 
             auto ent_it = entity_positions.find(cell_key);
             if (ent_it != entity_positions.end()) {

@@ -45,6 +45,11 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     
     info.solid = p_data.get("solid", false);
     info.tags = _parse_tags(p_data.get("tags", Array()));
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (tag_reg) {
+        uint16_t hidden_items_tag = tag_reg->get_tag_id("HIDDEN_ITEMS");
+        info.hides_items = TagRegistry::has_tag(hidden_items_tag, info.tags);
+    }
     String smash_loot_table = String(p_data.get("smash_loot_table", ""));
     if (!smash_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.smash_loot_table = IdRegistry::get_singleton()->register_string(smash_loot_table);
@@ -92,6 +97,11 @@ bool TileDb::has_tag(const String &p_id, const String &p_tag) const {
     
     uint16_t tag_id = reg->get_tag_id(p_tag);
     return TagRegistry::has_tag(tag_id, info->tags);
+}
+
+bool TileDb::hides_items_at(uint16_t p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return info ? info->hides_items : false;
 }
 
 String TileDb::get_tile_name(const String &p_id) const {

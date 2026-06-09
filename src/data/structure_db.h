@@ -2,22 +2,31 @@
 #define SPACETRAVELLER_STRUCTURE_DB_H
 
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/string.hpp>
+#include <godot_cpp/variant/vector2i.hpp>
 #include "database.h"
 #include <vector>
 
 namespace godot {
 
-struct StructureSpawnPoint {
+struct StructureRuleInfo {
     String id;
+    String type;
     Vector2i pos;
-    std::vector<uint16_t> tags;
+    String entity;
+    String job;
+    String dialogue_profile;
+    uint16_t loot_table = 0;
+    Dictionary params;
 };
 
 struct StructureInfo {
     std::vector<uint16_t> data;
     String blueprint;
     Array palette;
-    std::vector<StructureSpawnPoint> spawn_points;
+    std::vector<StructureRuleInfo> rules;
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
