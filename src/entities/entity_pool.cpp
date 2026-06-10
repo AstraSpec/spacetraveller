@@ -81,6 +81,19 @@ bool EntityPool::contains(uint32_t id) const {
     return id_to_slot.find(id) != id_to_slot.end();
 }
 
+std::vector<uint32_t> EntityPool::get_live_ids() const {
+    std::vector<uint32_t> ids;
+    collect_live_ids(ids);
+    return ids;
+}
+
+void EntityPool::collect_live_ids(std::vector<uint32_t>& out) const {
+    out.reserve(out.size() + id_to_slot.size());
+    for (const auto& pair : id_to_slot) {
+        out.push_back(pair.first);
+    }
+}
+
 size_t EntityPool::living_count() const {
     return id_to_slot.size();
 }

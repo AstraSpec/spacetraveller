@@ -54,6 +54,19 @@ public:
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
+    AnatomyData* try_get_anatomy(uint32_t id);
+    const AnatomyData* try_get_anatomy(uint32_t id) const;
+    HealthData* try_get_health(uint32_t id);
+    const HealthData* try_get_health(uint32_t id) const;
+    StaminaData* try_get_stamina(uint32_t id);
+    const StaminaData* try_get_stamina(uint32_t id) const;
+    EquipmentData* try_get_equipment(uint32_t id);
+    const EquipmentData* try_get_equipment(uint32_t id) const;
+    LocomotionData* try_get_locomotion(uint32_t id);
+    const LocomotionData* try_get_locomotion(uint32_t id) const;
+    bool has_core_components(uint32_t id) const;
+    bool is_schedulable_actor(uint32_t id) const;
+
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
 
     void init_relationship(uint32_t id);

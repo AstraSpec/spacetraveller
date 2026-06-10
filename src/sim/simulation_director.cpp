@@ -10,6 +10,7 @@
 #include "core/id_registry.h"
 #include "core/tag_registry.h"
 #include "core/faction.h"
+#include "world/entity_lifecycle.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
 #include "components/combat_resolver.h"
@@ -50,21 +51,22 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
     uint32_t best_id = EntityPool::INVALID_ID;
     long best_dist_sq = -1;
 
-    for (const auto& other : d.ledger->get_entity_pool().get_all()) {
-        if (!d.ledger->get_entity_pool().contains(other.id)) continue;
-        if (other.id == entity_id) continue;
+    for (uint32_t other_id : d.ledger->get_entity_pool().get_live_ids()) {
+        if (other_id == entity_id) continue;
+        const Entity* other = d.ledger->get_entity_pool().get_entity(other_id);
+        if (!other) continue;
 
         // Cheap bounding-box reject before any distance math.
-        int dx = other.x - self->x;
-        int dy = other.y - self->y;
+        int dx = other->x - self->x;
+        int dy = other->y - self->y;
         if (dx > radius || dx < -radius || dy > radius || dy < -radius) continue;
 
-        if (!Faction::are_hostile(my_faction, entity_faction(other.id))) continue;
+        if (!Faction::are_hostile(my_faction, entity_faction(other_id))) continue;
 
         long dist_sq = static_cast<long>(dx) * dx + static_cast<long>(dy) * dy;
         if (best_dist_sq < 0 || dist_sq < best_dist_sq) {
             best_dist_sq = dist_sq;
-            best_id = other.id;
+            best_id = other_id;
         }
     }
     return best_id;
@@ -93,13 +95,13 @@ Rng::Seeded SimulationDirector::combat_rng_for(uint32_t attacker_id, uint32_t de
 CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id) {
     CombatOutcome outcome;
 
-    auto atk_anat_it = d.ledger->anatomy_data.find(attacker_id);
-    auto def_anat_it = d.ledger->anatomy_data.find(defender_id);
-    auto def_hp_it = d.ledger->health_data.find(defender_id);
-    if (atk_anat_it == d.ledger->anatomy_data.end() ||
-        def_anat_it == d.ledger->anatomy_data.end() ||
-        def_hp_it == d.ledger->health_data.end() ||
-        !def_hp_it->second.alive) {
+    AnatomyData* attacker_anatomy = d.ledger->try_get_anatomy(attacker_id);
+    AnatomyData* defender_anatomy = d.ledger->try_get_anatomy(defender_id);
+    HealthData* defender_health = d.ledger->try_get_health(defender_id);
+    EquipmentData* attacker_equipment = d.ledger->try_get_equipment(attacker_id);
+    StaminaData* attacker_stamina = d.ledger->try_get_stamina(attacker_id);
+    if (!attacker_anatomy || !defender_anatomy || !defender_health ||
+        !attacker_equipment || !attacker_stamina || !defender_health->alive) {
         return outcome;
     }
 
@@ -112,14 +114,14 @@ CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, ui
 
     Rng::Seeded rng = combat_rng_for(attacker_id, defender_id);
     CombatContext ctx{
-        atk_anat_it->second,
-        def_anat_it->second,
-        def_hp_it->second,
-        d.ledger->equipment_data[attacker_id],
+        *attacker_anatomy,
+        *defender_anatomy,
+        *defender_health,
+        *attacker_equipment,
         rng,
         entity_base_damage(attacker_id),
         style,
-        &d.ledger->stamina_data[attacker_id]
+        attacker_stamina
     };
     return CombatResolver::resolve_attack(ctx);
 }
@@ -141,7 +143,8 @@ void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& c
         }
         d.event_listener->on_game_event(e);
     }
-    despawn_entity(entity_id);
+    uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
+    EntityLifecycle::despawn_entity(entity_id, *d.ledger, *d.bubble, *d.scheduler, seed, true);
 }
 
 bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
@@ -409,10 +412,11 @@ void SimulationDirector::process_game_turn(float current_time) {
 
     std::vector<Vector2i> blocking_positions;
     blocking_positions.reserve(pool.living_count());
-    for (const auto& entity : pool.get_all()) {
-        if (!pool.contains(entity.id)) continue;
-        if (entity.id != d.player_entity_id) {
-            blocking_positions.push_back({entity.x, entity.y});
+    for (uint32_t id : pool.get_live_ids()) {
+        const Entity* entity = pool.get_entity(id);
+        if (!entity) continue;
+        if (id != d.player_entity_id) {
+            blocking_positions.push_back({entity->x, entity->y});
         }
     }
 
@@ -579,61 +583,6 @@ Array SimulationDirector::find_path_with_flags(const Vector2i& start, const Vect
 
     PathResult result = d.pathfinder->find_path(request, traversal);
     return path_result_to_array(result);
-}
-
-void SimulationDirector::despawn_entity(uint32_t entity_id) {
-    if (entity_id == d.player_entity_id) return;
-
-    Entity* entity = d.ledger->get_entity_pool().get_entity(entity_id);
-    if (entity) {
-        Vector2i pos(entity->x, entity->y);
-
-        // Drop all inventory items to the ground
-        auto inv_it = d.ledger->inventory_data.find(entity_id);
-        if (inv_it != d.ledger->inventory_data.end()) {
-            for (const auto& item : inv_it->second.items) {
-                if (item.amount > 0) {
-                    d.bubble->drop_item(pos, item.id, item.amount);
-                }
-            }
-        }
-
-        // Drop the race-specific corpse
-        auto anat_it = d.ledger->anatomy_data.find(entity_id);
-        if (anat_it != d.ledger->anatomy_data.end()) {
-            RaceDb* race_db = RaceDb::get_singleton();
-            if (race_db) {
-                const RaceInfo* race = race_db->get_race_info(anat_it->second.race_id);
-                if (race && !race->corpse_item.is_empty()) {
-                    IdRegistry* reg = IdRegistry::get_singleton();
-                    if (reg) {
-                        uint16_t corpse_id = reg->get_id(race->corpse_item);
-                        if (corpse_id != 0) {
-                            d.bubble->drop_item(pos, corpse_id, 1);
-                        }
-                    }
-                }
-                if (race && race->death_loot_table != 0) {
-                    LootDb* loot_db = LootDb::get_singleton();
-                    if (loot_db) {
-                        uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
-                        Rng::Seeded loot_rng = Rng::at(seed, pos, Rng::ENTITY_LOOT, entity_id);
-                        std::vector<LootStack> stacks;
-                        loot_db->roll_table(race->death_loot_table, loot_rng, stacks);
-                        for (const LootStack& stack : stacks) {
-                            if (stack.item_id != 0 && stack.amount > 0) {
-                                d.bubble->drop_item(pos, stack.item_id, stack.amount);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        d.bubble->remove_entity(entity->x, entity->y);
-    }
-
-    d.ledger->destroy_entity(entity_id);
 }
 
 Vector2i SimulationDirector::entity_chunk(uint32_t entity_id) const {

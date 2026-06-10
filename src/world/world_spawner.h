@@ -8,6 +8,7 @@
 namespace godot {
 
 class EntityLedger;
+class EntityArchive;
 class TurnScheduler;
 class WorldBubble;
 class WorldGenerator;
@@ -21,6 +22,7 @@ public:
         const std::vector<uint64_t>& p_newly_seen_cells,
         WorldGenerator& p_generator,
         WorldBubble& p_bubble,
+        const EntityArchive& p_entity_archive,
         EntityLedger& p_ledger,
         TurnScheduler& p_scheduler,
         WorldSpawnState& p_spawn_state

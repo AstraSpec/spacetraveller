@@ -26,7 +26,11 @@ public:
     const Entity* get_entity(uint32_t id) const;
     bool contains(uint32_t id) const;
 
+    // Low-level storage view. This includes stale slots from destroyed entities;
+    // gameplay code should prefer get_live_ids() or collect_live_ids().
     const std::vector<Entity>& get_all() const { return entities; }
+    std::vector<uint32_t> get_live_ids() const;
+    void collect_live_ids(std::vector<uint32_t>& out) const;
 
     size_t living_count() const;
 

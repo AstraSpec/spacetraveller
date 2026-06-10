@@ -67,6 +67,73 @@ void EntityLedger::destroy_entity(uint32_t id) {
     entity_pool.destroy_entity(id);
 }
 
+AnatomyData* EntityLedger::try_get_anatomy(uint32_t id) {
+    auto it = anatomy_data.find(id);
+    return it == anatomy_data.end() ? nullptr : &it->second;
+}
+
+const AnatomyData* EntityLedger::try_get_anatomy(uint32_t id) const {
+    auto it = anatomy_data.find(id);
+    return it == anatomy_data.end() ? nullptr : &it->second;
+}
+
+HealthData* EntityLedger::try_get_health(uint32_t id) {
+    auto it = health_data.find(id);
+    return it == health_data.end() ? nullptr : &it->second;
+}
+
+const HealthData* EntityLedger::try_get_health(uint32_t id) const {
+    auto it = health_data.find(id);
+    return it == health_data.end() ? nullptr : &it->second;
+}
+
+StaminaData* EntityLedger::try_get_stamina(uint32_t id) {
+    auto it = stamina_data.find(id);
+    return it == stamina_data.end() ? nullptr : &it->second;
+}
+
+const StaminaData* EntityLedger::try_get_stamina(uint32_t id) const {
+    auto it = stamina_data.find(id);
+    return it == stamina_data.end() ? nullptr : &it->second;
+}
+
+EquipmentData* EntityLedger::try_get_equipment(uint32_t id) {
+    auto it = equipment_data.find(id);
+    return it == equipment_data.end() ? nullptr : &it->second;
+}
+
+const EquipmentData* EntityLedger::try_get_equipment(uint32_t id) const {
+    auto it = equipment_data.find(id);
+    return it == equipment_data.end() ? nullptr : &it->second;
+}
+
+LocomotionData* EntityLedger::try_get_locomotion(uint32_t id) {
+    auto it = locomotion_data.find(id);
+    return it == locomotion_data.end() ? nullptr : &it->second;
+}
+
+const LocomotionData* EntityLedger::try_get_locomotion(uint32_t id) const {
+    auto it = locomotion_data.find(id);
+    return it == locomotion_data.end() ? nullptr : &it->second;
+}
+
+bool EntityLedger::has_core_components(uint32_t id) const {
+    return entity_pool.contains(id)
+        && anatomy_data.find(id) != anatomy_data.end()
+        && inventory_data.find(id) != inventory_data.end()
+        && health_data.find(id) != health_data.end()
+        && stamina_data.find(id) != stamina_data.end()
+        && equipment_data.find(id) != equipment_data.end();
+}
+
+bool EntityLedger::is_schedulable_actor(uint32_t id) const {
+    if (!has_core_components(id)) return false;
+    if (id == EntityPool::PLAYER_ID) return locomotion_data.find(id) != locomotion_data.end();
+    return locomotion_data.find(id) != locomotion_data.end()
+        && ai_data.find(id) != ai_data.end()
+        && perception_memory.find(id) != perception_memory.end();
+}
+
 int EntityLedger::get_inventory_item_amount(uint32_t id, const String& item_id) const {
     IdRegistry* reg = IdRegistry::get_singleton();
     if (!reg) return 0;
@@ -317,9 +384,8 @@ bool EntityLedger::wield_weapon_by_string(uint32_t id, const String& item_id) {
 Dictionary EntityLedger::serialize() const {
     Dictionary data;
     Array entities;
-    for (const auto& e : entity_pool.get_all()) {
-        if (!entity_pool.contains(e.id)) continue;
-        entities.push_back(serialize_entity(e.id));
+    for (uint32_t id : entity_pool.get_live_ids()) {
+        entities.push_back(serialize_entity(id));
     }
     data["entities"] = entities;
     return data;

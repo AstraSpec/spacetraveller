@@ -18,6 +18,7 @@
 #include "world_generator.h"
 #include "quest_tracker.h"
 #include "world_spawn_state.h"
+#include "entity_archive.h"
 #include "path/a_star_grid.h"
 #include "turn_scheduler.h"
 #include "entities/entity_ledger.h"
@@ -54,6 +55,7 @@ private:
     std::unique_ptr<AStarGridPathfinder> pathfinder;
     std::unique_ptr<QuestTracker> quest_tracker;
     WorldSpawnState spawn_state;
+    EntityArchive entity_archive;
     EntityLedger entity_ledger;
     SimulationDirector sim_director;
 

@@ -13,6 +13,7 @@ void TurnScheduler::push(uint32_t entity_id, float turn_time) {
 }
 
 uint32_t TurnScheduler::pop() {
+    prune_stale_front();
     while (!heap.empty()) {
         Entry e = heap.front();
         std::pop_heap(heap.begin(), heap.end(), compare);
@@ -26,6 +27,18 @@ uint32_t TurnScheduler::pop() {
     return INVALID_ENTITY_ID;
 }
 
+void TurnScheduler::prune_stale_front() {
+    while (!heap.empty()) {
+        const Entry& e = heap.front();
+        auto it = active_generation.find(e.entity_id);
+        if (it != active_generation.end() && it->second == e.generation) {
+            return;
+        }
+        std::pop_heap(heap.begin(), heap.end(), compare);
+        heap.pop_back();
+    }
+}
+
 void TurnScheduler::remove(uint32_t entity_id) {
     active_generation.erase(entity_id);
 }
@@ -35,7 +48,8 @@ void TurnScheduler::clear() {
     active_generation.clear();
 }
 
-float TurnScheduler::peek_time() const {
+float TurnScheduler::peek_time() {
+    prune_stale_front();
     if (heap.empty()) return INFINITY;
     return heap.front().turn_time;
 }

@@ -1,6 +1,7 @@
 #include "world_spawner.h"
 #include "world_spawn_state.h"
 #include "world_bubble.h"
+#include "entity_archive.h"
 #include "world_generator.h"
 #include "turn_scheduler.h"
 #include "data/loot_db.h"
@@ -207,13 +208,14 @@ static bool apply_structure_spawn_rule(
     const StructureRuleInfo& p_rule,
     const Vector2i& p_pos,
     WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
     TurnScheduler& p_scheduler
 ) {
     if (p_rule.entity.is_empty()) return false;
 
     if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr
-        || p_bubble.has_frozen_entity(WorldCoords::pack_coords(p_pos.x, p_pos.y))) {
+        || p_entity_archive.has_frozen_entity(WorldCoords::pack_coords(p_pos.x, p_pos.y))) {
         return false;
     }
 
@@ -231,6 +233,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     const std::vector<uint64_t>& p_newly_seen_cells,
     WorldGenerator& p_generator,
     WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
     TurnScheduler& p_scheduler,
     WorldSpawnState& p_spawn_state
@@ -267,7 +270,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                         custom_loot_rule_matched = true;
                         apply_structure_loot_rule(p_world_seed, structure_id, rule, pos, p_bubble);
                     } else if (!spawned_from_rule && rule.type == "spawn_point") {
-                        spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_ledger, p_scheduler);
+                        spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_scheduler);
                     }
                 }
 
@@ -284,7 +287,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         if (!spawn_db) continue;
         if (p_spawn_state.has_attempted(packed)) continue;
         if (p_bubble.get_entity_at(pos.x, pos.y) != nullptr) continue;
-        if (p_bubble.has_frozen_entity(packed)) continue;
+        if (p_entity_archive.has_frozen_entity(packed)) continue;
 
         spawn_db->get_matching_rules(chunk_id, "free_cell", rules);
         if (rules.empty()) continue;

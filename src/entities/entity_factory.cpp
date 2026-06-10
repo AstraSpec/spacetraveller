@@ -3,6 +3,7 @@
 #include "entity_pool.h"
 #include "world/world_bubble.h"
 #include "world/turn_scheduler.h"
+#include "world/entity_lifecycle.h"
 #include "data/race_db.h"
 #include "data/item_db.h"
 #include "data/job_db.h"
@@ -17,18 +18,6 @@
 
 using namespace godot;
 
-static void register_and_schedule(uint32_t id, const Vector2i& pos, float p_initial_turn_time,
-                                  EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
-    bubble.set_entity(pos.x, pos.y, id);
-    Entity* entity = ledger.get_entity_pool().get_entity(id);
-    if (entity) {
-        if (entity->next_turn_time < p_initial_turn_time) {
-            entity->next_turn_time = p_initial_turn_time;
-        }
-        scheduler.push(id, entity->next_turn_time);
-    }
-}
-
 uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos,
                                       EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
     RaceDb* race_db = RaceDb::get_singleton();
@@ -42,7 +31,7 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
 
     ledger.combat_style[id] = "default";
 
-    register_and_schedule(id, pos, 0.0f, ledger, bubble, scheduler);
+    EntityLifecycle::activate_entity(id, pos, 0.0f, ledger, bubble, scheduler);
     return id;
 }
 
@@ -147,6 +136,6 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         }
     }
 
-    register_and_schedule(id, pos, p_initial_turn_time, ledger, bubble, scheduler);
+    EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, bubble, scheduler);
     return id;
 }

@@ -44,7 +44,6 @@ public:
 
 private:
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
-    void despawn_entity(uint32_t entity_id);
     Vector2i entity_chunk(uint32_t entity_id) const;
     CombatOutcome resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id);
     void handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id);

@@ -18,6 +18,7 @@ class TurnScheduler {
     uint64_t next_gen = 1;
 
     static bool compare(const Entry& a, const Entry& b) { return a.turn_time > b.turn_time; }
+    void prune_stale_front();
 
 public:
     TurnScheduler() = default;
@@ -26,7 +27,7 @@ public:
     uint32_t pop();
     void remove(uint32_t entity_id);
     void clear();
-    float peek_time() const;
+    float peek_time();
     int size() const { return static_cast<int>(active_generation.size()); }
     bool empty() const { return heap.empty(); }
 };
