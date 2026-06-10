@@ -29,7 +29,9 @@ float ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBu
     if (occupant) return 0.0f;
 
     int old_x = entity.x, old_y = entity.y;
-    bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id);
+    if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {
+        return 0.0f;
+    }
     entity.x = intent.target.x;
     entity.y = intent.target.y;
 

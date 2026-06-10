@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/rid.hpp>
 #include <godot_cpp/variant/color.hpp>
 #include <unordered_map>
+#include <vector>
 #include "data/tile_db.h"
 #include "world_bubble.h"
 #include "core/rng.h"
@@ -86,6 +87,7 @@ public:
     int get_world_bubble_radius() const { return world_bubble_radius; }
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = false);
+    std::vector<uint64_t> get_render_offset_keys() const;
     void update_visuals(const Vector2i& playerPos);
     void _process(double delta) override;
 };

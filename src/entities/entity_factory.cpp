@@ -31,7 +31,10 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
 
     ledger.combat_style[id] = "default";
 
-    EntityLifecycle::activate_entity(id, pos, 0.0f, ledger, bubble, scheduler);
+    if (!EntityLifecycle::activate_entity(id, pos, 0.0f, ledger, bubble, scheduler)) {
+        ledger.destroy_entity(id);
+        return EntityPool::INVALID_ID;
+    }
     return id;
 }
 
@@ -136,6 +139,9 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         }
     }
 
-    EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, bubble, scheduler);
+    if (!EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, bubble, scheduler)) {
+        ledger.destroy_entity(id);
+        return EntityPool::INVALID_ID;
+    }
     return id;
 }

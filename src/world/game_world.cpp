@@ -7,10 +7,12 @@
 #include "components/action_resolver.h"
 #include "world_spawner.h"
 #include "entity_lifecycle.h"
+#include "world_save_serializer.h"
 #include "core/id_registry.h"
 #include "entities/entity_factory.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/json.hpp>
+#include <vector>
 
 using namespace godot;
 
@@ -274,7 +276,11 @@ void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
 
 void GameWorld::update_world_bubble(const Vector2i& playerPos) {
     if (renderer) {
+        std::vector<uint64_t> offset_keys = renderer->get_render_offset_keys();
+        bubble.update_visibility(playerPos, offset_keys, renderer->is_occlusion_enabled());
+        sync_entity_streaming(playerPos);
         renderer->update_visuals(playerPos);
+        return;
     }
     sync_entity_streaming(playerPos);
 }
@@ -752,62 +758,28 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
 // --- Save / Load ---
 
 Dictionary GameWorld::get_save_data() const {
-    Dictionary data;
-    data["seed"] = world_seed;
-
-    Dictionary chunks;
-    const auto& region_chunks = generator->get_region_chunks();
-    for (auto const& pair : region_chunks) {
-        chunks[pair.first] = (int)pair.second;
-    }
-    data["region_chunks"] = chunks;
-
-    data["dropped_items"] = bubble.serialize_ground_items();
-    data["tile_id_cache"] = bubble.get_tile_id_cache(WorldBubble::LAYER_TILE);
-    data["seen_cells"] = bubble.get_seen_cells();
-
-    data["entity_ledger"] = entity_ledger.serialize();
-    data["frozen_entities"] = entity_archive.serialize();
-    data["world_spawn_state"] = spawn_state.serialize();
-
-    if (quest_tracker) {
-        data["quest_tracker"] = quest_tracker->serialize();
-    }
-
-    return data;
+    return WorldSaveSerializer::build_save_data(
+        world_seed,
+        *generator,
+        bubble,
+        entity_ledger,
+        entity_archive,
+        spawn_state,
+        quest_tracker.get()
+    );
 }
 
 void GameWorld::load_save_data(const Dictionary &p_data) {
-    world_seed = p_data.get("seed", 0);
-
-    std::unordered_map<uint64_t, uint32_t> region_chunks;
-    Dictionary chunks = p_data.get("region_chunks", Dictionary());
-    Array chunk_keys = chunks.keys();
-    for (int i = 0; i < chunk_keys.size(); i++) {
-        Variant key_var = chunk_keys[i];
-        uint64_t key;
-        if (key_var.get_type() == Variant::STRING) {
-            key = ((String)key_var).to_int();
-        } else {
-            key = key_var;
-        }
-        region_chunks[key] = (uint32_t)((int)chunks[key_var]);
-    }
-    generator->set_region_chunks(region_chunks);
-
-    bubble.deserialize_ground_items(p_data.get("dropped_items", Dictionary()));
-    bubble.set_tile_id_cache(p_data.get("tile_id_cache", Dictionary()), WorldBubble::LAYER_TILE);
-    bubble.set_seen_cells(p_data.get("seen_cells", Array()));
-
-    // Load entity data from ledger
-    entity_ledger.deserialize(p_data.get("entity_ledger", Dictionary()));
-
-    entity_archive.deserialize(p_data.get("frozen_entities", Dictionary()));
-    Dictionary spawn_state_data = p_data.get("world_spawn_state", Dictionary());
-    if (spawn_state_data.is_empty()) {
-        spawn_state_data = p_data.get("entity_spawn_tracker", Dictionary());
-    }
-    spawn_state.deserialize(spawn_state_data);
+    WorldSaveSerializer::load_save_data(
+        p_data,
+        world_seed,
+        *generator,
+        bubble,
+        entity_ledger,
+        entity_archive,
+        spawn_state,
+        quest_tracker.get()
+    );
 
     bubble.rebuild_from_pool();
 
@@ -825,10 +797,6 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
                 + String(" has incomplete actor components and was not scheduled.")
             );
         }
-    }
-
-    if (quest_tracker) {
-        quest_tracker->deserialize(p_data.get("quest_tracker", Dictionary()));
     }
 
     if (renderer) {

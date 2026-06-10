@@ -97,6 +97,15 @@ void FastTileMap::init_world_bubble(const Vector2i& playerPos, bool is_square) {
     }
 }
 
+std::vector<uint64_t> FastTileMap::get_render_offset_keys() const {
+    std::vector<uint64_t> offset_keys;
+    offset_keys.reserve(tile_rids[LAYER_TILE].size());
+    for (const auto& pair : tile_rids[LAYER_TILE]) {
+        offset_keys.push_back(pair.first);
+    }
+    return offset_keys;
+}
+
 void FastTileMap::update_visuals(const Vector2i& playerPos) {
     if (!tilesheet.is_valid() || !bubble_source) return;
 
@@ -109,11 +118,7 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
     ItemDb* item_db = ItemDb::get_singleton();
     if (!tile_db || !item_db) return;
 
-    std::vector<uint64_t> offset_keys;
-    offset_keys.reserve(tile_rids[LAYER_TILE].size());
-    for (const auto& pair : tile_rids[LAYER_TILE]) {
-        offset_keys.push_back(pair.first);
-    }
+    std::vector<uint64_t> offset_keys = get_render_offset_keys();
 
     WorldBubble::BubbleSnapshot snapshot = bubble_source->build_snapshot(playerPos, offset_keys, occlusion_enabled);
 

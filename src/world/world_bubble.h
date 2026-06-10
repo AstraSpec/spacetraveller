@@ -63,7 +63,8 @@ public:
 
 private:
     CellData cell_data;
-    std::unordered_map<uint64_t, uint16_t> tile_id_cache[LAYER_MAX];
+    std::unordered_map<uint64_t, uint16_t> tile_overrides[LAYER_MAX];
+    std::unordered_map<uint64_t, uint16_t> generated_tile_cache[LAYER_MAX];
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
     std::vector<uint64_t> newly_seen_cells;
@@ -108,6 +109,9 @@ public:
     Dictionary get_tile_id_cache(Layer p_layer = LAYER_TILE) const;
     void set_tile_id_cache(const Dictionary& p_cache, Layer p_layer = LAYER_TILE);
     void merge_tile_id_cache(const Dictionary& p_cache, Layer p_layer = LAYER_TILE);
+    const std::unordered_map<uint64_t, uint16_t>& get_tile_overrides(Layer p_layer = LAYER_TILE) const {
+        return tile_overrides[p_layer];
+    }
 
     Array get_seen_cells() const;
     void set_seen_cells(const Array& p_seen);
@@ -115,14 +119,13 @@ public:
     std::vector<uint64_t> consume_newly_seen_cells();
 
     void set_entity_pool(EntityPool* pool) { entity_pool_source = pool; }
-    void set_entity(int x, int y, uint32_t entity_id);
+    bool set_entity(int x, int y, uint32_t entity_id);
+    void force_set_entity(int x, int y, uint32_t entity_id);
     void remove_entity(int x, int y);
-    void update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id);
+    bool update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id);
     void clear_entities();
     void rebuild_from_pool();
     const CellEntity* get_entity_at(int x, int y) const;
-    Dictionary serialize_entity_positions() const;
-    void deserialize_entity_positions(const Dictionary& data);
 
     void add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime = -1.0f);
     void remove_overlay(int x, int y);
@@ -138,8 +141,14 @@ public:
     );
 
     const std::unordered_map<uint64_t, uint16_t>& get_tile_cache(Layer p_layer = LAYER_TILE) const {
-        return tile_id_cache[p_layer];
+        return generated_tile_cache[p_layer];
     }
+
+    void update_visibility(
+        const Vector2i& player_pos,
+        const std::vector<uint64_t>& offset_keys,
+        bool occlusion_enabled
+    );
 
     BubbleSnapshot build_snapshot(
         const Vector2i& player_pos,

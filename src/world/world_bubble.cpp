@@ -4,19 +4,25 @@
 #include "data/tile_db.h"
 #include "core/world_coords.h"
 #include "occlusion.h"
+#include <godot_cpp/variant/utility_functions.hpp>
 #include <queue>
 
 using namespace godot;
 
 uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y) {
-    auto it = tile_id_cache[layer].find(cell_key);
-    if (it != tile_id_cache[layer].end()) {
+    auto override_it = tile_overrides[layer].find(cell_key);
+    if (override_it != tile_overrides[layer].end()) {
+        return override_it->second;
+    }
+
+    auto it = generated_tile_cache[layer].find(cell_key);
+    if (it != generated_tile_cache[layer].end()) {
         return it->second;
     }
     if (layer == LAYER_TILE && tile_source) {
         uint16_t tile_id = tile_source(world_x, world_y);
         if (tile_id != 0) {
-            tile_id_cache[layer][cell_key] = tile_id;
+            generated_tile_cache[layer][cell_key] = tile_id;
             return tile_id;
         }
     }
@@ -31,21 +37,33 @@ void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer)
     uint64_t cell_key = WorldCoords::pack_coords(x, y);
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (id_reg) {
-        tile_id_cache[p_layer][cell_key] = id_reg->get_id(tile_id);
+        tile_overrides[p_layer][cell_key] = id_reg->get_id(tile_id);
     }
 }
 
 void WorldBubble::place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer) {
-    tile_id_cache[p_layer][WorldCoords::pack_coords(x, y)] = tile_id;
+    tile_overrides[p_layer][WorldCoords::pack_coords(x, y)] = tile_id;
 }
 
 String WorldBubble::get_tile_at(int x, int y, Layer p_layer) const {
     uint64_t cell_key = WorldCoords::pack_coords(x, y);
-    auto it = tile_id_cache[p_layer].find(cell_key);
-    if (it != tile_id_cache[p_layer].end()) {
+    uint16_t tile_id = 0;
+    bool found = false;
+    auto override_it = tile_overrides[p_layer].find(cell_key);
+    if (override_it != tile_overrides[p_layer].end()) {
+        tile_id = override_it->second;
+        found = true;
+    } else {
+        auto generated_it = generated_tile_cache[p_layer].find(cell_key);
+        if (generated_it != generated_tile_cache[p_layer].end()) {
+            tile_id = generated_it->second;
+            found = true;
+        }
+    }
+    if (found) {
         IdRegistry* id_reg = IdRegistry::get_singleton();
         if (id_reg) {
-            return id_reg->get_string(it->second);
+            return id_reg->get_string(tile_id);
         }
     }
     return "void";
@@ -59,10 +77,7 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
     uint16_t target_id = 0;
 
     uint64_t start_key = WorldCoords::pack_coords(x, y);
-    auto it = tile_id_cache[p_layer].find(start_key);
-    if (it != tile_id_cache[p_layer].end()) {
-        target_id = it->second;
-    }
+    target_id = resolve_tile_id(p_layer, start_key, x, y);
 
     if (new_id == target_id) return;
 
@@ -91,14 +106,10 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
             }
 
             uint64_t key = WorldCoords::pack_coords(p.x, p.y);
-            uint16_t current_id = 0;
-            auto it_cur = tile_id_cache[p_layer].find(key);
-            if (it_cur != tile_id_cache[p_layer].end()) {
-                current_id = it_cur->second;
-            }
+            uint16_t current_id = resolve_tile_id(p_layer, key, p.x, p.y);
 
             if (current_id == target_id) {
-                tile_id_cache[p_layer][key] = new_id;
+                tile_overrides[p_layer][key] = new_id;
                 q.push(Vector2i(p.x + 1, p.y));
                 q.push(Vector2i(p.x - 1, p.y));
                 q.push(Vector2i(p.x, p.y + 1));
@@ -121,14 +132,10 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
                 }
 
                 uint64_t key = WorldCoords::pack_coords(gx, gy);
-                uint16_t current_id = 0;
-                auto it_cur = tile_id_cache[p_layer].find(key);
-                if (it_cur != tile_id_cache[p_layer].end()) {
-                    current_id = it_cur->second;
-                }
+                uint16_t current_id = resolve_tile_id(p_layer, key, gx, gy);
 
                 if (current_id == target_id) {
-                    tile_id_cache[p_layer][key] = new_id;
+                    tile_overrides[p_layer][key] = new_id;
                 }
             }
         }
@@ -186,32 +193,60 @@ void WorldBubble::deserialize_ground_items(const Dictionary& data) {
 
 void WorldBubble::invalidate_tile_cache(int world_x, int world_y, Layer p_layer) {
     uint64_t key = WorldCoords::pack_coords(world_x, world_y);
-    tile_id_cache[p_layer].erase(key);
+    tile_overrides[p_layer].erase(key);
+    generated_tile_cache[p_layer].erase(key);
 }
 
 void WorldBubble::invalidate_region_cache(const Rect2i& p_rect, Layer p_layer) {
-    auto& cache = tile_id_cache[p_layer];
-    for (auto it = cache.begin(); it != cache.end(); ) {
-        Vector2i pos = WorldCoords::unpack_coords(it->first);
-        if (p_rect.has_point(pos)) {
-            it = cache.erase(it);
-        } else {
-            ++it;
+    auto erase_region = [&](std::unordered_map<uint64_t, uint16_t>& cache) {
+        for (auto it = cache.begin(); it != cache.end(); ) {
+            Vector2i pos = WorldCoords::unpack_coords(it->first);
+            if (p_rect.has_point(pos)) {
+                it = cache.erase(it);
+            } else {
+                ++it;
+            }
         }
-    }
+    };
+    erase_region(tile_overrides[p_layer]);
+    erase_region(generated_tile_cache[p_layer]);
 }
 
 void WorldBubble::clear_cache(Layer p_layer) {
-    tile_id_cache[p_layer].clear();
+    tile_overrides[p_layer].clear();
+    generated_tile_cache[p_layer].clear();
 }
 
 void WorldBubble::clear_all_caches() {
     for (int l = 0; l < LAYER_MAX; l++) {
-        tile_id_cache[l].clear();
+        tile_overrides[l].clear();
+        generated_tile_cache[l].clear();
     }
 }
 
-void WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
+bool WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
+    uint64_t key = WorldCoords::pack_coords(x, y);
+    auto it = entity_positions.find(key);
+    if (it != entity_positions.end() && it->second.entity_id != entity_id) {
+        if (!entity_pool_source || entity_pool_source->contains(it->second.entity_id)) {
+            UtilityFunctions::printerr(
+                String("[WorldBubble] Refusing to place entity ")
+                + String::num_int64(entity_id)
+                + String(" on occupied cell ")
+                + String::num_int64(x)
+                + String(",")
+                + String::num_int64(y)
+                + String(" occupied_by=")
+                + String::num_int64(it->second.entity_id)
+            );
+            return false;
+        }
+    }
+    entity_positions[key] = {entity_id};
+    return true;
+}
+
+void WorldBubble::force_set_entity(int x, int y, uint32_t entity_id) {
     uint64_t key = WorldCoords::pack_coords(x, y);
     entity_positions[key] = {entity_id};
 }
@@ -221,14 +256,32 @@ void WorldBubble::remove_entity(int x, int y) {
     entity_positions.erase(key);
 }
 
-void WorldBubble::update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id) {
+bool WorldBubble::update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id) {
+    uint64_t new_key = WorldCoords::pack_coords(new_x, new_y);
+    auto dest_it = entity_positions.find(new_key);
+    if (dest_it != entity_positions.end() && dest_it->second.entity_id != entity_id) {
+        if (!entity_pool_source || entity_pool_source->contains(dest_it->second.entity_id)) {
+            UtilityFunctions::printerr(
+                String("[WorldBubble] Refusing to move entity ")
+                + String::num_int64(entity_id)
+                + String(" into occupied cell ")
+                + String::num_int64(new_x)
+                + String(",")
+                + String::num_int64(new_y)
+                + String(" occupied_by=")
+                + String::num_int64(dest_it->second.entity_id)
+            );
+            return false;
+        }
+    }
+
     uint64_t old_key = WorldCoords::pack_coords(old_x, old_y);
     auto it = entity_positions.find(old_key);
     if (it != entity_positions.end() && it->second.entity_id == entity_id) {
         entity_positions.erase(it);
     }
-    uint64_t new_key = WorldCoords::pack_coords(new_x, new_y);
     entity_positions[new_key] = {entity_id};
+    return true;
 }
 
 void WorldBubble::clear_entities() {
@@ -243,7 +296,7 @@ void WorldBubble::rebuild_from_pool() {
     for (uint32_t id : entity_pool_source->get_live_ids()) {
         const Entity* e = entity_pool_source->get_entity(id);
         if (!e) continue;
-        set_entity(e->x, e->y, id);
+        force_set_entity(e->x, e->y, id);
     }
 }
 
@@ -255,36 +308,16 @@ const WorldBubble::CellEntity* WorldBubble::get_entity_at(int x, int y) const {
     return &it->second;
 }
 
-Dictionary WorldBubble::serialize_entity_positions() const {
-    Dictionary data;
-    for (const auto& [key, ce] : entity_positions) {
-        data[static_cast<double>(key)] = static_cast<int64_t>(ce.entity_id);
-    }
-    return data;
-}
-
-void WorldBubble::deserialize_entity_positions(const Dictionary& data) {
-    entity_positions.clear();
-    Array keys = data.keys();
-    for (int i = 0; i < keys.size(); i++) {
-        Variant key_var = keys[i];
-        uint64_t key = (key_var.get_type() == Variant::STRING) ? ((String)key_var).to_int() : static_cast<uint64_t>(static_cast<int64_t>(key_var));
-        CellEntity ce;
-        ce.entity_id = static_cast<uint32_t>(static_cast<int64_t>(data[key_var]));
-        entity_positions[key] = ce;
-    }
-}
-
 Dictionary WorldBubble::get_tile_id_cache(Layer p_layer) const {
     Dictionary d;
-    for (auto const& [key, val] : tile_id_cache[p_layer]) {
+    for (auto const& [key, val] : tile_overrides[p_layer]) {
         d[key] = (int)val;
     }
     return d;
 }
 
 void WorldBubble::set_tile_id_cache(const Dictionary& p_cache, Layer p_layer) {
-    tile_id_cache[p_layer].clear();
+    tile_overrides[p_layer].clear();
     merge_tile_id_cache(p_cache, p_layer);
 }
 
@@ -298,7 +331,7 @@ void WorldBubble::merge_tile_id_cache(const Dictionary& p_cache, Layer p_layer) 
         } else {
             key = key_var;
         }
-        tile_id_cache[p_layer][key] = (uint16_t)((int)p_cache[key_var]);
+        tile_overrides[p_layer][key] = (uint16_t)((int)p_cache[key_var]);
     }
 }
 
@@ -389,25 +422,49 @@ TraversalSnapshot WorldBubble::build_traversal_snapshot(
     return TraversalSnapshot(this, start, goal, blocking_positions);
 }
 
-WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
+void WorldBubble::update_visibility(
     const Vector2i& player_pos,
     const std::vector<uint64_t>& offset_keys,
     bool occlusion_enabled
 ) {
-    BubbleSnapshot snapshot;
-
     visible_cells.clear();
-    if (occlusion_enabled) {
-        // Resolve tiles before FOV so procedural/cache-backed solids block sight on the first frame.
+
+    if (!occlusion_enabled) {
         for (uint64_t offset_key : offset_keys) {
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
             int cx = offset.x + player_pos.x;
             int cy = offset.y + player_pos.y;
             uint64_t cell_key = WorldCoords::pack_coords(cx, cy);
             resolve_tile_id(LAYER_TILE, cell_key, cx, cy);
+            visible_cells.insert(cell_key);
         }
-        Occlusion::compute_visible(player_pos, world_bubble_radius, tile_id_cache[LAYER_TILE], visible_cells);
+        return;
     }
+
+    std::unordered_map<uint64_t, uint16_t> visibility_tiles;
+    visibility_tiles.reserve(offset_keys.size());
+    for (uint64_t offset_key : offset_keys) {
+        Vector2i offset = WorldCoords::unpack_coords(offset_key);
+        int cx = offset.x + player_pos.x;
+        int cy = offset.y + player_pos.y;
+        uint64_t cell_key = WorldCoords::pack_coords(cx, cy);
+        visibility_tiles[cell_key] = resolve_tile_id(LAYER_TILE, cell_key, cx, cy);
+    }
+
+    Occlusion::compute_visible(player_pos, world_bubble_radius, visibility_tiles, visible_cells);
+    for (uint64_t cell_key : visible_cells) {
+        if (seen_cells.insert(cell_key).second) {
+            newly_seen_cells.push_back(cell_key);
+        }
+    }
+}
+
+WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
+    const Vector2i& player_pos,
+    const std::vector<uint64_t>& offset_keys,
+    bool occlusion_enabled
+) {
+    BubbleSnapshot snapshot;
 
     static const bool LAYER_HAS_ITEMS[LAYER_MAX] = { true, false };
     TileDb* tile_db = TileDb::get_singleton();
@@ -426,13 +483,6 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             if (occlusion_enabled) {
                 visual.occluded = visible_cells.find(cell_key) == visible_cells.end();
                 visual.seen = seen_cells.count(cell_key) > 0;
-                if (!visual.occluded) {
-                    if (!visual.seen) {
-                        newly_seen_cells.push_back(cell_key);
-                    }
-                    seen_cells.insert(cell_key);
-                    visual.seen = true;
-                }
             }
 
             visual.tile_id = resolve_tile_id(l, cell_key, cx, cy);

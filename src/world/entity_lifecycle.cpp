@@ -90,7 +90,10 @@ bool EntityLifecycle::activate_entity(
     Entity* entity = ledger.get_entity_pool().get_entity(entity_id);
     if (!entity) return false;
 
-    bubble.set_entity(pos.x, pos.y, entity_id);
+    if (!bubble.set_entity(pos.x, pos.y, entity_id)) {
+        scheduler.remove(entity_id);
+        return false;
+    }
 
     if (entity->next_turn_time < initial_turn_time) {
         entity->next_turn_time = initial_turn_time;
@@ -143,7 +146,10 @@ uint32_t EntityLifecycle::thaw_entity(
         entity->next_turn_time = minimum_turn_time;
     }
 
-    bubble.set_entity(entity->x, entity->y, entity_id);
+    if (!bubble.set_entity(entity->x, entity->y, entity_id)) {
+        ledger.destroy_entity(entity_id);
+        return EntityPool::INVALID_ID;
+    }
     archive.remove_frozen_entity(packed_pos);
 
     if (ledger.is_schedulable_actor(entity_id)) {
