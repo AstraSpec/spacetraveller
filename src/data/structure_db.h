@@ -11,14 +11,22 @@
 
 namespace godot {
 
+enum class RuleType : uint8_t {
+    SPAWN_ENTITY,
+    SPAWN_LOOT_TABLE,
+    SPAWN_ITEM,
+    SET_METADATA
+};
+
 struct StructureRuleInfo {
-    String id;
-    String type;
+    RuleType type = RuleType::SPAWN_ENTITY;
     Vector2i pos;
     String entity;
     String job;
     String dialogue_profile;
     uint16_t loot_table = 0;
+    uint16_t item_id = 0;
+    int amount = 0;
     Dictionary params;
 };
 

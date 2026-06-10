@@ -105,5 +105,19 @@
     "atlas": [ 30, 25 ],
     "solid": false,
     "tags": []
+  },
+  {
+    "id": "hanging_sign",
+    "name": "Hanging Sign",
+    "atlas": [ 36, 20 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "sign",
+    "name": "Sign",
+    "atlas": [ 28, 20 ],
+    "solid": false,
+    "tags": []
   }
 ]

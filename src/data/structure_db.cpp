@@ -9,6 +9,26 @@ namespace godot {
 template<> StructureDb* DataBase<StructureInfo, StructureDb>::singleton = nullptr;
 const int StructureDb::CHUNK_SIZE = WorldCoords::CHUNK_SIZE;
 
+static bool parse_rule_type(const String& p_type, RuleType& r_type) {
+    if (p_type == "spawn_entity" || p_type == "spawn_point") {
+        r_type = RuleType::SPAWN_ENTITY;
+        return true;
+    }
+    if (p_type == "spawn_loot_table" || p_type == "loot_table") {
+        r_type = RuleType::SPAWN_LOOT_TABLE;
+        return true;
+    }
+    if (p_type == "spawn_item") {
+        r_type = RuleType::SPAWN_ITEM;
+        return true;
+    }
+    if (p_type == "set_metadata") {
+        r_type = RuleType::SET_METADATA;
+        return true;
+    }
+    return false;
+}
+
 void StructureDb::_bind_methods() {
     ClassDB::bind_static_method("StructureDb", D_METHOD("get_singleton"), &StructureDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &StructureDb::initialize_data);
@@ -38,31 +58,31 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
         Dictionary rule_data = rules[i];
 
         StructureRuleInfo rule;
-        rule.id = String(rule_data.get("id", ""));
-        rule.type = String(rule_data.get("type", ""));
         rule.pos = variant_to_vector2i(rule_data.get("pos", Array()), Vector2i());
         rule.entity = String(rule_data.get("entity", rule_data.get("race_id", "")));
         rule.job = String(rule_data.get("job", ""));
         rule.dialogue_profile = String(rule_data.get("dialogue_profile", ""));
         rule.params = rule_data;
 
+        String type_str = String(rule_data.get("type", ""));
+        if (!parse_rule_type(type_str, rule.type)) {
+            UtilityFunctions::push_error("[StructureDb] Unknown rule type in structure ", structure_id, ": ", type_str);
+            continue;
+        }
+
         String loot_table = String(rule_data.get("loot_table", ""));
         if (id_reg && !loot_table.is_empty()) {
             rule.loot_table = id_reg->register_string(loot_table);
         }
 
-        if (rule.id.is_empty()) {
-            UtilityFunctions::push_error("[StructureDb] Rule in structure ", structure_id, " is missing id");
+        String item_id_str = String(rule_data.get("item_id", ""));
+        if (id_reg && !item_id_str.is_empty()) {
+            rule.item_id = id_reg->register_string(item_id_str);
         }
+        rule.amount = static_cast<int>(rule_data.get("amount", Variant(0)));
+
         if (rule.pos.x < 0 || rule.pos.x >= CHUNK_SIZE || rule.pos.y < 0 || rule.pos.y >= CHUNK_SIZE) {
-            UtilityFunctions::push_error("[StructureDb] Rule in structure ", structure_id, " has out-of-bounds pos: ", rule.id);
-        }
-        if (rule.type == "spawn_point" && rule.entity.is_empty()) {
-            UtilityFunctions::push_error("[StructureDb] spawn_point rule in structure ", structure_id, " is missing entity: ", rule.id);
-        } else if (rule.type == "loot_table" && loot_table.is_empty()) {
-            UtilityFunctions::push_error("[StructureDb] loot_table rule in structure ", structure_id, " is missing loot_table: ", rule.id);
-        } else if (rule.type != "spawn_point" && rule.type != "loot_table") {
-            UtilityFunctions::push_error("[StructureDb] Unknown rule type in structure ", structure_id, ": ", rule.type);
+            UtilityFunctions::push_error("[StructureDb] Rule in structure ", structure_id, " has out-of-bounds pos: ", rule.pos);
         }
 
         info.rules.push_back(rule);

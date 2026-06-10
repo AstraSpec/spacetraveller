@@ -25,18 +25,17 @@
         ],
         "rules": [
             {
+                "type": "spawn_entity",
                 "entity": "human",
-                "id": "house01_human_spawn_01",
                 "pos": [
                     7.0,
                     17.0
-                ],
-                "type": "spawn_point"
+                ]
             }
         ]
     },
     {
-        "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 50x0)",
+        "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 44x0)",
         "id": "tavern",
         "palette": [
             "void",
@@ -53,7 +52,21 @@
             "barrel",
             "stairs_up",
             "stairs_down",
-            "toilet"
+            "toilet",
+            "hanging_sign"
+        ],
+        "rules": [
+            {
+                "type": "set_metadata",
+                "meta_type": "signage",
+                "pos": [
+                    3.0,
+                    22.0
+                ],
+                "data": {
+                    "text": "Tavern"
+                }
+            }
         ]
     },
     {
@@ -106,6 +119,31 @@
             "chest",
             "fireplace",
             "barrel_wine"
+        ]
+    },
+    {
+        "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 4x3, 1x4, 2x5, 1x1, 15x0, 1x2, 5x3, 2x5, 1x1, 15x0, 1x1, 7x3, 3x1, 1x2, 2x1, 4x0, 7x1, 1x6, 2x1, 4x3, 1x1, 1x7, 1x3, 1x8, 1x4, 1x1, 4x0, 1x1, 2x9, 3x3, 1x1, 2x3, 1x1, 4x3, 1x1, 2x3, 1x8, 1x3, 1x1, 4x0, 1x2, 1x3, 1x10, 3x3, 1x1, 1x11, 1x12, 1x1, 1x7, 3x3, 1x1, 4x3, 1x2, 4x0, 1x1, 5x3, 6x1, 1x6, 2x1, 4x3, 1x2, 4x0, 1x1, 5x3, 1x1, 7x3, 1x1, 4x3, 1x1, 4x0, 1x1, 1x13, 8x3, 1x10, 3x3, 1x1, 1x6, 1x1, 2x3, 1x1, 4x0, 1x1, 1x13, 7x3, 3x9, 4x3, 1x1, 1x3, 1x11, 1x1, 4x0, 1x2, 1x13, 1x10, 6x3, 1x10, 6x3, 1x1, 1x3, 1x14, 1x1, 4x0, 1x1, 1x13, 4x3, 1x1, 9x3, 1x1, 1x11, 1x14, 1x1, 4x0, 12x1, 3x3, 5x1, 8x0, 1x1, 1x15, 1x13, 1x3, 1x1, 6x3, 1x14, 1x1, 11x0, 1x1, 3x3, 1x6, 6x3, 1x14, 1x1, 11x0, 1x1, 1x16, 1x17, 1x18, 1x1, 6x3, 1x14, 1x1, 11x0, 2x1, 1x2, 3x1, 1x6, 1x1, 2x2, 3x1, 53x0)",
+        "id": "house04",
+        "palette": [
+            "void",
+            "w_wall",
+            "w_window_curtain",
+            "w_floor",
+            "dresser",
+            "bed_double",
+            "w_door_c",
+            "wardrobe",
+            "bed",
+            "table",
+            "chair",
+            "barrel",
+            "toilet",
+            "bar",
+            "bookcase",
+            "fireplace",
+            "stairs_up",
+            "stairs_down",
+            "chest"
         ]
     }
 ]

@@ -183,6 +183,53 @@ bool WorldBubble::has_items(const Vector2i& pos) const {
     return cell_data.has_items(key);
 }
 
+void WorldBubble::set_tile_metadata(const Vector2i& pos, const Dictionary& data) {
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    tile_metadata[key] = data;
+}
+
+Dictionary WorldBubble::get_tile_metadata(const Vector2i& pos) const {
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    auto it = tile_metadata.find(key);
+    return it != tile_metadata.end() ? it->second : Dictionary();
+}
+
+void WorldBubble::clear_tile_metadata(const Vector2i& pos) {
+    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    tile_metadata.erase(key);
+}
+
+void WorldBubble::clear_all_tile_metadata() {
+    tile_metadata.clear();
+}
+
+Dictionary WorldBubble::serialize_tile_metadata() const {
+    Dictionary data;
+    for (const auto& [key, metadata] : tile_metadata) {
+        data[static_cast<int64_t>(key)] = metadata;
+    }
+    return data;
+}
+
+void WorldBubble::deserialize_tile_metadata(const Dictionary& data) {
+    tile_metadata.clear();
+    Array keys = data.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Variant key_var = keys[i];
+        uint64_t key;
+        if (key_var.get_type() == Variant::STRING) {
+            key = static_cast<uint64_t>(((String)key_var).to_int());
+        } else {
+            key = static_cast<uint64_t>(static_cast<int64_t>(key_var));
+        }
+
+        Variant value = data[key_var];
+        if (value.get_type() == Variant::DICTIONARY) {
+            tile_metadata[key] = value;
+        }
+    }
+}
+
 Dictionary WorldBubble::serialize_ground_items() const {
     return cell_data.serialize();
 }

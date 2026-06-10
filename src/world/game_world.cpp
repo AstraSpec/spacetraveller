@@ -67,6 +67,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_seen_cells", "seen"), &GameWorld::set_seen_cells);
     ClassDB::bind_method(D_METHOD("invalidate_tile_cache", "world_x", "world_y", "layer"), &GameWorld::invalidate_tile_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("invalidate_region_cache", "rect", "layer"), &GameWorld::invalidate_region_cache, DEFVAL(LAYER_TILE));
+    ClassDB::bind_method(D_METHOD("get_tile_metadata", "pos"), &GameWorld::get_tile_metadata);
+    ClassDB::bind_method(D_METHOD("set_tile_metadata", "pos", "data"), &GameWorld::set_tile_metadata);
+    ClassDB::bind_method(D_METHOD("clear_tile_metadata", "pos"), &GameWorld::clear_tile_metadata);
 
     BIND_ENUM_CONSTANT(LAYER_TILE);
     BIND_ENUM_CONSTANT(LAYER_INDICATOR);
@@ -331,6 +334,18 @@ void GameWorld::invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_la
 
 void GameWorld::invalidate_region_cache(const Rect2i& p_rect, BubbleLayer p_layer) {
     bubble.invalidate_region_cache(p_rect, (WorldBubble::Layer)p_layer);
+}
+
+Dictionary GameWorld::get_tile_metadata(const Vector2i& pos) const {
+    return bubble.get_tile_metadata(pos);
+}
+
+void GameWorld::set_tile_metadata(const Vector2i& pos, const Dictionary& data) {
+    bubble.set_tile_metadata(pos, data);
+}
+
+void GameWorld::clear_tile_metadata(const Vector2i& pos) {
+    bubble.clear_tile_metadata(pos);
 }
 
 Dictionary GameWorld::init_region(const Vector2i& regionPos) {

@@ -44,6 +44,7 @@ func _on_entity_moved(entity_id: int, new_pos: Vector2i, new_chunk: Vector2i):
 		moved_cell.emit(Vector2(new_pos))
 		moved_chunk.emit(Vector2(new_chunk))
 		World.update_world_bubble(new_pos)
+		_check_tile_metadata(new_pos)
 		_check_ground_items(new_pos)
 
 func _on_right_click(_global_pos: Vector2):
@@ -191,3 +192,23 @@ func _check_ground_items(pos: Vector2i) -> void:
 	if items.size() > 1:
 		msg += " And others."
 	EventBus.post("ground", msg, {"pos": pos, "items": items})
+
+func _check_tile_metadata(pos: Vector2i) -> void:
+	var metadata: Dictionary = World.get_tile_metadata(pos)
+	if metadata.is_empty():
+		return
+
+	var text := _metadata_text(metadata)
+	if text.is_empty():
+		return
+
+	EventBus.post("metadata", "The text here says \"%s\"." % text, {"pos": pos, "metadata": metadata})
+
+func _metadata_text(metadata: Dictionary) -> String:
+	var data = metadata.get("data", {})
+	if data is Dictionary:
+		var nested_text := str(data.get("text", ""))
+		if not nested_text.is_empty():
+			return nested_text
+
+	return ""

@@ -138,10 +138,24 @@ static bool spawn_with_structure_rule(
     );
 }
 
+static String rule_type_to_string(RuleType p_type) {
+    switch (p_type) {
+        case RuleType::SPAWN_ENTITY: return "spawn_entity";
+        case RuleType::SPAWN_LOOT_TABLE: return "spawn_loot_table";
+        case RuleType::SPAWN_ITEM: return "spawn_item";
+        case RuleType::SET_METADATA: return "set_metadata";
+    }
+    return "unknown";
+}
+
 static uint64_t get_structure_rule_salt(const String& p_structure_id, const StructureRuleInfo& p_rule) {
-    String rule_id = p_rule.id.is_empty() ? p_rule.type : p_rule.id;
+    String rule_key = rule_type_to_string(p_rule.type)
+        + String(":")
+        + String::num_int64(p_rule.pos.x)
+        + String(",")
+        + String::num_int64(p_rule.pos.y);
     return (static_cast<uint64_t>(static_cast<uint32_t>(p_structure_id.hash())) << 32)
-        ^ static_cast<uint32_t>(rule_id.hash());
+        ^ static_cast<uint32_t>(rule_key.hash());
 }
 
 static uint64_t get_tile_spawn_loot_salt(const String& p_structure_id, uint16_t p_tile_id) {
@@ -188,6 +202,15 @@ static void apply_structure_loot_rule(
     roll_loot_table_at(p_world_seed, p_rule.loot_table, get_structure_rule_salt(p_structure_id, p_rule), p_pos, p_bubble);
 }
 
+static void apply_structure_spawn_item(
+    const Vector2i& p_pos,
+    const StructureRuleInfo& p_rule,
+    WorldBubble& p_bubble
+) {
+    if (p_rule.item_id == 0 || p_rule.amount <= 0) return;
+    p_bubble.drop_item(p_pos, p_rule.item_id, p_rule.amount);
+}
+
 static void apply_tile_spawn_loot(
     uint32_t p_world_seed,
     const String& p_structure_id,
@@ -220,7 +243,16 @@ static bool apply_structure_spawn_rule(
     }
 
     if (!spawn_with_structure_rule(p_world_seed, p_spawn_turn_time, p_pos, p_rule, p_bubble, p_ledger, p_scheduler)) {
-        UtilityFunctions::push_error("[WorldSpawner] Failed structure spawn rule: ", p_structure_id, "/", p_rule.id, " entity=", p_rule.entity);
+        UtilityFunctions::push_error(
+            "[WorldSpawner] Failed structure spawn rule: ",
+            p_structure_id,
+            " type=",
+            rule_type_to_string(p_rule.type),
+            " pos=",
+            p_rule.pos,
+            " entity=",
+            p_rule.entity
+        );
         return false;
     }
 
@@ -266,11 +298,23 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                     Vector2i rule_local = resolve_structure_rule_local(rule.pos, rotation);
                     if (rule_local != local_pos) continue;
 
-                    if (rule.type == "loot_table") {
-                        custom_loot_rule_matched = true;
-                        apply_structure_loot_rule(p_world_seed, structure_id, rule, pos, p_bubble);
-                    } else if (!spawned_from_rule && rule.type == "spawn_point") {
-                        spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_scheduler);
+                    switch (rule.type) {
+                        case RuleType::SPAWN_LOOT_TABLE:
+                            custom_loot_rule_matched = true;
+                            apply_structure_loot_rule(p_world_seed, structure_id, rule, pos, p_bubble);
+                            break;
+                        case RuleType::SPAWN_ITEM:
+                            custom_loot_rule_matched = true;
+                            apply_structure_spawn_item(pos, rule, p_bubble);
+                            break;
+                        case RuleType::SPAWN_ENTITY:
+                            if (!spawned_from_rule) {
+                                spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_scheduler);
+                            }
+                            break;
+                        case RuleType::SET_METADATA:
+                            p_bubble.set_tile_metadata(pos, rule.params);
+                            break;
                     }
                 }
 

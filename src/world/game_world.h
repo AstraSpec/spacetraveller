@@ -108,6 +108,9 @@ public:
     void set_seen_cells(const Array& p_seen);
     void invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_layer = LAYER_TILE);
     void invalidate_region_cache(const Rect2i& p_rect, BubbleLayer p_layer = LAYER_TILE);
+    Dictionary get_tile_metadata(const Vector2i& pos) const;
+    void set_tile_metadata(const Vector2i& pos, const Dictionary& data);
+    void clear_tile_metadata(const Vector2i& pos);
 
     void drop_item(const Vector2i& pos, const String& item_id, int amount);
     Array get_items_at(const Vector2i& pos) const;

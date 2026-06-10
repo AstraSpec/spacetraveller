@@ -33,6 +33,7 @@ Dictionary WorldSaveSerializer::build_save_data(
     data["region_chunks"] = chunks;
 
     data["dropped_items"] = bubble.serialize_ground_items();
+    data["tile_metadata"] = bubble.serialize_tile_metadata();
     data["tile_id_cache"] = bubble.get_tile_id_cache(WorldBubble::LAYER_TILE);
     data["seen_cells"] = bubble.get_seen_cells();
     data["entity_ledger"] = entity_ledger.serialize();
@@ -74,6 +75,7 @@ void WorldSaveSerializer::load_save_data(
     generator.set_region_chunks(region_chunks);
 
     bubble.deserialize_ground_items(data.get("dropped_items", Dictionary()));
+    bubble.deserialize_tile_metadata(data.get("tile_metadata", Dictionary()));
     bubble.set_tile_id_cache(data.get("tile_id_cache", Dictionary()), WorldBubble::LAYER_TILE);
     bubble.set_seen_cells(data.get("seen_cells", Array()));
     entity_ledger.deserialize(data.get("entity_ledger", Dictionary()));

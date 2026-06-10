@@ -70,6 +70,7 @@ private:
     std::vector<uint64_t> newly_seen_cells;
     std::unordered_map<uint64_t, CellEntity> entity_positions;
     std::unordered_map<uint64_t, Overlay> overlays;
+    std::unordered_map<uint64_t, Dictionary> tile_metadata;
 
     EntityPool* entity_pool_source = nullptr;
 
@@ -97,6 +98,13 @@ public:
     int peek_item_amount(const Vector2i& pos, uint16_t item_id) const;
     Array get_items_at(const Vector2i& pos) const;
     bool has_items(const Vector2i& pos) const;
+
+    void set_tile_metadata(const Vector2i& pos, const Dictionary& data);
+    Dictionary get_tile_metadata(const Vector2i& pos) const;
+    void clear_tile_metadata(const Vector2i& pos);
+    void clear_all_tile_metadata();
+    Dictionary serialize_tile_metadata() const;
+    void deserialize_tile_metadata(const Dictionary& data);
 
     Dictionary serialize_ground_items() const;
     void deserialize_ground_items(const Dictionary& data);
