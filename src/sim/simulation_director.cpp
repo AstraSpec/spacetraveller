@@ -12,6 +12,7 @@
 #include "core/faction.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
+#include "components/combat_resolver.h"
 #include "components/perception.h"
 #include "components/locomotion.h"
 #include "components/stamina.h"
@@ -69,7 +70,115 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
     return best_id;
 }
 
-void SimulationDirector::apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const AttackResult& atk) {
+float SimulationDirector::entity_base_damage(uint32_t entity_id) const {
+    auto anat_it = d.ledger->anatomy_data.find(entity_id);
+    if (anat_it == d.ledger->anatomy_data.end()) return 10.0f;
+    RaceDb* race_db = RaceDb::get_singleton();
+    if (!race_db) return 10.0f;
+    const RaceInfo* race = race_db->get_race_info(anat_it->second.race_id);
+    return race ? race->base_damage : 10.0f;
+}
+
+Rng::Seeded SimulationDirector::combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const {
+    const Entity* attacker = d.ledger->get_entity_pool().get_entity(attacker_id);
+    Vector2i pos = attacker ? Vector2i(attacker->x, attacker->y) : Vector2i();
+    uint64_t salt = (static_cast<uint64_t>(attacker_id) << 32) ^ static_cast<uint64_t>(defender_id);
+    if (attacker) {
+        salt ^= Rng::mix64(static_cast<uint64_t>(attacker->next_turn_time * 1000.0f));
+    }
+    uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
+    return Rng::at(seed, pos, Rng::COMBAT, salt);
+}
+
+CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id) {
+    CombatOutcome outcome;
+
+    auto atk_anat_it = d.ledger->anatomy_data.find(attacker_id);
+    auto def_anat_it = d.ledger->anatomy_data.find(defender_id);
+    auto def_hp_it = d.ledger->health_data.find(defender_id);
+    if (atk_anat_it == d.ledger->anatomy_data.end() ||
+        def_anat_it == d.ledger->anatomy_data.end() ||
+        def_hp_it == d.ledger->health_data.end() ||
+        !def_hp_it->second.alive) {
+        return outcome;
+    }
+
+    const StyleInfo* style = nullptr;
+    auto style_it = d.ledger->combat_style.find(attacker_id);
+    if (style_it != d.ledger->combat_style.end()) {
+        StyleDb* style_db = StyleDb::get_singleton();
+        if (style_db) style = style_db->get_style_info(style_it->second);
+    }
+
+    Rng::Seeded rng = combat_rng_for(attacker_id, defender_id);
+    CombatContext ctx{
+        atk_anat_it->second,
+        def_anat_it->second,
+        def_hp_it->second,
+        d.ledger->equipment_data[attacker_id],
+        rng,
+        entity_base_damage(attacker_id),
+        style,
+        &d.ledger->stamina_data[attacker_id]
+    };
+    return CombatResolver::resolve_attack(ctx);
+}
+
+void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id) {
+    if (entity_id == d.player_entity_id) {
+        d.sink->on_player_died(cause);
+        return;
+    }
+
+    d.sink->on_entity_died(entity_id, cause);
+    if (d.event_listener) {
+        GameEvent e;
+        e.type = GameEventType::ENTITY_KILLED;
+        e.subject_id = killer_id;
+        e.target_id = entity_id;
+        if (auto* dead = d.ledger->get_entity_pool().get_entity(entity_id)) {
+            e.position = Vector2i(dead->x, dead->y);
+        }
+        d.event_listener->on_game_event(e);
+    }
+    despawn_entity(entity_id);
+}
+
+bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
+    if (cost <= 0.0f) return false;
+
+    auto stam_it = d.ledger->stamina_data.find(entity_id);
+    if (stam_it != d.ledger->stamina_data.end()) {
+        Stamina::regen(stam_it->second, cost * StaminaTuning::REGEN_PER_TIME);
+    }
+
+    advance_entity_time(entity_id, cost);
+
+    Entity* entity = d.ledger->get_entity_pool().get_entity(entity_id);
+    if (!entity) return false;
+
+    float next_time = base_time + cost;
+    entity->next_turn_time = next_time;
+    d.scheduler->push(entity_id, next_time);
+    return true;
+}
+
+void SimulationDirector::emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos) {
+    const Entity* entity = d.ledger->get_entity_pool().get_entity(entity_id);
+    if (!entity || (entity->x == old_pos.x && entity->y == old_pos.y)) return;
+
+    Vector2i new_pos(entity->x, entity->y);
+    d.sink->on_entity_moved(entity_id, new_pos, entity_chunk(entity_id));
+    if (d.event_listener) {
+        GameEvent e;
+        e.type = GameEventType::ENTITY_MOVED;
+        e.subject_id = entity_id;
+        e.position = new_pos;
+        d.event_listener->on_game_event(e);
+    }
+}
+
+void SimulationDirector::apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk) {
     if (!atk.hit) return;
     EffectsData& fx = d.ledger->effects_data[defender_id];
 
@@ -113,22 +222,8 @@ void SimulationDirector::advance_entity_time(uint32_t entity_id, float dt) {
         if (hp_it != d.ledger->health_data.end() && hp_it->second.alive) {
             Health::damage(hp_it->second, bleed * EffectTuning::BLEED_HP_PER_MAG * dt);
                 if (!hp_it->second.alive) {
-                    if (entity_id == d.player_entity_id) d.sink->on_player_died("bleed");
-                    else {
-                        d.sink->on_entity_died(entity_id, "bleed");
-                        if (d.event_listener) {
-                            GameEvent e;
-                            e.type = GameEventType::ENTITY_KILLED;
-                            e.subject_id = 0;
-                            e.target_id = entity_id;
-                            if (auto ep = d.ledger->get_entity_pool().get_entity(entity_id)) {
-                                e.position = Vector2i(ep->x, ep->y);
-                            }
-                            d.event_listener->on_game_event(e);
-                        }
-                        despawn_entity(entity_id);
-                        return;
-                    }
+                    handle_entity_death(entity_id, "bleed", 0);
+                    return;
                 }
         }
     }
@@ -205,7 +300,8 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     }
 
     auto& loco = d.ledger->locomotion_data[d.player_entity_id];
-    int old_x = entity->x, old_y = entity->y;
+    float player_base_time = entity->next_turn_time;
+    Vector2i old_pos(entity->x, entity->y);
     float cost = 0.0f;
 
     if (intent.type == IntentType::ATTACK) {
@@ -216,21 +312,7 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
         auto def_hp_it = d.ledger->health_data.find(defender_id);
         if (def_hp_it == d.ledger->health_data.end() || !def_hp_it->second.alive) return 0.0f;
 
-        const StyleInfo* style = nullptr;
-        auto style_it = d.ledger->combat_style.find(d.player_entity_id);
-        if (style_it != d.ledger->combat_style.end()) {
-            StyleDb* style_db = StyleDb::get_singleton();
-            if (style_db) style = style_db->get_style_info(style_it->second);
-        }
-
-        AttackResult atk = ActionResolver::resolve_attack(
-            d.ledger->anatomy_data[d.player_entity_id],
-            d.ledger->anatomy_data[defender_id],
-            def_hp_it->second,
-            d.ledger->equipment_data[d.player_entity_id],
-            10.0f,
-            style,
-            &d.ledger->stamina_data[d.player_entity_id]);
+        CombatOutcome atk = resolve_entity_attack(d.player_entity_id, defender_id);
 
         if (atk.no_limbs) {
             d.sink->on_combat_event(d.player_entity_id, defender_id, 0.0f, "no_limbs", atk.verb, "");
@@ -247,17 +329,7 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             else result_str = atk.crit ? "crit" : "hit";
             d.sink->on_combat_event(d.player_entity_id, defender_id, atk.damage, result_str, atk.verb, atk.part_name);
             if (atk.killed) {
-                d.sink->on_entity_died(defender_id, "combat");
-                if (d.event_listener) {
-                    GameEvent e;
-                    e.type = GameEventType::ENTITY_KILLED;
-                    e.subject_id = d.player_entity_id;
-                    e.target_id = defender_id;
-                    auto* dead = d.ledger->get_entity_pool().get_entity(defender_id);
-                    if (dead) e.position = Vector2i(dead->x, dead->y);
-                    d.event_listener->on_game_event(e);
-                }
-                despawn_entity(defender_id);
+                handle_entity_death(defender_id, "combat", d.player_entity_id);
             } else {
                 apply_attack_effects(d.player_entity_id, defender_id, atk);
             }
@@ -274,7 +346,7 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             return 0.0f;
         }
 
-        if (UtilityFunctions::randf() < CombatTuning::SMASH_FAIL_CHANCE) {
+        if (UtilityFunctions::randf() < ActionTuning::SMASH_FAIL_CHANCE) {
             // Failed swing: still costs the turn and stamina, tile survives.
             cost = ActionCost::SMASH;
             if (has_stam) Stamina::drain(stam_it->second, StaminaTuning::SMASH_COST);
@@ -312,39 +384,14 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     }
 
     if (cost > 0.0f) {
-        entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
-        if (!entity) return cost;
-
-        auto stam_it = d.ledger->stamina_data.find(d.player_entity_id);
-        if (stam_it != d.ledger->stamina_data.end()) {
-            Stamina::regen(stam_it->second, cost * StaminaTuning::REGEN_PER_TIME);
-        }
-
-        advance_entity_time(d.player_entity_id, cost);
-
-        if (entity->x != old_x || entity->y != old_y) {
-            Vector2i new_pos(entity->x, entity->y);
-            Vector2i new_chunk = entity_chunk(d.player_entity_id);
-            d.sink->on_entity_moved(d.player_entity_id, new_pos, new_chunk);
-            if (d.event_listener) {
-                GameEvent e;
-                e.type = GameEventType::ENTITY_MOVED;
-                e.subject_id = d.player_entity_id;
-                e.position = new_pos;
-                d.event_listener->on_game_event(e);
+        if (finish_entity_action(d.player_entity_id, cost, player_base_time)) {
+            emit_movement_if_needed(d.player_entity_id, old_pos);
+            Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+            if (player) {
+                process_game_turn(player->next_turn_time);
+                d.sink->on_player_action_resolved(d.player_entity_id, cost, player->next_turn_time);
             }
-
-            entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
-            if (!entity) return cost;
         }
-
-        float player_next_time = entity->next_turn_time + cost;
-        entity->next_turn_time = player_next_time;
-        d.scheduler->push(d.player_entity_id, player_next_time);
-
-        process_game_turn(player_next_time);
-
-        d.sink->on_player_action_resolved(d.player_entity_id, cost, player_next_time);
     }
 
     return cost;
@@ -441,51 +488,21 @@ void SimulationDirector::process_game_turn(float current_time) {
         if (intent.type == IntentType::MOVE) {
             // If the NPC tries to step onto its target's cell, attack that target instead.
             if (target_entity && intent.target.x == target_entity->x && intent.target.y == target_entity->y) {
-                bool target_is_player = (target_id == d.player_entity_id);
                 auto def_hp_it = d.ledger->health_data.find(target_id);
                 if (def_hp_it != d.ledger->health_data.end() && def_hp_it->second.alive) {
-                    // Look up attacker's race base damage
-                    float atk_damage = 10.0f;
-                    auto atk_anat_it = d.ledger->anatomy_data.find(entity_id);
-                    if (atk_anat_it != d.ledger->anatomy_data.end()) {
-                        RaceDb* race_db = RaceDb::get_singleton();
-                        if (race_db) {
-                            const RaceInfo* race = race_db->get_race_info(atk_anat_it->second.race_id);
-                            if (race) atk_damage = race->base_damage;
-                        }
-                    }
-                    const StyleInfo* style = nullptr;
-                    auto style_it = d.ledger->combat_style.find(entity_id);
-                    if (style_it != d.ledger->combat_style.end()) {
-                        StyleDb* style_db = StyleDb::get_singleton();
-                        if (style_db) style = style_db->get_style_info(style_it->second);
-                    }
-                    AttackResult atk = ActionResolver::resolve_attack(
-                        d.ledger->anatomy_data[entity_id],
-                        d.ledger->anatomy_data[target_id],
-                        def_hp_it->second,
-                        d.ledger->equipment_data[entity_id],
-                        atk_damage,
-                        style,
-                        &d.ledger->stamina_data[entity_id]);
+                    CombatOutcome atk = resolve_entity_attack(entity_id, target_id);
 
                     if (atk.no_limbs) {
                         cost = ActionCost::ATTACK;
                         d.sink->on_combat_event(entity_id, target_id, 0.0f, "no_limbs", atk.verb, "");
-                        advance_entity_time(entity_id, cost);
-                        entity = pool.get_entity(entity_id);
-                        if (!entity) continue;
-                        entity->next_turn_time = base_time + cost;
-                        d.scheduler->push(entity_id, entity->next_turn_time);
+                        finish_entity_action(entity_id, cost, base_time);
                         continue;
                     }
 
                     if (atk.exhausted) {
                         // Too tired to attack; rest this turn and recover.
                         cost = ActionCost::ATTACK;
-                        Stamina::regen(d.ledger->stamina_data[entity_id], cost * StaminaTuning::REGEN_PER_TIME);
-                        entity->next_turn_time = base_time + cost;
-                        d.scheduler->push(entity_id, entity->next_turn_time);
+                        finish_entity_action(entity_id, cost, base_time);
                         continue;
                     }
 
@@ -497,31 +514,13 @@ void SimulationDirector::process_game_turn(float current_time) {
                     else result_str = atk.crit ? "crit" : "hit";
                     d.sink->on_combat_event(entity_id, target_id, atk.damage, result_str, atk.verb, atk.part_name);
                     if (atk.killed) {
-                        if (target_is_player) {
-                            d.sink->on_player_died("combat");
-                        } else {
-                            d.sink->on_entity_died(target_id, "combat");
-                            if (d.event_listener) {
-                                GameEvent e;
-                                e.type = GameEventType::ENTITY_KILLED;
-                                e.subject_id = entity_id;
-                                e.target_id = target_id;
-                                auto* dead = d.ledger->get_entity_pool().get_entity(target_id);
-                                if (dead) e.position = Vector2i(dead->x, dead->y);
-                                d.event_listener->on_game_event(e);
-                            }
-                            despawn_entity(target_id);
-                        }
+                        handle_entity_death(target_id, "combat", entity_id);
                     } else {
                         apply_attack_effects(entity_id, target_id, atk);
                     }
                 }
                 if (cost <= 0.0f) cost = 1.0f;
-                advance_entity_time(entity_id, cost);
-                entity = pool.get_entity(entity_id);
-                if (!entity) continue;
-                entity->next_turn_time = base_time + cost;
-                d.scheduler->push(entity_id, entity->next_turn_time);
+                finish_entity_action(entity_id, cost, base_time);
                 continue;
             }
 
@@ -531,7 +530,6 @@ void SimulationDirector::process_game_turn(float current_time) {
                 auto stam_it = d.ledger->stamina_data.find(entity_id);
                 if (stam_it != d.ledger->stamina_data.end()) {
                     cost *= Stamina::move_cost_multiplier(stam_it->second);
-                    Stamina::regen(stam_it->second, cost * StaminaTuning::REGEN_PER_TIME);
                 }
                 for (auto& bp : blocking_positions) {
                     Vector2i old_pos(entity->x - (intent.target.x - entity->x),
@@ -550,10 +548,7 @@ void SimulationDirector::process_game_turn(float current_time) {
         }
 
         if (cost <= 0.0f) cost = 1.0f / loco.speed;
-        advance_entity_time(entity_id, cost);
-        if (!pool.get_entity(entity_id)) continue;
-        entity->next_turn_time = base_time + cost;
-        d.scheduler->push(entity_id, entity->next_turn_time);
+        finish_entity_action(entity_id, cost, base_time);
     }
 }
 

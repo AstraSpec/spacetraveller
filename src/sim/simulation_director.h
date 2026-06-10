@@ -13,8 +13,11 @@
 #include "world/world_bubble.h"
 #include "world/turn_scheduler.h"
 #include "path/a_star_grid.h"
+#include "core/rng.h"
 
 namespace godot {
+
+struct CombatOutcome;
 
 struct SimulationDirectorDeps {
     EntityLedger* ledger = nullptr;
@@ -43,10 +46,16 @@ private:
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
     void despawn_entity(uint32_t entity_id);
     Vector2i entity_chunk(uint32_t entity_id) const;
-    void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const struct AttackResult& atk);
+    CombatOutcome resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id);
+    void handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id);
+    bool finish_entity_action(uint32_t entity_id, float cost, float base_time);
+    void emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos);
+    void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk);
     void advance_entity_time(uint32_t entity_id, float dt);
+    float entity_base_damage(uint32_t entity_id) const;
     String entity_faction(uint32_t entity_id) const;
     uint32_t find_nearest_hostile(uint32_t entity_id, int radius) const;
+    Rng::Seeded combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const;
 
     SimulationDirectorDeps d;
 };

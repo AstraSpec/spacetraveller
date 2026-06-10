@@ -5,6 +5,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <vector>
 #include <cstdint>
+#include "core/rng.h"
 
 namespace godot {
 
@@ -36,6 +37,7 @@ namespace Anatomy {
     int count_functional_parts_with_tag(const AnatomyData& data, const String& tag);
     float min_required_integrity(const AnatomyData& data, const std::vector<String>& required);
     int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights = std::vector<String>());
+    int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights, Rng::Seeded& rng);
     Dictionary serialize(const AnatomyData& data);
     void deserialize(AnatomyData& data, const Dictionary& dict);
 }

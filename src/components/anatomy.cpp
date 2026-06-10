@@ -153,7 +153,7 @@ int Anatomy::count_functional_parts_with_tag(const AnatomyData& data, const Stri
 
     int count = 0;
     for (int i = 0; i < data.parts.size(); i++) {
-        if (!is_functional(data, i)) continue;
+        if (!Anatomy::is_functional(data, i)) continue;
         const BodyPartInfo* info = db->get_body_part_info(data.parts[i].type_id);
         if (info && TagRegistry::has_tag(tag_id, info->tags)) count++;
     }
@@ -179,7 +179,7 @@ float Anatomy::min_required_integrity(const AnatomyData& data, const std::vector
     return any ? worst : 1.0f;
 }
 
-int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights) {
+static int pick_hit_location_internal(const AnatomyData& data, const std::vector<String>& preferred_heights, float roll_unit) {
     BodyPartDb* db = BodyPartDb::get_singleton();
     if (!db) return -1;
 
@@ -194,7 +194,7 @@ int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String
     // First pass: only parts matching preferred heights. If none match, fall back to all.
     float total = 0.0f;
     for (int i = 0; i < data.parts.size(); i++) {
-        if (!is_functional(data, i)) continue;
+        if (!Anatomy::is_functional(data, i)) continue;
         if (!height_match(i)) continue;
         total += db->get_body_part_size(data.parts[i].type_id);
     }
@@ -202,20 +202,28 @@ int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String
     bool use_height_filter = total > 0.0f;
     if (!use_height_filter) {
         for (int i = 0; i < data.parts.size(); i++) {
-            if (!is_functional(data, i)) continue;
+            if (!Anatomy::is_functional(data, i)) continue;
             total += db->get_body_part_size(data.parts[i].type_id);
         }
     }
     if (total <= 0.0f) return -1;
 
-    float roll = static_cast<float>(UtilityFunctions::randf()) * total;
+    float roll = roll_unit * total;
     for (int i = 0; i < data.parts.size(); i++) {
-        if (!is_functional(data, i)) continue;
+        if (!Anatomy::is_functional(data, i)) continue;
         if (use_height_filter && !height_match(i)) continue;
         roll -= db->get_body_part_size(data.parts[i].type_id);
         if (roll <= 0.0f) return i;
     }
     return -1;
+}
+
+int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights) {
+    return pick_hit_location_internal(data, preferred_heights, static_cast<float>(UtilityFunctions::randf()));
+}
+
+int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights, Rng::Seeded& rng) {
+    return pick_hit_location_internal(data, preferred_heights, rng.unit());
 }
 
 Dictionary Anatomy::serialize(const AnatomyData& data) {

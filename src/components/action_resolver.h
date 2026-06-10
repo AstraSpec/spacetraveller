@@ -11,11 +11,6 @@ class WorldBubble;
 class IGameEventListener;
 struct Entity;
 struct LocomotionData;
-struct HealthData;
-struct EquipmentData;
-struct AnatomyData;
-struct StyleInfo;
-struct StaminaData;
 struct InventoryData;
 
 enum class IntentType { NONE, MOVE, ATTACK, SMASH, PICKUP, CLOSE, OPEN };
@@ -24,24 +19,6 @@ struct Intent {
     IntentType type = IntentType::NONE;
     Vector2i target;
     String param;
-};
-
-struct AttackResult {
-    bool hit = false;
-    bool killed = false;
-    bool crit = false;
-    bool exhausted = false;
-    bool no_limbs = false;
-    float damage = 0.0f;
-    float speed = 1.0f;
-    String verb;
-    String part_name;
-    int hit_part_index = -1;
-    String hit_part_type;
-    String effect_type;
-    String effect_mode;
-    float effect_magnitude = 0.0f;
-    float effect_duration = 0.0f;
 };
 
 struct PickupResult {
@@ -57,17 +34,12 @@ namespace ActionCost {
     constexpr float INTERACT = 1.0f;
 }
 
-namespace CombatTuning {
-    constexpr float CRIT_CHANCE = 0.2f;
-    constexpr float CRIT_MULT = 2.0f;
-    constexpr float DAMAGE_VARIANCE_MIN = 0.75f;
-    constexpr float DAMAGE_VARIANCE_MAX = 1.25f;
+namespace ActionTuning {
     constexpr float SMASH_FAIL_CHANCE = 0.5f;
 }
 
 namespace ActionResolver {
     float resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco);
-    AttackResult resolve_attack(const AnatomyData& attacker_anatomy, AnatomyData& defender_anatomy, HealthData& defender_health, EquipmentData& attacker_equip, float base_damage = 10.0f, const StyleInfo* style = nullptr, StaminaData* attacker_stamina = nullptr);
     float resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
     float resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);
     float resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble);
