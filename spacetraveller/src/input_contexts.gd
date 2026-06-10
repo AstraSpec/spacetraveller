@@ -104,6 +104,9 @@ class ExplorationContext extends InputContext:
 		if event.is_action_pressed("action_smash"):
 			manager.action_smash_requested.emit()
 			return true
+		elif event.is_action_pressed("action_close"):
+			manager.action_close_requested.emit()
+			return true
 		elif event.is_action_pressed("action_pickup"):
 			manager.action_pickup_requested.emit()
 			return true

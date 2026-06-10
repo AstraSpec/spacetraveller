@@ -35,6 +35,10 @@ void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer)
     }
 }
 
+void WorldBubble::place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer) {
+    tile_id_cache[p_layer][WorldCoords::pack_coords(x, y)] = tile_id;
+}
+
 String WorldBubble::get_tile_at(int x, int y, Layer p_layer) const {
     uint64_t cell_key = WorldCoords::pack_coords(x, y);
     auto it = tile_id_cache[p_layer].find(cell_key);

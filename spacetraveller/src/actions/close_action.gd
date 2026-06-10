@@ -1,15 +1,16 @@
 extends PlayerAction
-class_name PickupAction
+class_name CloseAction
 
 func _init(p_player: Sprite2D, p_world: GameWorld):
 	super(p_player, p_world)
 	auto = true
 
 func is_valid(cell_pos: Vector2i) -> bool:
-	return world.has_item(cell_pos)
+	var tile_id := world.get_tile_at(cell_pos.x, cell_pos.y)
+	return TileDb.has_tag(tile_id, "CAN_CLOSE")
 
 func execute(cell_pos: Vector2i) -> void:
-	InputManager.toggle_menu("nearby", {"filter_pos": cell_pos})
+	world.submit_player_intent(GameWorld.INTENT_CLOSE, cell_pos.x, cell_pos.y, "")
 
 func get_action_name() -> String:
-	return "Pickup"
+	return "Close"

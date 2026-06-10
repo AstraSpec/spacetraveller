@@ -17,7 +17,7 @@ static inline bool is_opaque(
         return false;
     }
     const TileInfo* info = tile_db->get_tile_info(it->second);
-    return info && info->solid;
+    return info && info->solid && !info->transparent;
 }
 
 // RogueBasin recursive shadowcasting (C++ reference implementation).

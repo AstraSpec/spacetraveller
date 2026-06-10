@@ -8,6 +8,7 @@
 #include "data/loot_db.h"
 #include "core/world_coords.h"
 #include "core/id_registry.h"
+#include "core/tag_registry.h"
 #include "core/faction.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
@@ -189,6 +190,16 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
             } else {
                 d.sink->on_interact_event(d.player_entity_id, occupant->entity_id);
                 return 0.0f;
+            }
+        }
+        if (!occupant) {
+            TileDb* tile_db = TileDb::get_singleton();
+            TagRegistry* tag_reg = TagRegistry::get_singleton();
+            uint16_t can_open = tag_reg ? tag_reg->get_tag_id("CAN_OPEN") : 0;
+            uint16_t tile_id = d.bubble->query_tile_id(intent.target.x, intent.target.y);
+            const TileInfo* info = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+            if (info && can_open != 0 && info->opens_to != 0 && tile_db->has_tag(tile_id, can_open)) {
+                intent.type = IntentType::OPEN;
             }
         }
     }

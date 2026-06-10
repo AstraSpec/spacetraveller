@@ -23,10 +23,12 @@ func _ready():
 	InputManager.directional_input.connect(_on_movement_triggered)
 	InputManager.action_smash_requested.connect(_on_smash_requested)
 	InputManager.action_pickup_requested.connect(_on_pickup_requested)
+	InputManager.action_close_requested.connect(_on_close_requested)
 	InputManager.exploration_right_click.connect(_on_right_click)
 
 	available_actions.append(SmashAction.new(self, World))
 	available_actions.append(PickupAction.new(self, World))
+	available_actions.append(CloseAction.new(self, World))
 	available_actions.append(AttackAction.new(self, World))
 
 	World.entity_moved.connect(_on_entity_moved)
@@ -115,16 +117,21 @@ func _clear_interaction_cells():
 func _try_set_action(action: PlayerAction):
 	_clear_interaction_cells()
 	_clear_path()
-	var found_valid = false
+	var valid_cells: Array[Vector2i] = []
 
 	for dir :Vector2 in DIR:
 		var target = Vector2i(cellPos() + dir)
 		if action.is_valid(target):
-			found_valid = true
+			valid_cells.append(target)
+
+	if action.auto and valid_cells.size() == 1:
+		action.execute(valid_cells[0])
+		World.update_world_bubble(cellPos())
+		currentAction = null
+	elif not valid_cells.is_empty():
+		for target in valid_cells:
 			World.add_overlay(target.x, target.y, 20, 0, Color(1.0, 1.0, 1.0, 1.0), -1.0)
 			interactionCells.append(target)
-
-	if found_valid:
 		World.update_world_bubble(cellPos())
 		currentAction = action
 	else:
@@ -135,12 +142,10 @@ func _on_movement_triggered(dir: Vector2):
 	if currentAction:
 		var target_cell = Vector2i(cellPos()) + Vector2i(dir)
 		if currentAction.is_valid(target_cell):
-			if currentAction is SmashAction:
-				World.submit_player_intent(World.INTENT_SMASH, target_cell.x, target_cell.y, "")
-			elif currentAction is PickupAction:
-				currentAction.execute(target_cell)
-			elif currentAction is AttackAction:
+			if currentAction is AttackAction:
 				World.submit_player_intent(World.INTENT_ATTACK, target_cell.x, target_cell.y, "")
+			else:
+				currentAction.execute(target_cell)
 			World.update_world_bubble(cellPos())
 
 		currentAction = null
@@ -172,6 +177,9 @@ func _on_smash_requested():
 
 func _on_pickup_requested():
 	_try_set_action(PickupAction.new(self, World))
+
+func _on_close_requested():
+	_try_set_action(CloseAction.new(self, World))
 
 func _check_ground_items(pos: Vector2i) -> void:
 	var items = World.get_items_at(pos)

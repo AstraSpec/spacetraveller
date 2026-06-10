@@ -14,6 +14,7 @@
 #include "data/style_db.h"
 #include "data/ability_db.h"
 #include "data/item_db.h"
+#include "core/tag_registry.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <cmath>
 
@@ -25,8 +26,7 @@ float ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBu
 
     if (dx > 1 || dy > 1 || (dx == 0 && dy == 0)) return 0.0f;
 
-    TileDb* tile_db = TileDb::get_singleton();
-    if (tile_db) {
+    if (TileDb* tile_db = TileDb::get_singleton()) {
         uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
         if (tile_id != 0) {
             const TileInfo* info = tile_db->get_tile_info(tile_id);
@@ -209,6 +209,48 @@ float ActionResolver::resolve_smash(const Intent& intent, Entity& entity, WorldB
     return ActionCost::SMASH;
 }
 
+float ActionResolver::resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble) {
+    int dx = abs(intent.target.x - entity.x);
+    int dy = abs(intent.target.y - entity.y);
+    if (dx > 1 || dy > 1 || (dx == 0 && dy == 0)) return 0.0f;
+    if (bubble.get_entity_at(intent.target.x, intent.target.y)) return 0.0f;
+
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) return 0.0f;
+
+    uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
+    uint16_t can_open = tag_reg->get_tag_id("CAN_OPEN");
+    const TileInfo* info = tile_db->get_tile_info(tile_id);
+    if (!info || can_open == 0 || info->opens_to == 0 || !tile_db->has_tag(tile_id, can_open)) {
+        return 0.0f;
+    }
+
+    bubble.place_tile_id(intent.target.x, intent.target.y, info->opens_to);
+    return ActionCost::INTERACT;
+}
+
+float ActionResolver::resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble) {
+    int dx = abs(intent.target.x - entity.x);
+    int dy = abs(intent.target.y - entity.y);
+    if (dx > 1 || dy > 1 || (dx == 0 && dy == 0)) return 0.0f;
+    if (bubble.get_entity_at(intent.target.x, intent.target.y)) return 0.0f;
+
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) return 0.0f;
+
+    uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
+    uint16_t can_close = tag_reg->get_tag_id("CAN_CLOSE");
+    const TileInfo* info = tile_db->get_tile_info(tile_id);
+    if (!info || can_close == 0 || info->closes_to == 0 || !tile_db->has_tag(tile_id, can_close)) {
+        return 0.0f;
+    }
+
+    bubble.place_tile_id(intent.target.x, intent.target.y, info->closes_to);
+    return ActionCost::INTERACT;
+}
+
 PickupResult ActionResolver::resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener) {
     PickupResult result;
     if (requested_amount <= 0 || item_id.is_empty()) return result;
@@ -250,10 +292,16 @@ float ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBub
         case IntentType::SMASH:
             return resolve_smash(intent, entity, bubble);
 
+        case IntentType::OPEN:
+            return resolve_open(intent, entity, bubble);
+
+        case IntentType::CLOSE:
+            return resolve_close(intent, entity, bubble);
+
+        case IntentType::ATTACK:
         case IntentType::PICKUP:
             return 0.0f;
-        
-        case IntentType::ATTACK:
+
         case IntentType::NONE:
             return ActionCost::WAIT;
         default:

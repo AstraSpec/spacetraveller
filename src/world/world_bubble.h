@@ -86,6 +86,7 @@ public:
     int get_world_bubble_radius() const { return world_bubble_radius; }
 
     void place_tile(int x, int y, const String& tile_id, Layer p_layer = LAYER_TILE);
+    void place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer = LAYER_TILE);
     String get_tile_at(int x, int y, Layer p_layer = LAYER_TILE) const;
     void fill_tiles(int x, int y, const String& tile_id, const Vector2i& playerPos, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool p_contiguous = true, Layer p_layer = LAYER_TILE);
 

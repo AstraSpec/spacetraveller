@@ -42,7 +42,9 @@ public:
         INTENT_MOVE = 1,
         INTENT_ATTACK = 2,
         INTENT_SMASH = 3,
-        INTENT_PICKUP = 4
+        INTENT_PICKUP = 4,
+        INTENT_CLOSE = 5,
+        INTENT_OPEN = 6
     };
 
 private:

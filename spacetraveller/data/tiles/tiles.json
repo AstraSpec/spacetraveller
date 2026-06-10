@@ -84,32 +84,45 @@
     "tags": ["SMASHABLE", "WALL"]
   },
   {
-    "id": "w_door",
+    "id": "w_door_c",
     "name": "Wooden Door",
     "atlas": [ 4, 1 ],
     "solid": true,
-    "tags": ["DOOR"]
+    "tags": ["CAN_OPEN"],
+    "opens_to": "w_door_o"
   },
   {
-    "id": "w_door_open",
+    "id": "w_door_o",
     "name": "Open Wooden Door",
     "atlas": [ 13, 1 ],
     "solid": false,
-    "tags": ["DOOR"]
+    "tags": ["CAN_CLOSE"],
+    "closes_to": "w_door_c"
   },
   {
-    "id": "w_window",
+    "id": "w_window_c",
     "name": "Wooden Window",
     "atlas": [ 12, 4 ],
-    "solid": false,
-    "tags": ["DOOR", "TRANSPARENT"]
+    "solid": true,
+    "tags": ["TRANSPARENT", "CAN_OPEN", "CAN_CLOSE"],
+    "opens_to": "w_window_o",
+    "closes_to": "w_window_curtain"
   },
   {
-    "id": "w_window_open",
+    "id": "w_window_o",
     "name": "Open Wooden Window",
     "atlas": [ 13, 4 ],
     "solid": false,
-    "tags": ["DOOR", "TRANSPARENT"]
+    "tags": ["TRANSPARENT", "CAN_CLOSE"],
+    "closes_to": "w_window_c"
+  },
+  {
+    "id": "w_window_curtain",
+    "name": "Curtain Wooden Window",
+    "atlas": [ 14, 4 ],
+    "solid": true,
+    "tags": ["CAN_OPEN"],
+    "opens_to": "w_window_c"
   },
   {
     "id": "stairs_down",

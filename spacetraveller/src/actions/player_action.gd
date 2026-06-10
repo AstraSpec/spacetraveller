@@ -3,6 +3,7 @@ class_name PlayerAction
 
 var player: Sprite2D
 var world: GameWorld
+var auto: bool = false
 
 func _init(p_player: Sprite2D, p_world: GameWorld):
 	player = p_player

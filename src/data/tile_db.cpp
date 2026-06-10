@@ -12,7 +12,7 @@ void TileDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &TileDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &TileDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("is_solid", "id"), &TileDb::is_solid);
-    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &TileDb::has_tag);
+    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), static_cast<bool (TileDb::*)(const String&, const String&) const>(&TileDb::has_tag));
     ClassDB::bind_method(D_METHOD("get_tile_name", "id"), &TileDb::get_tile_name);
     ClassDB::bind_method(D_METHOD("get_smash_loot_table", "id"), &TileDb::get_smash_loot_table);
     ClassDB::bind_method(D_METHOD("get_spawn_loot_table", "id"), &TileDb::get_spawn_loot_table);
@@ -49,7 +49,9 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     TagRegistry* tag_reg = TagRegistry::get_singleton();
     if (tag_reg) {
         uint16_t hidden_items_tag = tag_reg->get_tag_id("HIDDEN_ITEMS");
+        uint16_t transparent_tag = tag_reg->get_tag_id("TRANSPARENT");
         info.hides_items = TagRegistry::has_tag(hidden_items_tag, info.tags);
+        info.transparent = TagRegistry::has_tag(transparent_tag, info.tags);
     }
     String smash_loot_table = String(p_data.get("smash_loot_table", ""));
     if (!smash_loot_table.is_empty() && IdRegistry::get_singleton()) {
@@ -58,6 +60,14 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     String spawn_loot_table = String(p_data.get("spawn_loot_table", ""));
     if (!spawn_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.spawn_loot_table = IdRegistry::get_singleton()->register_string(spawn_loot_table);
+    }
+    String opens_to = String(p_data.get("opens_to", ""));
+    if (!opens_to.is_empty() && IdRegistry::get_singleton()) {
+        info.opens_to = IdRegistry::get_singleton()->register_string(opens_to);
+    }
+    String closes_to = String(p_data.get("closes_to", ""));
+    if (!closes_to.is_empty() && IdRegistry::get_singleton()) {
+        info.closes_to = IdRegistry::get_singleton()->register_string(closes_to);
     }
     
     if (IdRegistry::get_singleton()) {
@@ -102,6 +112,11 @@ bool TileDb::has_tag(const String &p_id, const String &p_tag) const {
     
     uint16_t tag_id = reg->get_tag_id(p_tag);
     return TagRegistry::has_tag(tag_id, info->tags);
+}
+
+bool TileDb::has_tag(uint16_t p_id, uint16_t p_tag) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return info && TagRegistry::has_tag(p_tag, info->tags);
 }
 
 bool TileDb::hides_items_at(uint16_t p_id) const {

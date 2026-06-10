@@ -18,7 +18,7 @@ struct StyleInfo;
 struct StaminaData;
 struct InventoryData;
 
-enum class IntentType { NONE, MOVE, ATTACK, SMASH, PICKUP };
+enum class IntentType { NONE, MOVE, ATTACK, SMASH, PICKUP, CLOSE, OPEN };
 
 struct Intent {
     IntentType type = IntentType::NONE;
@@ -54,6 +54,7 @@ namespace ActionCost {
     constexpr float SMASH  = 2.0f;
     constexpr float PICKUP = 1.0f;
     constexpr float WAIT = 1.0f;
+    constexpr float INTERACT = 1.0f;
 }
 
 namespace CombatTuning {
@@ -68,6 +69,8 @@ namespace ActionResolver {
     float resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco);
     AttackResult resolve_attack(const AnatomyData& attacker_anatomy, AnatomyData& defender_anatomy, HealthData& defender_health, EquipmentData& attacker_equip, float base_damage = 10.0f, const StyleInfo* style = nullptr, StaminaData* attacker_stamina = nullptr);
     float resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
+    float resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);
+    float resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble);
     PickupResult resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener);
     float resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco);
     bool is_hostile_entity_at(const WorldBubble& bubble, int x, int y, uint32_t self_id);

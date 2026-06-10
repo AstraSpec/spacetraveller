@@ -42,6 +42,8 @@ void GameWorld::_bind_methods() {
     BIND_ENUM_CONSTANT(INTENT_ATTACK);
     BIND_ENUM_CONSTANT(INTENT_SMASH);
     BIND_ENUM_CONSTANT(INTENT_PICKUP);
+    BIND_ENUM_CONSTANT(INTENT_CLOSE);
+    BIND_ENUM_CONSTANT(INTENT_OPEN);
 
     ClassDB::bind_method(D_METHOD("setup_renderer"), &GameWorld::setup_renderer);
     ClassDB::bind_method(D_METHOD("get_renderer"), &GameWorld::get_renderer);

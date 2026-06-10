@@ -13,6 +13,7 @@ const BINDABLE_ACTIONS = {
 	],
 	"Actions": [
 		{"id": "action_smash", "name": "Smash / Interact"},
+		{"id": "action_close", "name": "Close"},
 		{"id": "action_pickup", "name": "Pick Up"},
 		{"id": "open_inventory", "name": "Open Inventory"},
 		{"id": "wield_item", "name": "Wield Item"},
