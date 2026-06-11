@@ -1,0 +1,15 @@
+{
+  "id": "djinn",
+  "male": [
+    "Amin", "Bahir", "Cassim", "Darian", "Emir", "Faris", "Hakim", "Idris",
+    "Jalil", "Kadir", "Malik", "Nadir", "Omar", "Rafiq", "Samir", "Zahir"
+  ],
+  "female": [
+    "Amira", "Bahiya", "Dalia", "Farah", "Hadiya", "Isra", "Jamila", "Kira",
+    "Laila", "Mira", "Nadia", "Ranya", "Safa", "Soraya", "Yasmin", "Zahra"
+  ],
+  "surname": [
+    "Al-Sahar", "Brightwind", "Cloudveil", "Dawnmirror", "Glasswind",
+    "Moonflame", "Nightbreeze", "Sandwhisper", "Silvermist", "Starveil"
+  ]
+}

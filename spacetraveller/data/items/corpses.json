@@ -28,5 +28,35 @@
     "weight": 150.0,
     "volume": 80.0,
     "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_imp",
+    "name": "Imp Corpse",
+    "description": "The remains of a fallen imp.",
+    "type": "misc",
+    "atlas": [ 201, 6 ],
+    "weight": 20.0,
+    "volume": 12.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_djinn",
+    "name": "Djinn Corpse",
+    "description": "The remains of a fallen djinn.",
+    "type": "misc",
+    "atlas": [ 201, 18 ],
+    "weight": 25.0,
+    "volume": 16.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_goblin",
+    "name": "Goblin Corpse",
+    "description": "The remains of a fallen goblin.",
+    "type": "misc",
+    "atlas": [ 201, 4 ],
+    "weight": 25.0,
+    "volume": 14.0,
+    "tags": ["ALWAYS_TOP"]
   }
 ]

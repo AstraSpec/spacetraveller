@@ -1,0 +1,12 @@
+{
+  "id": "adventurer",
+  "priority": 160,
+  "start": "start",
+  "selector": { "dialogue_profile": "adventurer" },
+  "nodes": {
+    "start": {
+      "npc": "I am an adventurer!",
+      "options": []
+    }
+  }
+}

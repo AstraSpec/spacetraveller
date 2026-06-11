@@ -1,0 +1,15 @@
+{
+  "id": "imp",
+  "male": [
+    "Azrik", "Bex", "Cinder", "Draz", "Ezrek", "Fenn", "Grix", "Hask",
+    "Izzik", "Jarek", "Krev", "Lazlo", "Mord", "Nix", "Orven", "Paz"
+  ],
+  "female": [
+    "Azra", "Brixa", "Cindra", "Dreza", "Ezra", "Fenna", "Grisha", "Hazra",
+    "Izzi", "Jara", "Kressa", "Lazra", "Mira", "Nixa", "Orva", "Pazra"
+  ],
+  "surname": [
+    "Ashhorn", "Brightspark", "Cinderwick", "Coalgrin", "Emberhand",
+    "Firetongue", "Quickclaw", "Redcap", "Smokefoot", "Sootwhistle"
+  ]
+}

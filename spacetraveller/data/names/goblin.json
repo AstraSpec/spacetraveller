@@ -1,0 +1,15 @@
+{
+  "id": "goblin",
+  "male": [
+    "Brak", "Crik", "Dobb", "Farg", "Glim", "Hob", "Krill", "Mog",
+    "Nerb", "Pogg", "Rikk", "Snik", "Tob", "Varg", "Wix", "Zogg"
+  ],
+  "female": [
+    "Brakka", "Crika", "Dobba", "Fara", "Glimma", "Hobba", "Krilla", "Moga",
+    "Nerba", "Pogga", "Rikka", "Snika", "Toba", "Vara", "Wixa", "Zoga"
+  ],
+  "surname": [
+    "Barrelbit", "Bentnail", "Coppertooth", "Grubwick", "Mossfinger",
+    "Oddbutton", "Patchcloak", "Rattlepot", "Tinwhistle", "Understep"
+  ]
+}
