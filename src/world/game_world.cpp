@@ -208,6 +208,7 @@ GameWorld::GameWorld() {
 
     SimulationDirectorDeps deps;
     deps.ledger = &entity_ledger;
+    deps.tracker = &entity_tracker;
     deps.bubble = &bubble;
     deps.pathfinder = pathfinder.get();
     deps.scheduler = &turn_scheduler;
@@ -442,7 +443,7 @@ bool GameWorld::is_cell_seen(const Vector2i& pos) const {
 }
 
 bool GameWorld::has_entity_at_cell(int x, int y) const {
-    return bubble.get_entity_at(x, y) != nullptr;
+    return entity_tracker.get_at(Vector2i(x, y)) != INVALID_ENTITY_ID;
 }
 
 Array GameWorld::request_player_path(const Vector2i& start, const Vector2i& goal) {
@@ -455,7 +456,7 @@ Array GameWorld::find_path(const Vector2i& start, const Vector2i& goal) {
 
 
 uint32_t GameWorld::spawn_player(int x, int y, const String& race_id) {
-    return EntityFactory::create_player(race_id, Vector2i(x, y), entity_ledger, bubble, turn_scheduler);
+    return EntityFactory::create_player(race_id, Vector2i(x, y), entity_ledger, entity_tracker, bubble, turn_scheduler);
 }
 
 uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
@@ -463,7 +464,7 @@ uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
     const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     if (player_e) spawn_time = player_e->next_turn_time;
     EntityFactory::SpawnOverrides overrides;
-    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, bubble, turn_scheduler, overrides, spawn_time);
+    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, entity_tracker, bubble, turn_scheduler, overrides, spawn_time);
 }
 
 void GameWorld::despawn_entity(uint32_t entity_id) {
@@ -471,6 +472,7 @@ void GameWorld::despawn_entity(uint32_t entity_id) {
     EntityLifecycle::despawn_entity(
         entity_id,
         entity_ledger,
+        entity_tracker,
         bubble,
         turn_scheduler,
         static_cast<uint32_t>(world_seed),
@@ -721,8 +723,11 @@ void GameWorld::clear_overlays() {
 void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     int radius = bubble.get_world_bubble_radius();
 
+    std::vector<uint32_t> active_ids;
+    entity_tracker.collect_ids(active_ids);
+
     std::vector<uint32_t> to_freeze;
-    for (uint32_t id : entity_ledger.get_entity_pool().get_live_ids()) {
+    for (uint32_t id : active_ids) {
         const Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
         if (!entity) continue;
         if (id == player_entity_id) continue;
@@ -732,7 +737,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     }
 
     for (uint32_t id : to_freeze) {
-        EntityLifecycle::freeze_entity(id, entity_archive, entity_ledger, bubble, turn_scheduler);
+        EntityLifecycle::freeze_entity(id, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler);
     }
 
     std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_range(player_pos, radius);
@@ -741,7 +746,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     if (player_e) player_time = player_e->next_turn_time;
 
     for (uint64_t key : thaw_keys) {
-        EntityLifecycle::thaw_entity(key, entity_archive, entity_ledger, bubble, turn_scheduler, player_time);
+        EntityLifecycle::thaw_entity(key, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler, player_time);
     }
 
     std::vector<uint64_t> newly_seen = bubble.consume_newly_seen_cells();
@@ -753,6 +758,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         bubble,
         entity_archive,
         entity_ledger,
+        entity_tracker,
         turn_scheduler,
         spawn_state
     );
@@ -785,6 +791,7 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
     );
 
     bubble.rebuild_from_pool();
+    entity_tracker.rebuild_from_pool(entity_ledger.get_entity_pool());
 
     // Rebuild turn scheduler from loaded entities
     turn_scheduler.clear();

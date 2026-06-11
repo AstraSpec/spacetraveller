@@ -8,12 +8,13 @@
 #include "data/tile_db.h"
 #include "core/tag_registry.h"
 #include "entities/entity_ledger.h"
+#include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
 #include <cmath>
 
 using namespace godot;
 
-ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger) {
+ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger, EntityTracker* tracker) {
     int dx = abs(intent.target.x - entity.x);
     int dy = abs(intent.target.y - entity.y);
 
@@ -34,6 +35,10 @@ ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, 
 
     int old_x = entity.x, old_y = entity.y;
     if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {
+        return ActionResult::make_failure(ActionFailure::OCCUPIED);
+    }
+    if (tracker && !tracker->move(entity.id, Vector2i(old_x, old_y), intent.target)) {
+        bubble.update_entity_position(intent.target.x, intent.target.y, old_x, old_y, entity.id);
         return ActionResult::make_failure(ActionFailure::OCCUPIED);
     }
     entity.x = intent.target.x;
@@ -139,10 +144,10 @@ ActionResult ActionResolver::resolve_pickup(uint32_t picker_id, const Vector2i& 
     return ActionResult::make_success(ActionCost::PICKUP, to_pickup);
 }
 
-ActionResult ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco, const EntityLedger* ledger) {
+ActionResult ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco, const EntityLedger* ledger, EntityTracker* tracker) {
     switch (intent.type) {
         case IntentType::MOVE:
-            return resolve_move(intent, entity, bubble, loco, ledger);
+            return resolve_move(intent, entity, bubble, loco, ledger, tracker);
 
         case IntentType::SMASH:
             return resolve_smash(intent, entity, bubble);

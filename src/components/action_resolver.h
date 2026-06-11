@@ -10,6 +10,7 @@ namespace godot {
 class WorldBubble;
 class IGameEventListener;
 class EntityLedger;
+class EntityTracker;
 struct Entity;
 struct LocomotionData;
 struct InventoryData;
@@ -70,12 +71,12 @@ namespace ActionTuning {
 }
 
 namespace ActionResolver {
-    ActionResult resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger = nullptr);
+    ActionResult resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger = nullptr, EntityTracker* tracker = nullptr);
     ActionResult resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
     ActionResult resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);
     ActionResult resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble);
     ActionResult resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener);
-    ActionResult resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco, const EntityLedger* ledger = nullptr);
+    ActionResult resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco, const EntityLedger* ledger = nullptr, EntityTracker* tracker = nullptr);
     bool is_hostile_entity_at(const WorldBubble& bubble, int x, int y, uint32_t self_id);
 }
 

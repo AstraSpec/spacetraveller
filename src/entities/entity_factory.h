@@ -9,6 +9,7 @@
 namespace godot {
 
 class EntityLedger;
+class EntityTracker;
 class WorldBubble;
 class TurnScheduler;
 
@@ -24,13 +25,13 @@ namespace EntityFactory {
     };
 
     uint32_t create_npc(const String& race_id, const Vector2i& pos, int world_seed,
-                        EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler);
+                        EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler);
     uint32_t create_npc(const String& race_id, const Vector2i& pos, int world_seed,
-                        EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler,
+                        EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler,
                         const SpawnOverrides& overrides,
                         float p_initial_turn_time = 0.0f);
     uint32_t create_player(const String& race_id, const Vector2i& pos,
-                        EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler);
+                        EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler);
 }
 
 }

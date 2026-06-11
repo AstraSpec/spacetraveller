@@ -22,6 +22,7 @@
 #include "path/a_star_grid.h"
 #include "turn_scheduler.h"
 #include "entities/entity_ledger.h"
+#include "entities/entity_tracker.h"
 #include "sim/simulation_event_sink.h"
 #include "sim/simulation_director.h"
 
@@ -57,6 +58,7 @@ private:
     WorldSpawnState spawn_state;
     EntityArchive entity_archive;
     EntityLedger entity_ledger;
+    EntityTracker entity_tracker;
     SimulationDirector sim_director;
 
     Ref<FastNoiseLite> biome_noise;

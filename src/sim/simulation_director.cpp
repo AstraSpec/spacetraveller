@@ -13,6 +13,7 @@
 #include "core/tag_registry.h"
 #include "core/faction.h"
 #include "world/entity_lifecycle.h"
+#include "entities/entity_tracker.h"
 #include "components/action_planner.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
@@ -75,7 +76,14 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
     uint32_t best_id = EntityPool::INVALID_ID;
     long best_dist_sq = -1;
 
-    for (uint32_t other_id : d.ledger->get_entity_pool().get_live_ids()) {
+    std::vector<uint32_t> candidates;
+    if (d.tracker) {
+        d.tracker->query_radius(Vector2i(self->x, self->y), radius, candidates);
+    } else {
+        candidates = d.ledger->get_entity_pool().get_live_ids();
+    }
+
+    for (uint32_t other_id : candidates) {
         if (other_id == entity_id) continue;
         const Entity* other = d.ledger->get_entity_pool().get_entity(other_id);
         if (!other) continue;
@@ -176,7 +184,7 @@ void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& c
         d.event_listener->on_game_event(e);
     }
     uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
-    EntityLifecycle::despawn_entity(entity_id, *d.ledger, *d.bubble, *d.scheduler, seed, true);
+    EntityLifecycle::despawn_entity(entity_id, *d.ledger, *d.tracker, *d.bubble, *d.scheduler, seed, true);
 }
 
 bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
@@ -404,7 +412,7 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
         return ActionResult::make_success(ActionCost::SMASH);
     }
 
-    ActionResult smash_result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger);
+    ActionResult smash_result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger, d.tracker);
     float cost = smash_result.cost;
     if (smash_result.success && cost > 0.0f) {
         if (stamina) Stamina::drain(*stamina, StaminaTuning::SMASH_COST);
@@ -429,7 +437,7 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
 }
 
 ActionResult SimulationDirector::resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco) {
-    ActionResult result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger);
+    ActionResult result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger, d.tracker);
     if (!result.success) return result;
 
     if (intent.type == IntentType::MOVE) {
@@ -491,7 +499,7 @@ bool SimulationDirector::finish_player_action(const ActionResult& result, float 
 }
 
 float SimulationDirector::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
-    if (d.ledger == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
+    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
         return 0.0f;
     }
 
@@ -558,7 +566,7 @@ float SimulationDirector::resolve_attack(uint32_t attacker_id, uint32_t defender
 }
 
 void SimulationDirector::process_game_turn(float current_time) {
-    if (d.ledger == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
+    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
         return;
     }
 
@@ -568,8 +576,21 @@ void SimulationDirector::process_game_turn(float current_time) {
     EntityPool& pool = d.ledger->get_entity_pool();
 
     std::vector<Vector2i> blocking_positions;
-    blocking_positions.reserve(pool.living_count());
-    for (uint32_t id : pool.get_live_ids()) {
+    std::vector<uint32_t> blocking_ids;
+    const Entity* player = pool.get_entity(d.player_entity_id);
+    if (d.tracker && player) {
+        const int radius = d.bubble->get_world_bubble_radius();
+        d.tracker->query_rect(
+            Vector2i(player->x - radius, player->y - radius),
+            Vector2i(player->x + radius, player->y + radius),
+            blocking_ids
+        );
+    } else {
+        blocking_ids = pool.get_live_ids();
+    }
+
+    blocking_positions.reserve(blocking_ids.size());
+    for (uint32_t id : blocking_ids) {
         const Entity* entity = pool.get_entity(id);
         if (!entity) continue;
         if (id != d.player_entity_id) {

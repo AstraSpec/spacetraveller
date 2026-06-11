@@ -13,6 +13,7 @@
 #include "core/world_coords.h"
 #include "entities/entity_factory.h"
 #include "entities/entity_pool.h"
+#include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -67,6 +68,7 @@ static bool spawn_npc_at(
     float p_spawn_turn_time,
     const Vector2i& p_pos,
     EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
     WorldBubble& p_bubble,
     TurnScheduler& p_scheduler
 ) {
@@ -84,6 +86,7 @@ static bool spawn_npc_at(
         p_pos,
         static_cast<int>(p_world_seed),
         p_ledger,
+        p_tracker,
         p_bubble,
         p_scheduler,
         overrides,
@@ -98,6 +101,7 @@ static bool spawn_with_rule(
     const SpawnRuleInfo& p_rule,
     WorldBubble& p_bubble,
     EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
     TurnScheduler& p_scheduler
 ) {
     uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
@@ -117,6 +121,7 @@ static bool spawn_with_rule(
         p_spawn_turn_time,
         p_pos,
         p_ledger,
+        p_tracker,
         p_bubble,
         p_scheduler
     );
@@ -129,6 +134,7 @@ static bool spawn_with_structure_rule(
     const StructureRuleInfo& p_rule,
     WorldBubble& p_bubble,
     EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
     TurnScheduler& p_scheduler
 ) {
     if (p_rule.entity.is_empty()) return false;
@@ -146,6 +152,7 @@ static bool spawn_with_structure_rule(
         p_spawn_turn_time,
         p_pos,
         p_ledger,
+        p_tracker,
         p_bubble,
         p_scheduler
     );
@@ -246,6 +253,7 @@ static bool apply_structure_spawn_rule(
     WorldBubble& p_bubble,
     const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
     TurnScheduler& p_scheduler
 ) {
     if (p_rule.entity.is_empty()) return false;
@@ -255,7 +263,7 @@ static bool apply_structure_spawn_rule(
         return false;
     }
 
-    if (!spawn_with_structure_rule(p_world_seed, p_spawn_turn_time, p_pos, p_rule, p_bubble, p_ledger, p_scheduler)) {
+    if (!spawn_with_structure_rule(p_world_seed, p_spawn_turn_time, p_pos, p_rule, p_bubble, p_ledger, p_tracker, p_scheduler)) {
         UtilityFunctions::push_error(
             "[WorldSpawner] Failed structure spawn rule: ",
             p_structure_id,
@@ -280,6 +288,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     WorldBubble& p_bubble,
     const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
     TurnScheduler& p_scheduler,
     WorldSpawnState& p_spawn_state
 ) {
@@ -322,7 +331,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                             break;
                         case RuleType::SPAWN_ENTITY:
                             if (!spawned_from_rule) {
-                                spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_scheduler);
+                                spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
                             }
                             break;
                         case RuleType::SET_METADATA:
@@ -352,7 +361,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         p_spawn_state.mark_attempted(packed);
         Rng::Seeded rule_rng = Rng::at(p_world_seed, pos, Rng::SPAWN_RULE);
         const SpawnRuleInfo* rule = spawn_db->pick_weighted_rule(rules, rule_rng);
-        if (rule) spawn_with_rule(p_world_seed, p_spawn_turn_time, pos, *rule, p_bubble, p_ledger, p_scheduler);
+        if (rule) spawn_with_rule(p_world_seed, p_spawn_turn_time, pos, *rule, p_bubble, p_ledger, p_tracker, p_scheduler);
     }
 }
 

@@ -41,7 +41,7 @@ float NpcTurnProcessor::resolve_move(
     std::vector<Vector2i>& blocking_positions,
     SimulationDirector& director
 ) {
-    ActionResult move_result = ActionResolver::resolve_move(intent, entity, *director.d.bubble, loco, director.d.ledger);
+    ActionResult move_result = ActionResolver::resolve_move(intent, entity, *director.d.bubble, loco, director.d.ledger, director.d.tracker);
     if (move_result.success && move_result.cost > 0.0f) {
         float cost = director.movement_action_cost(entity_id, move_result.cost, loco);
         for (auto& bp : blocking_positions) {

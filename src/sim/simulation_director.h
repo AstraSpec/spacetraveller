@@ -25,9 +25,11 @@ struct Intent;
 struct ActionResult;
 struct RaceInfo;
 class TileDb;
+class EntityTracker;
 
 struct SimulationDirectorDeps {
     EntityLedger* ledger = nullptr;
+    EntityTracker* tracker = nullptr;
     WorldBubble* bubble = nullptr;
     AStarGridPathfinder* pathfinder = nullptr;
     TurnScheduler* scheduler = nullptr;

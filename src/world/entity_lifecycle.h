@@ -8,6 +8,7 @@ namespace godot {
 
 class EntityArchive;
 class EntityLedger;
+class EntityTracker;
 class TurnScheduler;
 class WorldBubble;
 
@@ -17,6 +18,7 @@ namespace EntityLifecycle {
         const Vector2i& pos,
         float initial_turn_time,
         EntityLedger& ledger,
+        EntityTracker& tracker,
         WorldBubble& bubble,
         TurnScheduler& scheduler
     );
@@ -25,6 +27,7 @@ namespace EntityLifecycle {
         uint32_t entity_id,
         EntityArchive& archive,
         EntityLedger& ledger,
+        EntityTracker& tracker,
         WorldBubble& bubble,
         TurnScheduler& scheduler
     );
@@ -33,6 +36,7 @@ namespace EntityLifecycle {
         uint64_t packed_pos,
         EntityArchive& archive,
         EntityLedger& ledger,
+        EntityTracker& tracker,
         WorldBubble& bubble,
         TurnScheduler& scheduler,
         float minimum_turn_time
@@ -41,6 +45,7 @@ namespace EntityLifecycle {
     bool despawn_entity(
         uint32_t entity_id,
         EntityLedger& ledger,
+        EntityTracker& tracker,
         WorldBubble& bubble,
         TurnScheduler& scheduler,
         uint32_t world_seed,

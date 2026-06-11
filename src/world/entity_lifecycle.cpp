@@ -11,6 +11,7 @@
 #include "entities/entity.h"
 #include "entities/entity_ledger.h"
 #include "entities/entity_pool.h"
+#include "entities/entity_tracker.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -84,6 +85,7 @@ bool EntityLifecycle::activate_entity(
     const Vector2i& pos,
     float initial_turn_time,
     EntityLedger& ledger,
+    EntityTracker& tracker,
     WorldBubble& bubble,
     TurnScheduler& scheduler
 ) {
@@ -91,6 +93,11 @@ bool EntityLifecycle::activate_entity(
     if (!entity) return false;
 
     if (!bubble.set_entity(pos.x, pos.y, entity_id)) {
+        scheduler.remove(entity_id);
+        return false;
+    }
+    if (!tracker.insert(entity_id, pos)) {
+        bubble.remove_entity(pos.x, pos.y);
         scheduler.remove(entity_id);
         return false;
     }
@@ -113,6 +120,7 @@ bool EntityLifecycle::freeze_entity(
     uint32_t entity_id,
     EntityArchive& archive,
     EntityLedger& ledger,
+    EntityTracker& tracker,
     WorldBubble& bubble,
     TurnScheduler& scheduler
 ) {
@@ -123,6 +131,7 @@ bool EntityLifecycle::freeze_entity(
     archive.freeze_entity(packed, ledger.serialize_entity(entity_id));
     scheduler.remove(entity_id);
     bubble.remove_entity(entity->x, entity->y);
+    tracker.remove(entity_id);
     ledger.destroy_entity(entity_id);
     return true;
 }
@@ -131,6 +140,7 @@ uint32_t EntityLifecycle::thaw_entity(
     uint64_t packed_pos,
     EntityArchive& archive,
     EntityLedger& ledger,
+    EntityTracker& tracker,
     WorldBubble& bubble,
     TurnScheduler& scheduler,
     float minimum_turn_time
@@ -150,6 +160,11 @@ uint32_t EntityLifecycle::thaw_entity(
         ledger.destroy_entity(entity_id);
         return EntityPool::INVALID_ID;
     }
+    if (!tracker.insert(entity_id, Vector2i(entity->x, entity->y))) {
+        bubble.remove_entity(entity->x, entity->y);
+        ledger.destroy_entity(entity_id);
+        return EntityPool::INVALID_ID;
+    }
     archive.remove_frozen_entity(packed_pos);
 
     if (ledger.is_schedulable_actor(entity_id)) {
@@ -165,6 +180,7 @@ uint32_t EntityLifecycle::thaw_entity(
 bool EntityLifecycle::despawn_entity(
     uint32_t entity_id,
     EntityLedger& ledger,
+    EntityTracker& tracker,
     WorldBubble& bubble,
     TurnScheduler& scheduler,
     uint32_t world_seed,
@@ -181,6 +197,7 @@ bool EntityLifecycle::despawn_entity(
 
     if (entity) {
         bubble.remove_entity(entity->x, entity->y);
+        tracker.remove(entity_id);
     }
 
     ledger.destroy_entity(entity_id);

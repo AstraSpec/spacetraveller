@@ -1,6 +1,7 @@
 #include "entity_factory.h"
 #include "entity_ledger.h"
 #include "entity_pool.h"
+#include "entity_tracker.h"
 #include "world/world_bubble.h"
 #include "world/turn_scheduler.h"
 #include "world/entity_lifecycle.h"
@@ -21,7 +22,7 @@
 using namespace godot;
 
 uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos,
-                                      EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
+                                      EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler) {
     RaceDb* race_db = RaceDb::get_singleton();
     if (!race_db) return EntityPool::PLAYER_ID;
 
@@ -33,7 +34,7 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
 
     ledger.combat_style[id] = "default";
 
-    if (!EntityLifecycle::activate_entity(id, pos, 0.0f, ledger, bubble, scheduler)) {
+    if (!EntityLifecycle::activate_entity(id, pos, 0.0f, ledger, tracker, bubble, scheduler)) {
         ledger.destroy_entity(id);
         return EntityPool::INVALID_ID;
     }
@@ -41,13 +42,13 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
 }
 
 uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, int world_seed,
-                                    EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler) {
+                                    EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler) {
     SpawnOverrides overrides;
-    return create_npc(race_id, pos, world_seed, ledger, bubble, scheduler, overrides, 0.0f);
+    return create_npc(race_id, pos, world_seed, ledger, tracker, bubble, scheduler, overrides, 0.0f);
 }
 
 uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, int world_seed,
-                                    EntityLedger& ledger, WorldBubble& bubble, TurnScheduler& scheduler,
+                                    EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler,
                                     const SpawnOverrides& overrides,
                                     float p_initial_turn_time) {
     RaceDb* race_db = RaceDb::get_singleton();
@@ -172,7 +173,7 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         }
     }
 
-    if (!EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, bubble, scheduler)) {
+    if (!EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, tracker, bubble, scheduler)) {
         ledger.destroy_entity(id);
         return EntityPool::INVALID_ID;
     }

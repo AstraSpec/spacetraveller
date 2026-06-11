@@ -8,6 +8,7 @@
 namespace godot {
 
 class EntityLedger;
+class EntityTracker;
 class EntityArchive;
 class TurnScheduler;
 class WorldBubble;
@@ -24,6 +25,7 @@ public:
         WorldBubble& p_bubble,
         const EntityArchive& p_entity_archive,
         EntityLedger& p_ledger,
+        EntityTracker& p_tracker,
         TurnScheduler& p_scheduler,
         WorldSpawnState& p_spawn_state
     );
