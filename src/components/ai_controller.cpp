@@ -39,6 +39,11 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
         return Intent{IntentType::NONE};
     }
 
+    if (ai.state == AIState::IDLE) {
+        Locomotion::clear_path(loco);
+        return Intent{IntentType::NONE};
+    }
+
     if (ctx.perception.player_seen) {
         ai.state = AIState::CHASE;
     } else if (ai.state == AIState::CHASE) {

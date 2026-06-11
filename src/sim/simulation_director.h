@@ -5,6 +5,7 @@
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <cstdint>
+#include <vector>
 
 #include "sim/simulation_event_sink.h"
 #include "sim/game_event.h"
@@ -18,6 +19,12 @@
 namespace godot {
 
 struct CombatOutcome;
+struct LocomotionData;
+struct Intent;
+struct ActionResult;
+struct AIData;
+struct RaceInfo;
+class TileDb;
 
 struct SimulationDirectorDeps {
     EntityLedger* ledger = nullptr;
@@ -31,12 +38,14 @@ struct SimulationDirectorDeps {
 };
 
 class SimulationDirector {
+    friend class NpcTurnProcessor;
 public:
     SimulationDirector() = default;
 
     void configure(const SimulationDirectorDeps& deps);
 
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
+    bool submit_pickup(uint32_t entity_id, const Vector2i& pos, const String& item_id, int amount);
     void process_game_turn(float current_time);
 
     Array find_path(const Vector2i& start, const Vector2i& goal);
@@ -46,15 +55,29 @@ private:
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
     Vector2i entity_chunk(uint32_t entity_id) const;
     CombatOutcome resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id);
+    float handle_player_stun(Entity& entity);
+    bool plan_player_intent(Intent& intent);
+    ActionResult resolve_player_action(const Intent& intent, Entity& entity, LocomotionData& loco);
+    ActionResult resolve_player_attack(const Intent& intent);
+    ActionResult resolve_player_smash(const Intent& intent, Entity& entity, LocomotionData& loco);
+    ActionResult resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco);
+    ActionResult resolve_player_pickup(const Intent& intent);
+    ActionResult resolve_pickup(uint32_t entity_id, const Intent& intent);
+    bool finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos);
+    Rng::Seeded action_rng_for(uint32_t entity_id, const Vector2i& target, Rng::Stream stream) const;
+    float resolve_attack(uint32_t attacker_id, uint32_t defender_id, bool is_player);
     void handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id);
     bool finish_entity_action(uint32_t entity_id, float cost, float base_time);
     void emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos);
+    float movement_action_cost(uint32_t entity_id, float base_cost, const LocomotionData& loco) const;
     void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk);
     void advance_entity_time(uint32_t entity_id, float dt);
     float entity_base_damage(uint32_t entity_id) const;
     String entity_faction(uint32_t entity_id) const;
     uint32_t find_nearest_hostile(uint32_t entity_id, int radius) const;
     Rng::Seeded combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const;
+    const RaceInfo* get_race_info(uint32_t entity_id) const;
+    static uint64_t entity_rng_salt(const Entity* entity, uint32_t entity_id);
 
     SimulationDirectorDeps d;
 };

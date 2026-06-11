@@ -372,12 +372,7 @@ Array GameWorld::get_items_at(const Vector2i& pos) const {
 }
 
 bool GameWorld::pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id) {
-    auto inv_it = entity_ledger.inventory_data.find(entity_id);
-    if (inv_it == entity_ledger.inventory_data.end()) return false;
-
-    PickupResult r = ActionResolver::resolve_pickup(
-        entity_id, pos, item_id, amount, bubble, inv_it->second, quest_tracker.get());
-    return r.success;
+    return sim_director.submit_pickup(entity_id, pos, item_id, amount);
 }
 
 bool GameWorld::has_item(const Vector2i& pos) const {
@@ -541,18 +536,12 @@ Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
 }
 
 String GameWorld::get_entity_gender(uint32_t entity_id) const {
-    auto it = entity_ledger.gender.find(entity_id);
-    if (it != entity_ledger.gender.end()) return it->second;
-    return "";
+    const String* value = entity_ledger.try_get_gender(entity_id);
+    return value ? *value : String();
 }
 
 bool GameWorld::entity_has_sapient(uint32_t entity_id) const {
-    Dictionary anat = entity_ledger.get_anatomy(entity_id);
-    if (anat.is_empty()) return false;
-    String race_id = anat.get("race_id", "");
-    RaceDb* race_db = RaceDb::get_singleton();
-    if (!race_db) return false;
-    return race_db->has_tag(race_id, "SAPIENT");
+    return entity_ledger.is_sapient(entity_id);
 }
 
 int GameWorld::get_entity_friendship(uint32_t entity_id) const {
@@ -597,9 +586,8 @@ void GameWorld::clear_entity_social_state(uint32_t entity_id) {
 }
 
 String GameWorld::get_entity_name(uint32_t entity_id) const {
-    auto it = entity_ledger.entity_name.find(entity_id);
-    if (it != entity_ledger.entity_name.end()) return it->second;
-    return "";
+    const String* value = entity_ledger.try_get_name(entity_id);
+    return value ? *value : String();
 }
 
 Dictionary GameWorld::get_entity_clothing(uint32_t entity_id) const {
@@ -805,7 +793,7 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
         if (!entity) continue;
         if (entity_ledger.is_schedulable_actor(id)) {
             turn_scheduler.push(id, entity->next_turn_time);
-        } else if (id == player_entity_id || entity_ledger.ai_data.count(id) > 0) {
+        } else if (id == player_entity_id || entity_ledger.try_get_ai(id) != nullptr) {
             UtilityFunctions::printerr(
                 String("[GameWorld] Loaded entity ")
                 + String::num_int64(id)

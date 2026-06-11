@@ -24,9 +24,9 @@ void drop_entity_contents(uint32_t entity_id, EntityLedger& ledger, WorldBubble&
 
     Vector2i pos(entity->x, entity->y);
 
-    auto inv_it = ledger.inventory_data.find(entity_id);
-    if (inv_it != ledger.inventory_data.end()) {
-        for (const auto& item : inv_it->second.items) {
+    const InventoryData* inventory = ledger.try_get_inventory(entity_id);
+    if (inventory) {
+        for (const auto& item : inventory->items) {
             if (item.amount > 0) {
                 bubble.drop_item(pos, item.id, item.amount);
             }

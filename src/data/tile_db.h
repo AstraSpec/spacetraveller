@@ -32,7 +32,7 @@ public:
     TileDb();
     ~TileDb();
 
-    void initialize_data() { DataBase::initialize_data("res://data/tiles"); }
+    void initialize_data() { fast_cache.clear(); DataBase::initialize_data("res://data/tiles"); }
     Array get_ids() const { return DataBase::get_ids(); }
 
     // Fast C++ access

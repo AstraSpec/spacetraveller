@@ -43,7 +43,7 @@ public:
     RaceDb();
     ~RaceDb();
 
-    void initialize_data() { DataBase::initialize_data("res://data/races"); }
+    void initialize_data() { fast_cache.clear(); DataBase::initialize_data("res://data/races"); }
     Array get_ids() const { return DataBase::get_ids(); }
 
     const RaceInfo* get_race_info(const String &p_id) const;

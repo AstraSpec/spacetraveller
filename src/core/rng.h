@@ -24,6 +24,7 @@ namespace Rng {
         VENDOR_LOOT = 12,
         QUEST_LOOT = 13,
         COMBAT = 14,
+        ACTION = 15,
     };
 
     inline uint64_t mix64(uint64_t z) {

@@ -19,11 +19,41 @@ struct Intent {
     IntentType type = IntentType::NONE;
     Vector2i target;
     String param;
+    int amount = 0;
 };
 
-struct PickupResult {
-    int amount_picked = 0;   // 0 means nothing happened (no items, can't carry, etc.)
+enum class ActionFailure {
+    NONE,
+    INVALID_TARGET,
+    BLOCKED_TILE,
+    OCCUPIED,
+    MISSING_COMPONENT,
+    UNKNOWN_ITEM,
+    NO_ITEMS,
+    CARRY_LIMIT,
+    EXHAUSTED,
+    UNSUPPORTED
+};
+
+struct ActionResult {
     bool success = false;
+    float cost = 0.0f;
+    ActionFailure failure = ActionFailure::NONE;
+    int amount = 0;
+
+    static ActionResult make_success(float p_cost, int p_amount = 0) {
+        ActionResult result;
+        result.success = true;
+        result.cost = p_cost;
+        result.amount = p_amount;
+        return result;
+    }
+
+    static ActionResult make_failure(ActionFailure p_failure) {
+        ActionResult result;
+        result.failure = p_failure;
+        return result;
+    }
 };
 
 namespace ActionCost {
@@ -39,12 +69,12 @@ namespace ActionTuning {
 }
 
 namespace ActionResolver {
-    float resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco);
-    float resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
-    float resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);
-    float resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble);
-    PickupResult resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener);
-    float resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco);
+    ActionResult resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco);
+    ActionResult resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
+    ActionResult resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);
+    ActionResult resolve_close(const Intent& intent, const Entity& entity, WorldBubble& bubble);
+    ActionResult resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener);
+    ActionResult resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco);
     bool is_hostile_entity_at(const WorldBubble& bubble, int x, int y, uint32_t self_id);
 }
 

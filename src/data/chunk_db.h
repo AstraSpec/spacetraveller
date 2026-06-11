@@ -25,7 +25,7 @@ public:
     ChunkDb();
     ~ChunkDb();
 
-    void initialize_data() { DataBase::initialize_data("res://data/chunks"); }
+    void initialize_data() { fast_cache.clear(); DataBase::initialize_data("res://data/chunks"); }
     Array get_ids() const { return DataBase::get_ids(); }
 
     // Fast C++ access

@@ -19,12 +19,25 @@
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
+#include <unordered_map>
 
 namespace godot {
 
 class EntityLedger {
 private:
     EntityPool entity_pool;
+
+    template<typename Map>
+    static typename Map::mapped_type* try_get_ptr(Map& p_map, uint32_t id) {
+        auto it = p_map.find(id);
+        return it != p_map.end() ? &it->second : nullptr;
+    }
+
+    template<typename Map>
+    static const typename Map::mapped_type* try_get_ptr(const Map& p_map, uint32_t id) {
+        auto it = p_map.find(id);
+        return it != p_map.end() ? &it->second : nullptr;
+    }
 
 public:
     EntityPool& get_entity_pool() { return entity_pool; }
@@ -54,18 +67,53 @@ public:
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
-    AnatomyData* try_get_anatomy(uint32_t id);
-    const AnatomyData* try_get_anatomy(uint32_t id) const;
-    HealthData* try_get_health(uint32_t id);
-    const HealthData* try_get_health(uint32_t id) const;
-    StaminaData* try_get_stamina(uint32_t id);
-    const StaminaData* try_get_stamina(uint32_t id) const;
-    EquipmentData* try_get_equipment(uint32_t id);
-    const EquipmentData* try_get_equipment(uint32_t id) const;
-    LocomotionData* try_get_locomotion(uint32_t id);
-    const LocomotionData* try_get_locomotion(uint32_t id) const;
+    AnatomyData* try_get_anatomy(uint32_t id) { return try_get_ptr(anatomy_data, id); }
+    const AnatomyData* try_get_anatomy(uint32_t id) const { return try_get_ptr(anatomy_data, id); }
+    HealthData* try_get_health(uint32_t id) { return try_get_ptr(health_data, id); }
+    const HealthData* try_get_health(uint32_t id) const { return try_get_ptr(health_data, id); }
+    StaminaData* try_get_stamina(uint32_t id) { return try_get_ptr(stamina_data, id); }
+    const StaminaData* try_get_stamina(uint32_t id) const { return try_get_ptr(stamina_data, id); }
+    EquipmentData* try_get_equipment(uint32_t id) { return try_get_ptr(equipment_data, id); }
+    const EquipmentData* try_get_equipment(uint32_t id) const { return try_get_ptr(equipment_data, id); }
+    LocomotionData* try_get_locomotion(uint32_t id) { return try_get_ptr(locomotion_data, id); }
+    const LocomotionData* try_get_locomotion(uint32_t id) const { return try_get_ptr(locomotion_data, id); }
+    ClothingData* try_get_clothing(uint32_t id) { return try_get_ptr(clothing_data, id); }
+    const ClothingData* try_get_clothing(uint32_t id) const { return try_get_ptr(clothing_data, id); }
+    InventoryData* try_get_inventory(uint32_t id) { return try_get_ptr(inventory_data, id); }
+    const InventoryData* try_get_inventory(uint32_t id) const { return try_get_ptr(inventory_data, id); }
+    EffectsData* try_get_effects(uint32_t id) { return try_get_ptr(effects_data, id); }
+    const EffectsData* try_get_effects(uint32_t id) const { return try_get_ptr(effects_data, id); }
+    PerceptionMemory* try_get_perception(uint32_t id) { return try_get_ptr(perception_memory, id); }
+    const PerceptionMemory* try_get_perception(uint32_t id) const { return try_get_ptr(perception_memory, id); }
+    AIData* try_get_ai(uint32_t id) { return try_get_ptr(ai_data, id); }
+    const AIData* try_get_ai(uint32_t id) const { return try_get_ptr(ai_data, id); }
+    String* try_get_combat_style(uint32_t id) { return try_get_ptr(combat_style, id); }
+    const String* try_get_combat_style(uint32_t id) const { return try_get_ptr(combat_style, id); }
+    String* try_get_gender(uint32_t id) { return try_get_ptr(gender, id); }
+    const String* try_get_gender(uint32_t id) const { return try_get_ptr(gender, id); }
+    String* try_get_name(uint32_t id) { return try_get_ptr(entity_name, id); }
+    const String* try_get_name(uint32_t id) const { return try_get_ptr(entity_name, id); }
+    SocialMemoryData* try_get_social_memory(uint32_t id) { return try_get_ptr(social_data, id); }
+    const SocialMemoryData* try_get_social_memory(uint32_t id) const { return try_get_ptr(social_data, id); }
+    SocialProfileData* try_get_social_profile(uint32_t id) { return try_get_ptr(social_profiles, id); }
+    const SocialProfileData* try_get_social_profile(uint32_t id) const { return try_get_ptr(social_profiles, id); }
+
+    InventoryData& ensure_inventory(uint32_t id);
+    EffectsData& ensure_effects(uint32_t id);
+    SocialMemoryData& ensure_social_memory(uint32_t id);
+
+    bool has_inventory(uint32_t id) const;
+    bool is_alive(uint32_t id) const;
+    bool is_player(uint32_t id) const;
+    bool is_actor(uint32_t id) const;
+    bool is_npc(uint32_t id) const;
+    bool is_combatant(uint32_t id) const;
+    bool is_sapient(uint32_t id) const;
     bool has_core_components(uint32_t id) const;
     bool is_schedulable_actor(uint32_t id) const;
+    bool validate_player(uint32_t id) const;
+    bool validate_npc_actor(uint32_t id) const;
+    bool validate_combatant(uint32_t id) const;
 
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
 

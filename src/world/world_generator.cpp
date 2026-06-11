@@ -200,7 +200,7 @@ String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) c
 
     int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
     int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-    static const char* STRUCTURE_IDS[] = {"house01", "house02", "tavern"};
+    static const char* STRUCTURE_IDS[] = {"house01", "house02", "house03", "house04", "tavern", "adventurer_guild"};
     static constexpr int STRUCTURE_COUNT = sizeof(STRUCTURE_IDS) / sizeof(STRUCTURE_IDS[0]);
 
     uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(cx, cy), Rng::BIOME);

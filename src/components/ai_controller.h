@@ -16,7 +16,7 @@ class TileDb;
 struct PathResult;
 struct Entity;
 
-enum class AIState { WANDER, CHASE };
+enum class AIState { WANDER, CHASE, IDLE };
 
 struct AIData {
     AIState state = AIState::WANDER;

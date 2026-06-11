@@ -19,6 +19,7 @@ LootDb::LootDb() {}
 LootDb::~LootDb() {}
 
 void LootDb::initialize_data() {
+    fast_cache.clear();
     DataBase<LootTableInfo, LootDb>::initialize_data("res://data/loot_tables");
 
     IdRegistry* reg = IdRegistry::get_singleton();

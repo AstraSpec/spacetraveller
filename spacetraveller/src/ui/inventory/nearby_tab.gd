@@ -83,10 +83,8 @@ func _pickup_selected_item(all: bool):
 	
 	for source in item_data["sources"]:
 		var to_get = min(total_to_pickup - picked_up_so_far, source["amount"])
-		# Pass entity ID 0 (player) instead of Player._Inventory
 		if _GameWorld.pickup_item_specific(source["pos"], item_id, to_get, 0):
 			picked_up_so_far += to_get
-			TimeManager.advance_turn()
 			
 			if picked_up_so_far >= total_to_pickup:
 				break

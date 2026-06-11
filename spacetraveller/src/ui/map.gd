@@ -22,6 +22,7 @@ func _ready():
 	Camera.centerNode = playerChunk
 	Camera.viewport = MapView
 	Camera.limits = Rect2(0, 0, REGION_SIZE * TILE_SIZE, REGION_SIZE * TILE_SIZE)
+	_sync_player_chunk_position()
 	Camera._view_centered()
 
 func _on_world_generated(regionChunks: Dictionary) -> void:
@@ -49,8 +50,10 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 			Tilemap.set_cell(Vector2i(x, y), SOURCE, atlas)
 	
 	MapView.size = get_size()
+	_sync_player_chunk_position()
 
 func center_view() -> void:
+	_sync_player_chunk_position()
 	Camera._view_centered()
 
 func _on_player_moved_chunk(chunkPos: Vector2) -> void:
@@ -59,6 +62,9 @@ func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 		chunkPos.y * TILE_SIZE
 	)
 	playerChunk.position = newChunkPos
+
+func _sync_player_chunk_position() -> void:
+	_on_player_moved_chunk(Player.chunkPos())
 
 func resize_viewport():
 	MapView.size = _get_inner_size()
