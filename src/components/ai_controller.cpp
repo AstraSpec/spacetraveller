@@ -34,6 +34,23 @@ static bool is_adjacent(const Vector2i& a, const Vector2i& b) {
     return dx <= 1 && dy <= 1 && (dx + dy) > 0;
 }
 
+AIState AIController::state_from_string(const String& value, AIState fallback) {
+    String normalized = value.to_lower();
+    if (normalized == "wander") return AIState::WANDER;
+    if (normalized == "chase") return AIState::CHASE;
+    if (normalized == "idle") return AIState::IDLE;
+    return fallback;
+}
+
+String AIController::state_to_string(AIState value) {
+    switch (value) {
+        case AIState::WANDER: return "wander";
+        case AIState::CHASE: return "chase";
+        case AIState::IDLE: return "idle";
+    }
+    return "wander";
+}
+
 Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx) {
     if (ai.perception_tier == PerceptionTier::NONE) {
         return Intent{IntentType::NONE};
@@ -122,6 +139,9 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
 Dictionary AIController::serialize(const AIData& data) {
     Dictionary d;
     d["state"] = static_cast<int>(data.state);
+    d["state_name"] = state_to_string(data.state);
+    d["attitude"] = data.attitude;
+    d["role"] = data.role;
     d["perception_tier"] = static_cast<int>(data.perception_tier);
     d["wander_center_x"] = data.wander_center.x;
     d["wander_center_y"] = data.wander_center.y;
@@ -132,7 +152,13 @@ Dictionary AIController::serialize(const AIData& data) {
 }
 
 void AIController::deserialize(AIData& data, const Dictionary& dict) {
-    data.state = static_cast<AIState>(static_cast<int>(dict.get("state", 0)));
+    if (dict.has("state_name")) {
+        data.state = state_from_string(String(dict.get("state_name", "")), AIState::WANDER);
+    } else {
+        data.state = static_cast<AIState>(static_cast<int>(dict.get("state", 0)));
+    }
+    data.attitude = String(dict.get("attitude", "neutral")).to_lower();
+    data.role = String(dict.get("role", "none")).to_lower();
     data.perception_tier = static_cast<PerceptionTier>(static_cast<int>(dict.get("perception_tier", 0)));
     data.wander_center = Vector2i(
         static_cast<int>(dict.get("wander_center_x", 0)),

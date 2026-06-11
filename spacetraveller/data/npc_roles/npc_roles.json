@@ -1,0 +1,38 @@
+[
+  {
+    "id": "none",
+    "display_name": "None",
+    "default_attitude": "neutral"
+  },
+  {
+    "id": "civilian",
+    "display_name": "Civilian",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander"
+  },
+  {
+    "id": "adventurer",
+    "display_name": "Adventurer",
+    "default_attitude": "friendly",
+    "default_ai_state": "idle",
+    "default_dialogue_profile": "adventurer"
+  },
+  {
+    "id": "shopkeeper",
+    "display_name": "Shopkeeper",
+    "default_attitude": "friendly",
+    "default_ai_state": "idle"
+  },
+  {
+    "id": "guard",
+    "display_name": "Guard",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander"
+  },
+  {
+    "id": "monster",
+    "display_name": "Monster",
+    "default_attitude": "hostile",
+    "default_ai_state": "wander"
+  }
+]

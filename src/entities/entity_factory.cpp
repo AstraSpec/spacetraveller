@@ -8,8 +8,10 @@
 #include "data/item_db.h"
 #include "data/job_db.h"
 #include "data/name_db.h"
+#include "data/npc_role_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
+#include "core/faction.h"
 #include "components/locomotion.h"
 #include "components/perception.h"
 #include "components/ai_controller.h"
@@ -115,7 +117,38 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     }
 
     AIData& ai = ledger.ai_data[id];
-    ai.state = AIState::WANDER;
+    bool sapient = race_db->has_tag(race_id, "SAPIENT");
+    ai.role = overrides.role.is_empty()
+        ? (sapient ? String("civilian") : String("monster"))
+        : overrides.role.to_lower();
+
+    String default_attitude = Faction::are_hostile(race->faction, String("human"))
+        ? String("hostile")
+        : String("neutral");
+    String default_ai_state = "wander";
+
+    NpcRoleDb* role_db = NpcRoleDb::get_singleton();
+    if (role_db) {
+        const NpcRoleInfo* role_info = role_db->get_role_info(ai.role);
+        if (role_info) {
+            if (!role_info->default_attitude.is_empty()) {
+                default_attitude = role_info->default_attitude;
+            }
+            if (!role_info->default_ai_state.is_empty()) {
+                default_ai_state = role_info->default_ai_state;
+            }
+            if (sapient && overrides.dialogue_profile.is_empty() && !role_info->default_dialogue_profile.is_empty()) {
+                SocialProfileData& profile = ledger.social_profiles[id];
+                profile.dialogue_profile = role_info->default_dialogue_profile;
+            }
+        }
+    }
+
+    ai.attitude = overrides.attitude.is_empty() ? default_attitude : overrides.attitude.to_lower();
+    ai.state = AIController::state_from_string(
+        overrides.ai_state.is_empty() ? default_ai_state : overrides.ai_state,
+        AIState::WANDER
+    );
     ai.wander_center = pos;
     ai.wander_radius = 4.0f;
     ai.stuck_counter = 0;

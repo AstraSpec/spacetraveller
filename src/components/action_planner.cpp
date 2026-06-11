@@ -6,8 +6,7 @@ ActionPlan ActionPlanner::plan_player_intent(
     const Intent& raw_intent,
     WorldBubble& bubble,
     uint32_t player_id,
-    const String& player_faction,
-    const String& target_faction
+    bool target_hostile
 ) {
     ActionPlan plan;
     plan.intent = raw_intent;
@@ -18,7 +17,7 @@ ActionPlan ActionPlanner::plan_player_intent(
 
     const WorldBubble::CellEntity* occupant = bubble.get_entity_at(raw_intent.target.x, raw_intent.target.y);
     if (occupant && occupant->entity_id != player_id) {
-        if (Faction::are_hostile(player_faction, target_faction)) {
+        if (target_hostile) {
             plan.intent.type = IntentType::ATTACK;
         } else {
             plan.should_interact = true;

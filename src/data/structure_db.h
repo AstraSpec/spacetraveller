@@ -24,6 +24,9 @@ struct StructureRuleInfo {
     String entity;
     String job;
     String dialogue_profile;
+    String attitude;
+    String role;
+    String ai_state;
     uint16_t loot_table = 0;
     uint16_t item_id = 0;
     int amount = 0;

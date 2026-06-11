@@ -20,6 +20,8 @@ enum class AIState { WANDER, CHASE, IDLE };
 
 struct AIData {
     AIState state = AIState::WANDER;
+    String attitude = "neutral";
+    String role = "none";
     PerceptionTier perception_tier = PerceptionTier::RAYCAST;
     Vector2i wander_center;
     float wander_radius = 4.0f;
@@ -38,6 +40,8 @@ struct AIContext {
 
 namespace AIController {
     Intent tick(AIData& ai, LocomotionData& loco, const AIContext& ctx);
+    AIState state_from_string(const String& value, AIState fallback = AIState::WANDER);
+    String state_to_string(AIState value);
     Dictionary serialize(const AIData& data);
     void deserialize(AIData& data, const Dictionary& dict);
 }

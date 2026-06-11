@@ -43,6 +43,9 @@ SpawnRuleInfo SpawnDb::_parse_row(const Dictionary &p_data) {
     info.tile_tags = _parse_tags(p_data.get("tile_tags", Array()));
     info.job = String(p_data.get("job", ""));
     info.dialogue_profile = String(p_data.get("dialogue_profile", ""));
+    info.attitude = String(p_data.get("attitude", ""));
+    info.role = String(p_data.get("role", ""));
+    info.ai_state = String(p_data.get("ai_state", ""));
     return info;
 }
 

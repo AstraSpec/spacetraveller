@@ -2,7 +2,6 @@
 #define SPACETRAVELLER_ACTION_PLANNER_H
 
 #include "components/action_resolver.h"
-#include "core/faction.h"
 #include "world/world_bubble.h"
 #include "data/tile_db.h"
 #include "core/tag_registry.h"
@@ -21,8 +20,7 @@ namespace ActionPlanner {
         const Intent& raw_intent,
         WorldBubble& bubble,
         uint32_t player_id,
-        const String& player_faction,
-        const String& target_faction
+        bool target_hostile
     );
 }
 

@@ -7,6 +7,7 @@
 #include "data/race_db.h"
 #include "data/style_db.h"
 #include "data/loot_db.h"
+#include "data/attitude_db.h"
 #include "core/world_coords.h"
 #include "core/id_registry.h"
 #include "core/tag_registry.h"
@@ -47,12 +48,29 @@ String SimulationDirector::entity_faction(uint32_t entity_id) const {
     return race ? race->faction : String();
 }
 
+String SimulationDirector::entity_attitude(uint32_t entity_id) const {
+    const AIData* ai = d.ledger->try_get_ai(entity_id);
+    return ai ? ai->attitude : String("neutral");
+}
+
+bool SimulationDirector::entity_is_hostile_to(uint32_t entity_id, uint32_t target_id) const {
+    if (entity_id == target_id) return false;
+
+    String hostility_mode = "faction";
+    AttitudeDb* attitude_db = AttitudeDb::get_singleton();
+    if (attitude_db) {
+        hostility_mode = attitude_db->get_hostility_mode(entity_attitude(entity_id));
+    }
+
+    if (hostility_mode == "always") return true;
+    if (hostility_mode == "never") return false;
+
+    return Faction::are_hostile(entity_faction(entity_id), entity_faction(target_id));
+}
+
 uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius) const {
     const Entity* self = d.ledger->get_entity_pool().get_entity(entity_id);
     if (!self) return EntityPool::INVALID_ID;
-
-    String my_faction = entity_faction(entity_id);
-    if (my_faction.is_empty()) return EntityPool::INVALID_ID;
 
     uint32_t best_id = EntityPool::INVALID_ID;
     long best_dist_sq = -1;
@@ -67,7 +85,7 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
         int dy = other->y - self->y;
         if (dx > radius || dx < -radius || dy > radius || dy < -radius) continue;
 
-        if (!Faction::are_hostile(my_faction, entity_faction(other_id))) continue;
+        if (!entity_is_hostile_to(entity_id, other_id)) continue;
 
         long dist_sq = static_cast<long>(dx) * dx + static_cast<long>(dy) * dy;
         if (best_dist_sq < 0 || dist_sq < best_dist_sq) {
@@ -333,13 +351,16 @@ bool SimulationDirector::plan_player_intent(Intent& intent) {
     }
 
     const WorldBubble::CellEntity* occupant = d.bubble->get_entity_at(intent.target.x, intent.target.y);
-    String target_faction = occupant ? entity_faction(occupant->entity_id) : String();
+    bool target_hostile = occupant ? entity_is_hostile_to(d.player_entity_id, occupant->entity_id)
+                                   : false;
+    if (occupant && !target_hostile) {
+        target_hostile = entity_is_hostile_to(occupant->entity_id, d.player_entity_id);
+    }
     ActionPlan plan = ActionPlanner::plan_player_intent(
         intent,
         *d.bubble,
         d.player_entity_id,
-        entity_faction(d.player_entity_id),
-        target_faction
+        target_hostile
     );
     if (plan.should_interact) {
         d.sink->on_interact_event(d.player_entity_id, plan.interact_target);

@@ -20,6 +20,9 @@ struct SpawnRuleInfo {
     std::vector<uint16_t> tile_tags;
     String job;
     String dialogue_profile;
+    String attitude;
+    String role;
+    String ai_state;
 };
 
 class SpawnDb : public Object, public DataBase<SpawnRuleInfo, SpawnDb> {

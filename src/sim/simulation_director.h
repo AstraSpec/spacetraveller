@@ -15,6 +15,7 @@
 #include "world/turn_scheduler.h"
 #include "path/a_star_grid.h"
 #include "core/rng.h"
+#include "components/ai_controller.h"
 
 namespace godot {
 
@@ -22,7 +23,6 @@ struct CombatOutcome;
 struct LocomotionData;
 struct Intent;
 struct ActionResult;
-struct AIData;
 struct RaceInfo;
 class TileDb;
 
@@ -74,6 +74,8 @@ private:
     void advance_entity_time(uint32_t entity_id, float dt);
     float entity_base_damage(uint32_t entity_id) const;
     String entity_faction(uint32_t entity_id) const;
+    String entity_attitude(uint32_t entity_id) const;
+    bool entity_is_hostile_to(uint32_t entity_id, uint32_t target_id) const;
     uint32_t find_nearest_hostile(uint32_t entity_id, int radius) const;
     Rng::Seeded combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const;
     const RaceInfo* get_race_info(uint32_t entity_id) const;

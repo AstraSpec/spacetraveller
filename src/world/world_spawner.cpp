@@ -59,6 +59,9 @@ static bool spawn_npc_at(
     const String& p_race_id,
     const String& p_job,
     const String& p_dialogue_profile,
+    const String& p_attitude,
+    const String& p_role,
+    const String& p_ai_state,
     uint32_t p_world_seed,
     float p_spawn_turn_time,
     const Vector2i& p_pos,
@@ -71,6 +74,9 @@ static bool spawn_npc_at(
     EntityFactory::SpawnOverrides overrides;
     overrides.job = p_job;
     overrides.dialogue_profile = p_dialogue_profile;
+    overrides.attitude = p_attitude;
+    overrides.role = p_role;
+    overrides.ai_state = p_ai_state;
 
     return EntityFactory::create_npc(
         p_race_id,
@@ -103,6 +109,9 @@ static bool spawn_with_rule(
         p_rule.race_id,
         p_rule.job,
         p_rule.dialogue_profile,
+        p_rule.attitude,
+        p_rule.role,
+        p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
         p_pos,
@@ -129,6 +138,9 @@ static bool spawn_with_structure_rule(
         p_rule.entity,
         p_rule.job,
         p_rule.dialogue_profile,
+        p_rule.attitude,
+        p_rule.role,
+        p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
         p_pos,

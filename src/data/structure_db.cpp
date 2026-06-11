@@ -62,6 +62,9 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
         rule.entity = String(rule_data.get("entity", rule_data.get("race_id", "")));
         rule.job = String(rule_data.get("job", ""));
         rule.dialogue_profile = String(rule_data.get("dialogue_profile", ""));
+        rule.attitude = String(rule_data.get("attitude", ""));
+        rule.role = String(rule_data.get("role", ""));
+        rule.ai_state = String(rule_data.get("ai_state", ""));
         rule.params = rule_data;
 
         String type_str = String(rule_data.get("type", ""));

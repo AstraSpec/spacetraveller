@@ -19,6 +19,8 @@ func _ready() -> void:
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
 	RecipeDb.initialize_data()
+	AttitudeDb.initialize_data()
+	NpcRoleDb.initialize_data()
 	StructureDb.initialize_data()
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()

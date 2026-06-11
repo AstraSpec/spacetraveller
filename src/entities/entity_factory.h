@@ -16,6 +16,9 @@ namespace EntityFactory {
     struct SpawnOverrides {
         String job;
         String dialogue_profile;
+        String attitude;
+        String role;
+        String ai_state;
         Array traits;
         Array context_tags;
     };
