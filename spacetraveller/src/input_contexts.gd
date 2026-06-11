@@ -110,6 +110,9 @@ class ExplorationContext extends InputContext:
 		elif event.is_action_pressed("action_pickup"):
 			manager.action_pickup_requested.emit()
 			return true
+		elif event.is_action_pressed("action_examine"):
+			manager.action_examine_requested.emit()
+			return true
 		elif event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				manager.exploration_right_click.emit(event.global_position)

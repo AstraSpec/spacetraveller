@@ -155,6 +155,8 @@ func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if c.has("job") and str(c["job"]) != str(ctx.get("job", "")):
 		return false
+	if c.has("dialogue_profile") and str(c["dialogue_profile"]) != str(ctx.get("dialogue_profile", "")):
+		return false
 	if c.has("trait") and not Array(ctx.get("traits", [])).has(str(c["trait"])):
 		return false
 	if c.has("min_friendship") and int(ctx.get("friendship", 0)) < int(c["min_friendship"]):

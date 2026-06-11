@@ -26,6 +26,7 @@ signal input_captured(event: InputEvent)
 signal action_smash_requested
 signal action_pickup_requested
 signal action_close_requested
+signal action_examine_requested
 signal exploration_right_click(pos: Vector2)
 
 signal structure_mode_changed(mode :String)

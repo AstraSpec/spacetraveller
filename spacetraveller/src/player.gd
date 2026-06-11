@@ -7,8 +7,6 @@ signal moved_chunk(chunkPos :Vector2)
 @export var World : GameWorld
 @export var PathfindingTimer :Timer
 
-const DIR :Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
-
 var CHUNK_SIZE = GameWorld.get_chunk_size()
 
 var currentAction: PlayerAction = null
@@ -24,11 +22,13 @@ func _ready():
 	InputManager.action_smash_requested.connect(_on_smash_requested)
 	InputManager.action_pickup_requested.connect(_on_pickup_requested)
 	InputManager.action_close_requested.connect(_on_close_requested)
+	InputManager.action_examine_requested.connect(_on_examine_requested)
 	InputManager.exploration_right_click.connect(_on_right_click)
 
 	available_actions.append(SmashAction.new(self, World))
 	available_actions.append(PickupAction.new(self, World))
 	available_actions.append(CloseAction.new(self, World))
+	available_actions.append(ExamineAction.new(self, World))
 	available_actions.append(AttackAction.new(self, World))
 
 	World.entity_moved.connect(_on_entity_moved)
@@ -120,8 +120,8 @@ func _try_set_action(action: PlayerAction):
 	_clear_path()
 	var valid_cells: Array[Vector2i] = []
 
-	for dir :Vector2 in DIR:
-		var target = Vector2i(cellPos() + dir)
+	for offset: Vector2i in action.get_target_offsets():
+		var target = Vector2i(cellPos()) + offset
 		if action.is_valid(target):
 			valid_cells.append(target)
 
@@ -181,6 +181,9 @@ func _on_pickup_requested():
 
 func _on_close_requested():
 	_try_set_action(CloseAction.new(self, World))
+
+func _on_examine_requested():
+	_try_set_action(ExamineAction.new(self, World))
 
 func _check_ground_items(pos: Vector2i) -> void:
 	var items = World.get_items_at(pos)
