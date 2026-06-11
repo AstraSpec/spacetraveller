@@ -35,6 +35,7 @@ struct AIContext {
     const TileDb& tile_db;
     const PerceptionMemory& perception;
     const Vector2i& player_pos;
+    const std::function<bool(Vector2i)>& can_enter;
     const std::function<PathResult(Vector2i, Vector2i)>& find_path;
 };
 

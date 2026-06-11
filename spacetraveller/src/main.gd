@@ -21,6 +21,7 @@ func _ready() -> void:
 	RecipeDb.initialize_data()
 	AttitudeDb.initialize_data()
 	NpcRoleDb.initialize_data()
+	TraversalProfileDb.initialize_data()
 	StructureDb.initialize_data()
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()

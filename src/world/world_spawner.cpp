@@ -13,6 +13,7 @@
 #include "core/world_coords.h"
 #include "entities/entity_factory.h"
 #include "entities/entity_pool.h"
+#include "world/traversal_rules.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
@@ -22,16 +23,16 @@ static bool tile_allows_rule(uint16_t p_tile_id, const SpawnRuleInfo& p_rule) {
     if (!tile_db) return false;
     const TileInfo* tile = tile_db->get_tile_info(p_tile_id);
     if (!tile) return false;
-    if (tile->solid) return false;
+    if (!TraversalRules::can_race_enter(p_rule.race_id, p_tile_id)) return false;
     if (!p_rule.tile_tags.empty() && !TagRegistry::has_tag_any(tile->tags, p_rule.tile_tags)) return false;
     return true;
 }
 
-static bool tile_allows_entity_spawn(uint16_t p_tile_id) {
+static bool tile_allows_entity_spawn(const String& p_race_id, uint16_t p_tile_id) {
     TileDb* tile_db = TileDb::get_singleton();
     if (!tile_db) return false;
     const TileInfo* tile = tile_db->get_tile_info(p_tile_id);
-    return tile && !tile->solid;
+    return tile && TraversalRules::can_race_enter(p_race_id, p_tile_id);
 }
 
 static int floor_div_chunk(int p_value) {
@@ -132,7 +133,7 @@ static bool spawn_with_structure_rule(
 ) {
     if (p_rule.entity.is_empty()) return false;
     uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
-    if (!tile_allows_entity_spawn(tile_id)) return false;
+    if (!tile_allows_entity_spawn(p_rule.entity, tile_id)) return false;
 
     return spawn_npc_at(
         p_rule.entity,

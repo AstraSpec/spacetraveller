@@ -11,6 +11,7 @@
   "death_loot_table": "bear_death",
   "combat_style": "maul",
   "faction": "enemy",
+  "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },
     { "id": "head", "parent": "torso", "count": 1, "height": "HIGH" },

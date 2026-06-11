@@ -10,6 +10,7 @@
   "corpse_item": "corpse_human",
   "death_loot_table": "human_death",
   "faction": "human",
+  "traversal_profile": "smart_walker",
   "tags": ["GENDER", "SAPIENT"],
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

@@ -11,6 +11,7 @@
   "death_loot_table": "human_death",
   "combat_style": "default",
   "faction": "human",
+  "traversal_profile": "smart_walker",
   "tags": ["GENDER", "SAPIENT"],
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

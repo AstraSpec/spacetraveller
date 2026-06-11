@@ -26,6 +26,7 @@ struct RaceInfo {
     uint16_t death_loot_table = 0;
     String combat_style = "default";
     String faction;
+    String traversal_profile = "animal_walker";
     std::vector<uint16_t> tags;
     std::vector<RacePartDefinition> parts;
 };

@@ -9,8 +9,11 @@
 
 using namespace godot;
 
-static Vector2i pick_wander_target(const AIData& ai, const Entity& self,
-                                    WorldBubble& bubble, const TileDb& tile_db) {
+static Vector2i pick_wander_target(
+    const AIData& ai,
+    const Entity& self,
+    const std::function<bool(Vector2i)>& can_enter
+) {
     for (int attempt = 0; attempt < 20; attempt++) {
         int ox = UtilityFunctions::randi_range(-static_cast<int>(ai.wander_radius),
                                                 static_cast<int>(ai.wander_radius));
@@ -20,10 +23,8 @@ static Vector2i pick_wander_target(const AIData& ai, const Entity& self,
         int ty = ai.wander_center.y + oy;
         if (tx == self.x && ty == self.y) continue;
 
-        uint16_t tile_id = bubble.query_tile_id(tx, ty);
-        if (tile_id == 0) return Vector2i(tx, ty);
-        const TileInfo* info = tile_db.get_tile_info(tile_id);
-        if (info && !info->solid) return Vector2i(tx, ty);
+        Vector2i target(tx, ty);
+        if (can_enter(target)) return target;
     }
     return Vector2i(self.x, self.y);
 }
@@ -93,7 +94,7 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
             return Intent{IntentType::NONE};
         }
 
-        Vector2i target = pick_wander_target(ai, ctx.self, ctx.bubble, ctx.tile_db);
+        Vector2i target = pick_wander_target(ai, ctx.self, ctx.can_enter);
         if (target.x == ctx.self.x && target.y == ctx.self.y) {
             ai.wander_cooldown = 10;
             return Intent{IntentType::NONE};

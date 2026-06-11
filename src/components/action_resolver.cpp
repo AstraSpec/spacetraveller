@@ -7,11 +7,13 @@
 #include "locomotion.h"
 #include "data/tile_db.h"
 #include "core/tag_registry.h"
+#include "entities/entity_ledger.h"
+#include "world/traversal_rules.h"
 #include <cmath>
 
 using namespace godot;
 
-ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco) {
+ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger) {
     int dx = abs(intent.target.x - entity.x);
     int dy = abs(intent.target.y - entity.y);
 
@@ -19,12 +21,12 @@ ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, 
         return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
     }
 
-    if (TileDb* tile_db = TileDb::get_singleton()) {
-        uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
-        if (tile_id != 0) {
-            const TileInfo* info = tile_db->get_tile_info(tile_id);
-            if (info && info->solid) return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
-        }
+    uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
+    bool can_enter = ledger
+        ? TraversalRules::can_enter(entity.id, tile_id, *ledger)
+        : TraversalRules::can_profile_enter("walker", tile_id);
+    if (!can_enter) {
+        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
     }
 
     const WorldBubble::CellEntity* occupant = bubble.get_entity_at(intent.target.x, intent.target.y);
@@ -137,10 +139,10 @@ ActionResult ActionResolver::resolve_pickup(uint32_t picker_id, const Vector2i& 
     return ActionResult::make_success(ActionCost::PICKUP, to_pickup);
 }
 
-ActionResult ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco) {
+ActionResult ActionResolver::resolve(uint32_t entity_id, const Intent& intent, WorldBubble& bubble, Entity& entity, LocomotionData& loco, const EntityLedger* ledger) {
     switch (intent.type) {
         case IntentType::MOVE:
-            return resolve_move(intent, entity, bubble, loco);
+            return resolve_move(intent, entity, bubble, loco, ledger);
 
         case IntentType::SMASH:
             return resolve_smash(intent, entity, bubble);

@@ -19,6 +19,7 @@
 namespace godot {
 
 class EntityPool;
+class EntityLedger;
 
 class WorldBubble {
 public:
@@ -145,7 +146,11 @@ public:
     TraversalSnapshot build_traversal_snapshot(
         const Vector2i& start,
         const Vector2i& goal,
-        const std::vector<Vector2i>& blocking_positions = std::vector<Vector2i>()
+        const std::vector<Vector2i>& blocking_positions = std::vector<Vector2i>(),
+        const EntityLedger* ledger = nullptr,
+        uint32_t entity_id = UINT32_MAX,
+        const String& traversal_profile = "",
+        bool allow_openable_tiles = false
     );
 
     const std::unordered_map<uint64_t, uint16_t>& get_tile_cache(Layer p_layer = LAYER_TILE) const {

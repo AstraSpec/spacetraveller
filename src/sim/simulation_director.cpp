@@ -404,7 +404,7 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
         return ActionResult::make_success(ActionCost::SMASH);
     }
 
-    ActionResult smash_result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco);
+    ActionResult smash_result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger);
     float cost = smash_result.cost;
     if (smash_result.success && cost > 0.0f) {
         if (stamina) Stamina::drain(*stamina, StaminaTuning::SMASH_COST);
@@ -429,7 +429,7 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
 }
 
 ActionResult SimulationDirector::resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco) {
-    ActionResult result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco);
+    ActionResult result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger);
     if (!result.success) return result;
 
     if (intent.type == IntentType::MOVE) {
@@ -608,7 +608,13 @@ Array SimulationDirector::find_path_with_flags(const Vector2i& start, const Vect
     std::vector<Vector2i> blocking;
     blocking.push_back(start);
 
-    TraversalSnapshot traversal = d.bubble->build_traversal_snapshot(start, goal, blocking);
+    TraversalSnapshot traversal = d.bubble->build_traversal_snapshot(
+        start,
+        goal,
+        blocking,
+        d.ledger,
+        d.player_entity_id
+    );
     PathRequest request;
     request.start = start;
     request.goal = goal;

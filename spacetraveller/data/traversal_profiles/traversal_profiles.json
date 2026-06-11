@@ -1,0 +1,42 @@
+[
+  {
+    "id": "walker",
+    "display_name": "Walker",
+    "can_move": true,
+    "can_enter_solid": false,
+    "can_open_doors": false,
+    "allowed_tile_tags": [],
+    "blocked_tile_tags": [],
+    "requires_body_tag": "STANCE"
+  },
+  {
+    "id": "smart_walker",
+    "display_name": "Smart Walker",
+    "can_move": true,
+    "can_enter_solid": false,
+    "can_open_doors": true,
+    "allowed_tile_tags": [],
+    "blocked_tile_tags": [],
+    "requires_body_tag": "STANCE"
+  },
+  {
+    "id": "immobile",
+    "display_name": "Immobile",
+    "can_move": false,
+    "can_enter_solid": false,
+    "can_open_doors": false,
+    "allowed_tile_tags": [],
+    "blocked_tile_tags": [],
+    "requires_body_tag": ""
+  },
+  {
+    "id": "phase",
+    "display_name": "Phase",
+    "can_move": true,
+    "can_enter_solid": true,
+    "can_open_doors": false,
+    "allowed_tile_tags": [],
+    "blocked_tile_tags": [],
+    "requires_body_tag": ""
+  }
+]
