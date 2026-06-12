@@ -78,7 +78,7 @@ uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius
 
     std::vector<uint32_t> candidates;
     if (d.tracker) {
-        d.tracker->query_radius(Vector2i(self->x, self->y), radius, candidates);
+        d.tracker->query_radius(Vector2i(self->x, self->y), radius, candidates, self->z);
     } else {
         candidates = d.ledger->get_entity_pool().get_live_ids();
     }
@@ -264,7 +264,7 @@ bool SimulationDirector::submit_pickup(uint32_t entity_id, const Vector2i& pos, 
     if (!result.success || result.cost <= 0.0f) return false;
 
     if (entity_id == d.player_entity_id) {
-        finish_player_action(result, base_time, Vector2i(entity->x, entity->y));
+        finish_player_action(result, base_time, Vector2i(entity->x, entity->y), entity->z);
     } else {
         finish_entity_action(entity_id, result.cost, base_time);
     }
@@ -485,13 +485,17 @@ ActionResult SimulationDirector::resolve_player_action(const Intent& intent, Ent
     }
 }
 
-bool SimulationDirector::finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos) {
+bool SimulationDirector::finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos, int old_z) {
     if (!result.success || result.cost <= 0.0f) return false;
     if (!finish_entity_action(d.player_entity_id, result.cost, base_time)) return false;
 
     emit_movement_if_needed(d.player_entity_id, old_pos);
     Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
     if (!player) return false;
+    if (player->z != old_z) {
+        d.bubble->set_active_z(player->z);
+        d.bubble->rebuild_from_pool();
+    }
 
     process_game_turn(player->next_turn_time);
     d.sink->on_player_action_resolved(d.player_entity_id, result.cost, player->next_turn_time);
@@ -524,8 +528,41 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     if (!loco) return 0.0f;
     float player_base_time = entity->next_turn_time;
     Vector2i old_pos(entity->x, entity->y);
+    int old_z = entity->z;
     ActionResult result = resolve_player_action(intent, *entity, *loco);
-    finish_player_action(result, player_base_time, old_pos);
+    finish_player_action(result, player_base_time, old_pos, old_z);
+
+    return result.success ? result.cost : 0.0f;
+}
+
+float SimulationDirector::submit_player_change_z(int delta) {
+    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
+        return 0.0f;
+    }
+
+    Entity* entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    if (!entity) return 0.0f;
+
+    Intent intent;
+    intent.type = IntentType::CHANGE_Z;
+    intent.target = Vector2i(entity->x, entity->y);
+    intent.amount = delta;
+
+    HealthData* player_health = d.ledger->try_get_health(d.player_entity_id);
+    if (player_health && !player_health->alive) {
+        return 0.0f;
+    }
+
+    float stun_cost = handle_player_stun(*entity);
+    if (stun_cost > 0.0f) return stun_cost;
+
+    LocomotionData* loco = d.ledger->try_get_locomotion(d.player_entity_id);
+    if (!loco) return 0.0f;
+    float player_base_time = entity->next_turn_time;
+    Vector2i old_pos(entity->x, entity->y);
+    int old_z = entity->z;
+    ActionResult result = resolve_player_action(intent, *entity, *loco);
+    finish_player_action(result, player_base_time, old_pos, old_z);
 
     return result.success ? result.cost : 0.0f;
 }
@@ -575,29 +612,6 @@ void SimulationDirector::process_game_turn(float current_time) {
 
     EntityPool& pool = d.ledger->get_entity_pool();
 
-    std::vector<Vector2i> blocking_positions;
-    std::vector<uint32_t> blocking_ids;
-    const Entity* player = pool.get_entity(d.player_entity_id);
-    if (d.tracker && player) {
-        const int radius = d.bubble->get_world_bubble_radius();
-        d.tracker->query_rect(
-            Vector2i(player->x - radius, player->y - radius),
-            Vector2i(player->x + radius, player->y + radius),
-            blocking_ids
-        );
-    } else {
-        blocking_ids = pool.get_live_ids();
-    }
-
-    blocking_positions.reserve(blocking_ids.size());
-    for (uint32_t id : blocking_ids) {
-        const Entity* entity = pool.get_entity(id);
-        if (!entity) continue;
-        if (id != d.player_entity_id) {
-            blocking_positions.push_back({entity->x, entity->y});
-        }
-    }
-
     while (d.scheduler->peek_time() <= current_time) {
         uint32_t entity_id = d.scheduler->pop();
         if (entity_id == EntityPool::INVALID_ID) break;
@@ -606,7 +620,7 @@ void SimulationDirector::process_game_turn(float current_time) {
             break;
         }
 
-        NpcTurnProcessor::run_turn(entity_id, pool, *tile_db, blocking_positions, *this);
+        NpcTurnProcessor::run_turn(entity_id, pool, *tile_db, *this);
     }
 }
 

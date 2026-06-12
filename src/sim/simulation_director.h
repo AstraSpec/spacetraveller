@@ -47,6 +47,7 @@ public:
     void configure(const SimulationDirectorDeps& deps);
 
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
+    float submit_player_change_z(int delta);
     bool submit_pickup(uint32_t entity_id, const Vector2i& pos, const String& item_id, int amount);
     void process_game_turn(float current_time);
 
@@ -65,7 +66,7 @@ private:
     ActionResult resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco);
     ActionResult resolve_player_pickup(const Intent& intent);
     ActionResult resolve_pickup(uint32_t entity_id, const Intent& intent);
-    bool finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos);
+    bool finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos, int old_z);
     Rng::Seeded action_rng_for(uint32_t entity_id, const Vector2i& target, Rng::Stream stream) const;
     float resolve_attack(uint32_t attacker_id, uint32_t defender_id, bool is_player);
     void handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id);

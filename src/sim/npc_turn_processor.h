@@ -21,7 +21,6 @@ public:
         uint32_t entity_id,
         EntityPool& pool,
         TileDb& tile_db,
-        std::vector<Vector2i>& blocking_positions,
         SimulationDirector& director
     );
 

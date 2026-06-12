@@ -10,7 +10,7 @@ static constexpr uint32_t PLAYER_ENTITY_ID = 0;
 
 struct Entity {
     uint32_t id;
-    int x, y;
+    int x, y, z;
     uint32_t component_mask;
     float next_turn_time;
     uint16_t atlas_x;

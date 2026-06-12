@@ -129,14 +129,14 @@
     "name": "Stairs Down",
     "atlas": [ 23, 0 ],
     "solid": false,
-    "tags": ["LEVEL_DOWN"]
+    "tags": ["DESCENT_LEVEL"]
   },
   {
     "id": "stairs_up",
     "name": "Stairs Up",
     "atlas": [ 24, 0 ],
     "solid": false,
-    "tags": ["LEVEL_UP"]
+    "tags": ["ASCEND_LEVEL"]
   },
   {
     "id": "w_floor",
@@ -186,5 +186,19 @@
     "atlas": [ 52, 0 ],
     "solid": false,
     "tags": ["FLOOR"]
+  },
+  {
+    "id": "underground_earth",
+    "name": "Underground Earth",
+    "atlas": [ 8, 2 ],
+    "solid": true,
+    "tags": ["GROUND", "WALL"]
+  },
+  {
+    "id": "solid_rock",
+    "name": "Solid Rock",
+    "atlas": [ 1, 2 ],
+    "solid": true,
+    "tags": ["WALL"]
   }
 ]

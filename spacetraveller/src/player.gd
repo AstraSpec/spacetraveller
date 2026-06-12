@@ -23,6 +23,8 @@ func _ready():
 	InputManager.action_pickup_requested.connect(_on_pickup_requested)
 	InputManager.action_close_requested.connect(_on_close_requested)
 	InputManager.action_examine_requested.connect(_on_examine_requested)
+	InputManager.action_ascend_requested.connect(_on_ascend_requested)
+	InputManager.action_descend_requested.connect(_on_descend_requested)
 	InputManager.exploration_right_click.connect(_on_right_click)
 
 	available_actions.append(SmashAction.new(self, World))
@@ -184,6 +186,30 @@ func _on_close_requested():
 
 func _on_examine_requested():
 	_try_set_action(ExamineAction.new(self, World))
+
+func _on_ascend_requested():
+	_try_change_z(1)
+
+func _on_descend_requested():
+	_try_change_z(-1)
+
+func _try_change_z(delta: int) -> void:
+	_clear_interaction_cells()
+	_clear_path()
+	var old_z := World.get_player_z()
+	var cost := World.submit_player_change_z(delta)
+	if cost > 0.0:
+		var pos := Vector2i(cellPos())
+		World.update_world_bubble(pos)
+		EventBus.post("movement", "You go up." if delta > 0 else "You go down.", {"z": World.get_player_z(), "old_z": old_z})
+		_check_tile_metadata(pos)
+		_check_ground_items(pos)
+		return
+
+	if delta > 0:
+		EventBus.post("movement", "You cannot go up here.", {"z": old_z})
+	else:
+		EventBus.post("movement", "You cannot go down here.", {"z": old_z})
 
 func _check_ground_items(pos: Vector2i) -> void:
 	var items = World.get_items_at(pos)

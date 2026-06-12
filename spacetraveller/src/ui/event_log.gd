@@ -17,6 +17,7 @@ const CATEGORY_COLORS = {
 	"quest_failed": "ff5555",
 	"inventory": "ffffff",
 	"inventory_warning": "ffb347",
+	"movement": "ffffff",
 }
 const DEFAULT_COLOR = "cccccc"
 

@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_WORLD_COORDS_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 #include <cstdint>
 
 namespace godot {
@@ -39,6 +40,25 @@ struct WorldCoords {
         return Vector2i(
             static_cast<int>(static_cast<int32_t>(key >> 32)),
             static_cast<int>(static_cast<int32_t>(key & 0xFFFFFFFF))
+        );
+    }
+
+    static inline uint64_t pack_coords_3d(int x, int y, int z) {
+        const uint64_t ux = static_cast<uint64_t>(static_cast<uint32_t>(x) & 0xFFFFFFu);
+        const uint64_t uy = static_cast<uint64_t>(static_cast<uint32_t>(y) & 0xFFFFFFu);
+        const uint64_t uz = static_cast<uint64_t>(static_cast<uint32_t>(z) & 0xFFFFu);
+        return (uz << 48) | (ux << 24) | uy;
+    }
+
+    static inline int sign_extend_24(uint32_t value) {
+        return (value & 0x800000u) ? static_cast<int>(value | 0xFF000000u) : static_cast<int>(value);
+    }
+
+    static inline Vector3i unpack_coords_3d(uint64_t key) {
+        return Vector3i(
+            sign_extend_24(static_cast<uint32_t>((key >> 24) & 0xFFFFFFu)),
+            sign_extend_24(static_cast<uint32_t>(key & 0xFFFFFFu)),
+            static_cast<int>(static_cast<int16_t>((key >> 48) & 0xFFFFu))
         );
     }
 };

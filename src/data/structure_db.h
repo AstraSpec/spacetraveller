@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/vector2i.hpp>
 #include "database.h"
 #include <vector>
+#include <unordered_map>
 
 namespace godot {
 
@@ -33,11 +34,19 @@ struct StructureRuleInfo {
     Dictionary params;
 };
 
+struct StructureLevelInfo {
+    std::vector<uint16_t> data;
+    String blueprint;
+    Array palette;
+    std::vector<StructureRuleInfo> rules;
+};
+
 struct StructureInfo {
     std::vector<uint16_t> data;
     String blueprint;
     Array palette;
     std::vector<StructureRuleInfo> rules;
+    std::unordered_map<int, StructureLevelInfo> levels;
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
@@ -59,10 +68,12 @@ public:
 
     String get_blueprint(const String &p_id) const;
     Array get_palette(const String &p_id) const;
+    Dictionary get_levels(const String &p_id) const;
 
     // Fast C++ access
     const StructureInfo* get_structure_info(const String &p_id) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
+    uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const;
 };
 
 }

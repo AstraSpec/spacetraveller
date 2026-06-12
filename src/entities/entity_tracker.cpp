@@ -18,27 +18,28 @@ static int floor_div(int value, int divisor) {
 
 }
 
-uint64_t EntityTracker::cell_key(const Vector2i& pos) {
-    return WorldCoords::pack_coords(pos.x, pos.y);
+uint64_t EntityTracker::cell_key(const Vector3i& pos) {
+    return WorldCoords::pack_coords_3d(pos.x, pos.y, pos.z);
 }
 
-Vector2i EntityTracker::bucket_pos(const Vector2i& pos) {
-    return Vector2i(
+Vector3i EntityTracker::bucket_pos(const Vector3i& pos) {
+    return Vector3i(
         floor_div(pos.x, WorldCoords::CHUNK_SIZE),
-        floor_div(pos.y, WorldCoords::CHUNK_SIZE)
+        floor_div(pos.y, WorldCoords::CHUNK_SIZE),
+        pos.z
     );
 }
 
-uint64_t EntityTracker::bucket_key(const Vector2i& pos) {
-    Vector2i bucket = bucket_pos(pos);
-    return WorldCoords::pack_coords(bucket.x, bucket.y);
+uint64_t EntityTracker::bucket_key(const Vector3i& pos) {
+    Vector3i bucket = bucket_pos(pos);
+    return WorldCoords::pack_coords_3d(bucket.x, bucket.y, bucket.z);
 }
 
-void EntityTracker::add_to_bucket(uint32_t entity_id, const Vector2i& pos) {
+void EntityTracker::add_to_bucket(uint32_t entity_id, const Vector3i& pos) {
     entities_by_bucket[bucket_key(pos)].insert(entity_id);
 }
 
-void EntityTracker::remove_from_bucket(uint32_t entity_id, const Vector2i& pos) {
+void EntityTracker::remove_from_bucket(uint32_t entity_id, const Vector3i& pos) {
     uint64_t key = bucket_key(pos);
     auto it = entities_by_bucket.find(key);
     if (it == entities_by_bucket.end()) return;
@@ -50,6 +51,10 @@ void EntityTracker::remove_from_bucket(uint32_t entity_id, const Vector2i& pos) 
 }
 
 bool EntityTracker::insert(uint32_t entity_id, const Vector2i& pos) {
+    return insert(entity_id, Vector3i(pos.x, pos.y, 0));
+}
+
+bool EntityTracker::insert(uint32_t entity_id, const Vector3i& pos) {
     uint64_t key = cell_key(pos);
     auto cell_it = entities_by_cell.find(key);
     if (cell_it != entities_by_cell.end() && cell_it->second != entity_id) {
@@ -70,6 +75,10 @@ bool EntityTracker::insert(uint32_t entity_id, const Vector2i& pos) {
 }
 
 bool EntityTracker::move(uint32_t entity_id, const Vector2i& old_pos, const Vector2i& new_pos) {
+    return move(entity_id, Vector3i(old_pos.x, old_pos.y, 0), Vector3i(new_pos.x, new_pos.y, 0));
+}
+
+bool EntityTracker::move(uint32_t entity_id, const Vector3i& old_pos, const Vector3i& new_pos) {
     if (old_pos == new_pos) return contains(entity_id) || insert(entity_id, new_pos);
 
     auto existing = positions_by_entity.find(entity_id);
@@ -84,7 +93,7 @@ bool EntityTracker::move(uint32_t entity_id, const Vector2i& old_pos, const Vect
         return false;
     }
 
-    const Vector2i current_pos = existing->second;
+    const Vector3i current_pos = existing->second;
     uint64_t old_key = cell_key(old_pos);
     auto old_cell_it = entities_by_cell.find(old_key);
     if (old_cell_it != entities_by_cell.end() && old_cell_it->second == entity_id) {
@@ -104,7 +113,7 @@ void EntityTracker::remove(uint32_t entity_id) {
     auto it = positions_by_entity.find(entity_id);
     if (it == positions_by_entity.end()) return;
 
-    Vector2i pos = it->second;
+    Vector3i pos = it->second;
     positions_by_entity.erase(it);
 
     uint64_t key = cell_key(pos);
@@ -128,29 +137,40 @@ bool EntityTracker::contains(uint32_t entity_id) const {
 bool EntityTracker::get_position(uint32_t entity_id, Vector2i& out_pos) const {
     auto it = positions_by_entity.find(entity_id);
     if (it == positions_by_entity.end()) return false;
-    out_pos = it->second;
+    out_pos = Vector2i(it->second.x, it->second.y);
     return true;
 }
 
 uint32_t EntityTracker::get_at(const Vector2i& pos) const {
+    return get_at(Vector3i(pos.x, pos.y, 0));
+}
+
+bool EntityTracker::get_position_3d(uint32_t entity_id, Vector3i& out_pos) const {
+    auto it = positions_by_entity.find(entity_id);
+    if (it == positions_by_entity.end()) return false;
+    out_pos = it->second;
+    return true;
+}
+
+uint32_t EntityTracker::get_at(const Vector3i& pos) const {
     auto it = entities_by_cell.find(cell_key(pos));
     return it == entities_by_cell.end() ? INVALID_ENTITY_ID : it->second;
 }
 
-void EntityTracker::query_rect(const Vector2i& min_pos, const Vector2i& max_pos, std::vector<uint32_t>& out_ids) const {
-    Vector2i min_bucket = bucket_pos(min_pos);
-    Vector2i max_bucket = bucket_pos(max_pos);
+void EntityTracker::query_rect(const Vector2i& min_pos, const Vector2i& max_pos, std::vector<uint32_t>& out_ids, int z) const {
+    Vector3i min_bucket = bucket_pos(Vector3i(min_pos.x, min_pos.y, z));
+    Vector3i max_bucket = bucket_pos(Vector3i(max_pos.x, max_pos.y, z));
 
     for (int by = min_bucket.y; by <= max_bucket.y; by++) {
         for (int bx = min_bucket.x; bx <= max_bucket.x; bx++) {
-            auto bucket_it = entities_by_bucket.find(WorldCoords::pack_coords(bx, by));
+            auto bucket_it = entities_by_bucket.find(WorldCoords::pack_coords_3d(bx, by, z));
             if (bucket_it == entities_by_bucket.end()) continue;
 
             for (uint32_t entity_id : bucket_it->second) {
                 auto pos_it = positions_by_entity.find(entity_id);
                 if (pos_it == positions_by_entity.end()) continue;
-                const Vector2i& pos = pos_it->second;
-                if (pos.x < min_pos.x || pos.x > max_pos.x || pos.y < min_pos.y || pos.y > max_pos.y) {
+                const Vector3i& pos = pos_it->second;
+                if (pos.z != z || pos.x < min_pos.x || pos.x > max_pos.x || pos.y < min_pos.y || pos.y > max_pos.y) {
                     continue;
                 }
                 out_ids.push_back(entity_id);
@@ -159,7 +179,7 @@ void EntityTracker::query_rect(const Vector2i& min_pos, const Vector2i& max_pos,
     }
 }
 
-void EntityTracker::query_radius(const Vector2i& center, int radius, std::vector<uint32_t>& out_ids) const {
+void EntityTracker::query_radius(const Vector2i& center, int radius, std::vector<uint32_t>& out_ids, int z) const {
     if (radius < 0) return;
 
     std::vector<uint32_t> rect_ids;
@@ -167,7 +187,8 @@ void EntityTracker::query_radius(const Vector2i& center, int radius, std::vector
     query_rect(
         Vector2i(center.x - radius, center.y - radius),
         Vector2i(center.x + radius, center.y + radius),
-        rect_ids
+        rect_ids,
+        z
     );
 
     const long radius_sq = static_cast<long>(radius) * radius;
@@ -175,6 +196,7 @@ void EntityTracker::query_radius(const Vector2i& center, int radius, std::vector
         auto pos_it = positions_by_entity.find(entity_id);
         if (pos_it == positions_by_entity.end()) continue;
 
+        if (pos_it->second.z != z) continue;
         const long dx = static_cast<long>(pos_it->second.x - center.x);
         const long dy = static_cast<long>(pos_it->second.y - center.y);
         if (dx * dx + dy * dy <= radius_sq) {
@@ -185,8 +207,8 @@ void EntityTracker::query_radius(const Vector2i& center, int radius, std::vector
 
 void EntityTracker::collect_ids(std::vector<uint32_t>& out_ids) const {
     out_ids.reserve(out_ids.size() + positions_by_entity.size());
-    for (const auto& [entity_id, pos] : positions_by_entity) {
-        out_ids.push_back(entity_id);
+    for (const auto& pair : positions_by_entity) {
+        out_ids.push_back(pair.first);
     }
 }
 
@@ -195,6 +217,6 @@ void EntityTracker::rebuild_from_pool(const EntityPool& pool) {
     for (uint32_t entity_id : pool.get_live_ids()) {
         const Entity* entity = pool.get_entity(entity_id);
         if (!entity) continue;
-        insert(entity_id, Vector2i(entity->x, entity->y));
+        insert(entity_id, Vector3i(entity->x, entity->y, entity->z));
     }
 }

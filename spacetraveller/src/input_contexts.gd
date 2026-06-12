@@ -113,6 +113,12 @@ class ExplorationContext extends InputContext:
 		elif event.is_action_pressed("action_examine"):
 			manager.action_examine_requested.emit()
 			return true
+		elif event.is_action_pressed("ascend_level"):
+			manager.action_ascend_requested.emit()
+			return true
+		elif event.is_action_pressed("descent_level"):
+			manager.action_descend_requested.emit()
+			return true
 		elif event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				manager.exploration_right_click.emit(event.global_position)
@@ -167,6 +173,12 @@ class StructureContext extends InputContext:
 			return true
 		elif event.is_action_pressed("structure_redo"): 
 			manager.structure_key_input.emit("redo")
+			return true
+		elif event.is_action_pressed("ascend_level"):
+			manager.structure_key_input.emit("ascend_level")
+			return true
+		elif event.is_action_pressed("descent_level"):
+			manager.structure_key_input.emit("descent_level")
 			return true
 		elif event.is_action_pressed("structure_pencil"): 
 			manager.structure_mode_changed.emit("pencil")

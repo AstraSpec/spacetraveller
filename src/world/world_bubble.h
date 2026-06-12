@@ -23,7 +23,7 @@ class EntityLedger;
 
 class WorldBubble {
 public:
-    using TileSource = std::function<uint16_t(int world_x, int world_y)>;
+    using TileSource = std::function<uint16_t(int world_x, int world_y, int world_z)>;
 
     enum Layer {
         LAYER_TILE = 0,
@@ -76,9 +76,12 @@ private:
     EntityPool* entity_pool_source = nullptr;
 
     int world_bubble_radius = 32;
+    int active_z = 0;
     TileSource tile_source = nullptr;
 
-    uint16_t resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y);
+    uint64_t make_cell_key(int world_x, int world_y) const;
+    uint64_t make_cell_key_at_z(int world_x, int world_y, int world_z) const;
+    uint16_t resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y, int world_z);
 
 public:
     WorldBubble() = default;
@@ -86,6 +89,8 @@ public:
     void set_tile_source(TileSource p_source) { tile_source = p_source; }
     void set_world_bubble_radius(int p_radius) { world_bubble_radius = p_radius; }
     int get_world_bubble_radius() const { return world_bubble_radius; }
+    void set_active_z(int p_z) { active_z = p_z; }
+    int get_active_z() const { return active_z; }
 
     void place_tile(int x, int y, const String& tile_id, Layer p_layer = LAYER_TILE);
     void place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer = LAYER_TILE);
@@ -143,6 +148,7 @@ public:
     bool has_timed_overlays() const;
 
     uint16_t query_tile_id(int x, int y);
+    uint16_t query_tile_id_at_z(int x, int y, int z);
     TraversalSnapshot build_traversal_snapshot(
         const Vector2i& start,
         const Vector2i& goal,

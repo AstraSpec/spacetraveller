@@ -9,8 +9,11 @@
 #include "entity_lifecycle.h"
 #include "world_save_serializer.h"
 #include "core/id_registry.h"
+#include "core/tag_registry.h"
 #include "entities/entity_factory.h"
+#include "world/traversal_rules.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 #include <godot_cpp/classes/json.hpp>
 #include <vector>
 
@@ -47,12 +50,14 @@ void GameWorld::_bind_methods() {
     BIND_ENUM_CONSTANT(INTENT_PICKUP);
     BIND_ENUM_CONSTANT(INTENT_CLOSE);
     BIND_ENUM_CONSTANT(INTENT_OPEN);
+    BIND_ENUM_CONSTANT(INTENT_CHANGE_Z);
 
     ClassDB::bind_method(D_METHOD("setup_renderer"), &GameWorld::setup_renderer);
     ClassDB::bind_method(D_METHOD("get_renderer"), &GameWorld::get_renderer);
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "player_pos", "is_square"), &GameWorld::init_world_bubble, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &GameWorld::update_world_bubble);
+    ClassDB::bind_method(D_METHOD("update_world_bubble_at_z", "playerPos", "z"), &GameWorld::update_world_bubble_at_z);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &GameWorld::init_region);
 
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id", "layer"), &GameWorld::place_tile, DEFVAL(LAYER_TILE));
@@ -65,6 +70,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("merge_tile_id_cache", "cache", "layer"), &GameWorld::merge_tile_id_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("get_seen_cells"), &GameWorld::get_seen_cells);
     ClassDB::bind_method(D_METHOD("set_seen_cells", "seen"), &GameWorld::set_seen_cells);
+    ClassDB::bind_method(D_METHOD("set_active_z", "z"), &GameWorld::set_active_z);
+    ClassDB::bind_method(D_METHOD("get_active_z"), &GameWorld::get_active_z);
     ClassDB::bind_method(D_METHOD("invalidate_tile_cache", "world_x", "world_y", "layer"), &GameWorld::invalidate_tile_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("invalidate_region_cache", "rect", "layer"), &GameWorld::invalidate_region_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("get_tile_metadata", "pos"), &GameWorld::get_tile_metadata);
@@ -156,10 +163,14 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("spawn_player", "x", "y", "race_id"), &GameWorld::spawn_player);
     ClassDB::bind_method(D_METHOD("get_entity_position", "entity_id"), &GameWorld::get_entity_position);
+    ClassDB::bind_method(D_METHOD("get_entity_z", "entity_id"), &GameWorld::get_entity_z);
     ClassDB::bind_method(D_METHOD("get_entity_chunk", "entity_id"), &GameWorld::get_entity_chunk);
     ClassDB::bind_method(D_METHOD("get_player_position"), &GameWorld::get_player_position);
+    ClassDB::bind_method(D_METHOD("get_player_z"), &GameWorld::get_player_z);
     ClassDB::bind_method(D_METHOD("get_player_chunk"), &GameWorld::get_player_chunk);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
+    ClassDB::bind_method(D_METHOD("can_change_z", "entity_id", "delta"), &GameWorld::can_change_z);
+    ClassDB::bind_method(D_METHOD("submit_player_change_z", "delta"), &GameWorld::submit_player_change_z);
 
     ADD_SIGNAL(MethodInfo("entity_moved",
         PropertyInfo(Variant::INT, "entity_id"),
@@ -235,8 +246,8 @@ void GameWorld::setup_renderer() {
     renderer->set_name("Renderer");
     add_child(renderer);
 
-    bubble.set_tile_source([this](int x, int y) {
-        return generator->get_tile(x, y, world_seed);
+    bubble.set_tile_source([this](int x, int y, int z) {
+        return generator->get_tile(x, y, z, world_seed);
     });
     renderer->set_bubble(&bubble);
     renderer->set_occlusion_enabled(true);
@@ -272,6 +283,8 @@ int GameWorld::get_world_seed() const {
 
 void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
     bubble.clear_all_caches();
+    const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    bubble.set_active_z(player ? player->z : 0);
     if (renderer) {
         bubble.set_world_bubble_radius(renderer->get_world_bubble_radius());
         renderer->init_world_bubble(player_pos, is_square);
@@ -279,6 +292,13 @@ void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
 }
 
 void GameWorld::update_world_bubble(const Vector2i& playerPos) {
+    const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    bubble.set_active_z(player ? player->z : 0);
+    update_world_bubble_at_z(playerPos, bubble.get_active_z());
+}
+
+void GameWorld::update_world_bubble_at_z(const Vector2i& playerPos, int z) {
+    bubble.set_active_z(z);
     if (renderer) {
         std::vector<uint64_t> offset_keys = renderer->get_render_offset_keys();
         bubble.update_visibility(playerPos, offset_keys, renderer->is_occlusion_enabled());
@@ -327,6 +347,14 @@ Array GameWorld::get_seen_cells() const {
 
 void GameWorld::set_seen_cells(const Array& p_seen) {
     bubble.set_seen_cells(p_seen);
+}
+
+void GameWorld::set_active_z(int z) {
+    bubble.set_active_z(z);
+}
+
+int GameWorld::get_active_z() const {
+    return bubble.get_active_z();
 }
 
 void GameWorld::invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_layer) {
@@ -443,7 +471,7 @@ bool GameWorld::is_cell_seen(const Vector2i& pos) const {
 }
 
 bool GameWorld::has_entity_at_cell(int x, int y) const {
-    return entity_tracker.get_at(Vector2i(x, y)) != INVALID_ENTITY_ID;
+    return entity_tracker.get_at(Vector3i(x, y, bubble.get_active_z())) != INVALID_ENTITY_ID;
 }
 
 Array GameWorld::request_player_path(const Vector2i& start, const Vector2i& goal) {
@@ -486,6 +514,11 @@ Vector2i GameWorld::get_entity_position(uint32_t entity_id) const {
     return Vector2i();
 }
 
+int GameWorld::get_entity_z(uint32_t entity_id) const {
+    const Entity* e = entity_ledger.get_entity_pool().get_entity(entity_id);
+    return e ? e->z : 0;
+}
+
 Vector2i GameWorld::get_entity_chunk(uint32_t entity_id) const {
     const Entity* e = entity_ledger.get_entity_pool().get_entity(entity_id);
     if (e) {
@@ -497,6 +530,10 @@ Vector2i GameWorld::get_entity_chunk(uint32_t entity_id) const {
 
 Vector2i GameWorld::get_player_position() const {
     return get_entity_position(player_entity_id);
+}
+
+int GameWorld::get_player_z() const {
+    return get_entity_z(player_entity_id);
 }
 
 Vector2i GameWorld::get_player_chunk() const {
@@ -636,6 +673,32 @@ float GameWorld::submit_player_intent(int intent_type, int target_x, int target_
     return sim_director.submit_player_intent(intent_type, target_x, target_y, param);
 }
 
+bool GameWorld::can_change_z(uint32_t entity_id, int delta) {
+    if (delta != 1 && delta != -1) return false;
+
+    const Entity* entity = entity_ledger.get_entity_pool().get_entity(entity_id);
+    if (!entity) return false;
+
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) return false;
+
+    const uint16_t tile_id = bubble.query_tile_id_at_z(entity->x, entity->y, entity->z);
+    const uint16_t required_tag = tag_reg->get_tag_id(delta > 0 ? "ASCEND_LEVEL" : "DESCENT_LEVEL");
+    if (required_tag == 0 || !tile_db->has_tag(tile_id, required_tag)) return false;
+
+    const int target_z = entity->z + delta;
+    uint32_t occupant = entity_tracker.get_at(Vector3i(entity->x, entity->y, target_z));
+    if (occupant != INVALID_ENTITY_ID && occupant != entity_id) return false;
+
+    const uint16_t destination_tile_id = bubble.query_tile_id_at_z(entity->x, entity->y, target_z);
+    return destination_tile_id != 0 && TraversalRules::can_enter(entity_id, destination_tile_id, entity_ledger);
+}
+
+float GameWorld::submit_player_change_z(int delta) {
+    return sim_director.submit_player_change_z(delta);
+}
+
 void GameWorld::process_game_turn(float current_time) {
     sim_director.process_game_turn(current_time);
 }
@@ -722,6 +785,7 @@ void GameWorld::clear_overlays() {
 
 void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     int radius = bubble.get_world_bubble_radius();
+    int active_z = bubble.get_active_z();
 
     std::vector<uint32_t> active_ids;
     entity_tracker.collect_ids(active_ids);
@@ -740,7 +804,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         EntityLifecycle::freeze_entity(id, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler);
     }
 
-    std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_range(player_pos, radius);
+    std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_range(player_pos, radius, active_z);
     float player_time = 0.0f;
     const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     if (player_e) player_time = player_e->next_turn_time;
@@ -790,6 +854,8 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
         quest_tracker.get()
     );
 
+    const Entity* loaded_player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    bubble.set_active_z(loaded_player ? loaded_player->z : 0);
     bubble.rebuild_from_pool();
     entity_tracker.rebuild_from_pool(entity_ledger.get_entity_pool());
 

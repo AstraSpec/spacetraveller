@@ -9,7 +9,15 @@
 
 using namespace godot;
 
-uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y) {
+uint64_t WorldBubble::make_cell_key(int world_x, int world_y) const {
+    return make_cell_key_at_z(world_x, world_y, active_z);
+}
+
+uint64_t WorldBubble::make_cell_key_at_z(int world_x, int world_y, int world_z) const {
+    return WorldCoords::pack_coords_3d(world_x, world_y, world_z);
+}
+
+uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y, int world_z) {
     auto override_it = tile_overrides[layer].find(cell_key);
     if (override_it != tile_overrides[layer].end()) {
         return override_it->second;
@@ -20,7 +28,7 @@ uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x,
         return it->second;
     }
     if (layer == LAYER_TILE && tile_source) {
-        uint16_t tile_id = tile_source(world_x, world_y);
+        uint16_t tile_id = tile_source(world_x, world_y, world_z);
         if (tile_id != 0) {
             generated_tile_cache[layer][cell_key] = tile_id;
             return tile_id;
@@ -34,7 +42,7 @@ static bool is_adjacent_to_player(int ox, int oy) {
 }
 
 void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer) {
-    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    uint64_t cell_key = make_cell_key(x, y);
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (id_reg) {
         tile_overrides[p_layer][cell_key] = id_reg->get_id(tile_id);
@@ -42,11 +50,11 @@ void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer)
 }
 
 void WorldBubble::place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer) {
-    tile_overrides[p_layer][WorldCoords::pack_coords(x, y)] = tile_id;
+    tile_overrides[p_layer][make_cell_key(x, y)] = tile_id;
 }
 
 String WorldBubble::get_tile_at(int x, int y, Layer p_layer) const {
-    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    uint64_t cell_key = make_cell_key(x, y);
     uint16_t tile_id = 0;
     bool found = false;
     auto override_it = tile_overrides[p_layer].find(cell_key);
@@ -76,8 +84,8 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
     uint16_t new_id = id_reg->get_id(tile_id);
     uint16_t target_id = 0;
 
-    uint64_t start_key = WorldCoords::pack_coords(x, y);
-    target_id = resolve_tile_id(p_layer, start_key, x, y);
+    uint64_t start_key = make_cell_key(x, y);
+    target_id = resolve_tile_id(p_layer, start_key, x, y, active_z);
 
     if (new_id == target_id) return;
 
@@ -105,8 +113,8 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
                 }
             }
 
-            uint64_t key = WorldCoords::pack_coords(p.x, p.y);
-            uint16_t current_id = resolve_tile_id(p_layer, key, p.x, p.y);
+            uint64_t key = make_cell_key(p.x, p.y);
+            uint16_t current_id = resolve_tile_id(p_layer, key, p.x, p.y, active_z);
 
             if (current_id == target_id) {
                 tile_overrides[p_layer][key] = new_id;
@@ -131,8 +139,8 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
                     }
                 }
 
-                uint64_t key = WorldCoords::pack_coords(gx, gy);
-                uint16_t current_id = resolve_tile_id(p_layer, key, gx, gy);
+                uint64_t key = make_cell_key(gx, gy);
+                uint16_t current_id = resolve_tile_id(p_layer, key, gx, gy, active_z);
 
                 if (current_id == target_id) {
                     tile_overrides[p_layer][key] = new_id;
@@ -143,28 +151,28 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
 }
 
 const DroppedItem* WorldBubble::get_top_item(int x, int y) const {
-    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    uint64_t cell_key = make_cell_key(x, y);
     return cell_data.get_top_item(cell_key);
 }
 
 void WorldBubble::drop_item(const Vector2i& pos, uint16_t item_id, int amount) {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     cell_data.add_item(key, item_id, amount);
 }
 
 int WorldBubble::remove_item(const Vector2i& pos, uint16_t item_id, int amount) {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     return cell_data.remove_item(key, item_id, amount);
 }
 
 int WorldBubble::peek_item_amount(const Vector2i& pos, uint16_t item_id) const {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     return cell_data.peek_item_amount(key, item_id);
 }
 
 Array WorldBubble::get_items_at(const Vector2i& pos) const {
     Array list;
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     const std::vector<DroppedItem>* items = cell_data.get_items(key);
     if (!items) return list;
 
@@ -179,23 +187,23 @@ Array WorldBubble::get_items_at(const Vector2i& pos) const {
 }
 
 bool WorldBubble::has_items(const Vector2i& pos) const {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     return cell_data.has_items(key);
 }
 
 void WorldBubble::set_tile_metadata(const Vector2i& pos, const Dictionary& data) {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     tile_metadata[key] = data;
 }
 
 Dictionary WorldBubble::get_tile_metadata(const Vector2i& pos) const {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     auto it = tile_metadata.find(key);
     return it != tile_metadata.end() ? it->second : Dictionary();
 }
 
 void WorldBubble::clear_tile_metadata(const Vector2i& pos) {
-    uint64_t key = WorldCoords::pack_coords(pos.x, pos.y);
+    uint64_t key = make_cell_key(pos.x, pos.y);
     tile_metadata.erase(key);
 }
 
@@ -239,7 +247,7 @@ void WorldBubble::deserialize_ground_items(const Dictionary& data) {
 }
 
 void WorldBubble::invalidate_tile_cache(int world_x, int world_y, Layer p_layer) {
-    uint64_t key = WorldCoords::pack_coords(world_x, world_y);
+    uint64_t key = make_cell_key(world_x, world_y);
     tile_overrides[p_layer].erase(key);
     generated_tile_cache[p_layer].erase(key);
 }
@@ -247,8 +255,8 @@ void WorldBubble::invalidate_tile_cache(int world_x, int world_y, Layer p_layer)
 void WorldBubble::invalidate_region_cache(const Rect2i& p_rect, Layer p_layer) {
     auto erase_region = [&](std::unordered_map<uint64_t, uint16_t>& cache) {
         for (auto it = cache.begin(); it != cache.end(); ) {
-            Vector2i pos = WorldCoords::unpack_coords(it->first);
-            if (p_rect.has_point(pos)) {
+            Vector3i pos = WorldCoords::unpack_coords_3d(it->first);
+            if (pos.z == active_z && p_rect.has_point(Vector2i(pos.x, pos.y))) {
                 it = cache.erase(it);
             } else {
                 ++it;
@@ -272,7 +280,7 @@ void WorldBubble::clear_all_caches() {
 }
 
 bool WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
-    uint64_t key = WorldCoords::pack_coords(x, y);
+    uint64_t key = make_cell_key(x, y);
     auto it = entity_positions.find(key);
     if (it != entity_positions.end() && it->second.entity_id != entity_id) {
         if (!entity_pool_source || entity_pool_source->contains(it->second.entity_id)) {
@@ -294,17 +302,17 @@ bool WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
 }
 
 void WorldBubble::force_set_entity(int x, int y, uint32_t entity_id) {
-    uint64_t key = WorldCoords::pack_coords(x, y);
+    uint64_t key = make_cell_key(x, y);
     entity_positions[key] = {entity_id};
 }
 
 void WorldBubble::remove_entity(int x, int y) {
-    uint64_t key = WorldCoords::pack_coords(x, y);
+    uint64_t key = make_cell_key(x, y);
     entity_positions.erase(key);
 }
 
 bool WorldBubble::update_entity_position(int old_x, int old_y, int new_x, int new_y, uint32_t entity_id) {
-    uint64_t new_key = WorldCoords::pack_coords(new_x, new_y);
+    uint64_t new_key = make_cell_key(new_x, new_y);
     auto dest_it = entity_positions.find(new_key);
     if (dest_it != entity_positions.end() && dest_it->second.entity_id != entity_id) {
         if (!entity_pool_source || entity_pool_source->contains(dest_it->second.entity_id)) {
@@ -322,7 +330,7 @@ bool WorldBubble::update_entity_position(int old_x, int old_y, int new_x, int ne
         }
     }
 
-    uint64_t old_key = WorldCoords::pack_coords(old_x, old_y);
+    uint64_t old_key = make_cell_key(old_x, old_y);
     auto it = entity_positions.find(old_key);
     if (it != entity_positions.end() && it->second.entity_id == entity_id) {
         entity_positions.erase(it);
@@ -343,12 +351,14 @@ void WorldBubble::rebuild_from_pool() {
     for (uint32_t id : entity_pool_source->get_live_ids()) {
         const Entity* e = entity_pool_source->get_entity(id);
         if (!e) continue;
-        force_set_entity(e->x, e->y, id);
+        if (e->z == active_z) {
+            force_set_entity(e->x, e->y, id);
+        }
     }
 }
 
 const WorldBubble::CellEntity* WorldBubble::get_entity_at(int x, int y) const {
-    uint64_t key = WorldCoords::pack_coords(x, y);
+    uint64_t key = make_cell_key(x, y);
     auto it = entity_positions.find(key);
     if (it == entity_positions.end()) return nullptr;
     if (entity_pool_source && !entity_pool_source->contains(it->second.entity_id)) return nullptr;
@@ -403,7 +413,7 @@ void WorldBubble::set_seen_cells(const Array& p_seen) {
 }
 
 bool WorldBubble::is_cell_seen(int x, int y) const {
-    uint64_t cell_key = WorldCoords::pack_coords(x, y);
+    uint64_t cell_key = make_cell_key(x, y);
     return seen_cells.count(cell_key) > 0;
 }
 
@@ -414,12 +424,16 @@ std::vector<uint64_t> WorldBubble::consume_newly_seen_cells() {
 }
 
 uint16_t WorldBubble::query_tile_id(int x, int y) {
-    uint64_t cell_key = WorldCoords::pack_coords(x, y);
-    return resolve_tile_id(LAYER_TILE, cell_key, x, y);
+    return query_tile_id_at_z(x, y, active_z);
+}
+
+uint16_t WorldBubble::query_tile_id_at_z(int x, int y, int z) {
+    uint64_t cell_key = make_cell_key_at_z(x, y, z);
+    return resolve_tile_id(LAYER_TILE, cell_key, x, y, z);
 }
 
 void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime) {
-    uint64_t key = WorldCoords::pack_coords(x, y);
+    uint64_t key = make_cell_key(x, y);
     Overlay ov;
     ov.atlas_x = atlas_x;
     ov.atlas_y = atlas_y;
@@ -430,7 +444,7 @@ void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, 
 }
 
 void WorldBubble::remove_overlay(int x, int y) {
-    overlays.erase(WorldCoords::pack_coords(x, y));
+    overlays.erase(make_cell_key(x, y));
 }
 
 void WorldBubble::clear_overlays() {
@@ -485,8 +499,8 @@ void WorldBubble::update_visibility(
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
             int cx = offset.x + player_pos.x;
             int cy = offset.y + player_pos.y;
-            uint64_t cell_key = WorldCoords::pack_coords(cx, cy);
-            resolve_tile_id(LAYER_TILE, cell_key, cx, cy);
+            uint64_t cell_key = make_cell_key(cx, cy);
+            resolve_tile_id(LAYER_TILE, cell_key, cx, cy, active_z);
             visible_cells.insert(cell_key);
         }
         return;
@@ -498,12 +512,17 @@ void WorldBubble::update_visibility(
         Vector2i offset = WorldCoords::unpack_coords(offset_key);
         int cx = offset.x + player_pos.x;
         int cy = offset.y + player_pos.y;
-        uint64_t cell_key = WorldCoords::pack_coords(cx, cy);
-        visibility_tiles[cell_key] = resolve_tile_id(LAYER_TILE, cell_key, cx, cy);
+        uint64_t visibility_key = WorldCoords::pack_coords(cx, cy);
+        uint64_t cell_key = make_cell_key(cx, cy);
+        visibility_tiles[visibility_key] = resolve_tile_id(LAYER_TILE, cell_key, cx, cy, active_z);
     }
 
-    Occlusion::compute_visible(player_pos, world_bubble_radius, visibility_tiles, visible_cells);
-    for (uint64_t cell_key : visible_cells) {
+    std::unordered_set<uint64_t> visible_2d;
+    Occlusion::compute_visible(player_pos, world_bubble_radius, visibility_tiles, visible_2d);
+    for (uint64_t visible_key : visible_2d) {
+        Vector2i pos = WorldCoords::unpack_coords(visible_key);
+        uint64_t cell_key = make_cell_key(pos.x, pos.y);
+        visible_cells.insert(cell_key);
         if (seen_cells.insert(cell_key).second) {
             newly_seen_cells.push_back(cell_key);
         }
@@ -527,7 +546,7 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             int oy = offset.y;
             int cx = ox + player_pos.x;
             int cy = oy + player_pos.y;
-            uint64_t cell_key = WorldCoords::pack_coords(cx, cy);
+            uint64_t cell_key = make_cell_key(cx, cy);
 
             CellVisual visual;
 
@@ -536,7 +555,7 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 visual.seen = seen_cells.count(cell_key) > 0;
             }
 
-            visual.tile_id = resolve_tile_id(l, cell_key, cx, cy);
+            visual.tile_id = resolve_tile_id(l, cell_key, cx, cy, active_z);
 
             if (LAYER_HAS_ITEMS[l]) {
                 const DroppedItem* top = cell_data.get_top_item(cell_key);

@@ -1,38 +1,55 @@
 [
     {
-        "blueprint": "(50x0, 4x1, 1x2, 4x1, 3x2, 1x1, 11x0, 1x1, 1x3, 1x4, 3x5, 1x4, 1x3, 1x1, 1x5, 1x6, 1x7, 1x1, 11x0, 1x2, 7x5, 1x1, 3x5, 1x1, 11x0, 1x1, 1x8, 1x5, 1x7, 1x6, 3x5, 1x9, 3x5, 1x1, 11x0, 9x1, 3x5, 1x1, 11x0, 1x1, 1x6, 2x5, 1x10, 1x5, 1x7, 1x1, 1x11, 3x5, 1x1, 11x0, 1x2, 1x6, 4x5, 1x8, 1x1, 1x6, 3x5, 1x2, 11x0, 1x1, 1x7, 4x5, 1x8, 1x1, 1x11, 3x5, 1x1, 11x0, 3x1, 1x9, 5x1, 3x5, 2x1, 1x2, 5x1, 4x0, 1x2, 1x12, 14x5, 1x9, 2x5, 1x1, 4x0, 1x2, 15x5, 1x1, 2x5, 1x1, 4x0, 1x2, 1x13, 14x5, 1x1, 1x14, 1x15, 1x1, 4x0, 10x1, 1x9, 9x1, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x11, 2x5, 1x16, 1x17, 1x14, 1x16, 1x1, 4x0, 1x2, 1x6, 1x7, 1x5, 2x6, 2x5, 1x1, 3x5, 1x11, 5x5, 1x16, 1x2, 4x0, 1x1, 1x6, 16x5, 1x16, 1x1, 4x0, 1x1, 1x6, 17x5, 1x1, 4x0, 1x2, 1x6, 2x5, 2x6, 12x5, 1x18, 1x2, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x1, 4x5, 2x16, 1x1, 4x0, 4x1, 2x2, 4x1, 1x9, 4x1, 2x2, 3x1, 50x0)",
         "id": "house01",
-        "palette": [
-            "void",
-            "w_wall",
-            "w_window_curtain",
-            "dresser",
-            "bed",
-            "w_floor",
-            "table",
-            "chair",
-            "wardrobe",
-            "w_door_c",
-            "bed_double",
-            "bookcase",
-            "stairs_up",
-            "stairs_down",
-            "barrel",
-            "toilet",
-            "bar",
-            "fireplace",
-            "pot"
-        ],
-        "rules": [
-            {
-                "entity": "human",
-                "pos": [
-                    7.0,
-                    17.0
+        "levels": {
+            "-1": {
+                "blueprint": "(50x0, 13x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x3, 3x2, 1x1, 11x0, 9x1, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x5, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 3x1, 1x3, 5x1, 3x2, 8x1, 4x0, 1x1, 15x2, 1x3, 2x2, 1x1, 4x0, 1x1, 15x2, 1x1, 2x2, 1x1, 4x0, 1x1, 1x6, 14x2, 1x1, 1x7, 1x8, 1x1, 4x0, 10x1, 1x3, 9x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x1, 6x2, 1x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "alley_bricks",
+                    "w_door_c",
+                    "bookcase",
+                    "table",
+                    "stairs_up",
+                    "barrel",
+                    "toilet"
+                ]
+            },
+            "0": {
+                "blueprint": "(50x0, 4x1, 1x2, 4x1, 3x2, 1x1, 11x0, 1x1, 1x3, 1x4, 3x5, 1x4, 1x3, 1x1, 1x5, 1x6, 1x7, 1x1, 11x0, 1x2, 7x5, 1x1, 3x5, 1x1, 11x0, 1x1, 1x8, 1x5, 1x7, 1x6, 3x5, 1x9, 3x5, 1x1, 11x0, 9x1, 3x5, 1x1, 11x0, 1x1, 1x6, 2x5, 1x10, 1x5, 1x7, 1x1, 1x11, 3x5, 1x1, 11x0, 1x2, 1x6, 4x5, 1x8, 1x1, 1x6, 3x5, 1x2, 11x0, 1x1, 1x7, 4x5, 1x8, 1x1, 1x11, 3x5, 1x1, 11x0, 3x1, 1x9, 5x1, 3x5, 2x1, 1x2, 5x1, 4x0, 1x2, 15x5, 1x9, 2x5, 1x1, 4x0, 1x2, 15x5, 1x1, 2x5, 1x1, 4x0, 1x2, 1x12, 14x5, 1x1, 1x13, 1x14, 1x1, 4x0, 10x1, 1x9, 9x1, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x11, 2x5, 1x15, 1x16, 1x13, 1x15, 1x1, 4x0, 1x2, 1x6, 1x7, 1x5, 2x6, 2x5, 1x1, 3x5, 1x11, 5x5, 1x15, 1x2, 4x0, 1x1, 1x6, 16x5, 1x15, 1x1, 4x0, 1x1, 1x6, 17x5, 1x1, 4x0, 1x2, 1x6, 2x5, 2x6, 12x5, 1x17, 1x2, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x1, 4x5, 2x15, 1x1, 4x0, 4x1, 2x2, 4x1, 1x9, 4x1, 2x2, 3x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_window_curtain",
+                    "dresser",
+                    "bed",
+                    "w_floor",
+                    "table",
+                    "chair",
+                    "wardrobe",
+                    "w_door_c",
+                    "bed_double",
+                    "bookcase",
+                    "stairs_down",
+                    "barrel",
+                    "toilet",
+                    "bar",
+                    "fireplace",
+                    "pot"
                 ],
-                "type": "spawn_entity"
+                "rules": [
+                    {
+                        "entity": "human",
+                        "pos": [
+                            7.0,
+                            17.0
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
             }
-        ]
+        }
     },
     {
         "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 44x0)",
@@ -70,30 +87,44 @@
         ]
     },
     {
-        "blueprint": "(50x0, 3x1, 2x2, 15x1, 4x0, 1x1, 1x3, 1x4, 2x5, 1x6, 2x4, 1x1, 1x7, 1x4, 1x8, 2x4, 1x9, 1x10, 1x9, 2x4, 1x1, 4x0, 1x1, 2x4, 2x5, 3x4, 4x1, 7x4, 1x2, 4x0, 1x2, 1x11, 9x4, 1x1, 7x4, 1x2, 4x0, 1x1, 10x4, 1x1, 2x4, 3x12, 2x4, 1x2, 4x0, 1x1, 2x13, 8x4, 1x1, 3x4, 1x14, 3x4, 1x1, 4x0, 9x1, 1x8, 2x1, 7x4, 1x1, 4x0, 1x1, 1x6, 1x15, 2x4, 1x13, 1x1, 12x4, 1x1, 4x0, 1x2, 1x4, 1x15, 3x4, 1x1, 12x4, 1x2, 4x0, 1x2, 5x4, 1x1, 12x4, 1x2, 4x0, 1x1, 5x4, 1x1, 6x4, 3x16, 3x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x8, 5x4, 5x1, 2x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x1, 6x4, 1x3, 1x1, 1x9, 3x4, 1x1, 4x0, 7x1, 4x4, 1x14, 2x4, 1x1, 1x9, 3x4, 1x1, 10x0, 1x1, 2x4, 1x14, 2x12, 1x14, 1x4, 1x1, 4x4, 1x1, 10x0, 1x1, 3x4, 2x12, 7x4, 1x1, 10x0, 1x2, 3x4, 1x14, 8x4, 1x2, 10x0, 1x1, 7x4, 1x1, 4x4, 1x1, 10x0, 1x1, 5x4, 1x17, 1x18, 1x1, 1x9, 1x19, 2x9, 1x1, 10x0, 2x1, 1x8, 1x1, 1x2, 5x1, 2x2, 2x1, 50x0)",
         "id": "house02",
-        "palette": [
-            "void",
-            "w_wall",
-            "w_window_curtain",
-            "pot",
-            "w_floor",
-            "bed_double",
-            "dresser",
-            "toilet",
-            "w_door_c",
-            "bar",
-            "fireplace",
-            "chest",
-            "table",
-            "wardrobe",
-            "chair",
-            "bed",
-            "bookcase",
-            "stairs_down",
-            "stairs_up",
-            "barrel"
-        ]
+        "levels": {
+            "-1": {
+                "blueprint": "(50x0, 20x1, 4x0, 1x1, 7x2, 1x1, 1x3, 1x2, 1x4, 7x2, 1x1, 4x0, 1x1, 7x2, 4x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 9x1, 1x4, 2x1, 7x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x4, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 7x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 7x2, 1x1, 4x2, 1x1, 10x0, 1x1, 6x2, 1x5, 1x1, 4x2, 1x1, 10x0, 14x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "alley_bricks",
+                    "toilet",
+                    "w_door_c",
+                    "stairs_up"
+                ]
+            },
+            "0": {
+                "blueprint": "(50x0, 3x1, 2x2, 15x1, 4x0, 1x1, 1x3, 1x4, 2x5, 1x6, 2x4, 1x1, 1x7, 1x4, 1x8, 2x4, 1x9, 1x10, 1x9, 2x4, 1x1, 4x0, 1x1, 2x4, 2x5, 3x4, 4x1, 7x4, 1x2, 4x0, 1x2, 1x11, 9x4, 1x1, 7x4, 1x2, 4x0, 1x1, 10x4, 1x1, 2x4, 3x12, 2x4, 1x2, 4x0, 1x1, 2x13, 8x4, 1x1, 3x4, 1x14, 3x4, 1x1, 4x0, 9x1, 1x8, 2x1, 7x4, 1x1, 4x0, 1x1, 1x6, 1x15, 2x4, 1x13, 1x1, 12x4, 1x1, 4x0, 1x2, 1x4, 1x15, 3x4, 1x1, 12x4, 1x2, 4x0, 1x2, 5x4, 1x1, 12x4, 1x2, 4x0, 1x1, 5x4, 1x1, 6x4, 3x16, 3x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x8, 5x4, 5x1, 2x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x1, 6x4, 1x3, 1x1, 1x9, 3x4, 1x1, 4x0, 7x1, 4x4, 1x14, 2x4, 1x1, 1x9, 3x4, 1x1, 10x0, 1x1, 2x4, 1x14, 2x12, 1x14, 1x4, 1x1, 4x4, 1x1, 10x0, 1x1, 3x4, 2x12, 7x4, 1x1, 10x0, 1x2, 3x4, 1x14, 8x4, 1x2, 10x0, 1x1, 7x4, 1x1, 4x4, 1x1, 10x0, 1x1, 6x4, 1x17, 1x1, 1x9, 1x18, 2x9, 1x1, 10x0, 2x1, 1x8, 1x1, 1x2, 5x1, 2x2, 2x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_window_curtain",
+                    "pot",
+                    "w_floor",
+                    "bed_double",
+                    "dresser",
+                    "toilet",
+                    "w_door_c",
+                    "bar",
+                    "fireplace",
+                    "chest",
+                    "table",
+                    "wardrobe",
+                    "chair",
+                    "bed",
+                    "bookcase",
+                    "stairs_down",
+                    "barrel"
+                ]
+            }
+        }
     },
     {
         "blueprint": "(98x0, 5x1, 2x2, 4x1, 1x2, 3x1, 9x0, 1x1, 4x3, 2x4, 1x5, 1x1, 1x6, 2x7, 1x8, 1x7, 1x1, 1x0, 1x9, 7x0, 1x1, 4x3, 2x4, 1x3, 1x1, 2x3, 1x10, 2x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 1x1, 2x0, 1x12, 6x0, 1x1, 1x8, 1x3, 1x11, 4x3, 1x1, 5x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 6x1, 4x0, 2x1, 1x13, 1x1, 4x3, 1x13, 9x3, 1x6, 1x1, 4x0, 1x1, 1x14, 1x3, 1x1, 2x15, 2x3, 1x1, 4x3, 1x10, 5x3, 1x1, 4x0, 9x1, 3x3, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 2x3, 1x10, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 5x3, 1x10, 4x3, 1x2, 4x0, 1x2, 18x3, 1x1, 4x0, 1x2, 3x3, 1x10, 6x3, 2x11, 6x3, 1x1, 4x0, 1x2, 7x3, 7x1, 3x3, 2x1, 4x0, 1x1, 1x3, 1x10, 2x3, 1x10, 3x3, 1x11, 1x3, 2x11, 1x1, 5x3, 1x1, 4x0, 1x1, 11x3, 1x17, 1x1, 5x3, 1x2, 4x0, 1x1, 2x3, 2x7, 1x18, 4x3, 1x19, 1x11, 1x3, 1x1, 5x3, 1x1, 4x0, 2x1, 1x2, 4x1, 1x2, 8x1, 1x13, 3x1, 50x0)",
@@ -122,29 +153,54 @@
         ]
     },
     {
-        "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 4x3, 1x4, 2x5, 1x1, 15x0, 1x2, 5x3, 2x5, 1x1, 15x0, 1x1, 7x3, 3x1, 1x2, 2x1, 4x0, 7x1, 1x6, 2x1, 4x3, 1x1, 1x7, 1x3, 1x8, 1x4, 1x1, 4x0, 1x1, 2x9, 3x3, 1x1, 2x3, 1x1, 4x3, 1x1, 2x3, 1x8, 1x3, 1x1, 4x0, 1x2, 1x3, 1x10, 3x3, 1x1, 1x11, 1x12, 1x1, 1x7, 3x3, 1x1, 4x3, 1x2, 4x0, 1x1, 5x3, 6x1, 1x6, 2x1, 4x3, 1x2, 4x0, 1x1, 5x3, 1x1, 7x3, 1x1, 4x3, 1x1, 4x0, 1x1, 1x13, 8x3, 1x10, 3x3, 1x1, 1x6, 1x1, 2x3, 1x1, 4x0, 1x1, 1x13, 7x3, 3x9, 4x3, 1x1, 1x3, 1x11, 1x1, 4x0, 1x2, 1x13, 1x10, 6x3, 1x10, 6x3, 1x1, 1x3, 1x14, 1x1, 4x0, 1x1, 1x13, 4x3, 1x1, 9x3, 1x1, 1x11, 1x14, 1x1, 4x0, 12x1, 3x3, 5x1, 8x0, 1x1, 1x15, 1x13, 1x3, 1x1, 6x3, 1x14, 1x1, 11x0, 1x1, 3x3, 1x6, 6x3, 1x14, 1x1, 11x0, 1x1, 1x16, 1x17, 1x18, 1x1, 6x3, 1x14, 1x1, 11x0, 2x1, 1x2, 3x1, 1x6, 1x1, 2x2, 3x1, 53x0)",
         "id": "house04",
-        "palette": [
-            "void",
-            "w_wall",
-            "w_window_curtain",
-            "w_floor",
-            "dresser",
-            "bed_double",
-            "w_door_c",
-            "wardrobe",
-            "bed",
-            "table",
-            "chair",
-            "barrel",
-            "toilet",
-            "bar",
-            "bookcase",
-            "fireplace",
-            "stairs_up",
-            "stairs_down",
-            "chest"
-        ]
+        "levels": {
+            "0": {
+                "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 4x3, 1x4, 2x5, 1x1, 15x0, 1x2, 5x3, 2x5, 1x1, 15x0, 1x1, 7x3, 3x1, 1x2, 2x1, 4x0, 7x1, 1x6, 2x1, 4x3, 1x1, 1x7, 1x3, 1x8, 1x4, 1x1, 4x0, 1x1, 2x9, 3x3, 1x1, 2x3, 1x1, 4x3, 1x1, 2x3, 1x8, 1x3, 1x1, 4x0, 1x2, 1x3, 1x10, 3x3, 1x1, 1x11, 1x12, 1x1, 1x7, 3x3, 1x1, 4x3, 1x2, 4x0, 1x1, 5x3, 6x1, 1x6, 2x1, 4x3, 1x2, 4x0, 1x1, 5x3, 1x1, 7x3, 1x1, 4x3, 1x1, 4x0, 1x1, 1x13, 8x3, 1x10, 3x3, 1x1, 1x6, 1x1, 2x3, 1x1, 4x0, 1x1, 1x13, 7x3, 3x9, 4x3, 1x1, 1x3, 1x11, 1x1, 4x0, 1x2, 1x13, 1x10, 6x3, 1x10, 6x3, 1x1, 1x3, 1x14, 1x1, 4x0, 1x1, 1x13, 4x3, 1x1, 9x3, 1x1, 1x11, 1x14, 1x1, 4x0, 12x1, 3x3, 5x1, 8x0, 1x1, 1x15, 1x13, 1x3, 1x1, 6x3, 1x14, 1x1, 11x0, 1x1, 3x3, 1x6, 6x3, 1x14, 1x1, 11x0, 1x1, 1x16, 1x3, 1x17, 1x1, 6x3, 1x14, 1x1, 11x0, 2x1, 1x2, 3x1, 1x6, 1x1, 2x2, 3x1, 53x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_window_curtain",
+                    "w_floor",
+                    "dresser",
+                    "bed_double",
+                    "w_door_c",
+                    "wardrobe",
+                    "bed",
+                    "table",
+                    "chair",
+                    "barrel",
+                    "toilet",
+                    "bar",
+                    "bookcase",
+                    "fireplace",
+                    "stairs_up",
+                    "chest"
+                ]
+            },
+            "1": {
+                "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 1x3, 1x4, 3x5, 1x6, 1x5, 1x1, 15x0, 1x2, 1x3, 6x5, 1x1, 15x0, 1x1, 7x5, 3x1, 1x2, 2x1, 4x0, 7x1, 1x7, 2x1, 4x5, 1x1, 1x4, 1x5, 2x8, 1x1, 4x0, 1x1, 4x9, 1x5, 1x1, 2x5, 1x1, 1x10, 3x5, 1x1, 2x5, 2x8, 1x1, 4x0, 1x2, 5x5, 1x1, 1x11, 1x12, 1x1, 1x10, 3x5, 1x1, 4x5, 1x2, 4x0, 1x1, 5x5, 6x1, 1x7, 2x1, 4x5, 1x2, 4x0, 1x1, 1x11, 3x9, 1x5, 1x1, 7x5, 1x1, 1x5, 2x6, 1x5, 1x1, 4x0, 1x1, 8x5, 1x13, 4x5, 1x1, 1x7, 2x1, 1x7, 1x1, 4x0, 1x1, 7x5, 1x14, 1x13, 6x5, 1x1, 1x11, 1x5, 1x1, 4x0, 1x2, 8x5, 1x13, 6x5, 1x1, 2x5, 1x1, 4x0, 1x1, 2x9, 1x11, 1x9, 1x5, 1x1, 8x5, 1x15, 1x1, 1x5, 1x12, 1x1, 4x0, 12x1, 3x5, 5x1, 8x0, 1x1, 1x15, 2x5, 1x1, 6x5, 1x10, 1x1, 11x0, 1x1, 3x5, 1x7, 6x5, 1x10, 1x1, 11x0, 1x1, 1x16, 1x5, 1x11, 1x1, 6x5, 1x10, 1x1, 11x0, 2x1, 1x2, 3x1, 1x7, 1x1, 2x2, 3x1, 53x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_window_curtain",
+                    "bed",
+                    "dresser",
+                    "w_floor",
+                    "wardrobe",
+                    "w_door_c",
+                    "bed_double",
+                    "barrel_wine",
+                    "bookcase",
+                    "barrel",
+                    "toilet",
+                    "table",
+                    "chair",
+                    "pot",
+                    "stairs_down"
+                ]
+            }
+        }
     },
     {
         "blueprint": "(62x0, 2x1, 2x2, 2x1, 18x0, 1x1, 4x3, 1x1, 6x0, 7x1, 5x0, 1x1, 1x4, 1x5, 2x4, 3x1, 4x0, 1x1, 1x6, 1x7, 1x8, 1x1, 1x9, 1x1, 5x0, 1x1, 6x4, 1x1, 4x0, 1x1, 1x4, 1x5, 1x4, 1x1, 1x10, 7x1, 3x4, 1x3, 1x5, 1x4, 1x1, 4x0, 1x2, 14x4, 1x5, 2x3, 1x5, 1x2, 4x0, 1x2, 16x4, 1x3, 1x4, 1x2, 4x0, 1x1, 18x4, 1x1, 4x0, 2x1, 3x4, 1x1, 1x11, 1x4, 2x5, 2x4, 3x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 1x11, 1x4, 2x3, 1x5, 1x3, 1x1, 1x12, 1x1, 4x4, 1x2, 5x0, 1x2, 1x3, 2x4, 8x1, 1x10, 1x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 7x11, 1x4, 1x1, 4x4, 1x1, 4x0, 2x1, 3x4, 1x7, 8x4, 1x7, 2x4, 1x5, 1x4, 1x1, 4x0, 1x2, 4x4, 10x7, 1x4, 1x5, 2x3, 1x2, 4x0, 1x2, 1x5, 14x4, 1x5, 2x3, 1x2, 4x0, 1x2, 2x3, 1x5, 5x4, 2x13, 7x4, 1x5, 1x2, 4x0, 6x1, 3x4, 2x13, 3x4, 6x1, 8x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 5x1, 2x10, 5x1, 54x0)",
@@ -168,38 +224,38 @@
         "rules": [
             {
                 "entity": "human",
-                "role": "adventurer",
                 "pos": [
                     8.0,
                     16.0
                 ],
+                "role": "adventurer",
                 "type": "spawn_entity"
             },
             {
                 "entity": "imp",
-                "role": "adventurer",
                 "pos": [
                     18.0,
                     11.0
                 ],
+                "role": "adventurer",
                 "type": "spawn_entity"
             },
             {
                 "entity": "djinn",
-                "role": "adventurer",
                 "pos": [
                     5.0,
                     8.0
                 ],
+                "role": "adventurer",
                 "type": "spawn_entity"
             },
             {
                 "entity": "goblin",
-                "role": "adventurer",
                 "pos": [
                     14.0,
                     19.0
                 ],
+                "role": "adventurer",
                 "type": "spawn_entity"
             }
         ]

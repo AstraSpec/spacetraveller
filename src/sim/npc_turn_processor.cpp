@@ -12,12 +12,28 @@
 #include "components/effects.h"
 #include "world/traversal_rules.h"
 #include "core/tag_registry.h"
+#include "entities/entity_tracker.h"
 
 #include <functional>
 
 using namespace godot;
 
 namespace {
+
+class ScopedBubbleZ {
+public:
+    ScopedBubbleZ(WorldBubble& p_bubble, int p_z) : bubble(p_bubble), previous_z(p_bubble.get_active_z()) {
+        bubble.set_active_z(p_z);
+    }
+
+    ~ScopedBubbleZ() {
+        bubble.set_active_z(previous_z);
+    }
+
+private:
+    WorldBubble& bubble;
+    int previous_z = 0;
+};
 
 bool is_openable_tile(WorldBubble& bubble, const Vector2i& pos) {
     TileDb* tile_db = TileDb::get_singleton();
@@ -64,11 +80,12 @@ void NpcTurnProcessor::run_turn(
     uint32_t entity_id,
     EntityPool& pool,
     TileDb& tile_db,
-    std::vector<Vector2i>& blocking_positions,
     SimulationDirector& director
 ) {
     Entity* entity = pool.get_entity(entity_id);
     if (!entity) return;
+
+    ScopedBubbleZ scoped_z(*director.d.bubble, entity->z);
 
     float base_time = entity->next_turn_time;
 
@@ -88,6 +105,28 @@ void NpcTurnProcessor::run_turn(
     PerceptionMemory* mem = director.d.ledger->try_get_perception(entity_id);
     AIData* ai = director.d.ledger->try_get_ai(entity_id);
     if (!mem || !ai) return;
+
+    std::vector<Vector2i> blocking_positions;
+    std::vector<uint32_t> blocking_ids;
+    const int block_radius = director.d.bubble->get_world_bubble_radius();
+    if (director.d.tracker) {
+        director.d.tracker->query_rect(
+            Vector2i(entity->x - block_radius, entity->y - block_radius),
+            Vector2i(entity->x + block_radius, entity->y + block_radius),
+            blocking_ids,
+            entity->z
+        );
+    } else {
+        blocking_ids = pool.get_live_ids();
+    }
+
+    blocking_positions.reserve(blocking_ids.size());
+    for (uint32_t id : blocking_ids) {
+        if (id == entity_id) continue;
+        const Entity* blocker = pool.get_entity(id);
+        if (!blocker || blocker->z != entity->z) continue;
+        blocking_positions.push_back(Vector2i(blocker->x, blocker->y));
+    }
 
     int acquire_radius = director.d.bubble->get_world_bubble_radius();
     uint32_t target_id = director.find_nearest_hostile(entity_id, acquire_radius);
@@ -137,7 +176,10 @@ void NpcTurnProcessor::run_turn(
 
     float cost = 1.0f;
     if (intent.type == IntentType::MOVE) {
-        if (target_entity && intent.target.x == target_entity->x && intent.target.y == target_entity->y) {
+        if (target_entity &&
+            target_entity->z == entity->z &&
+            intent.target.x == target_entity->x &&
+            intent.target.y == target_entity->y) {
             cost = director.resolve_attack(entity_id, target_id, false);
             if (cost <= 0.0f) cost = 1.0f;
             director.finish_entity_action(entity_id, cost, base_time);

@@ -16,8 +16,8 @@ void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_tilemap", "tilemap"), &StructureEditor::set_tilemap);
     ClassDB::bind_method(D_METHOD("get_tilemap"), &StructureEditor::get_tilemap);
 
-    ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()));
-    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()));
+    ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset", "z"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()), DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset", "z"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()), DEFVAL(0));
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id", "entry_type"), &StructureEditor::update_preview_tiles, DEFVAL("tile"));
     ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data", "entry_type"), &StructureEditor::update_preview_tiles_with_data, DEFVAL("tile"));
     ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id", "entry_type"), &StructureEditor::update_preview_shape, DEFVAL("tile"));
@@ -54,7 +54,7 @@ FastTileMap *StructureEditor::get_tilemap() const {
     return tilemap;
 }
 
-Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset) const {
+Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset, int p_z) const {
     Dictionary result;
 
     int size = GameWorld::get_chunk_size();
@@ -86,7 +86,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     IdRegistry* id_reg = IdRegistry::get_singleton();
     for (int y = p_offset.y; y < p_offset.y + size; y++) {
         for (int x = p_offset.x; x < p_offset.x + size; x++) {
-            uint64_t key = WorldCoords::pack_coords(x, y);
+            uint64_t key = WorldCoords::pack_coords_3d(x, y, p_z);
             String tile_id = "void";
             
             auto it_v = cache.get(key, Variant());
@@ -114,7 +114,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     return result;
 }
 
-void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset) {
+void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset, int p_z) {
     if (!world) return;
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
@@ -154,7 +154,7 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             int x = (current_pos % size) + p_offset.x;
             int y = (current_pos / size) + p_offset.y;
             
-            uint64_t key = WorldCoords::pack_coords(x, y);
+            uint64_t key = WorldCoords::pack_coords_3d(x, y, p_z);
             new_cache[key] = (int)tile_id;
             
             current_pos++;

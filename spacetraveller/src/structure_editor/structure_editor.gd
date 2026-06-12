@@ -17,6 +17,7 @@ signal open_load
 @export var LoadWindow :Window
 @export var CoordsLabel :Label
 @export var ChunkVisual :Line2D
+@export var ZLevelLabel :Label
 var World :GameWorld
 var FastTilemap :FastTileMap
 var spacing :int = 0
@@ -40,6 +41,8 @@ var tileType2 :String = "tile"
 var lastMousePos :Vector2i
 var mousePos :Vector2i
 var playerOffset :Vector2
+var active_z :int = 0
+var levels :Dictionary = {}
 
 var undo_stack : Array = []
 var redo_stack : Array = []
@@ -47,7 +50,7 @@ const MAX_UNDOS = 100
 
 func update_editor_visuals():
 	if World:
-		World.update_world_bubble(playerOffset)
+		World.update_world_bubble_at_z(playerOffset, active_z)
 	elif FastTilemap:
 		FastTilemap.update_visuals(playerOffset)
 
@@ -62,6 +65,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	LoadWindow.FastTilemap = FastTilemap
 	if World:
 		Editor.set_world(World)
+		World.set_active_z(active_z)
 	Editor.set_tilemap(FastTilemap)
 	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()
 	
@@ -76,6 +80,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	if !chunkMenu.index_pressed.is_connected(_on_chunk_index_pressed):
 		chunkMenu.index_pressed.connect(_on_chunk_index_pressed)
 	_update_chunk_visual()
+	_update_z_label()
 	
 	TileGrid.start(spacing, TileDb)
 	ItemGrid.start(spacing, ItemDb)
@@ -173,8 +178,18 @@ func _on_mouse_input(button: String, action: InputManager.MouseAction):
 
 func _on_key_input(key: String):
 	match key:
-		"undo": undo()
-		"redo": redo()
+		"undo":
+			undo()
+			return
+		"redo":
+			redo()
+			return
+		"ascend_level":
+			change_z(1)
+			return
+		"descent_level":
+			change_z(-1)
+			return
 	
 	if active_tool and active_tool.has_method("on_key"):
 		active_tool.on_key(key)
@@ -243,9 +258,7 @@ func is_inside_bubble(pos: Vector2i) -> bool:
 
 func _on_clear_button_pressed() -> void:
 	save_undo_state()
-	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
-		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
-			World.place_tile(x, y, "void")
+	_clear_current_chunk()
 	update_editor_visuals()
 
 func get_mouse_tile_pos() -> Vector2i:
@@ -280,11 +293,7 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0:
-		save_undo_state()
-		for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
-			for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
-				World.place_tile(x, y, "void")
-		update_editor_visuals()
+		new_structure()
 	elif index == 1: open_save.emit()
 	elif index == 2: open_load.emit()
 
@@ -317,3 +326,157 @@ func _update_chunk_visual():
 	var rel_pos = selectedChunkPos - Vector2i(playerOffset)
 	ChunkVisual.position = Vector2(rel_pos) * cell_size
 	update_editor_visuals()
+
+func _level_key(z: int) -> String:
+	return str(z)
+
+func _update_z_label() -> void:
+	if ZLevelLabel:
+		ZLevelLabel.text = "Z: " + str(active_z)
+
+func _reset_level_edit_state() -> void:
+	undo_stack.clear()
+	redo_stack.clear()
+	active_selection = Rect2i()
+	if active_tool:
+		active_tool.on_deactivate()
+	if tools.has("selection"):
+		var selection_tool = tools["selection"]
+		selection_tool.selection_rect = Rect2i()
+		selection_tool.is_selecting = false
+		selection_tool.is_moving = false
+		selection_tool.is_floating = false
+		selection_tool.move_offset = Vector2i.ZERO
+		selection_tool.captured_tiles.clear()
+	Editor.clear_preview_tiles()
+
+func _clear_current_chunk() -> void:
+	if !World:
+		return
+	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
+		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
+			World.place_tile(x, y, "void")
+
+func _level_has_non_void(level_data: Dictionary) -> bool:
+	var palette: Array = level_data.get("palette", [])
+	var blueprint: String = str(level_data.get("blueprint", ""))
+	if palette.is_empty() or blueprint.is_empty():
+		return false
+	var rle: String = blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "")
+	for raw_part in rle.split(","):
+		var part: String = raw_part.strip_edges()
+		if part.is_empty():
+			continue
+		var pieces: PackedStringArray = part.split("x")
+		if pieces.size() != 2:
+			continue
+		var count: int = int(pieces[0])
+		var palette_index: int = int(pieces[1])
+		if count <= 0 or palette_index < 0 or palette_index >= palette.size():
+			continue
+		if str(palette[palette_index]) != "void":
+			return true
+	return false
+
+func _capture_active_level() -> void:
+	if !World:
+		return
+	if active_tool:
+		active_tool.on_deactivate()
+	var key: String = _level_key(active_z)
+	var previous: Dictionary = levels.get(key, {})
+	var rules: Array = previous.get("rules", [])
+	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z)
+	level_data.erase("id")
+	if !rules.is_empty():
+		level_data["rules"] = rules
+	if _level_has_non_void(level_data) or !rules.is_empty():
+		levels[key] = level_data
+	else:
+		levels.erase(key)
+
+func _apply_level(z: int) -> void:
+	if !World:
+		return
+	World.set_active_z(z)
+	active_z = z
+	_clear_current_chunk()
+	var key: String = _level_key(z)
+	if levels.has(key):
+		var level_data: Dictionary = levels[key]
+		Editor.import_from_rle(level_data.get("blueprint", ""), level_data.get("palette", []), selectedChunkPos, z)
+	_reset_level_edit_state()
+	_update_z_label()
+	update_editor_visuals()
+
+func change_z(delta: int) -> void:
+	if delta == 0 or !World:
+		return
+	_capture_active_level()
+	_apply_level(active_z + delta)
+
+func new_structure() -> void:
+	if !World:
+		return
+	if active_tool:
+		active_tool.on_deactivate()
+	levels.clear()
+	active_z = 0
+	World.set_active_z(active_z)
+	_clear_current_chunk()
+	_reset_level_edit_state()
+	_update_z_label()
+	update_editor_visuals()
+
+func import_structure(structure_data: Dictionary) -> void:
+	if !World:
+		return
+	if active_tool:
+		active_tool.on_deactivate()
+	var imported_levels: Dictionary = {}
+	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
+		var raw_levels: Dictionary = structure_data["levels"]
+		for key in raw_levels.keys():
+			var value: Variant = raw_levels[key]
+			if value is Dictionary:
+				imported_levels[str(key)] = value.duplicate(true)
+	elif structure_data.has("blueprint") or structure_data.has("palette") or structure_data.has("rules"):
+		var level_zero: Dictionary = {}
+		level_zero["blueprint"] = structure_data.get("blueprint", "")
+		level_zero["palette"] = structure_data.get("palette", [])
+		if structure_data.has("rules"):
+			level_zero["rules"] = structure_data["rules"]
+		imported_levels["0"] = level_zero
+
+	var levels_to_clear: Array = levels.keys()
+	for key in imported_levels.keys():
+		if !levels_to_clear.has(key):
+			levels_to_clear.append(key)
+	if !levels_to_clear.has(_level_key(active_z)):
+		levels_to_clear.append(_level_key(active_z))
+
+	for key in levels_to_clear:
+		World.set_active_z(int(str(key)))
+		_clear_current_chunk()
+
+	levels = imported_levels
+	_apply_level(0)
+
+func export_structure(id: String) -> Dictionary:
+	_capture_active_level()
+	var result_levels: Dictionary = {}
+	var result: Dictionary = {
+		"id": id,
+		"levels": result_levels
+	}
+	var sorted_keys: Array = levels.keys()
+	sorted_keys.sort_custom(func(a, b): return int(str(a)) < int(str(b)))
+	for key in sorted_keys:
+		var level_data: Dictionary = levels[key]
+		if _level_has_non_void(level_data) or level_data.has("rules"):
+			result_levels[str(key)] = level_data.duplicate(true)
+	if result_levels.is_empty():
+		var blank_level: Dictionary = Editor.export_to_rle("", selectedChunkPos, 0)
+		blank_level.erase("id")
+		result_levels["0"] = blank_level
+	return result

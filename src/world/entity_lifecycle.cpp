@@ -14,6 +14,7 @@
 #include "entities/entity_tracker.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 
 using namespace godot;
 
@@ -96,7 +97,7 @@ bool EntityLifecycle::activate_entity(
         scheduler.remove(entity_id);
         return false;
     }
-    if (!tracker.insert(entity_id, pos)) {
+    if (!tracker.insert(entity_id, Vector3i(entity->x, entity->y, entity->z))) {
         bubble.remove_entity(pos.x, pos.y);
         scheduler.remove(entity_id);
         return false;
@@ -127,7 +128,7 @@ bool EntityLifecycle::freeze_entity(
     Entity* entity = ledger.get_entity_pool().get_entity(entity_id);
     if (!entity) return false;
 
-    uint64_t packed = WorldCoords::pack_coords(entity->x, entity->y);
+    uint64_t packed = WorldCoords::pack_coords_3d(entity->x, entity->y, entity->z);
     archive.freeze_entity(packed, ledger.serialize_entity(entity_id));
     scheduler.remove(entity_id);
     bubble.remove_entity(entity->x, entity->y);
@@ -160,7 +161,7 @@ uint32_t EntityLifecycle::thaw_entity(
         ledger.destroy_entity(entity_id);
         return EntityPool::INVALID_ID;
     }
-    if (!tracker.insert(entity_id, Vector2i(entity->x, entity->y))) {
+    if (!tracker.insert(entity_id, Vector3i(entity->x, entity->y, entity->z))) {
         bubble.remove_entity(entity->x, entity->y);
         ledger.destroy_entity(entity_id);
         return EntityPool::INVALID_ID;

@@ -26,12 +26,12 @@ void EntityArchive::remove_frozen_entity(uint64_t packed_pos) {
     frozen_entities.erase(packed_pos);
 }
 
-std::vector<uint64_t> EntityArchive::get_frozen_keys_in_range(const Vector2i& center, int radius) const {
+std::vector<uint64_t> EntityArchive::get_frozen_keys_in_range(const Vector2i& center, int radius, int z) const {
     std::vector<uint64_t> result;
     for (const auto& [key, data] : frozen_entities) {
         (void)data;
-        Vector2i pos = WorldCoords::unpack_coords(key);
-        if (std::abs(pos.x - center.x) <= radius && std::abs(pos.y - center.y) <= radius) {
+        Vector3i pos = WorldCoords::unpack_coords_3d(key);
+        if (pos.z == z && std::abs(pos.x - center.x) <= radius && std::abs(pos.y - center.y) <= radius) {
             result.push_back(key);
         }
     }

@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "ItemAmountInput", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "ItemAmountInput", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -26,6 +26,7 @@ ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
 LoadWindow = NodePath("LoadWindow")
 CoordsLabel = NodePath("Canvas/MarginContainer/CoordsLabel")
 ChunkVisual = NodePath("ChunkVisual")
+ZLevelLabel = NodePath("Canvas/HBoxContainer/ZLevelLabel")
 
 [node name="Editor" type="StructureEditor" parent="."]
 
@@ -163,6 +164,10 @@ item_0/id = 0
 
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2
+
+[node name="ZLevelLabel" type="Label" parent="Canvas/HBoxContainer"]
+layout_mode = 2
+text = "Z: 0"
 
 [node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 oversampling_override = 1.0

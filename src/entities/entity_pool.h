@@ -18,8 +18,10 @@ public:
     EntityPool() = default;
 
     uint32_t create_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
-    uint32_t create_entity_with_id(uint32_t id, int x, int y, uint16_t atlas_x, uint16_t atlas_y);
+    uint32_t create_entity(int x, int y, int z, uint16_t atlas_x, uint16_t atlas_y);
+    uint32_t create_entity_with_id(uint32_t id, int x, int y, int z, uint16_t atlas_x, uint16_t atlas_y);
     uint32_t create_player_entity(int x, int y, uint16_t atlas_x, uint16_t atlas_y);
+    uint32_t create_player_entity(int x, int y, int z, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 
     Entity* get_entity(uint32_t id);

@@ -18,7 +18,7 @@ public:
     Dictionary get_frozen_entity_at(uint64_t packed_pos) const;
     bool has_frozen_entity(uint64_t packed_pos) const;
     void remove_frozen_entity(uint64_t packed_pos);
-    std::vector<uint64_t> get_frozen_keys_in_range(const Vector2i& center, int radius) const;
+    std::vector<uint64_t> get_frozen_keys_in_range(const Vector2i& center, int radius, int z = 0) const;
     Dictionary serialize() const;
     void deserialize(const Dictionary& data);
     void clear();

@@ -22,6 +22,8 @@ void WorldGenerator::setup_biome_rules() {
     id_building = id_reg->register_string("building");
     id_forest = id_reg->register_string("forest");
     id_plains = id_reg->register_string("plains");
+    id_underground_earth = id_reg->register_string("underground_earth");
+    id_solid_rock = id_reg->register_string("solid_rock");
 
     auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
         uint16_t b_id = id_reg->register_string(name);
@@ -261,7 +263,7 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
             case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break;
         }
         String structure_id = get_structure_id_for_cell(x, y, world_seed);
-        uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry);
+        uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, 0);
         if (tile_id != id_void) return tile_id;
     }
 
@@ -270,5 +272,37 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
         return pick_weighted_tile(*last_biome_ptr, h % 100);
     }
 
+    return id_void;
+}
+
+uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
+    if (z == 0) return get_tile(x, y, world_seed);
+
+    uint16_t chunk_id = get_chunk_id_for_cell(x, y);
+    if (chunk_id == id_building && s_db) {
+        int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+        int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+        uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
+        auto it = region_chunks.find(chunk_key);
+        if (it != region_chunks.end()) {
+            uint8_t rotation = static_cast<uint8_t>(it->second >> WorldCoords::ORIENTATION_SHIFT);
+            int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
+            int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
+            int rx = lx, ry = ly;
+            int max_coord = WorldCoords::CHUNK_SIZE - 1;
+            switch (rotation) {
+                case WorldCoords::ROT_WEST: rx = ly; ry = max_coord - lx; break;
+                case WorldCoords::ROT_NORTH: rx = max_coord - lx; ry = max_coord - ly; break;
+                case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break;
+            }
+
+            String structure_id = get_structure_id_for_cell(x, y, world_seed);
+            uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, z);
+            if (tile_id != id_void) return tile_id;
+        }
+    }
+
+    if (z == -1) return id_underground_earth;
+    if (z < -1) return id_solid_rock;
     return id_void;
 }

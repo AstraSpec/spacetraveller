@@ -11,6 +11,7 @@
 #include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
 #include <cmath>
+#include <godot_cpp/variant/vector3i.hpp>
 
 using namespace godot;
 
@@ -37,7 +38,7 @@ ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, 
     if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {
         return ActionResult::make_failure(ActionFailure::OCCUPIED);
     }
-    if (tracker && !tracker->move(entity.id, Vector2i(old_x, old_y), intent.target)) {
+    if (tracker && !tracker->move(entity.id, Vector3i(old_x, old_y, entity.z), Vector3i(intent.target.x, intent.target.y, entity.z))) {
         bubble.update_entity_position(intent.target.x, intent.target.y, old_x, old_y, entity.id);
         return ActionResult::make_failure(ActionFailure::OCCUPIED);
     }
@@ -111,6 +112,60 @@ ActionResult ActionResolver::resolve_close(const Intent& intent, const Entity& e
     return ActionResult::make_success(ActionCost::INTERACT);
 }
 
+ActionResult ActionResolver::resolve_change_z(const Intent& intent, Entity& entity, WorldBubble& bubble, const EntityLedger* ledger, EntityTracker* tracker) {
+    const int delta = intent.amount;
+    if (delta != 1 && delta != -1) {
+        return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
+    }
+    if (!ledger || !tracker) {
+        return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
+    }
+
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) {
+        return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
+    }
+
+    const uint16_t tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, entity.z);
+    const uint16_t required_tag = tag_reg->get_tag_id(delta > 0 ? "ASCEND_LEVEL" : "DESCENT_LEVEL");
+    if (required_tag == 0 || !tile_db->has_tag(tile_id, required_tag)) {
+        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+    }
+
+    const int old_z = entity.z;
+    const int new_z = old_z + delta;
+    const Vector3i old_pos(entity.x, entity.y, old_z);
+    const Vector3i new_pos(entity.x, entity.y, new_z);
+    const uint32_t occupant = tracker->get_at(new_pos);
+    if (occupant != INVALID_ENTITY_ID && occupant != entity.id) {
+        return ActionResult::make_failure(ActionFailure::OCCUPIED);
+    }
+
+    const uint16_t destination_tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, new_z);
+    if (destination_tile_id == 0 || !TraversalRules::can_enter(entity.id, destination_tile_id, *ledger)) {
+        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+    }
+
+    if (!tracker->move(entity.id, old_pos, new_pos)) {
+        return ActionResult::make_failure(ActionFailure::OCCUPIED);
+    }
+
+    if (old_z == bubble.get_active_z()) {
+        bubble.remove_entity(entity.x, entity.y);
+    }
+    entity.z = new_z;
+    if (new_z == bubble.get_active_z()) {
+        if (!bubble.set_entity(entity.x, entity.y, entity.id)) {
+            entity.z = old_z;
+            tracker->move(entity.id, new_pos, old_pos);
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
+    }
+
+    return ActionResult::make_success(ActionCost::INTERACT);
+}
+
 ActionResult ActionResolver::resolve_pickup(uint32_t picker_id, const Vector2i& pos, const String& item_id, int requested_amount, WorldBubble& bubble, InventoryData& inv, IGameEventListener* listener) {
     if (requested_amount <= 0 || item_id.is_empty()) {
         return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
@@ -157,6 +212,9 @@ ActionResult ActionResolver::resolve(uint32_t entity_id, const Intent& intent, W
 
         case IntentType::CLOSE:
             return resolve_close(intent, entity, bubble);
+
+        case IntentType::CHANGE_Z:
+            return resolve_change_z(intent, entity, bubble, ledger, tracker);
 
         case IntentType::ATTACK:
         case IntentType::PICKUP:

@@ -444,6 +444,7 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
     data["id"] = static_cast<int64_t>(id);
     data["x"] = e->x;
     data["y"] = e->y;
+    data["z"] = e->z;
     data["atlas_x"] = static_cast<int>(e->atlas_x);
     data["atlas_y"] = static_cast<int>(e->atlas_y);
     data["next_turn_time"] = e->next_turn_time;
@@ -542,10 +543,11 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
     uint32_t id = static_cast<uint32_t>(static_cast<int64_t>(data.get("id", static_cast<int64_t>(0))));
     int x = data.get("x", 0);
     int y = data.get("y", 0);
+    int z = data.get("z", 0);
     uint16_t atlas_x = static_cast<uint16_t>(static_cast<int>(data.get("atlas_x", 0)));
     uint16_t atlas_y = static_cast<uint16_t>(static_cast<int>(data.get("atlas_y", 0)));
 
-    entity_pool.create_entity_with_id(id, x, y, atlas_x, atlas_y);
+    entity_pool.create_entity_with_id(id, x, y, z, atlas_x, atlas_y);
 
     Entity* e = entity_pool.get_entity(id);
     if (e) {

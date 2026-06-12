@@ -296,7 +296,8 @@ void WorldSpawner::spawn_for_newly_seen_cells(
 
     std::vector<const SpawnRuleInfo*> rules;
     for (uint64_t packed : p_newly_seen_cells) {
-        Vector2i pos = WorldCoords::unpack_coords(packed);
+        Vector3i pos3 = WorldCoords::unpack_coords_3d(packed);
+        Vector2i pos(pos3.x, pos3.y);
         uint16_t chunk_id = p_generator.get_chunk_id_for_cell(pos.x, pos.y);
 
         String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, static_cast<int>(p_world_seed));
@@ -306,6 +307,13 @@ void WorldSpawner::spawn_for_newly_seen_cells(
             StructureDb* structure_db = StructureDb::get_singleton();
             const StructureInfo* structure = structure_db ? structure_db->get_structure_info(structure_id) : nullptr;
             if (structure) {
+                auto level_it = structure->levels.find(pos3.z);
+                if (level_it == structure->levels.end()) {
+                    p_spawn_state.mark_attempted(packed);
+                    continue;
+                }
+                const StructureLevelInfo& level = level_it->second;
+
                 int chunk_x = floor_div_chunk(pos.x);
                 int chunk_y = floor_div_chunk(pos.y);
                 Vector2i local_pos(
@@ -316,7 +324,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
 
                 bool spawned_from_rule = false;
                 bool custom_loot_rule_matched = false;
-                for (const StructureRuleInfo& rule : structure->rules) {
+                for (const StructureRuleInfo& rule : level.rules) {
                     Vector2i rule_local = resolve_structure_rule_local(rule.pos, rotation);
                     if (rule_local != local_pos) continue;
 

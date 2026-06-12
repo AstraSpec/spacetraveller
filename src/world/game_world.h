@@ -46,7 +46,8 @@ public:
         INTENT_SMASH = 3,
         INTENT_PICKUP = 4,
         INTENT_CLOSE = 5,
-        INTENT_OPEN = 6
+        INTENT_OPEN = 6,
+        INTENT_CHANGE_Z = 7
     };
 
 private:
@@ -96,6 +97,7 @@ public:
 
     void init_world_bubble(const Vector2i& player_pos, bool is_square = false);
     void update_world_bubble(const Vector2i& playerPos);
+    void update_world_bubble_at_z(const Vector2i& playerPos, int z);
     Dictionary init_region(const Vector2i& regionPos);
 
     void place_tile(int x, int y, const String& tile_id, BubbleLayer p_layer = LAYER_TILE);
@@ -108,6 +110,8 @@ public:
     void merge_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_layer = LAYER_TILE);
     Array get_seen_cells() const;
     void set_seen_cells(const Array& p_seen);
+    void set_active_z(int z);
+    int get_active_z() const;
     void invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_layer = LAYER_TILE);
     void invalidate_region_cache(const Rect2i& p_rect, BubbleLayer p_layer = LAYER_TILE);
     Dictionary get_tile_metadata(const Vector2i& pos) const;
@@ -142,10 +146,14 @@ public:
     uint32_t spawn_entity(int x, int y, const String& race_id);
     void despawn_entity(uint32_t entity_id);
     Vector2i get_entity_position(uint32_t entity_id) const;
+    int get_entity_z(uint32_t entity_id) const;
     Vector2i get_entity_chunk(uint32_t entity_id) const;
     Vector2i get_player_position() const;
+    int get_player_z() const;
     Vector2i get_player_chunk() const;
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
+    bool can_change_z(uint32_t entity_id, int delta);
+    float submit_player_change_z(int delta);
 
     bool add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);

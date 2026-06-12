@@ -77,19 +77,19 @@ func _update_buttons() -> void:
 func _on_load_pressed() -> void:
 	if selectedID == "": return
 	
-	var blueprint = StructureDb.get_blueprint(selectedID)
-	var palette = StructureDb.get_palette(selectedID)
+	var structure_data: Dictionary = {
+		"id": selectedID,
+		"levels": StructureDb.get_levels(selectedID)
+	}
+	var structure_levels: Dictionary = structure_data["levels"]
 	
-	if blueprint == "" or palette.is_empty():
+	if structure_levels.is_empty():
 		printerr("Failed to load raw data for: ", selectedID)
 		return
 		
 	structureEditor.save_undo_state()
-	Editor.import_from_rle(blueprint, palette, structureEditor.selectedChunkPos)
-	if World:
-		World.update_world_bubble(structureEditor.playerOffset)
-	elif FastTilemap:
-		FastTilemap.update_visuals(structureEditor.playerOffset)
+	structureEditor.import_structure(structure_data)
+	structureEditor.update_editor_visuals()
 	_close_window()
 
 func _on_delete_pressed() -> void:
