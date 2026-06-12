@@ -57,6 +57,7 @@ protected:
 
     void draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer* rs, RID texture_rid, class ItemDb* item_db, Layer p_layer = LAYER_TILE);
     void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
+    void draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
 
     uint32_t _get_variant_index(int x, int y, int variant_count) const {
         return Rng::variant_index(static_cast<uint32_t>(world_seed), x, y, static_cast<uint32_t>(variant_count));

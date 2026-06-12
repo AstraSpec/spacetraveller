@@ -39,6 +39,9 @@ public:
         bool draw_item = false;
         uint16_t item_id = 0;
         uint16_t tile_id = 0;
+        bool draw_below_tile = false;
+        uint16_t below_tile_id = 0;
+        int below_depth = 0;
         bool occluded = false;
         bool seen = true;
         uint16_t entity_sprite_id = 0;
@@ -128,6 +131,7 @@ public:
     }
 
     Array get_seen_cells() const;
+    Array get_seen_cells_at_z(int z) const;
     void set_seen_cells(const Array& p_seen);
     bool is_cell_seen(int x, int y) const;
     std::vector<uint64_t> consume_newly_seen_cells();

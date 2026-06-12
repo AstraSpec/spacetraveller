@@ -15,6 +15,48 @@
 
 using namespace godot;
 
+namespace {
+
+bool tile_is_air(uint16_t tile_id) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    return id_reg && tile_id == id_reg->get_id("air");
+}
+
+bool can_enter_tile(uint32_t entity_id, uint16_t tile_id, const EntityLedger* ledger) {
+    return ledger
+        ? TraversalRules::can_enter(entity_id, tile_id, *ledger)
+        : TraversalRules::can_profile_enter("walker", tile_id);
+}
+
+bool find_fall_landing(
+    uint32_t entity_id,
+    int x,
+    int y,
+    int start_z,
+    WorldBubble& bubble,
+    const EntityLedger* ledger,
+    int& r_landing_z
+) {
+    static constexpr int MAX_FALL_SCAN_DEPTH = 64;
+    for (int depth = 1; depth <= MAX_FALL_SCAN_DEPTH; depth++) {
+        const int candidate_z = start_z - depth;
+        const uint16_t tile_id = bubble.query_tile_id_at_z(x, y, candidate_z);
+        if (tile_id == 0 || tile_is_air(tile_id)) {
+            continue;
+        }
+        if (!can_enter_tile(entity_id, tile_id, ledger)) {
+            return false;
+        }
+
+        r_landing_z = candidate_z;
+        return true;
+    }
+
+    return false;
+}
+
+}
+
 ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger, EntityTracker* tracker) {
     int dx = abs(intent.target.x - entity.x);
     int dy = abs(intent.target.y - entity.y);
@@ -24,26 +66,68 @@ ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, 
     }
 
     uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
-    bool can_enter = ledger
-        ? TraversalRules::can_enter(entity.id, tile_id, *ledger)
-        : TraversalRules::can_profile_enter("walker", tile_id);
-    if (!can_enter) {
+    int target_z = entity.z;
+    if (tile_is_air(tile_id)) {
+        if (!find_fall_landing(entity.id, intent.target.x, intent.target.y, entity.z, bubble, ledger, target_z)) {
+            return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+        }
+    } else if (!can_enter_tile(entity.id, tile_id, ledger)) {
         return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
     }
 
     const WorldBubble::CellEntity* occupant = bubble.get_entity_at(intent.target.x, intent.target.y);
     if (occupant) return ActionResult::make_failure(ActionFailure::OCCUPIED);
-
-    int old_x = entity.x, old_y = entity.y;
-    if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {
-        return ActionResult::make_failure(ActionFailure::OCCUPIED);
+    if (target_z != entity.z && tracker) {
+        const uint32_t landing_occupant = tracker->get_at(Vector3i(intent.target.x, intent.target.y, target_z));
+        if (landing_occupant != INVALID_ENTITY_ID && landing_occupant != entity.id) {
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
     }
-    if (tracker && !tracker->move(entity.id, Vector3i(old_x, old_y, entity.z), Vector3i(intent.target.x, intent.target.y, entity.z))) {
-        bubble.update_entity_position(intent.target.x, intent.target.y, old_x, old_y, entity.id);
-        return ActionResult::make_failure(ActionFailure::OCCUPIED);
+
+    int old_x = entity.x, old_y = entity.y, old_z = entity.z;
+    if (target_z == old_z) {
+        if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
+        if (tracker && !tracker->move(entity.id, Vector3i(old_x, old_y, old_z), Vector3i(intent.target.x, intent.target.y, old_z))) {
+            bubble.update_entity_position(intent.target.x, intent.target.y, old_x, old_y, entity.id);
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
+    } else {
+        if (!tracker) {
+            return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
+        }
+        const Vector3i old_pos(old_x, old_y, old_z);
+        const Vector3i new_pos(intent.target.x, intent.target.y, target_z);
+        const int previous_active_z = bubble.get_active_z();
+        bubble.set_active_z(old_z);
+        bubble.remove_entity(old_x, old_y);
+        bubble.set_active_z(previous_active_z);
+
+        if (!tracker->move(entity.id, old_pos, new_pos)) {
+            const int restore_active_z = bubble.get_active_z();
+            bubble.set_active_z(old_z);
+            bubble.set_entity(old_x, old_y, entity.id);
+            bubble.set_active_z(restore_active_z);
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
+
+        const int set_active_z = bubble.get_active_z();
+        bubble.set_active_z(target_z);
+        bool set_target = bubble.set_entity(intent.target.x, intent.target.y, entity.id);
+        bubble.set_active_z(set_active_z);
+        if (!set_target) {
+            tracker->move(entity.id, new_pos, old_pos);
+            const int restore_active_z = bubble.get_active_z();
+            bubble.set_active_z(old_z);
+            bubble.set_entity(old_x, old_y, entity.id);
+            bubble.set_active_z(restore_active_z);
+            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+        }
     }
     entity.x = intent.target.x;
     entity.y = intent.target.y;
+    entity.z = target_z;
 
     Locomotion::advance_step(loco);
 

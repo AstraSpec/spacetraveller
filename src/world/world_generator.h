@@ -39,6 +39,7 @@ private:
 
     // Data-Driven Registry IDs
     uint16_t id_void = 0;
+    uint16_t id_air = 0;
     uint16_t id_building = 0;
     uint16_t id_forest = 0;
     uint16_t id_plains = 0;

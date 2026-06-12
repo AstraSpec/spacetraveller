@@ -97,7 +97,7 @@ public:
 
     void init_world_bubble(const Vector2i& player_pos, bool is_square = false);
     void update_world_bubble(const Vector2i& playerPos);
-    void update_world_bubble_at_z(const Vector2i& playerPos, int z);
+    void update_world_bubble_at_z(const Vector2i& playerPos, int z, bool process_streaming = true);
     Dictionary init_region(const Vector2i& regionPos);
 
     void place_tile(int x, int y, const String& tile_id, BubbleLayer p_layer = LAYER_TILE);
@@ -109,6 +109,7 @@ public:
     void set_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_layer = LAYER_TILE);
     void merge_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_layer = LAYER_TILE);
     Array get_seen_cells() const;
+    Array get_seen_cells_at_z(int z) const;
     void set_seen_cells(const Array& p_seen);
     void set_active_z(int z);
     int get_active_z() const;

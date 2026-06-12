@@ -610,6 +610,14 @@ texture = SubResource("ViewportTexture_kjl2a")
 expand_mode = 1
 stretch_mode = 2
 
+[node name="ZLevelLabel" type="Label" parent="Canvas/Window/MapUI/Map"]
+layout_mode = 1
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 72.0
+offset_bottom = 31.0
+text = "Z: 0"
+
 [node name="EscUI" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("single_tab")]
 oversampling_override = 1.0
 title = "Main Menu"

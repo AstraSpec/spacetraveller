@@ -259,7 +259,7 @@ static bool apply_structure_spawn_rule(
     if (p_rule.entity.is_empty()) return false;
 
     if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr
-        || p_entity_archive.has_frozen_entity(WorldCoords::pack_coords(p_pos.x, p_pos.y))) {
+        || p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_bubble.get_active_z()))) {
         return false;
     }
 

@@ -19,6 +19,7 @@ void WorldGenerator::setup_biome_rules() {
     if (!id_reg) return;
 
     id_void = id_reg->register_string("void");
+    id_air = id_reg->register_string("air");
     id_building = id_reg->register_string("building");
     id_forest = id_reg->register_string("forest");
     id_plains = id_reg->register_string("plains");
@@ -304,5 +305,5 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
 
     if (z == -1) return id_underground_earth;
     if (z < -1) return id_solid_rock;
-    return id_void;
+    return id_air;
 }

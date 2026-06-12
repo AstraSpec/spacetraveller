@@ -50,7 +50,7 @@ const MAX_UNDOS = 100
 
 func update_editor_visuals():
 	if World:
-		World.update_world_bubble_at_z(playerOffset, active_z)
+		World.update_world_bubble_at_z(playerOffset, active_z, false)
 	elif FastTilemap:
 		FastTilemap.update_visuals(playerOffset)
 

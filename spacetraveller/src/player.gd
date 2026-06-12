@@ -122,8 +122,8 @@ func _try_set_action(action: PlayerAction):
 	_clear_path()
 	var valid_cells: Array[Vector2i] = []
 
-	for offset: Vector2i in action.get_target_offsets():
-		var target = Vector2i(cellPos()) + offset
+	for _offset: Vector2i in action.get_target_offsets():
+		var target = Vector2i(cellPos()) + _offset
 		if action.is_valid(target):
 			valid_cells.append(target)
 

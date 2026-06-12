@@ -9,6 +9,8 @@
 
 using namespace godot;
 
+static constexpr int VERTICAL_AIR_VISIBILITY_DEPTH = 4;
+
 uint64_t WorldBubble::make_cell_key(int world_x, int world_y) const {
     return make_cell_key_at_z(world_x, world_y, active_z);
 }
@@ -39,6 +41,11 @@ uint16_t WorldBubble::resolve_tile_id(int layer, uint64_t cell_key, int world_x,
 
 static bool is_adjacent_to_player(int ox, int oy) {
     return ox >= -1 && ox <= 1 && oy >= -1 && oy <= 1 && !(ox == 0 && oy == 0);
+}
+
+static bool tile_is_air(uint16_t tile_id) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    return id_reg && tile_id == id_reg->get_id("air");
 }
 
 void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer) {
@@ -400,6 +407,17 @@ Array WorldBubble::get_seen_cells() const {
     return a;
 }
 
+Array WorldBubble::get_seen_cells_at_z(int z) const {
+    Array a;
+    for (uint64_t key : seen_cells) {
+        Vector3i pos = WorldCoords::unpack_coords_3d(key);
+        if (pos.z == z) {
+            a.push_back(Vector2i(pos.x, pos.y));
+        }
+    }
+    return a;
+}
+
 void WorldBubble::set_seen_cells(const Array& p_seen) {
     seen_cells.clear();
     for (int i = 0; i < p_seen.size(); i++) {
@@ -494,6 +512,59 @@ void WorldBubble::update_visibility(
 ) {
     visible_cells.clear();
 
+    auto remember_visible_cell = [&](int x, int y, int z) {
+        const uint64_t cell_key = make_cell_key_at_z(x, y, z);
+        visible_cells.insert(cell_key);
+        if (seen_cells.insert(cell_key).second) {
+            newly_seen_cells.push_back(cell_key);
+        }
+    };
+
+    auto propagate_vertical_air_visibility = [&]() {
+        struct VisibleActiveCell {
+            Vector3i pos;
+            uint16_t tile_id = 0;
+        };
+
+        std::vector<VisibleActiveCell> visible_active_cells;
+        visible_active_cells.reserve(visible_cells.size());
+
+        for (uint64_t cell_key : visible_cells) {
+            Vector3i pos = WorldCoords::unpack_coords_3d(cell_key);
+            if (pos.z != active_z) {
+                continue;
+            }
+            uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, pos.x, pos.y, pos.z);
+            visible_active_cells.push_back({pos, tile_id});
+        }
+
+        for (const VisibleActiveCell& cell : visible_active_cells) {
+            if (tile_is_air(cell.tile_id)) {
+                for (int direction : {-1, 1}) {
+                    for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
+                        const int z = cell.pos.z + direction * depth;
+                        const uint64_t vertical_key = make_cell_key_at_z(cell.pos.x, cell.pos.y, z);
+                        const uint16_t tile_id = resolve_tile_id(LAYER_TILE, vertical_key, cell.pos.x, cell.pos.y, z);
+                        remember_visible_cell(cell.pos.x, cell.pos.y, z);
+                        if (!tile_is_air(tile_id)) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
+                    const int z = cell.pos.z + depth;
+                    const uint64_t vertical_key = make_cell_key_at_z(cell.pos.x, cell.pos.y, z);
+                    const uint16_t tile_id = resolve_tile_id(LAYER_TILE, vertical_key, cell.pos.x, cell.pos.y, z);
+                    if (!tile_is_air(tile_id)) {
+                        break;
+                    }
+                    remember_visible_cell(cell.pos.x, cell.pos.y, z);
+                }
+            }
+        }
+    };
+
     if (!occlusion_enabled) {
         for (uint64_t offset_key : offset_keys) {
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
@@ -501,8 +572,9 @@ void WorldBubble::update_visibility(
             int cy = offset.y + player_pos.y;
             uint64_t cell_key = make_cell_key(cx, cy);
             resolve_tile_id(LAYER_TILE, cell_key, cx, cy, active_z);
-            visible_cells.insert(cell_key);
+            remember_visible_cell(cx, cy, active_z);
         }
+        propagate_vertical_air_visibility();
         return;
     }
 
@@ -521,12 +593,10 @@ void WorldBubble::update_visibility(
     Occlusion::compute_visible(player_pos, world_bubble_radius, visibility_tiles, visible_2d);
     for (uint64_t visible_key : visible_2d) {
         Vector2i pos = WorldCoords::unpack_coords(visible_key);
-        uint64_t cell_key = make_cell_key(pos.x, pos.y);
-        visible_cells.insert(cell_key);
-        if (seen_cells.insert(cell_key).second) {
-            newly_seen_cells.push_back(cell_key);
-        }
+        remember_visible_cell(pos.x, pos.y, active_z);
     }
+
+    propagate_vertical_air_visibility();
 }
 
 WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
@@ -556,8 +626,32 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             }
 
             visual.tile_id = resolve_tile_id(l, cell_key, cx, cy, active_z);
+            bool draw_dynamic = !occlusion_enabled || !visual.occluded;
+            bool can_draw_below_air = l == LAYER_TILE
+                && tile_is_air(visual.tile_id)
+                && (!occlusion_enabled || !visual.occluded || visual.seen);
 
-            if (LAYER_HAS_ITEMS[l]) {
+            if (can_draw_below_air) {
+                for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
+                    const int below_z = active_z - depth;
+                    const uint64_t below_key = make_cell_key_at_z(cx, cy, below_z);
+                    bool below_known = occlusion_enabled && visual.occluded
+                        ? seen_cells.count(below_key) > 0
+                        : visible_cells.count(below_key) > 0;
+                    if (!below_known) {
+                        break;
+                    }
+                    const uint16_t below_tile = resolve_tile_id(l, below_key, cx, cy, below_z);
+                    if (below_tile != 0 && !tile_is_air(below_tile)) {
+                        visual.draw_below_tile = true;
+                        visual.below_tile_id = below_tile;
+                        visual.below_depth = depth;
+                        break;
+                    }
+                }
+            }
+
+            if (draw_dynamic && LAYER_HAS_ITEMS[l]) {
                 const DroppedItem* top = cell_data.get_top_item(cell_key);
                 bool item_hidden_by_tile = tile_db && tile_db->hides_items_at(visual.tile_id) && !is_adjacent_to_player(ox, oy);
                 if (top && !item_hidden_by_tile) {
@@ -582,7 +676,7 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             }
 
             auto ent_it = entity_positions.find(cell_key);
-            if (ent_it != entity_positions.end()) {
+            if (draw_dynamic && ent_it != entity_positions.end()) {
                 visual.entity_sprite_id = 1;
                 if (entity_pool_source) {
                     const Entity* entity = entity_pool_source->get_entity(ent_it->second.entity_id);
@@ -593,7 +687,7 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 }
             }
 
-            if (l == LAYER_INDICATOR) {
+            if (draw_dynamic && l == LAYER_INDICATOR) {
                 auto ov_it = overlays.find(cell_key);
                 if (ov_it != overlays.end()) {
                     const Overlay& ov = ov_it->second;

@@ -57,7 +57,7 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "player_pos", "is_square"), &GameWorld::init_world_bubble, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &GameWorld::update_world_bubble);
-    ClassDB::bind_method(D_METHOD("update_world_bubble_at_z", "playerPos", "z"), &GameWorld::update_world_bubble_at_z);
+    ClassDB::bind_method(D_METHOD("update_world_bubble_at_z", "playerPos", "z", "process_streaming"), &GameWorld::update_world_bubble_at_z, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &GameWorld::init_region);
 
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id", "layer"), &GameWorld::place_tile, DEFVAL(LAYER_TILE));
@@ -69,6 +69,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache", "layer"), &GameWorld::set_tile_id_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("merge_tile_id_cache", "cache", "layer"), &GameWorld::merge_tile_id_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("get_seen_cells"), &GameWorld::get_seen_cells);
+    ClassDB::bind_method(D_METHOD("get_seen_cells_at_z", "z"), &GameWorld::get_seen_cells_at_z);
     ClassDB::bind_method(D_METHOD("set_seen_cells", "seen"), &GameWorld::set_seen_cells);
     ClassDB::bind_method(D_METHOD("set_active_z", "z"), &GameWorld::set_active_z);
     ClassDB::bind_method(D_METHOD("get_active_z"), &GameWorld::get_active_z);
@@ -297,16 +298,24 @@ void GameWorld::update_world_bubble(const Vector2i& playerPos) {
     update_world_bubble_at_z(playerPos, bubble.get_active_z());
 }
 
-void GameWorld::update_world_bubble_at_z(const Vector2i& playerPos, int z) {
+void GameWorld::update_world_bubble_at_z(const Vector2i& playerPos, int z, bool process_streaming) {
     bubble.set_active_z(z);
     if (renderer) {
         std::vector<uint64_t> offset_keys = renderer->get_render_offset_keys();
         bubble.update_visibility(playerPos, offset_keys, renderer->is_occlusion_enabled());
-        sync_entity_streaming(playerPos);
+        if (process_streaming) {
+            sync_entity_streaming(playerPos);
+        } else {
+            bubble.consume_newly_seen_cells();
+        }
         renderer->update_visuals(playerPos);
         return;
     }
-    sync_entity_streaming(playerPos);
+    if (process_streaming) {
+        sync_entity_streaming(playerPos);
+    } else {
+        bubble.consume_newly_seen_cells();
+    }
 }
 
 void GameWorld::place_tile(int x, int y, const String& tile_id, BubbleLayer p_layer) {
@@ -343,6 +352,10 @@ void GameWorld::merge_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_lay
 
 Array GameWorld::get_seen_cells() const {
     return bubble.get_seen_cells();
+}
+
+Array GameWorld::get_seen_cells_at_z(int z) const {
+    return bubble.get_seen_cells_at_z(z);
 }
 
 void GameWorld::set_seen_cells(const Array& p_seen) {

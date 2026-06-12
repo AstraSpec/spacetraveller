@@ -137,6 +137,7 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
             }
 
             const WorldBubble::CellVisual& visual = snap_it->second;
+            bool used_below_tile = false;
 
             if (visual.draw_item) {
                 draw_item_at(ox, oy, visual.item_id, rs, texture_rid, item_db, (Layer)l);
@@ -153,6 +154,9 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
                         TILE_SIZE
                     )
                 );
+            } else if (l == LAYER_TILE && visual.draw_below_tile) {
+                draw_below_tile_at(ox, oy, playerPos, visual.below_tile_id, visual.below_depth, rs, texture_rid, tile_db);
+                used_below_tile = true;
             } else if (visual.tile_id != 0) {
                 update_tile_at(ox, oy, playerPos, visual.tile_id, rs, texture_rid, tile_db, (Layer)l);
             } else {
@@ -175,6 +179,12 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
 
             if (l == LAYER_INDICATOR && visual.draw_overlay) {
                 rs->canvas_item_set_modulate(pair.second, visual.overlay_color);
+            } else if (used_below_tile) {
+                if (occlusion_enabled && visual.occluded) {
+                    rs->canvas_item_set_modulate(pair.second, props.seen_modulation);
+                } else {
+                    rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
+                }
             } else if (occlusion_enabled) {
                 if (!visual.occluded) {
                     rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
@@ -207,6 +217,38 @@ void FastTileMap::draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer
         Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
         texture_rid,
         Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
+    );
+}
+
+void FastTileMap::draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db) {
+    uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
+    auto it_rid = tile_rids[LAYER_TILE].find(offset_key);
+    if (it_rid == tile_rids[LAYER_TILE].end()) return;
+
+    RID tile_rid = it_rid->second;
+    Vector2i atlas_pos(1, 1);
+    const TileInfo* info = tile_db->get_tile_info(tile_id);
+    if (info && !info->atlas_variants.empty()) {
+        uint32_t variant_idx = _get_variant_index(ox + playerPos.x, oy + playerPos.y - depth, info->atlas_variants.size());
+        Vector2i variant_coords = info->atlas_variants[variant_idx];
+        atlas_pos.x = 1 + variant_coords.x * (TILE_SIZE + 1);
+        atlas_pos.y = 1 + variant_coords.y * (TILE_SIZE + 1);
+    }
+
+    rs->canvas_item_clear(tile_rid);
+    rs->canvas_item_add_texture_rect_region(
+        tile_rid,
+        Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
+        texture_rid,
+        Rect2(atlas_pos.x, atlas_pos.y, TILE_SIZE, TILE_SIZE)
+    );
+
+    float overlay_alpha = 0.18f + 0.08f * static_cast<float>(depth - 1);
+    if (overlay_alpha > 0.48f) overlay_alpha = 0.48f;
+    rs->canvas_item_add_rect(
+        tile_rid,
+        Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
+        Color(1.0f, 1.0f, 1.0f, overlay_alpha)
     );
 }
 

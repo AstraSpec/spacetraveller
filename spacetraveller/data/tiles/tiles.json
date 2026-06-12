@@ -7,6 +7,13 @@
     "tags": []
   },
   {
+    "id": "air",
+    "name": "Air",
+    "atlas": [ 21, 0 ],
+    "solid": false,
+    "tags": ["AIR", "TRANSPARENT"]
+  },
+  {
     "id": "dirt",
     "name": "Dirt",
     "atlas": [ 9, 5 ],

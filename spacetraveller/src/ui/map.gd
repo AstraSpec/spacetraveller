@@ -5,6 +5,8 @@ extends Control
 @onready var Tilemap :TileMapLayer = get_node("/root/Main/MapView/TileMap")
 @onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
 @onready var Player :Sprite2D = get_node("/root/Main/Player")
+@onready var World :GameWorld = get_node("/root/Main/GameWorld")
+@onready var ZLevelLabel :Label = get_node("ZLevelLabel")
 
 const SOURCE :int = 2
 var REGION_SIZE = GameWorld.get_region_size()
@@ -54,6 +56,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 
 func center_view() -> void:
 	_sync_player_chunk_position()
+	_update_z_label()
 	Camera._view_centered()
 
 func _on_player_moved_chunk(chunkPos: Vector2) -> void:
@@ -65,6 +68,10 @@ func _on_player_moved_chunk(chunkPos: Vector2) -> void:
 
 func _sync_player_chunk_position() -> void:
 	_on_player_moved_chunk(Player.chunkPos())
+
+func _update_z_label() -> void:
+	if ZLevelLabel and World:
+		ZLevelLabel.text = "Z: " + str(World.get_player_z())
 
 func resize_viewport():
 	MapView.size = _get_inner_size()
