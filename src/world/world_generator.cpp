@@ -38,6 +38,8 @@ void WorldGenerator::setup_biome_rules() {
     reg_biome("plains", {{"grass", 80}, {"dirt", 20}});
     reg_biome("forest", {{"tree_oak", 30}, {"grass", 56}, {"dirt", 14}});
     reg_biome("building", {{"grass", 80}, {"dirt", 20}});
+    reg_biome("tavern", {{"grass", 80}, {"dirt", 20}});
+    reg_biome("adventurer_guild", {{"grass", 80}, {"dirt", 20}});
 
     auto reg_simple = [&](const String& name, const String& tile) {
         uint16_t b_id = id_reg->register_string(name);
@@ -83,6 +85,22 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
                 uint32_t h = get_hash(gx, gy, static_cast<uint32_t>(world_seed));
                 chunk_id = (h % 100 < 50) ? id_forest : id_plains;
+            } else if (chunk_id == id_building) {
+                ChunkDb* chunk_db = ChunkDb::get_singleton();
+                if (chunk_db && chunk_db->get_city_spawn_total_weight() > 0) {
+                    int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+                    int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+                    uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(gx, gy), Rng::BIOME);
+                    int roll = static_cast<int>(h % static_cast<uint64_t>(chunk_db->get_city_spawn_total_weight()));
+                    int cumulative = 0;
+                    for (const CityChunkSpawnInfo& spawn_info : chunk_db->get_city_spawn_chunks()) {
+                        cumulative += spawn_info.weight;
+                        if (roll < cumulative) {
+                            chunk_id = spawn_info.id;
+                            break;
+                        }
+                    }
+                }
             }
 
             uint8_t rot = pixel.meta & WorldCoords::ROTATION_MASK;
@@ -193,23 +211,33 @@ uint8_t WorldGenerator::get_chunk_rotation_for_cell(int x, int y) const {
 }
 
 String WorldGenerator::get_structure_id_for_chunk(uint16_t p_chunk_id) const {
-    if (p_chunk_id == id_building) return "house01";
-    return "";
+    StructureDb* structure_db = StructureDb::get_singleton();
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(p_chunk_id) : nullptr;
+    if (!structure_db || !chunk_info || chunk_info->structure_type.is_empty()) return "";
+
+    const std::vector<String>* structures = structure_db->get_structure_ids_by_type(chunk_info->structure_type);
+    if (!structures || structures->empty()) return "";
+    return structures->front();
 }
 
 String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) const {
     uint16_t chunk_id = get_chunk_id_for_cell(x, y);
-    if (chunk_id != id_building) return "";
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(chunk_id) : nullptr;
+    if (!chunk_info || chunk_info->structure_type.is_empty()) return "";
 
     int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
     int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-    static const char* STRUCTURE_IDS[] = {"house01", "house02", "house03", "house04", "tavern", "adventurer_guild"};
-    static constexpr int STRUCTURE_COUNT = sizeof(STRUCTURE_IDS) / sizeof(STRUCTURE_IDS[0]);
+
+    StructureDb* structure_db = StructureDb::get_singleton();
+    const std::vector<String>* structures = structure_db ? structure_db->get_structure_ids_by_type(chunk_info->structure_type) : nullptr;
+    if (!structures || structures->empty()) {
+        return "house01";
+    }
 
     uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(cx, cy), Rng::BIOME);
-    String selected = STRUCTURE_IDS[h % STRUCTURE_COUNT];
-    StructureDb* structure_db = StructureDb::get_singleton();
-    return structure_db && structure_db->get_structure_info(selected) ? selected : String("house01");
+    return (*structures)[h % structures->size()];
 }
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
@@ -253,7 +281,9 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
         }
     }
 
-    if (chunk_id == id_building && s_db) {
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(chunk_id) : nullptr;
+    if (chunk_info && !chunk_info->structure_type.is_empty() && s_db) {
         int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
         int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
         int rx = lx, ry = ly;
@@ -280,7 +310,9 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
     if (z == 0) return get_tile(x, y, world_seed);
 
     uint16_t chunk_id = get_chunk_id_for_cell(x, y);
-    if (chunk_id == id_building && s_db) {
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(chunk_id) : nullptr;
+    if (chunk_info && !chunk_info->structure_type.is_empty() && s_db) {
         int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
         int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
         uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);

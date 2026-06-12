@@ -54,7 +54,7 @@ static bool can_profile_enter_internal(
 
 static const TraversalProfileInfo* get_profile(const String& profile_id) {
     TraversalProfileDb* profile_db = TraversalProfileDb::get_singleton();
-    return profile_db ? profile_db->get_profile_info(profile_id.is_empty() ? String("animal_walker") : profile_id) : nullptr;
+    return profile_db ? profile_db->get_profile_info(profile_id.is_empty() ? String("walker") : profile_id) : nullptr;
 }
 
 static const TileInfo* get_tile(uint16_t tile_id) {

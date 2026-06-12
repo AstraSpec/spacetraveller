@@ -14,7 +14,21 @@
   },
   {
     "id": "building",
-    "atlas": [ 58, 8 ]
+    "atlas": [ 58, 8 ],
+    "city_spawn_weight": 40,
+    "structure_type": "building"
+  },
+  {
+    "id": "tavern",
+    "atlas": [ 60, 8 ],
+    "city_spawn_weight": 2,
+    "structure_type": "tavern"
+  },
+  {
+    "id": "adventurer_guild",
+    "atlas": [ 59, 8 ],
+    "city_spawn_weight": 1,
+    "structure_type": "adventurer_guild"
   },
   {
     "id": "palace",

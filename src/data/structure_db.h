@@ -47,6 +47,7 @@ struct StructureInfo {
     Array palette;
     std::vector<StructureRuleInfo> rules;
     std::unordered_map<int, StructureLevelInfo> levels;
+    String type = "building";
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
@@ -54,6 +55,7 @@ class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
 
 private:
     static const int CHUNK_SIZE;
+    std::unordered_map<String, std::vector<String>, StringHasher> structures_by_type;
 
 protected:
     static void _bind_methods();
@@ -63,7 +65,7 @@ public:
     StructureDb();
     ~StructureDb();
 
-    void initialize_data() { DataBase::initialize_data("res://data/structures"); }
+    void initialize_data();
     Array get_ids() const { return DataBase::get_ids(); }
 
     String get_blueprint(const String &p_id) const;
@@ -72,6 +74,7 @@ public:
 
     // Fast C++ access
     const StructureInfo* get_structure_info(const String &p_id) const;
+    const std::vector<String>* get_structure_ids_by_type(const String& p_type) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const;
 };

@@ -3,6 +3,7 @@
 #include "core/world_coords.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <algorithm>
 
 namespace godot {
 
@@ -146,10 +147,25 @@ void StructureDb::_bind_methods() {
 StructureDb::StructureDb() {}
 StructureDb::~StructureDb() {}
 
+void StructureDb::initialize_data() {
+    structures_by_type.clear();
+    DataBase::initialize_data("res://data/structures");
+
+    for (const auto& pair : cache) {
+        const StructureInfo& info = pair.second;
+        structures_by_type[info.type].push_back(pair.first);
+    }
+
+    for (auto& pair : structures_by_type) {
+        std::sort(pair.second.begin(), pair.second.end());
+    }
+}
+
 StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
+    info.type = String(p_data.get("type", "building"));
 
     if (id_reg) {
         id_reg->register_string(structure_id);
@@ -231,6 +247,11 @@ Dictionary StructureDb::get_levels(const String &p_id) const {
 
 const StructureInfo* StructureDb::get_structure_info(const String &p_id) const {
     return get_info(p_id);
+}
+
+const std::vector<String>* StructureDb::get_structure_ids_by_type(const String& p_type) const {
+    auto it = structures_by_type.find(p_type);
+    return it != structures_by_type.end() ? &it->second : nullptr;
 }
 
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {

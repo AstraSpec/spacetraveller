@@ -85,11 +85,11 @@ offset_right = 12.0
 offset_bottom = 12.0
 texture = ExtResource("7_143wy")
 
-[node name="TileMap" type="TileMapLayer" parent="MapView"]
+[node name="MapRenderer" type="FastMapRenderer" parent="MapView"]
 z_index = 100
 z_as_relative = false
 texture_filter = 1
-tile_set = SubResource("TileSet_3mine")
+tilesheet = ExtResource("2_hj8l7")
 
 [node name="Camera" type="Camera2D" parent="MapView"]
 script = ExtResource("4_8p67s")

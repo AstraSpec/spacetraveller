@@ -2,20 +2,20 @@ extends Control
 
 @onready var MapView :SubViewport = get_node("/root/Main/MapView")
 @onready var Camera :ViewCamera = get_node("/root/Main/MapView/Camera")
-@onready var Tilemap :TileMapLayer = get_node("/root/Main/MapView/TileMap")
+@onready var MapRenderer :FastMapRenderer = get_node("/root/Main/MapView/MapRenderer")
 @onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
 @onready var Player :Sprite2D = get_node("/root/Main/Player")
 @onready var World :GameWorld = get_node("/root/Main/GameWorld")
 @onready var ZLevelLabel :Label = get_node("ZLevelLabel")
 
-const SOURCE :int = 2
 var REGION_SIZE = GameWorld.get_region_size()
-var TILE_SIZE = FastTileMap.get_tile_size()
+var TILE_SIZE = FastMapRenderer.get_tile_size()
 
 func _ready():
 	get_window().size_changed.connect(resize_viewport)
 	resized.connect(resize_viewport)
 	call_deferred("resize_viewport")
+	MapView.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
 	
 	visible = true
 	Player.moved_chunk.connect(_on_player_moved_chunk)
@@ -30,6 +30,8 @@ func _ready():
 func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():
 		return
+
+	MapRenderer.clear()
 	
 	# Determine bounds from any key in the dictionary
 	var firstKey = regionChunks.keys()[0]
@@ -49,7 +51,7 @@ func _on_world_generated(regionChunks: Dictionary) -> void:
 				continue
 				
 			var atlas :Vector2i = ChunkDb.get_atlas_coords(chunkID)
-			Tilemap.set_cell(Vector2i(x, y), SOURCE, atlas)
+			MapRenderer.set_cell(Vector2i(x, y), atlas)
 	
 	MapView.size = get_size()
 	_sync_player_chunk_position()

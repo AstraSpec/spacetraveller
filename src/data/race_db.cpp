@@ -32,7 +32,7 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     }
     info.combat_style = p_data.get("combat_style", "default");
     info.faction = p_data.get("faction", "");
-    info.traversal_profile = String(p_data.get("traversal_profile", "animal_walker")).to_lower();
+    info.traversal_profile = String(p_data.get("traversal_profile", "walker")).to_lower();
     info.tags = _parse_tags(p_data.get("tags", Array()));
 
     Array parts = p_data.get("parts", Array());

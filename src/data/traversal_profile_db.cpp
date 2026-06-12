@@ -29,7 +29,7 @@ TraversalProfileInfo TraversalProfileDb::_parse_row(const Dictionary &p_data) {
 
 const TraversalProfileInfo* TraversalProfileDb::get_profile_info(const String &p_id) const {
     const TraversalProfileInfo* info = get_info(p_id.to_lower());
-    return info ? info : get_info("smart_walker");
+    return info ? info : get_info("walker");
 }
 
 }
