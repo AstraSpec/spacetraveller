@@ -24,19 +24,26 @@ ChunkDb::~ChunkDb() {
 void ChunkDb::initialize_data() {
     fast_cache.clear();
     city_spawn_chunks.clear();
+    wilderness_spawn_chunks.clear();
     city_spawn_total_weight = 0;
     DataBase::initialize_data("res://data/chunks");
 
     for (uint16_t id = 0; id < fast_cache.size(); id++) {
         const ChunkInfo& info = fast_cache[id];
-        if (info.city_spawn_weight <= 0) {
-            continue;
+        if (info.city_spawn_weight > 0) {
+            city_spawn_chunks.push_back({ id, info.city_spawn_weight });
+            city_spawn_total_weight += info.city_spawn_weight;
         }
-        city_spawn_chunks.push_back({ id, info.city_spawn_weight });
-        city_spawn_total_weight += info.city_spawn_weight;
+
+        if (info.wilderness_spawn_chance > 0.0f) {
+            wilderness_spawn_chunks.push_back({ id, static_cast<int>(info.wilderness_spawn_chance * 1000000.0f) });
+        }
     }
 
     std::sort(city_spawn_chunks.begin(), city_spawn_chunks.end(), [](const CityChunkSpawnInfo& a, const CityChunkSpawnInfo& b) {
+        return a.id < b.id;
+    });
+    std::sort(wilderness_spawn_chunks.begin(), wilderness_spawn_chunks.end(), [](const CityChunkSpawnInfo& a, const CityChunkSpawnInfo& b) {
         return a.id < b.id;
     });
 }
@@ -46,7 +53,11 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.city_spawn_weight = static_cast<int>(p_data.get("city_spawn_weight", Variant(0)));
+    info.wilderness_spawn_chance = static_cast<float>(static_cast<double>(p_data.get("wilderness_spawn_chance", 0.0)));
+    if (info.wilderness_spawn_chance < 0.0f) info.wilderness_spawn_chance = 0.0f;
+    if (info.wilderness_spawn_chance > 1.0f) info.wilderness_spawn_chance = 1.0f;
     info.structure_type = String(p_data.get("structure_type", ""));
+    info.dungeon_type = String(p_data.get("dungeon_type", ""));
 
     Variant feature_spawns_var = p_data.get("feature_spawns", Array());
     if (feature_spawns_var.get_type() == Variant::ARRAY) {

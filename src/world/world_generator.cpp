@@ -2,9 +2,11 @@
 #include "data/structure_db.h"
 #include "core/id_registry.h"
 #include "data/chunk_db.h"
+#include "data/dungeon_db.h"
 #include "data/feature_db.h"
 #include "core/tag_registry.h"
 #include "city_generation.h"
+#include "dungeon_generator.h"
 #include "gen_grid.h"
 
 using namespace godot;
@@ -17,6 +19,37 @@ static int floor_div_chunk(int p_value) {
 
 WorldGenerator::WorldGenerator() {}
 WorldGenerator::~WorldGenerator() = default;
+
+void WorldGenerator::reset_dungeon_cache() {
+    dungeon_layout_cache.clear();
+    dungeon_layout_cache_seed_valid = false;
+    dungeon_entrance_cache.clear();
+    dungeon_entrance_cache_valid = false;
+}
+
+void WorldGenerator::rebuild_dungeon_entrance_cache() {
+    dungeon_entrance_cache.clear();
+    dungeon_entrance_cache_valid = true;
+
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    DungeonDb* dungeon_db = DungeonDb::get_singleton();
+    if (!chunk_db || !dungeon_db) return;
+
+    for (const auto& pair : region_chunks) {
+        const uint16_t chunk_id = static_cast<uint16_t>(pair.second & WorldCoords::ID_MASK);
+        const ChunkInfo* chunk_info = chunk_db->get_chunk_info(chunk_id);
+        if (!chunk_info || chunk_info->dungeon_type.is_empty()) continue;
+
+        const DungeonInfo* dungeon_info = dungeon_db->get_dungeon_info(chunk_info->dungeon_type);
+        if (!dungeon_info) continue;
+
+        DungeonEntranceRef ref;
+        ref.dungeon_type = chunk_info->dungeon_type;
+        ref.entrance_chunk = WorldCoords::unpack_coords(pair.first);
+        ref.start_z = dungeon_info->start_z;
+        dungeon_entrance_cache.push_back(ref);
+    }
+}
 
 void WorldGenerator::setup_biome_rules() {
     if (!biome_rules.empty()) return;
@@ -36,6 +69,10 @@ void WorldGenerator::setup_biome_rules() {
     id_road_flagstone = id_reg->register_string("road_flagstone");
     id_alley_bricks = id_reg->register_string("alley_bricks");
     id_alley_flagstone = id_reg->register_string("alley_flagstone");
+    id_crypt_entrance = id_reg->register_string("crypt_entrance");
+    id_dungeon_floor = id_reg->register_string("dungeon_floor");
+    id_dungeon_wall = id_reg->register_string("dungeon_wall");
+    id_dungeon_door = id_reg->register_string("w_door_c");
 
     auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
         uint16_t b_id = id_reg->register_string(name);
@@ -51,6 +88,7 @@ void WorldGenerator::setup_biome_rules() {
     reg_biome("building", {{"grass", 80}, {"dirt", 20}});
     reg_biome("tavern", {{"grass", 80}, {"dirt", 20}});
     reg_biome("adventurer_guild", {{"grass", 80}, {"dirt", 20}});
+    reg_biome("crypt_entrance", {{"grass", 80}, {"dirt", 20}});
 
     auto reg_simple = [&](const String& name, const String& tile) {
         uint16_t b_id = id_reg->register_string(name);
@@ -81,6 +119,7 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
     
     region_chunks.clear();
     last_chunk_valid = false;
+    reset_dungeon_cache();
 
     GenGrid cityGenGrid(WorldCoords::REGION_SIZE);
     CityGeneration::spawn_city(cityGenGrid, 127, 128, world_seed);
@@ -95,7 +134,29 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
                 int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
                 uint32_t h = get_hash(gx, gy, static_cast<uint32_t>(world_seed));
-                chunk_id = (h % 100 < 50) ? id_forest : id_plains;
+
+                ChunkDb* chunk_db = ChunkDb::get_singleton();
+                if (chunk_db) {
+                    for (const CityChunkSpawnInfo& spawn_info : chunk_db->get_wilderness_spawn_chunks()) {
+                        const ChunkInfo* spawn_chunk = chunk_db->get_chunk_info(spawn_info.id);
+                        if (!spawn_chunk || spawn_chunk->wilderness_spawn_chance <= 0.0f) continue;
+
+                        Rng::Seeded spawn_rng = Rng::at(
+                            static_cast<uint32_t>(world_seed),
+                            Vector2i(gx, gy),
+                            Rng::BIOME,
+                            0x44554E47454F4E53ULL + static_cast<uint64_t>(spawn_info.id) // "DUNGEONS"
+                        );
+                        if (spawn_rng.chance(spawn_chunk->wilderness_spawn_chance)) {
+                            chunk_id = spawn_info.id;
+                            break;
+                        }
+                    }
+                }
+
+                if (chunk_id == id_void) {
+                    chunk_id = (h % 100 < 50) ? id_forest : id_plains;
+                }
             } else if (chunk_id == id_building) {
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
                 if (chunk_db && chunk_db->get_city_spawn_total_weight() > 0) {
@@ -117,6 +178,13 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
             uint8_t rot = pixel.meta & WorldCoords::ROTATION_MASK;
             int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
             int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+
+            // Temporary dungeon testing hook: place a crypt entrance just east of the default player spawn.
+            if (gx == 121 && gy == 120 && id_crypt_entrance != 0) {
+                chunk_id = id_crypt_entrance;
+                rot = WorldCoords::ROT_SOUTH;
+            }
+
             uint64_t key = WorldCoords::pack_coords(gx, gy);
 
             region_chunks[key] = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
@@ -624,6 +692,95 @@ uint16_t WorldGenerator::get_road_surface_feature_tile(int x, int y, uint16_t ba
     return id_void;
 }
 
+DungeonLayout* WorldGenerator::get_or_create_dungeon_layout(
+    const String& p_dungeon_type,
+    const Vector2i& p_entrance_chunk,
+    int p_world_seed
+) {
+    if (!dungeon_layout_cache_seed_valid || dungeon_layout_cache_seed != p_world_seed) {
+        dungeon_layout_cache.clear();
+        dungeon_layout_cache_seed = p_world_seed;
+        dungeon_layout_cache_seed_valid = true;
+    }
+
+    const uint64_t key = WorldCoords::pack_coords(p_entrance_chunk.x, p_entrance_chunk.y);
+    auto it = dungeon_layout_cache.find(key);
+    if (it != dungeon_layout_cache.end()) {
+        return &it->second;
+    }
+
+    DungeonDb* dungeon_db = DungeonDb::get_singleton();
+    const DungeonInfo* info = dungeon_db ? dungeon_db->get_dungeon_info(p_dungeon_type) : nullptr;
+    if (!info || info->generator != "room_graph") {
+        return nullptr;
+    }
+
+    DungeonLayout layout = DungeonGenerator::build_layout(*info, p_entrance_chunk, p_world_seed);
+    auto inserted = dungeon_layout_cache.emplace(key, layout);
+    return &inserted.first->second;
+}
+
+uint16_t WorldGenerator::get_dungeon_tile(int x, int y, int z, int world_seed) {
+    if (!dungeon_layout_cache_seed_valid || dungeon_layout_cache_seed != world_seed) {
+        dungeon_layout_cache.clear();
+        dungeon_layout_cache_seed = world_seed;
+        dungeon_layout_cache_seed_valid = true;
+    }
+
+    auto tile_from_layout = [&](const DungeonLayout& p_layout) -> uint16_t {
+        if (p_layout.z != z || !p_layout.might_contain(x, y)) {
+            return id_void;
+        }
+
+        for (int room_index = 0; room_index < (int)p_layout.rooms.size(); room_index++) {
+            const PlacedDungeonRoom& room = p_layout.rooms[room_index];
+            if (!DungeonGenerator::rect_has_point(room.bounds, x, y)) continue;
+
+            const bool is_door = DungeonGenerator::room_boundary_has_point(room.bounds, x, y) && p_layout.has_door(x, y);
+            if (is_door) {
+                return id_dungeon_door;
+            }
+            if (DungeonGenerator::room_boundary_has_point(room.bounds, x, y)) {
+                return id_dungeon_wall;
+            }
+            return id_dungeon_floor;
+        }
+
+        if (p_layout.has_corridor(x, y)) {
+            return id_dungeon_floor;
+        }
+        if (p_layout.has_corridor_wall(x, y)) {
+            return id_dungeon_wall;
+        }
+        return id_void;
+    };
+
+    for (const auto& pair : dungeon_layout_cache) {
+        uint16_t tile_id = tile_from_layout(pair.second);
+        if (tile_id != id_void) {
+            return tile_id;
+        }
+    }
+
+    if (!dungeon_entrance_cache_valid) {
+        rebuild_dungeon_entrance_cache();
+    }
+
+    for (const DungeonEntranceRef& entrance : dungeon_entrance_cache) {
+        if (entrance.start_z != z) continue;
+
+        DungeonLayout* layout = get_or_create_dungeon_layout(entrance.dungeon_type, entrance.entrance_chunk, world_seed);
+        if (!layout) continue;
+
+        uint16_t tile_id = tile_from_layout(*layout);
+        if (tile_id != id_void) {
+            return tile_id;
+        }
+    }
+
+    return id_void;
+}
+
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     uint16_t base_tile_id = get_base_surface_tile(x, y, world_seed);
     uint16_t feature_tile_id = get_surface_feature_tile(x, y, base_tile_id, world_seed);
@@ -658,6 +815,9 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
             if (tile_id != id_void) return tile_id;
         }
     }
+
+    uint16_t dungeon_tile_id = get_dungeon_tile(x, y, z, world_seed);
+    if (dungeon_tile_id != id_void) return dungeon_tile_id;
 
     if (z == -1) return id_underground_earth;
     if (z < -1) return id_solid_rock;

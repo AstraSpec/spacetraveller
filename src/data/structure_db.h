@@ -48,7 +48,7 @@ struct StructureInfo {
     Array palette;
     std::vector<StructureRuleInfo> rules;
     std::unordered_map<int, StructureLevelInfo> levels;
-    String type = "building";
+    String type = "";
     Vector2i size = Vector2i(24, 24);
 };
 

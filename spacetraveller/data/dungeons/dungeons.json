@@ -1,0 +1,13 @@
+[
+  {
+    "id": "crypt",
+    "generator": "room_graph",
+    "start_z": -2,
+    "depth_min": 3,
+    "depth_max": 6,
+    "radius_chunks": 6,
+    "room_count_min": 18,
+    "room_count_max": 30,
+    "corridor_width": 1
+  }
+]

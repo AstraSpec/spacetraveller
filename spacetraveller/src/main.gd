@@ -17,6 +17,7 @@ func _ready() -> void:
 	RaceDb.initialize_data()
 	ChunkDb.initialize_data()
 	FeatureDb.initialize_data()
+	DungeonDb.initialize_data()
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
 	RecipeDb.initialize_data()

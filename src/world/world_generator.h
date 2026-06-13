@@ -3,12 +3,14 @@
 
 #include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/classes/fast_noise_lite.hpp>
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
 #include "core/world_coords.h"
 #include "core/rng.h"
+#include "world/dungeon_generator.h"
 
 namespace godot {
 
@@ -49,6 +51,21 @@ private:
     uint16_t id_road_flagstone = 0;
     uint16_t id_alley_bricks = 0;
     uint16_t id_alley_flagstone = 0;
+    uint16_t id_crypt_entrance = 0;
+    uint16_t id_dungeon_floor = 0;
+    uint16_t id_dungeon_wall = 0;
+    uint16_t id_dungeon_door = 0;
+
+    std::unordered_map<uint64_t, DungeonLayout> dungeon_layout_cache;
+    int dungeon_layout_cache_seed = 0;
+    bool dungeon_layout_cache_seed_valid = false;
+    struct DungeonEntranceRef {
+        String dungeon_type;
+        Vector2i entrance_chunk;
+        int start_z = -1;
+    };
+    std::vector<DungeonEntranceRef> dungeon_entrance_cache;
+    bool dungeon_entrance_cache_valid = false;
 
     // Pre-fetched singletons/references used during generation
     class StructureDb* s_db = nullptr;
@@ -57,6 +74,10 @@ private:
     uint16_t get_base_surface_tile(int x, int y, int world_seed);
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
+    uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);
+    DungeonLayout* get_or_create_dungeon_layout(const String& p_dungeon_type, const Vector2i& p_entrance_chunk, int p_world_seed);
+    void reset_dungeon_cache();
+    void rebuild_dungeon_entrance_cache();
     bool base_allows_surface_feature(uint16_t p_base_tile_id) const;
     bool validate_surface_feature_anchor(
         const String& p_feature_id,
@@ -96,9 +117,9 @@ public:
 
     // Accessors for GameWorld to handle saving/loading
     const std::unordered_map<uint64_t, uint32_t>& get_region_chunks() const { return region_chunks; }
-    void set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks) { region_chunks = chunks; last_chunk_valid = false; }
-    void clear_region_chunks() { region_chunks.clear(); last_chunk_valid = false; }
-    void invalidate_cache() { last_chunk_valid = false; }
+    void set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks) { region_chunks = chunks; last_chunk_valid = false; reset_dungeon_cache(); }
+    void clear_region_chunks() { region_chunks.clear(); last_chunk_valid = false; reset_dungeon_cache(); }
+    void invalidate_cache() { last_chunk_valid = false; reset_dungeon_cache(); }
 };
 
 }

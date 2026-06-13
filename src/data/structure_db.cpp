@@ -175,6 +175,7 @@ void StructureDb::initialize_data() {
 
     for (const auto& pair : cache) {
         const StructureInfo& info = pair.second;
+        if (info.type.is_empty()) continue;
         structures_by_type[info.type].push_back(pair.first);
     }
 
@@ -187,7 +188,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
-    info.type = String(p_data.get("type", "building"));
+    info.type = String(p_data.get("type", ""));
     info.size = variant_to_vector2i(p_data.get("size", Array()), Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE));
     if (info.size.x <= 0 || info.size.y <= 0) {
         info.size = Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE);

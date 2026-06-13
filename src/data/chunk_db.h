@@ -17,7 +17,9 @@ struct ChunkInfo {
     Vector2i atlas;
     std::vector<uint16_t> tags;
     int city_spawn_weight = 0;
+    float wilderness_spawn_chance = 0.0f;
     String structure_type;
+    String dungeon_type;
     std::vector<ChunkFeatureSpawnInfo> feature_spawns;
 };
 
@@ -32,6 +34,7 @@ class ChunkDb : public Object, public DataBase<ChunkInfo, ChunkDb> {
 private:
     std::vector<ChunkInfo> fast_cache;
     std::vector<CityChunkSpawnInfo> city_spawn_chunks;
+    std::vector<CityChunkSpawnInfo> wilderness_spawn_chunks;
     int city_spawn_total_weight = 0;
 
 protected:
@@ -49,6 +52,7 @@ public:
     const ChunkInfo* get_chunk_info(const String &p_id) const;
     const ChunkInfo* get_chunk_info(uint16_t p_id) const;
     const std::vector<CityChunkSpawnInfo>& get_city_spawn_chunks() const { return city_spawn_chunks; }
+    const std::vector<CityChunkSpawnInfo>& get_wilderness_spawn_chunks() const { return wilderness_spawn_chunks; }
     int get_city_spawn_total_weight() const { return city_spawn_total_weight; }
     bool has_tag(const String &p_id, const String &p_tag) const;
     bool has_tag(uint16_t p_id, uint16_t p_tag_id) const;

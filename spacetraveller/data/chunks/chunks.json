@@ -8,6 +8,13 @@
     "atlas": [ 16, 0 ]
   },
   {
+    "id": "crypt_entrance",
+    "atlas": [ 40, 2 ],
+    "wilderness_spawn_chance": 0.001,
+    "structure_type": "crypt_entrance",
+    "dungeon_type": "crypt"
+  },
+  {
     "id": "road",
     "atlas": [ 53, 0 ],
     "tags": ["ROAD"],
