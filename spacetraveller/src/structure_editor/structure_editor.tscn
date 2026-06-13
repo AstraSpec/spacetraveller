@@ -169,7 +169,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Z: 0"
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 oversampling_override = 1.0
 title = "Save Structure"
 initial_position = 1
@@ -180,6 +180,8 @@ script = ExtResource("5_dh32f")
 structureEditor = NodePath("..")
 Editor = NodePath("../Editor")
 StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
+WidthText = NodePath("MarginContainer/VBoxContainer/SizeContainer/WidthText")
+HeightText = NodePath("MarginContainer/VBoxContainer/SizeContainer/HeightText")
 CreateButton = NodePath("MarginContainer/VBoxContainer/CreateButton")
 ExistingButton = NodePath("MarginContainer/VBoxContainer/ExistingButton")
 CreateFP = NodePath("MarginContainer/VBoxContainer/CreateFP")
@@ -203,12 +205,41 @@ theme_override_constants/separation = 10
 [node name="1" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)
 layout_mode = 2
-text = "1. Structure ID"
+text = "1. Structure Data"
 
 [node name="StructureIDText" type="TextEdit" parent="SaveWindow/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "ID"
+
+[node name="SizeContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Width" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Width: "
+
+[node name="WidthText" type="SpinBox" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+min_value = 1.0
+max_value = 24.0
+value = 24.0
+rounded = true
+
+[node name="Height" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Height: "
+
+[node name="HeightText" type="SpinBox" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+min_value = 1.0
+max_value = 24.0
+value = 24.0
+rounded = true
 
 [node name="2" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)

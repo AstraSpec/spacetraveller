@@ -6,11 +6,19 @@
 
 namespace godot {
 
+struct ChunkFeatureSpawnInfo {
+    String pool;
+    String placement;
+    float chance = 0.0f;
+    int candidates = 0;
+};
+
 struct ChunkInfo {
     Vector2i atlas;
     std::vector<uint16_t> tags;
     int city_spawn_weight = 0;
     String structure_type;
+    std::vector<ChunkFeatureSpawnInfo> feature_spawns;
 };
 
 struct CityChunkSpawnInfo {

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "roadside_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "horse_carriage", "weight": 1 }
+    ]
+  }
+]

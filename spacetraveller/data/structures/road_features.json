@@ -1,0 +1,24 @@
+[
+    {
+        "id": "horse_carriage",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x0, 1x2, 1x3, 1x2, 1x4, 1x5, 1x4, 1x6, 1x5, 1x7, 1x4, 1x3, 4x4)",
+                "palette": [
+                    "sign",
+                    "void",
+                    "barrel",
+                    "chair",
+                    "w_wall",
+                    "w_floor",
+                    "w_door_c",
+                    "w_window_c"
+                ]
+            }
+        },
+        "size": [
+            3,
+            6
+        ]
+    }
+]

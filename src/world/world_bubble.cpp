@@ -520,51 +520,6 @@ void WorldBubble::update_visibility(
         }
     };
 
-    auto propagate_vertical_air_visibility = [&]() {
-        struct VisibleActiveCell {
-            Vector3i pos;
-            uint16_t tile_id = 0;
-        };
-
-        std::vector<VisibleActiveCell> visible_active_cells;
-        visible_active_cells.reserve(visible_cells.size());
-
-        for (uint64_t cell_key : visible_cells) {
-            Vector3i pos = WorldCoords::unpack_coords_3d(cell_key);
-            if (pos.z != active_z) {
-                continue;
-            }
-            uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, pos.x, pos.y, pos.z);
-            visible_active_cells.push_back({pos, tile_id});
-        }
-
-        for (const VisibleActiveCell& cell : visible_active_cells) {
-            if (tile_is_air(cell.tile_id)) {
-                for (int direction : {-1, 1}) {
-                    for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
-                        const int z = cell.pos.z + direction * depth;
-                        const uint64_t vertical_key = make_cell_key_at_z(cell.pos.x, cell.pos.y, z);
-                        const uint16_t tile_id = resolve_tile_id(LAYER_TILE, vertical_key, cell.pos.x, cell.pos.y, z);
-                        remember_visible_cell(cell.pos.x, cell.pos.y, z);
-                        if (!tile_is_air(tile_id)) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
-                    const int z = cell.pos.z + depth;
-                    const uint64_t vertical_key = make_cell_key_at_z(cell.pos.x, cell.pos.y, z);
-                    const uint16_t tile_id = resolve_tile_id(LAYER_TILE, vertical_key, cell.pos.x, cell.pos.y, z);
-                    if (!tile_is_air(tile_id)) {
-                        break;
-                    }
-                    remember_visible_cell(cell.pos.x, cell.pos.y, z);
-                }
-            }
-        }
-    };
-
     if (!occlusion_enabled) {
         for (uint64_t offset_key : offset_keys) {
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
@@ -574,7 +529,6 @@ void WorldBubble::update_visibility(
             resolve_tile_id(LAYER_TILE, cell_key, cx, cy, active_z);
             remember_visible_cell(cx, cy, active_z);
         }
-        propagate_vertical_air_visibility();
         return;
     }
 
@@ -595,8 +549,6 @@ void WorldBubble::update_visibility(
         Vector2i pos = WorldCoords::unpack_coords(visible_key);
         remember_visible_cell(pos.x, pos.y, active_z);
     }
-
-    propagate_vertical_air_visibility();
 }
 
 WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
@@ -635,17 +587,16 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
                     const int below_z = active_z - depth;
                     const uint64_t below_key = make_cell_key_at_z(cx, cy, below_z);
-                    bool below_known = occlusion_enabled && visual.occluded
-                        ? seen_cells.count(below_key) > 0
-                        : visible_cells.count(below_key) > 0;
-                    if (!below_known) {
-                        break;
-                    }
                     const uint16_t below_tile = resolve_tile_id(l, below_key, cx, cy, below_z);
                     if (below_tile != 0 && !tile_is_air(below_tile)) {
-                        visual.draw_below_tile = true;
-                        visual.below_tile_id = below_tile;
-                        visual.below_depth = depth;
+                        const bool below_known = !occlusion_enabled
+                            || seen_cells.count(below_key) > 0
+                            || visible_cells.count(below_key) > 0;
+                        if (below_known) {
+                            visual.draw_below_tile = true;
+                            visual.below_tile_id = below_tile;
+                            visual.below_depth = depth;
+                        }
                         break;
                     }
                 }

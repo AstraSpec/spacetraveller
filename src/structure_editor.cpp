@@ -10,14 +10,24 @@
 
 using namespace godot;
 
+static Vector2i normalize_structure_editor_size(const Vector2i &p_size) {
+    const int max_size = GameWorld::get_chunk_size();
+    Vector2i size = p_size;
+    if (size.x <= 0) size.x = max_size;
+    if (size.y <= 0) size.y = max_size;
+    size.x = std::clamp(size.x, 1, max_size);
+    size.y = std::clamp(size.y, 1, max_size);
+    return size;
+}
+
 void StructureEditor::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_world", "world"), &StructureEditor::set_world);
     ClassDB::bind_method(D_METHOD("get_world"), &StructureEditor::get_world);
     ClassDB::bind_method(D_METHOD("set_tilemap", "tilemap"), &StructureEditor::set_tilemap);
     ClassDB::bind_method(D_METHOD("get_tilemap"), &StructureEditor::get_tilemap);
 
-    ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset", "z"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()), DEFVAL(0));
-    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset", "z"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()), DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("export_to_rle", "id", "offset", "z", "size"), &StructureEditor::export_to_rle, DEFVAL(Vector2i()), DEFVAL(0), DEFVAL(Vector2i()));
+    ClassDB::bind_method(D_METHOD("import_from_rle", "blueprint", "palette", "offset", "z", "size"), &StructureEditor::import_from_rle, DEFVAL(Vector2i()), DEFVAL(0), DEFVAL(Vector2i()));
     ClassDB::bind_method(D_METHOD("update_preview_tiles", "positions", "tile_id", "entry_type"), &StructureEditor::update_preview_tiles, DEFVAL("tile"));
     ClassDB::bind_method(D_METHOD("update_preview_tiles_with_data", "data", "entry_type"), &StructureEditor::update_preview_tiles_with_data, DEFVAL("tile"));
     ClassDB::bind_method(D_METHOD("update_preview_shape", "type", "p1", "p2", "filled", "perfect", "tile_id", "entry_type"), &StructureEditor::update_preview_shape, DEFVAL("tile"));
@@ -54,10 +64,10 @@ FastTileMap *StructureEditor::get_tilemap() const {
     return tilemap;
 }
 
-Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset, int p_z) const {
+Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset, int p_z, const Vector2i &p_size) const {
     Dictionary result;
 
-    int size = GameWorld::get_chunk_size();
+    const Vector2i size = normalize_structure_editor_size(p_size);
     if (!world) return result;
     Dictionary cache = world->get_tile_id_cache(GameWorld::LAYER_TILE);
 
@@ -82,10 +92,9 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
         blueprint_str += String::num_int64(run_count) + "x" + String::num_int64(index);
     };
 
-    // Iterate through the full grid
     IdRegistry* id_reg = IdRegistry::get_singleton();
-    for (int y = p_offset.y; y < p_offset.y + size; y++) {
-        for (int x = p_offset.x; x < p_offset.x + size; x++) {
+    for (int y = p_offset.y; y < p_offset.y + size.y; y++) {
+        for (int x = p_offset.x; x < p_offset.x + size.x; x++) {
             uint64_t key = WorldCoords::pack_coords_3d(x, y, p_z);
             String tile_id = "void";
             
@@ -114,7 +123,7 @@ Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_
     return result;
 }
 
-void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset, int p_z) {
+void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset, int p_z, const Vector2i &p_size) {
     if (!world) return;
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
@@ -129,9 +138,9 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
     String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    int size = GameWorld::get_chunk_size();
+    const Vector2i size = normalize_structure_editor_size(p_size);
     int current_pos = 0;
-    int total_expected = size * size;
+    int total_expected = size.x * size.y;
 
     Dictionary new_cache;
 
@@ -151,8 +160,8 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
         }
 
         for (int j = 0; j < count && current_pos < total_expected; j++) {
-            int x = (current_pos % size) + p_offset.x;
-            int y = (current_pos / size) + p_offset.y;
+            int x = (current_pos % size.x) + p_offset.x;
+            int y = (current_pos / size.x) + p_offset.y;
             
             uint64_t key = WorldCoords::pack_coords_3d(x, y, p_z);
             new_cache[key] = (int)tile_id;

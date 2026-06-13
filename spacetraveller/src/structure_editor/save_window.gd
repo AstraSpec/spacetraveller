@@ -3,6 +3,8 @@ extends Window
 @export var structureEditor :Node2D
 @export var Editor :StructureEditor
 @export var StructureID :TextEdit
+@export var WidthText :Control
+@export var HeightText :Control
 
 @export var CreateButton :Button
 @export var ExistingButton :Button
@@ -10,12 +12,15 @@ extends Window
 @export var ExistingFP :Button
 
 const DIR_FILEPATH :String = "res://data/structures/"
+const DEFAULT_STRUCTURE_SIZE :int = 24
 var currentPath :String = "res://data/structures/structures.json"
 
 func _ready() -> void:
 	structureEditor.open_save.connect(open)
 	CreateFP.text = DIR_FILEPATH
 	ExistingFP.text = currentPath
+	_configure_size_input(WidthText)
+	_configure_size_input(HeightText)
 
 func open() -> void:
 	visible = true
@@ -24,9 +29,33 @@ func _on_save_pressed() -> void:
 	var newID = StructureID.text.strip_edges()
 	if newID.is_empty(): return
 	
-	var structure_data :Dictionary = structureEditor.export_structure(newID)
+	var structure_data :Dictionary = structureEditor.export_structure(newID, _read_structure_size())
 	DbAccess.save_structure(newID, structure_data, currentPath)
 	visible = false
+
+func _configure_size_input(input: Control) -> void:
+	if input is SpinBox:
+		input.min_value = 1
+		input.max_value = DEFAULT_STRUCTURE_SIZE
+		input.step = 1
+		input.rounded = true
+		input.value = DEFAULT_STRUCTURE_SIZE
+		input.allow_greater = false
+		input.allow_lesser = false
+
+func _read_structure_size() -> Vector2i:
+	return Vector2i(_read_dimension(WidthText), _read_dimension(HeightText))
+
+func _read_dimension(input: Control) -> int:
+	if input is SpinBox:
+		var spin_value := int(round(input.value))
+		return spin_value if spin_value >= 1 and spin_value <= DEFAULT_STRUCTURE_SIZE else DEFAULT_STRUCTURE_SIZE
+	if input != null:
+		var text := str(input.get("text")).strip_edges()
+		if text.is_valid_int():
+			var text_value := int(text)
+			return text_value if text_value >= 1 and text_value <= DEFAULT_STRUCTURE_SIZE else DEFAULT_STRUCTURE_SIZE
+	return DEFAULT_STRUCTURE_SIZE
 
 func _on_create_button_pressed() -> void:
 	CreateFP.visible = true

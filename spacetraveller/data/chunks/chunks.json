@@ -10,7 +10,15 @@
   {
     "id": "road",
     "atlas": [ 53, 0 ],
-    "tags": ["ROAD"]
+    "tags": ["ROAD"],
+    "feature_spawns": [
+      {
+        "pool": "roadside_features",
+        "chance": 0.25,
+        "candidates": 2,
+        "placement": "roadside"
+      }
+    ]
   },
   {
     "id": "building",
@@ -37,7 +45,15 @@
   {
     "id": "alley",
     "atlas": [ 53, 1 ],
-    "tags": ["ROAD"]
+    "tags": ["ROAD"],
+    "feature_spawns": [
+      {
+        "pool": "roadside_features",
+        "chance": 0.5,
+        "candidates": 2,
+        "placement": "roadside"
+      }
+    ]
   },
   {
     "id": "gate",

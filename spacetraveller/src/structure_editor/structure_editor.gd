@@ -43,6 +43,7 @@ var mousePos :Vector2i
 var playerOffset :Vector2
 var active_z :int = 0
 var levels :Dictionary = {}
+var structure_size :Vector2i = Vector2i(24, 24)
 
 var undo_stack : Array = []
 var redo_stack : Array = []
@@ -378,6 +379,139 @@ func _level_has_non_void(level_data: Dictionary) -> bool:
 			return true
 	return false
 
+func _level_has_rules(level_data: Dictionary) -> bool:
+	if !level_data.has("rules"):
+		return false
+	var rules: Variant = level_data["rules"]
+	return rules is Array and !rules.is_empty()
+
+func _normalize_structure_size(size: Vector2i) -> Vector2i:
+	var normalized := size
+	if normalized.x <= 0:
+		normalized.x = CHUNK_SIZE
+	if normalized.y <= 0:
+		normalized.y = CHUNK_SIZE
+	normalized.x = clampi(normalized.x, 1, CHUNK_SIZE)
+	normalized.y = clampi(normalized.y, 1, CHUNK_SIZE)
+	return normalized
+
+func _structure_size_from_variant(value: Variant, fallback: Vector2i = Vector2i(24, 24)) -> Vector2i:
+	var size := fallback
+	if value is Vector2i:
+		size = value
+	elif value is Vector2:
+		size = Vector2i(int(value.x), int(value.y))
+	elif value is Array and value.size() >= 2:
+		size = Vector2i(int(value[0]), int(value[1]))
+	return _normalize_structure_size(size)
+
+func _decode_level_tiles(level_data: Dictionary, source_size: Vector2i) -> Array:
+	var total := source_size.x * source_size.y
+	var tiles: Array = []
+	tiles.resize(total)
+	for i in range(total):
+		tiles[i] = "void"
+
+	var palette: Array = level_data.get("palette", [])
+	var blueprint: String = str(level_data.get("blueprint", ""))
+	var rle: String = blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "")
+	var current_pos := 0
+
+	for raw_part in rle.split(","):
+		var part: String = raw_part.strip_edges()
+		if part.is_empty():
+			continue
+		var pieces: PackedStringArray = part.split("x")
+		if pieces.size() != 2:
+			continue
+		var count: int = int(pieces[0])
+		var palette_index: int = int(pieces[1])
+		var tile_id := "void"
+		if palette_index >= 0 and palette_index < palette.size():
+			tile_id = str(palette[palette_index])
+		for _i in range(count):
+			if current_pos >= total:
+				return tiles
+			tiles[current_pos] = tile_id
+			current_pos += 1
+
+	return tiles
+
+func _append_rle_run(parts: PackedStringArray, palette: Array, id_to_index: Dictionary, tile_id: String, count: int) -> void:
+	if count <= 0:
+		return
+	if !id_to_index.has(tile_id):
+		id_to_index[tile_id] = palette.size()
+		palette.append(tile_id)
+	parts.append("%dx%d" % [count, int(id_to_index[tile_id])])
+
+func _encode_tiles_to_level(tiles: Array, size: Vector2i) -> Dictionary:
+	var palette: Array = []
+	var id_to_index: Dictionary = {}
+	var parts := PackedStringArray()
+	var current_id := ""
+	var count := 0
+
+	for tile_id_variant in tiles:
+		var tile_id := str(tile_id_variant)
+		if tile_id.is_empty():
+			tile_id = "void"
+		if tile_id == current_id:
+			count += 1
+		else:
+			_append_rle_run(parts, palette, id_to_index, current_id, count)
+			current_id = tile_id
+			count = 1
+	_append_rle_run(parts, palette, id_to_index, current_id, count)
+
+	return {
+		"palette": palette,
+		"blueprint": "(" + ", ".join(parts) + ")"
+	}
+
+func _rule_pos_from_variant(value: Variant) -> Vector2i:
+	if value is Vector2i:
+		return value
+	if value is Vector2:
+		return Vector2i(int(value.x), int(value.y))
+	if value is Array and value.size() >= 2:
+		return Vector2i(int(value[0]), int(value[1]))
+	return Vector2i.ZERO
+
+func _filter_rules_for_size(rules: Array, size: Vector2i) -> Array:
+	var filtered: Array = []
+	for rule_variant in rules:
+		if !(rule_variant is Dictionary):
+			continue
+		var rule: Dictionary = rule_variant
+		if rule.has("pos"):
+			var pos := _rule_pos_from_variant(rule["pos"])
+			if pos.x < 0 or pos.x >= size.x or pos.y < 0 or pos.y >= size.y:
+				continue
+		filtered.append(rule.duplicate(true))
+	return filtered
+
+func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i) -> Dictionary:
+	var source_tiles := _decode_level_tiles(level_data, source_size)
+	var target_tiles: Array = []
+	target_tiles.resize(target_size.x * target_size.y)
+
+	for y in range(target_size.y):
+		for x in range(target_size.x):
+			var target_index := y * target_size.x + x
+			var tile_id := "void"
+			if x < source_size.x and y < source_size.y:
+				var source_index := y * source_size.x + x
+				if source_index >= 0 and source_index < source_tiles.size():
+					tile_id = str(source_tiles[source_index])
+			target_tiles[target_index] = tile_id
+
+	var compact_level := _encode_tiles_to_level(target_tiles, target_size)
+	var rules := _filter_rules_for_size(level_data.get("rules", []), target_size)
+	if level_data.has("rules"):
+		compact_level["rules"] = rules
+	return compact_level
+
 func _capture_active_level() -> void:
 	if !World:
 		return
@@ -386,7 +520,7 @@ func _capture_active_level() -> void:
 	var key: String = _level_key(active_z)
 	var previous: Dictionary = levels.get(key, {})
 	var rules: Array = previous.get("rules", [])
-	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z)
+	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z, structure_size)
 	level_data.erase("id")
 	if !rules.is_empty():
 		level_data["rules"] = rules
@@ -404,7 +538,7 @@ func _apply_level(z: int) -> void:
 	var key: String = _level_key(z)
 	if levels.has(key):
 		var level_data: Dictionary = levels[key]
-		Editor.import_from_rle(level_data.get("blueprint", ""), level_data.get("palette", []), selectedChunkPos, z)
+		Editor.import_from_rle(level_data.get("blueprint", ""), level_data.get("palette", []), selectedChunkPos, z, structure_size)
 	_reset_level_edit_state()
 	_update_z_label()
 	update_editor_visuals()
@@ -421,6 +555,7 @@ func new_structure() -> void:
 	if active_tool:
 		active_tool.on_deactivate()
 	levels.clear()
+	structure_size = Vector2i(CHUNK_SIZE, CHUNK_SIZE)
 	active_z = 0
 	World.set_active_z(active_z)
 	_clear_current_chunk()
@@ -434,6 +569,8 @@ func import_structure(structure_data: Dictionary) -> void:
 	if active_tool:
 		active_tool.on_deactivate()
 	var imported_levels: Dictionary = {}
+	var root_size := _structure_size_from_variant(structure_data.get("size", []))
+	structure_size = root_size
 	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
 		var raw_levels: Dictionary = structure_data["levels"]
 		for key in raw_levels.keys():
@@ -462,21 +599,26 @@ func import_structure(structure_data: Dictionary) -> void:
 	levels = imported_levels
 	_apply_level(0)
 
-func export_structure(id: String) -> Dictionary:
+func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dictionary:
 	_capture_active_level()
+	footprint = _normalize_structure_size(footprint)
+	var source_size := structure_size
 	var result_levels: Dictionary = {}
 	var result: Dictionary = {
 		"id": id,
+		"size": [footprint.x, footprint.y],
 		"levels": result_levels
 	}
 	var sorted_keys: Array = levels.keys()
 	sorted_keys.sort_custom(func(a, b): return int(str(a)) < int(str(b)))
 	for key in sorted_keys:
 		var level_data: Dictionary = levels[key]
-		if _level_has_non_void(level_data) or level_data.has("rules"):
-			result_levels[str(key)] = level_data.duplicate(true)
+		var compact_level := _compact_level_to_size(level_data, source_size, footprint)
+		if _level_has_non_void(compact_level) or _level_has_rules(compact_level):
+			result_levels[str(key)] = compact_level
 	if result_levels.is_empty():
-		var blank_level: Dictionary = Editor.export_to_rle("", selectedChunkPos, 0)
+		var blank_level: Dictionary = Editor.export_to_rle("", selectedChunkPos, 0, footprint)
 		blank_level.erase("id")
 		result_levels["0"] = blank_level
+	structure_size = footprint
 	return result

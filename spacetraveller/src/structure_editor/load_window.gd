@@ -79,6 +79,7 @@ func _on_load_pressed() -> void:
 	
 	var structure_data: Dictionary = {
 		"id": selectedID,
+		"size": StructureDb.get_structure_size(selectedID),
 		"levels": StructureDb.get_levels(selectedID)
 	}
 	var structure_levels: Dictionary = structure_data["levels"]

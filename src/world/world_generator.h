@@ -45,10 +45,34 @@ private:
     uint16_t id_plains = 0;
     uint16_t id_underground_earth = 0;
     uint16_t id_solid_rock = 0;
+    uint16_t id_road_bricks = 0;
+    uint16_t id_road_flagstone = 0;
+    uint16_t id_alley_bricks = 0;
+    uint16_t id_alley_flagstone = 0;
 
     // Pre-fetched singletons/references used during generation
     class StructureDb* s_db = nullptr;
     class IdRegistry* id_reg = nullptr;
+
+    uint16_t get_base_surface_tile(int x, int y, int world_seed);
+    uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
+    uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
+    bool base_allows_surface_feature(uint16_t p_base_tile_id) const;
+    bool validate_surface_feature_anchor(
+        const String& p_feature_id,
+        const Vector2i& p_origin,
+        const Vector2i& p_source_size,
+        const Vector2i& p_placed_size,
+        uint8_t p_rotation,
+        int p_world_seed
+    );
+    uint16_t get_surface_feature_tile_at(
+        const String& p_feature_id,
+        int p_local_x,
+        int p_local_y,
+        const Vector2i& p_source_size,
+        uint8_t p_rotation
+    ) const;
 
 public:
     WorldGenerator();

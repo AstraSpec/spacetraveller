@@ -2,11 +2,18 @@
 #include "data/structure_db.h"
 #include "core/id_registry.h"
 #include "data/chunk_db.h"
+#include "data/feature_db.h"
 #include "core/tag_registry.h"
 #include "city_generation.h"
 #include "gen_grid.h"
 
 using namespace godot;
+
+static int floor_div_chunk(int p_value) {
+    return (p_value >= 0)
+        ? (p_value / WorldCoords::CHUNK_SIZE)
+        : ((p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+}
 
 WorldGenerator::WorldGenerator() {}
 WorldGenerator::~WorldGenerator() = default;
@@ -25,6 +32,10 @@ void WorldGenerator::setup_biome_rules() {
     id_plains = id_reg->register_string("plains");
     id_underground_earth = id_reg->register_string("underground_earth");
     id_solid_rock = id_reg->register_string("solid_rock");
+    id_road_bricks = id_reg->register_string("road_bricks");
+    id_road_flagstone = id_reg->register_string("road_flagstone");
+    id_alley_bricks = id_reg->register_string("alley_bricks");
+    id_alley_flagstone = id_reg->register_string("alley_flagstone");
 
     auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
         uint16_t b_id = id_reg->register_string(name);
@@ -240,9 +251,9 @@ String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) c
     return (*structures)[h % structures->size()];
 }
 
-uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
-    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
+    int cx = floor_div_chunk(x);
+    int cy = floor_div_chunk(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
 
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
@@ -304,6 +315,319 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     }
 
     return id_void;
+}
+
+bool WorldGenerator::base_allows_surface_feature(uint16_t p_base_tile_id) const {
+    return p_base_tile_id == id_road_bricks ||
+        p_base_tile_id == id_road_flagstone ||
+        p_base_tile_id == id_alley_bricks ||
+        p_base_tile_id == id_alley_flagstone;
+}
+
+uint16_t WorldGenerator::get_surface_feature_tile_at(
+    const String& p_feature_id,
+    int p_local_x,
+    int p_local_y,
+    const Vector2i& p_source_size,
+    uint8_t p_rotation
+) const {
+    int sx = p_local_x;
+    int sy = p_local_y;
+
+    switch (p_rotation) {
+        case WorldCoords::ROT_EAST:
+            sx = p_local_y;
+            sy = p_source_size.y - 1 - p_local_x;
+            break;
+        case WorldCoords::ROT_WEST:
+            sx = p_source_size.x - 1 - p_local_y;
+            sy = p_local_x;
+            break;
+        case WorldCoords::ROT_NORTH:
+            sx = p_source_size.x - 1 - p_local_x;
+            sy = p_source_size.y - 1 - p_local_y;
+            break;
+        default:
+            break;
+    }
+
+    return s_db ? s_db->get_tile_at(p_feature_id, sx, sy, 0) : id_void;
+}
+
+bool WorldGenerator::validate_surface_feature_anchor(
+    const String& p_feature_id,
+    const Vector2i& p_origin,
+    const Vector2i& p_source_size,
+    const Vector2i& p_placed_size,
+    uint8_t p_rotation,
+    int p_world_seed
+) {
+    for (int ly = 0; ly < p_placed_size.y; ly++) {
+        for (int lx = 0; lx < p_placed_size.x; lx++) {
+            const uint16_t feature_tile = get_surface_feature_tile_at(p_feature_id, lx, ly, p_source_size, p_rotation);
+            if (feature_tile == 0 || feature_tile == id_void) continue;
+
+            const uint16_t base_tile = get_base_surface_tile(p_origin.x + lx, p_origin.y + ly, p_world_seed);
+            if (!base_allows_surface_feature(base_tile)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+uint16_t WorldGenerator::get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed) {
+    return get_road_surface_feature_tile(x, y, base_tile_id, world_seed);
+}
+
+uint16_t WorldGenerator::get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed) {
+    static constexpr int ROAD_SHOULDER_OFFSET = 3;
+    static constexpr uint64_t ROAD_FEATURE_SALT = 0x524F414446454154ULL; // "ROADFEAT"
+    static const String ROADSIDE_PLACEMENT = "roadside";
+
+    struct RoadFeatureCandidate {
+        bool valid = false;
+        int chunk_x = 0;
+        int chunk_y = 0;
+        int index = 0;
+        String feature_id;
+        Vector2i origin;
+        Vector2i source_size;
+        Vector2i placed_size;
+        uint8_t rotation = WorldCoords::ROT_SOUTH;
+    };
+
+    if (!base_allows_surface_feature(base_tile_id)) return id_void;
+    if (!s_db) return id_void;
+
+    FeatureDb* feature_db = FeatureDb::get_singleton();
+    if (!feature_db) return id_void;
+
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    const uint16_t road_tag_id = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
+    if (!chunk_db || road_tag_id == 0) return id_void;
+
+    const int current_cx = floor_div_chunk(x);
+    const int current_cy = floor_div_chunk(y);
+
+    auto roadside_candidate_count_for_chunk = [&](int p_chunk_x, int p_chunk_y) -> int {
+        const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
+        auto chunk_it = region_chunks.find(chunk_key);
+        if (chunk_it == region_chunks.end()) return 0;
+
+        const uint16_t chunk_id = static_cast<uint16_t>(chunk_it->second & WorldCoords::ID_MASK);
+        if (!chunk_db->has_tag(chunk_id, road_tag_id)) return 0;
+
+        const uint8_t neighbor_mask = static_cast<uint8_t>((chunk_it->second >> WorldCoords::NEIGHBOR_SHIFT) & WorldCoords::NEIGHBOR_MASK);
+        const bool north_south = (neighbor_mask & WorldCoords::NEIGH_NORTH) || (neighbor_mask & WorldCoords::NEIGH_SOUTH);
+        const bool east_west = (neighbor_mask & WorldCoords::NEIGH_EAST) || (neighbor_mask & WorldCoords::NEIGH_WEST);
+        if (!north_south && !east_west) return 0;
+
+        const ChunkInfo* chunk_info = chunk_db->get_chunk_info(chunk_id);
+        if (!chunk_info) return 0;
+
+        int count = 0;
+        for (const ChunkFeatureSpawnInfo& spawn : chunk_info->feature_spawns) {
+            if (spawn.placement != ROADSIDE_PLACEMENT) continue;
+            count += spawn.candidates;
+        }
+        return count;
+    };
+
+    auto build_candidate = [&](int p_chunk_x, int p_chunk_y, int p_index) -> RoadFeatureCandidate {
+        RoadFeatureCandidate candidate;
+        candidate.chunk_x = p_chunk_x;
+        candidate.chunk_y = p_chunk_y;
+        candidate.index = p_index;
+
+        const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
+        auto chunk_it = region_chunks.find(chunk_key);
+        if (chunk_it == region_chunks.end()) return candidate;
+
+        const uint16_t chunk_id = static_cast<uint16_t>(chunk_it->second & WorldCoords::ID_MASK);
+        if (!chunk_db->has_tag(chunk_id, road_tag_id)) return candidate;
+        const ChunkInfo* chunk_info = chunk_db->get_chunk_info(chunk_id);
+        if (!chunk_info) return candidate;
+
+        const uint8_t neighbor_mask = static_cast<uint8_t>((chunk_it->second >> WorldCoords::NEIGHBOR_SHIFT) & WorldCoords::NEIGHBOR_MASK);
+        const bool north_south = (neighbor_mask & WorldCoords::NEIGH_NORTH) || (neighbor_mask & WorldCoords::NEIGH_SOUTH);
+        const bool east_west = (neighbor_mask & WorldCoords::NEIGH_EAST) || (neighbor_mask & WorldCoords::NEIGH_WEST);
+        if (!north_south && !east_west) return candidate;
+
+        const ChunkFeatureSpawnInfo* spawn_info = nullptr;
+        int local_index = p_index;
+        for (const ChunkFeatureSpawnInfo& spawn : chunk_info->feature_spawns) {
+            if (spawn.placement != ROADSIDE_PLACEMENT) continue;
+            if (local_index < spawn.candidates) {
+                spawn_info = &spawn;
+                break;
+            }
+            local_index -= spawn.candidates;
+        }
+        if (!spawn_info) return candidate;
+
+        Rng::Seeded rng = Rng::at(
+            static_cast<uint32_t>(world_seed),
+            Vector2i(p_chunk_x, p_chunk_y),
+            Rng::BIOME,
+            ROAD_FEATURE_SALT + static_cast<uint64_t>(p_index) * 0x9E3779B97F4A7C15ULL
+        );
+        if (!rng.chance(spawn_info->chance)) return candidate;
+
+        const bool west_open = (neighbor_mask & WorldCoords::NEIGH_WEST) == 0;
+        const bool east_open = (neighbor_mask & WorldCoords::NEIGH_EAST) == 0;
+        const bool north_open = (neighbor_mask & WorldCoords::NEIGH_NORTH) == 0;
+        const bool south_open = (neighbor_mask & WorldCoords::NEIGH_SOUTH) == 0;
+        const bool can_place_vertical = north_south && (west_open || east_open);
+        const bool can_place_horizontal = east_west && (north_open || south_open);
+        if (!can_place_vertical && !can_place_horizontal) return candidate;
+
+        const bool place_horizontal = can_place_vertical && can_place_horizontal
+            ? rng.range(0, 1) == 1
+            : can_place_horizontal;
+
+        const FeaturePoolInfo* pool = feature_db->get_feature_pool(spawn_info->pool);
+        if (!pool || pool->type != "structure_stamp") return candidate;
+        const FeatureEntryInfo* entry = feature_db->pick_weighted_entry(*pool, rng);
+        if (!entry || entry->structure_id.is_empty()) return candidate;
+
+        candidate.feature_id = entry->structure_id;
+        candidate.source_size = s_db->get_structure_size(candidate.feature_id);
+        if (candidate.source_size.x <= 0 || candidate.source_size.y <= 0) return candidate;
+
+        const bool flipped = rng.range(0, 1) == 1;
+        candidate.rotation = place_horizontal
+            ? (flipped ? WorldCoords::ROT_WEST : WorldCoords::ROT_EAST)
+            : (flipped ? WorldCoords::ROT_NORTH : WorldCoords::ROT_SOUTH);
+        candidate.placed_size = place_horizontal ? Vector2i(candidate.source_size.y, candidate.source_size.x) : candidate.source_size;
+        if (candidate.placed_size.x >= WorldCoords::CHUNK_SIZE || candidate.placed_size.y >= WorldCoords::CHUNK_SIZE) return candidate;
+
+        const int shoulder_nudge = rng.range(-1, 1);
+        const int chunk_world_x = p_chunk_x * WorldCoords::CHUNK_SIZE;
+        const int chunk_world_y = p_chunk_y * WorldCoords::CHUNK_SIZE;
+        int anchor_x = chunk_world_x;
+        int anchor_y = chunk_world_y;
+
+        if (!place_horizontal) {
+            const bool use_far_side = west_open && east_open ? rng.range(0, 1) == 1 : east_open;
+            anchor_x += use_far_side
+                ? WorldCoords::CHUNK_SIZE - ROAD_SHOULDER_OFFSET - candidate.placed_size.x - shoulder_nudge
+                : ROAD_SHOULDER_OFFSET + shoulder_nudge;
+            anchor_y += rng.range(0, WorldCoords::CHUNK_SIZE - candidate.placed_size.y);
+        } else {
+            const bool use_far_side = north_open && south_open ? rng.range(0, 1) == 1 : south_open;
+            anchor_x += rng.range(0, WorldCoords::CHUNK_SIZE - candidate.placed_size.x);
+            anchor_y += use_far_side
+                ? WorldCoords::CHUNK_SIZE - ROAD_SHOULDER_OFFSET - candidate.placed_size.y - shoulder_nudge
+                : ROAD_SHOULDER_OFFSET + shoulder_nudge;
+        }
+
+        candidate.origin = Vector2i(anchor_x, anchor_y);
+        candidate.valid = true;
+        return candidate;
+    };
+
+    auto candidate_has_priority = [](const RoadFeatureCandidate& p_a, const RoadFeatureCandidate& p_b) -> bool {
+        if (p_a.chunk_y != p_b.chunk_y) return p_a.chunk_y < p_b.chunk_y;
+        if (p_a.chunk_x != p_b.chunk_x) return p_a.chunk_x < p_b.chunk_x;
+        return p_a.index < p_b.index;
+    };
+
+    auto candidates_overlap = [&](const RoadFeatureCandidate& p_a, const RoadFeatureCandidate& p_b) -> bool {
+        const int min_x = p_a.origin.x > p_b.origin.x ? p_a.origin.x : p_b.origin.x;
+        const int min_y = p_a.origin.y > p_b.origin.y ? p_a.origin.y : p_b.origin.y;
+        const int max_x_a = p_a.origin.x + p_a.placed_size.x;
+        const int max_y_a = p_a.origin.y + p_a.placed_size.y;
+        const int max_x_b = p_b.origin.x + p_b.placed_size.x;
+        const int max_y_b = p_b.origin.y + p_b.placed_size.y;
+        const int max_x = max_x_a < max_x_b ? max_x_a : max_x_b;
+        const int max_y = max_y_a < max_y_b ? max_y_a : max_y_b;
+
+        if (min_x >= max_x || min_y >= max_y) return false;
+
+        for (int wy = min_y; wy < max_y; wy++) {
+            for (int wx = min_x; wx < max_x; wx++) {
+                const uint16_t tile_a = get_surface_feature_tile_at(
+                    p_a.feature_id,
+                    wx - p_a.origin.x,
+                    wy - p_a.origin.y,
+                    p_a.source_size,
+                    p_a.rotation
+                );
+                if (tile_a == 0 || tile_a == id_void) continue;
+
+                const uint16_t tile_b = get_surface_feature_tile_at(
+                    p_b.feature_id,
+                    wx - p_b.origin.x,
+                    wy - p_b.origin.y,
+                    p_b.source_size,
+                    p_b.rotation
+                );
+                if (tile_b != 0 && tile_b != id_void) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    auto overlaps_prior_candidate = [&](const RoadFeatureCandidate& p_candidate) -> bool {
+        for (int cy = p_candidate.chunk_y - 1; cy <= p_candidate.chunk_y + 1; cy++) {
+            for (int cx = p_candidate.chunk_x - 1; cx <= p_candidate.chunk_x + 1; cx++) {
+                const int candidate_count = roadside_candidate_count_for_chunk(cx, cy);
+                for (int index = 0; index < candidate_count; index++) {
+                    RoadFeatureCandidate prior = build_candidate(cx, cy, index);
+                    if (!prior.valid || !candidate_has_priority(prior, p_candidate)) continue;
+                    if (!validate_surface_feature_anchor(prior.feature_id, prior.origin, prior.source_size, prior.placed_size, prior.rotation, world_seed)) continue;
+                    if (candidates_overlap(p_candidate, prior)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    };
+
+    for (int oy = -1; oy <= 1; oy++) {
+        for (int ox = -1; ox <= 1; ox++) {
+            const int anchor_cx = current_cx + ox;
+            const int anchor_cy = current_cy + oy;
+
+            const int candidate_count = roadside_candidate_count_for_chunk(anchor_cx, anchor_cy);
+            for (int candidate = 0; candidate < candidate_count; candidate++) {
+                RoadFeatureCandidate placed = build_candidate(anchor_cx, anchor_cy, candidate);
+                if (!placed.valid) continue;
+
+                if (x >= placed.origin.x && x < placed.origin.x + placed.placed_size.x &&
+                    y >= placed.origin.y && y < placed.origin.y + placed.placed_size.y) {
+                    if (!validate_surface_feature_anchor(placed.feature_id, placed.origin, placed.source_size, placed.placed_size, placed.rotation, world_seed)) {
+                        continue;
+                    }
+                    if (overlaps_prior_candidate(placed)) {
+                        continue;
+                    }
+
+                    const int local_x = x - placed.origin.x;
+                    const int local_y = y - placed.origin.y;
+                    const uint16_t tile_id = get_surface_feature_tile_at(placed.feature_id, local_x, local_y, placed.source_size, placed.rotation);
+                    if (tile_id != 0 && tile_id != id_void) {
+                        return tile_id;
+                    }
+                }
+            }
+        }
+    }
+
+    return id_void;
+}
+
+uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
+    uint16_t base_tile_id = get_base_surface_tile(x, y, world_seed);
+    uint16_t feature_tile_id = get_surface_feature_tile(x, y, base_tile_id, world_seed);
+    return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
 }
 
 uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {

@@ -39,6 +39,7 @@ struct StructureLevelInfo {
     String blueprint;
     Array palette;
     std::vector<StructureRuleInfo> rules;
+    Vector2i size = Vector2i(24, 24);
 };
 
 struct StructureInfo {
@@ -48,6 +49,7 @@ struct StructureInfo {
     std::vector<StructureRuleInfo> rules;
     std::unordered_map<int, StructureLevelInfo> levels;
     String type = "building";
+    Vector2i size = Vector2i(24, 24);
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
@@ -75,6 +77,7 @@ public:
     // Fast C++ access
     const StructureInfo* get_structure_info(const String &p_id) const;
     const std::vector<String>* get_structure_ids_by_type(const String& p_type) const;
+    Vector2i get_structure_size(const String &p_structure_id) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const;
 };

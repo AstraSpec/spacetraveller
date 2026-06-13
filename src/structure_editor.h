@@ -35,8 +35,8 @@ public:
     void set_tilemap(FastTileMap *p_tilemap);
     FastTileMap *get_tilemap() const;
 
-    Dictionary export_to_rle(const String &p_id, const Vector2i &p_offset = Vector2i(), int p_z = 0) const;
-    void import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset = Vector2i(), int p_z = 0);
+    Dictionary export_to_rle(const String &p_id, const Vector2i &p_offset = Vector2i(), int p_z = 0, const Vector2i &p_size = Vector2i()) const;
+    void import_from_rle(const String &p_blueprint, const Array &p_palette, const Vector2i &p_offset = Vector2i(), int p_z = 0, const Vector2i &p_size = Vector2i());
 
     void update_preview_tiles(const Array &p_positions, const String &p_tile_id, const String &p_entry_type = "tile");
     void update_preview_tiles_with_data(const Dictionary &p_data, const String &p_entry_type = "tile");

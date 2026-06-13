@@ -42,7 +42,8 @@ static void parse_rules(
     const String& p_structure_id,
     StructureLevelInfo& r_level,
     const StructureDb* p_db,
-    IdRegistry* p_id_reg
+    IdRegistry* p_id_reg,
+    const Vector2i& p_size
 ) {
     for (int i = 0; i < p_rules.size(); i++) {
         if (p_rules[i].get_type() != Variant::DICTIONARY) continue;
@@ -75,7 +76,7 @@ static void parse_rules(
         }
         rule.amount = static_cast<int>(rule_data.get("amount", Variant(0)));
 
-        if (rule.pos.x < 0 || rule.pos.x >= WorldCoords::CHUNK_SIZE || rule.pos.y < 0 || rule.pos.y >= WorldCoords::CHUNK_SIZE) {
+        if (rule.pos.x < 0 || rule.pos.x >= p_size.x || rule.pos.y < 0 || rule.pos.y >= p_size.y) {
             UtilityFunctions::push_error("[StructureDb] Rule in structure ", p_structure_id, " has out-of-bounds pos: ", rule.pos);
         }
 
@@ -87,12 +88,14 @@ static StructureLevelInfo parse_level(
     const Dictionary& p_data,
     const String& p_structure_id,
     const StructureDb* p_db,
-    IdRegistry* p_id_reg
+    IdRegistry* p_id_reg,
+    const Vector2i& p_size
 ) {
     StructureLevelInfo level;
     level.blueprint = p_data.get("blueprint", "");
     level.palette = p_data.get("palette", Array());
-    parse_rules(p_data.get("rules", Array()), p_structure_id, level, p_db, p_id_reg);
+    level.size = p_size;
+    parse_rules(p_data.get("rules", Array()), p_structure_id, level, p_db, p_id_reg, p_size);
 
     std::vector<uint16_t> palette_ids;
     for (int i = 0; i < level.palette.size(); i++) {
@@ -103,14 +106,15 @@ static StructureLevelInfo parse_level(
         }
     }
 
-    const int total_tiles = WorldCoords::CHUNK_SIZE * WorldCoords::CHUNK_SIZE;
-    level.data.assign(total_tiles, 0);
+    const int compact_total_tiles = level.size.x * level.size.y;
+    const int chunk_total_tiles = WorldCoords::CHUNK_SIZE * WorldCoords::CHUNK_SIZE;
+    std::vector<uint16_t> parsed_tiles;
+    parsed_tiles.reserve(chunk_total_tiles);
 
     String rle = level.blueprint;
     rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    int current_pos = 0;
     for (int i = 0; i < parts.size(); i++) {
         String part = parts[i].strip_edges();
         if (part.is_empty()) continue;
@@ -126,8 +130,25 @@ static StructureLevelInfo parse_level(
             tile_id = palette_ids[palette_idx];
         }
 
-        for (int j = 0; j < count && current_pos < total_tiles; j++) {
-            level.data[current_pos++] = tile_id;
+        for (int j = 0; j < count; j++) {
+            parsed_tiles.push_back(tile_id);
+        }
+    }
+
+    level.data.assign(compact_total_tiles, 0);
+    if (level.size == Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE) || (int)parsed_tiles.size() <= compact_total_tiles) {
+        for (int i = 0; i < compact_total_tiles && i < (int)parsed_tiles.size(); i++) {
+            level.data[i] = parsed_tiles[i];
+        }
+    } else {
+        for (int y = 0; y < level.size.y; y++) {
+            for (int x = 0; x < level.size.x; x++) {
+                const int source_idx = y * WorldCoords::CHUNK_SIZE + x;
+                const int target_idx = y * level.size.x + x;
+                if (source_idx >= 0 && source_idx < (int)parsed_tiles.size() && target_idx >= 0 && target_idx < (int)level.data.size()) {
+                    level.data[target_idx] = parsed_tiles[source_idx];
+                }
+            }
         }
     }
 
@@ -142,6 +163,7 @@ void StructureDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_blueprint", "id"), &StructureDb::get_blueprint);
     ClassDB::bind_method(D_METHOD("get_palette", "id"), &StructureDb::get_palette);
     ClassDB::bind_method(D_METHOD("get_levels", "id"), &StructureDb::get_levels);
+    ClassDB::bind_method(D_METHOD("get_structure_size", "id"), &StructureDb::get_structure_size);
 }
 
 StructureDb::StructureDb() {}
@@ -166,13 +188,17 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
     info.type = String(p_data.get("type", "building"));
+    info.size = variant_to_vector2i(p_data.get("size", Array()), Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE));
+    if (info.size.x <= 0 || info.size.y <= 0) {
+        info.size = Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE);
+    }
 
     if (id_reg) {
         id_reg->register_string(structure_id);
     }
 
     if (p_data.has("blueprint") || p_data.has("palette") || p_data.has("rules")) {
-        StructureLevelInfo level_zero = parse_level(p_data, structure_id, this, id_reg);
+        StructureLevelInfo level_zero = parse_level(p_data, structure_id, this, id_reg, info.size);
         info.levels[0] = level_zero;
     }
 
@@ -186,7 +212,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
             if (value.get_type() != Variant::DICTIONARY) continue;
             int z = variant_to_level(key_var);
             Dictionary level_data = value;
-            info.levels[z] = parse_level(level_data, structure_id, this, id_reg);
+            info.levels[z] = parse_level(level_data, structure_id, this, id_reg, info.size);
         }
     } else if (levels_var.get_type() == Variant::ARRAY) {
         Array levels = levels_var;
@@ -194,7 +220,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
             if (levels[i].get_type() != Variant::DICTIONARY) continue;
             Dictionary level_data = levels[i];
             int z = variant_to_level(level_data.get("z", level_data.get("level", 0)));
-            info.levels[z] = parse_level(level_data, structure_id, this, id_reg);
+            info.levels[z] = parse_level(level_data, structure_id, this, id_reg, info.size);
         }
     }
 
@@ -204,6 +230,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
         info.blueprint = level_zero_it->second.blueprint;
         info.palette = level_zero_it->second.palette;
         info.rules = level_zero_it->second.rules;
+        info.size = level_zero_it->second.size;
     }
     return info;
 }
@@ -254,6 +281,11 @@ const std::vector<String>* StructureDb::get_structure_ids_by_type(const String& 
     return it != structures_by_type.end() ? &it->second : nullptr;
 }
 
+Vector2i StructureDb::get_structure_size(const String &p_structure_id) const {
+    const StructureInfo* info = get_info(p_structure_id);
+    return info ? info->size : Vector2i();
+}
+
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {
     return get_tile_at(p_structure_id, p_x, p_y, 0);
 }
@@ -261,13 +293,13 @@ uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const {
     const StructureInfo* info = get_info(p_structure_id);
     if (!info) return 0;
-    if (p_x < 0 || p_x >= CHUNK_SIZE || p_y < 0 || p_y >= CHUNK_SIZE) return 0;
 
     auto level_it = info->levels.find(p_z);
     if (level_it == info->levels.end()) return 0;
     const StructureLevelInfo& level = level_it->second;
+    if (p_x < 0 || p_x >= level.size.x || p_y < 0 || p_y >= level.size.y) return 0;
 
-    int idx = p_y * CHUNK_SIZE + p_x;
+    int idx = p_y * level.size.x + p_x;
     if (idx < 0 || idx >= (int)level.data.size()) return 0;
 
     return level.data[idx];

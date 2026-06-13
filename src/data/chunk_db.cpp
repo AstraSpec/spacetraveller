@@ -48,6 +48,28 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     info.city_spawn_weight = static_cast<int>(p_data.get("city_spawn_weight", Variant(0)));
     info.structure_type = String(p_data.get("structure_type", ""));
 
+    Variant feature_spawns_var = p_data.get("feature_spawns", Array());
+    if (feature_spawns_var.get_type() == Variant::ARRAY) {
+        Array feature_spawns = feature_spawns_var;
+        for (int i = 0; i < feature_spawns.size(); i++) {
+            if (feature_spawns[i].get_type() != Variant::DICTIONARY) continue;
+
+            Dictionary spawn_data = feature_spawns[i];
+            ChunkFeatureSpawnInfo spawn;
+            spawn.pool = String(spawn_data.get("pool", ""));
+            spawn.placement = String(spawn_data.get("placement", ""));
+            spawn.chance = static_cast<float>(static_cast<double>(spawn_data.get("chance", 0.0)));
+            spawn.candidates = static_cast<int>(spawn_data.get("candidates", Variant(1)));
+
+            if (spawn.chance < 0.0f) spawn.chance = 0.0f;
+            if (spawn.chance > 1.0f) spawn.chance = 1.0f;
+            if (spawn.candidates < 0) spawn.candidates = 0;
+            if (spawn.pool.is_empty() || spawn.placement.is_empty() || spawn.chance <= 0.0f || spawn.candidates <= 0) continue;
+
+            info.feature_spawns.push_back(spawn);
+        }
+    }
+
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);
         if (id >= fast_cache.size()) {
