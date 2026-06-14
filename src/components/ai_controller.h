@@ -21,7 +21,6 @@ enum class AIState { WANDER, CHASE, IDLE };
 struct AIData {
     AIState state = AIState::WANDER;
     String attitude = "neutral";
-    String role = "none";
     PerceptionTier perception_tier = PerceptionTier::RAYCAST;
     Vector2i wander_center;
     float wander_radius = 4.0f;

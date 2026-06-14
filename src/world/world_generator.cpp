@@ -788,6 +788,61 @@ uint16_t WorldGenerator::get_dungeon_tile(int x, int y, int z, int world_seed) {
     return id_void;
 }
 
+DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int y, int z, int world_seed) {
+    setup_biome_rules();
+
+    if (!dungeon_layout_cache_seed_valid || dungeon_layout_cache_seed != world_seed) {
+        dungeon_layout_cache.clear();
+        dungeon_layout_cache_seed = world_seed;
+        dungeon_layout_cache_seed_valid = true;
+    }
+
+    auto context_from_layout = [&](const DungeonLayout& p_layout) -> DungeonStructureContext {
+        DungeonStructureContext context;
+        if (p_layout.z != z || !p_layout.might_contain(x, y)) {
+            return context;
+        }
+
+        for (const PlacedDungeonRoom& room : p_layout.rooms) {
+            if (room.structure_id.is_empty()) continue;
+            if (!DungeonGenerator::rect_has_point(room.bounds, x, y)) continue;
+
+            context.valid = true;
+            context.structure_id = room.structure_id;
+            context.local_pos = Vector2i(x - room.bounds.origin.x, y - room.bounds.origin.y);
+            context.local_z = 0;
+            return context;
+        }
+
+        return context;
+    };
+
+    for (const auto& pair : dungeon_layout_cache) {
+        DungeonStructureContext context = context_from_layout(pair.second);
+        if (context.valid) {
+            return context;
+        }
+    }
+
+    if (!dungeon_entrance_cache_valid) {
+        rebuild_dungeon_entrance_cache();
+    }
+
+    for (const DungeonEntranceRef& entrance : dungeon_entrance_cache) {
+        if (entrance.start_z != z) continue;
+
+        DungeonLayout* layout = get_or_create_dungeon_layout(entrance.dungeon_type, entrance.entrance_chunk, world_seed);
+        if (!layout) continue;
+
+        DungeonStructureContext context = context_from_layout(*layout);
+        if (context.valid) {
+            return context;
+        }
+    }
+
+    return DungeonStructureContext{};
+}
+
 bool WorldGenerator::is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed) {
     setup_biome_rules();
     return get_dungeon_tile(x, y, z, world_seed) == id_dungeon_floor;

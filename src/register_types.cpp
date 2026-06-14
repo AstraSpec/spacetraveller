@@ -23,7 +23,6 @@
 #include "data/feature_db.h"
 #include "data/dungeon_db.h"
 #include "data/attitude_db.h"
-#include "data/npc_role_db.h"
 #include "data/traversal_profile_db.h"
 
 #include <gdextension_interface.h>
@@ -61,7 +60,6 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(FeatureDb);
 	GDREGISTER_CLASS(DungeonDb);
 	GDREGISTER_CLASS(AttitudeDb);
-	GDREGISTER_CLASS(NpcRoleDb);
 	GDREGISTER_CLASS(TraversalProfileDb);
 
 	TileDb::create_singleton();
@@ -120,9 +118,6 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	AttitudeDb::create_singleton();
 	Engine::get_singleton()->register_singleton("AttitudeDb", AttitudeDb::get_singleton());
-
-	NpcRoleDb::create_singleton();
-	Engine::get_singleton()->register_singleton("NpcRoleDb", NpcRoleDb::get_singleton());
 
 	TraversalProfileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TraversalProfileDb", TraversalProfileDb::get_singleton());
@@ -189,9 +184,6 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("AttitudeDb");
 	AttitudeDb::delete_singleton();
-
-	Engine::get_singleton()->unregister_singleton("NpcRoleDb");
-	NpcRoleDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("TraversalProfileDb");
 	TraversalProfileDb::delete_singleton();

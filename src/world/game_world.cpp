@@ -92,6 +92,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_inventory_volume", "entity_id"), &GameWorld::get_entity_inventory_volume);
 
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &GameWorld::drop_item);
+    ClassDB::bind_method(D_METHOD("remove_ground_item", "pos", "item_id", "amount"), &GameWorld::remove_ground_item);
     ClassDB::bind_method(D_METHOD("get_items_at", "pos"), &GameWorld::get_items_at);
     ClassDB::bind_method(D_METHOD("pickup_item_specific", "pos", "item_id", "amount", "entity_id"), &GameWorld::pickup_item_specific);
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &GameWorld::has_item);
@@ -407,6 +408,12 @@ void GameWorld::drop_item(const Vector2i& pos, const String& item_id, int amount
     IdRegistry* reg = IdRegistry::get_singleton();
     if (!reg) return;
     bubble.drop_item(pos, reg->get_id(item_id), amount);
+}
+
+int GameWorld::remove_ground_item(const Vector2i& pos, const String& item_id, int amount) {
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (!reg || amount <= 0) return 0;
+    return bubble.remove_item(pos, reg->get_id(item_id), amount);
 }
 
 Array GameWorld::get_items_at(const Vector2i& pos) const {

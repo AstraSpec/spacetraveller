@@ -21,7 +21,6 @@ struct SpawnRuleInfo {
     String job;
     String dialogue_profile;
     String attitude;
-    String role;
     String ai_state;
 };
 

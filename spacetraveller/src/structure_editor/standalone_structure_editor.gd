@@ -12,6 +12,8 @@ func _ready() -> void:
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
 	ItemDb.initialize_data()
+	RaceDb.initialize_data()
+	JobDb.initialize_data()
 
 	World.setup_renderer()
 	var renderer := World.get_renderer()

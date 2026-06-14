@@ -11,11 +11,11 @@ template<> StructureDb* DataBase<StructureInfo, StructureDb>::singleton = nullpt
 const int StructureDb::CHUNK_SIZE = WorldCoords::CHUNK_SIZE;
 
 static bool parse_rule_type(const String& p_type, RuleType& r_type) {
-    if (p_type == "spawn_entity" || p_type == "spawn_point") {
+    if (p_type == "spawn_entity") {
         r_type = RuleType::SPAWN_ENTITY;
         return true;
     }
-    if (p_type == "spawn_loot_table" || p_type == "loot_table") {
+    if (p_type == "spawn_loot_table") {
         r_type = RuleType::SPAWN_LOOT_TABLE;
         return true;
     }
@@ -108,7 +108,6 @@ static void parse_rules(
         rule.job = String(rule_data.get("job", ""));
         rule.dialogue_profile = String(rule_data.get("dialogue_profile", ""));
         rule.attitude = String(rule_data.get("attitude", ""));
-        rule.role = String(rule_data.get("role", ""));
         rule.ai_state = String(rule_data.get("ai_state", ""));
         rule.params = rule_data;
 

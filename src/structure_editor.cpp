@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
+#include "data/race_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
 #include <unordered_set>
@@ -190,6 +191,12 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         ItemDb* item_db = ItemDb::get_singleton();
         if (!item_db) return;
         const ItemInfo* info = item_db->get_item_info(p_id);
+        if (!info) return;
+        atlas_coords = info->atlas;
+    } else if (entry_type == "npc") {
+        RaceDb* race_db = RaceDb::get_singleton();
+        if (!race_db) return;
+        const RaceInfo* info = race_db->get_race_info(p_id);
         if (!info) return;
         atlas_coords = info->atlas;
     } else {

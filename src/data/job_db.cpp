@@ -1,5 +1,6 @@
 #include "job_db.h"
 #include "core/id_registry.h"
+#include "core/tag_registry.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <algorithm>
 
@@ -31,7 +32,10 @@ void JobDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_ids"), &JobDb::get_ids);
     ClassDB::bind_method(D_METHOD("get_display_name", "id"), &JobDb::get_display_name);
     ClassDB::bind_method(D_METHOD("get_dialogue_profile", "id"), &JobDb::get_dialogue_profile);
+    ClassDB::bind_method(D_METHOD("get_default_attitude", "id"), &JobDb::get_default_attitude);
+    ClassDB::bind_method(D_METHOD("get_default_ai_state", "id"), &JobDb::get_default_ai_state);
     ClassDB::bind_method(D_METHOD("get_spawn_weight", "id"), &JobDb::get_spawn_weight);
+    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &JobDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_traits", "id"), &JobDb::get_traits);
     ClassDB::bind_method(D_METHOD("get_context_tags", "id"), &JobDb::get_context_tags);
     ClassDB::bind_method(D_METHOD("get_quest_kinds", "id"), &JobDb::get_quest_kinds);
@@ -47,8 +51,11 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     info.id = String(p_data.get("id", ""));
     info.display_name = String(p_data.get("display_name", info.id.capitalize()));
     info.dialogue_profile = String(p_data.get("dialogue_profile", info.id));
+    info.default_attitude = String(p_data.get("default_attitude", "")).to_lower();
+    info.default_ai_state = String(p_data.get("default_ai_state", "")).to_lower();
     info.spawn_weight = int(p_data.get("spawn_weight", 1));
     if (info.spawn_weight < 0) info.spawn_weight = 0;
+    info.tags = _parse_tags(p_data.get("tags", Array()));
     info.traits = parse_string_list(p_data.get("traits", Array()));
     info.context_tags = parse_string_list(p_data.get("context_tags", Array()));
     info.quest_kinds = parse_string_list(p_data.get("quest_kinds", Array()));
@@ -112,9 +119,30 @@ String JobDb::get_dialogue_profile(const String &p_id) const {
     return info ? info->dialogue_profile : "";
 }
 
+String JobDb::get_default_attitude(const String &p_id) const {
+    const JobInfo* info = get_job_info(p_id);
+    return info ? info->default_attitude : "";
+}
+
+String JobDb::get_default_ai_state(const String &p_id) const {
+    const JobInfo* info = get_job_info(p_id);
+    return info ? info->default_ai_state : "";
+}
+
 int JobDb::get_spawn_weight(const String &p_id) const {
     const JobInfo* info = get_job_info(p_id);
     return info ? info->spawn_weight : 0;
+}
+
+bool JobDb::has_tag(const String &p_id, const String &p_tag) const {
+    const JobInfo* info = get_job_info(p_id);
+    if (!info) return false;
+
+    TagRegistry *reg = TagRegistry::get_singleton();
+    if (!reg) return false;
+
+    uint16_t tag_id = reg->get_tag_id(p_tag);
+    return TagRegistry::has_tag(tag_id, info->tags);
 }
 
 Array JobDb::get_traits(const String &p_id) const {

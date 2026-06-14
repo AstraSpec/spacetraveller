@@ -120,6 +120,7 @@ public:
     void clear_tile_metadata(const Vector2i& pos);
 
     void drop_item(const Vector2i& pos, const String& item_id, int amount);
+    int remove_ground_item(const Vector2i& pos, const String& item_id, int amount);
     Array get_items_at(const Vector2i& pos) const;
     bool pickup_item_specific(const Vector2i& pos, const String& item_id, int amount, uint32_t entity_id);
     bool has_item(const Vector2i& pos) const;

@@ -9,7 +9,14 @@ signal open_load
 @export var TileIDLabel2 :Label
 @export var TileGrid :FlowContainer
 @export var ItemGrid :FlowContainer
+@export var NpcGrid :FlowContainer
 @export var ItemAmountInput :SpinBox
+@export var NpcJobContainer :HBoxContainer
+@export var NpcJobText :LineEdit
+@export var NpcJobPopup :MenuButton
+@export var NpcDialogueProfileContainer :HBoxContainer
+@export var NpcDialogueProfileText :LineEdit
+@export var NpcDialogueProfilePopup :MenuButton
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -48,6 +55,11 @@ var current_structure_id :String = ""
 var current_structure_type :String = "building"
 var current_structure_path :String = "res://data/structures/structures.json"
 var current_dungeon_room_entrances :Array = ["north", "east", "south", "west"]
+var editor_npc_entities :Dictionary = {}
+var editor_live_item_rules :Dictionary = {}
+var editor_npc_rules_by_level :Dictionary = {}
+var editor_item_rules_by_level :Dictionary = {}
+var editor_other_rules_by_level :Dictionary = {}
 
 var undo_stack : Array = []
 var redo_stack : Array = []
@@ -89,9 +101,13 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	TileGrid.start(spacing, TileDb)
 	ItemGrid.start(spacing, ItemDb)
+	NpcGrid.start(spacing, RaceDb)
+	_setup_npc_option_menus()
+	_update_npc_options_for_race("")
 	
 	TileGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "tile", is_primary))
 	ItemGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "item", is_primary))
+	NpcGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "npc", is_primary))
 	
 	update_editor_visuals()
 
@@ -225,6 +241,14 @@ func select_entry(id: String, type: String = "tile", is_primary: bool = true):
 	if is_primary:
 		tileID1 = id
 		tileType1 = type
+		match type:
+			"item":
+				tileID2 = id
+				tileType2 = "item_erase"
+			"npc":
+				tileID2 = id
+				tileType2 = "npc_erase"
+				_update_npc_options_for_race(id)
 	else:
 		tileID2 = id
 		tileType2 = type
@@ -239,6 +263,88 @@ func on_tile_changed(_pos: Vector2i):
 var item_amount: int:
 	get: return int(ItemAmountInput.value) if ItemAmountInput else 1
 
+func _setup_npc_option_menus() -> void:
+	_populate_menu(NpcJobPopup, JobDb.get_ids(), _on_npc_job_index_pressed)
+	_populate_menu(NpcDialogueProfilePopup, _get_dialogue_profile_suggestions(), _on_npc_dialogue_profile_index_pressed)
+
+func _populate_menu(button: MenuButton, values: Array, callback: Callable) -> void:
+	if !button:
+		return
+	var popup := button.get_popup()
+	popup.clear()
+	for value in values:
+		var text := str(value).strip_edges()
+		if !text.is_empty():
+			popup.add_item(text)
+	if !popup.index_pressed.is_connected(callback):
+		popup.index_pressed.connect(callback)
+
+func _get_dialogue_profile_suggestions() -> Array:
+	var seen := {}
+	for job_id in JobDb.get_ids():
+		var profile := str(JobDb.get_dialogue_profile(str(job_id))).strip_edges()
+		if !profile.is_empty():
+			seen[profile] = true
+	var profiles: Array = seen.keys()
+	profiles.sort()
+	return profiles
+
+func _on_npc_job_index_pressed(index: int) -> void:
+	var job := _menu_item_text(NpcJobPopup, index)
+	if job.is_empty():
+		return
+	NpcJobText.text = job
+	if NpcDialogueProfileText and NpcDialogueProfileText.text.strip_edges().is_empty():
+		var profile := str(JobDb.get_dialogue_profile(job)).strip_edges()
+		if !profile.is_empty():
+			NpcDialogueProfileText.text = profile
+
+func _on_npc_dialogue_profile_index_pressed(index: int) -> void:
+	var profile := _menu_item_text(NpcDialogueProfilePopup, index)
+	if profile.is_empty():
+		return
+	NpcDialogueProfileText.text = profile
+
+func _menu_item_text(button: MenuButton, index: int) -> String:
+	if !button:
+		return ""
+	var popup := button.get_popup()
+	if index < 0 or index >= popup.get_item_count():
+		return ""
+	return popup.get_item_text(index)
+
+func _selected_npc_is_sapient() -> bool:
+	return tileType1 == "npc" and _is_sapient_race(tileID1)
+
+func _is_sapient_race(race_id: String) -> bool:
+	return !race_id.is_empty() and RaceDb.has_tag(race_id, "SAPIENT")
+
+func _update_npc_options_for_race(race_id: String) -> void:
+	var sapient := _is_sapient_race(race_id)
+	if NpcJobContainer:
+		NpcJobContainer.visible = true
+	if NpcDialogueProfileContainer:
+		NpcDialogueProfileContainer.visible = sapient
+	if NpcJobText:
+		var job := NpcJobText.text.strip_edges().to_lower()
+		if sapient:
+			if job.is_empty() or job == "monster" or job == "animal":
+				NpcJobText.text = "scavenger"
+		elif job.is_empty() or (job != "monster" and job != "animal"):
+			NpcJobText.text = "monster"
+	if !sapient:
+		if NpcDialogueProfileText:
+			NpcDialogueProfileText.text = ""
+
+func _npc_job_for_race(race_id: String) -> String:
+	var job := NpcJobText.text.strip_edges().to_lower() if NpcJobText else ""
+	if job.is_empty():
+		return _default_job_for_race(race_id)
+	return job
+
+func _default_job_for_race(race_id: String) -> String:
+	return "scavenger" if _is_sapient_race(race_id) else "monster"
+
 func place_at(pos: Vector2i, id: String, type: String = "tile"):
 	if !id or !is_inside_bubble(pos): return
 	place_entry(Vector2i(int(pos.x + playerOffset.x), int(pos.y + playerOffset.y)), id, type)
@@ -247,9 +353,150 @@ func place_at(pos: Vector2i, id: String, type: String = "tile"):
 func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount: int = -1):
 	match type:
 		"item":
-			World.drop_item(world_pos, id, amount if amount > 0 else item_amount)
+			var place_amount := amount if amount > 0 else item_amount
+			World.drop_item(world_pos, id, place_amount)
+			_add_item_rule(world_pos, id, place_amount)
+		"item_erase":
+			var erase_amount := amount if amount > 0 else item_amount
+			World.remove_ground_item(world_pos, id, erase_amount)
+			_remove_item_rule(world_pos, id, erase_amount)
+		"npc":
+			if place_npc(world_pos, id):
+				_set_npc_rule(world_pos, id)
+		"npc_erase":
+			erase_npc(world_pos)
+			_remove_npc_rule(world_pos)
 		_:
 			World.place_tile(world_pos.x, world_pos.y, id)
+
+func place_npc(world_pos: Vector2i, race_id: String) -> bool:
+	if !World or race_id.is_empty():
+		return false
+	erase_npc(world_pos)
+	if World.has_entity_at_cell(world_pos.x, world_pos.y):
+		return false
+	var entity_id: int = World.spawn_entity(world_pos.x, world_pos.y, race_id)
+	if entity_id >= 0 and entity_id != 4294967295:
+		editor_npc_entities[_npc_key(world_pos)] = entity_id
+		return true
+	return false
+
+func erase_npc(world_pos: Vector2i) -> void:
+	var key := _npc_key(world_pos)
+	if !World or !editor_npc_entities.has(key):
+		return
+	World.despawn_entity(editor_npc_entities[key])
+	editor_npc_entities.erase(key)
+
+func clear_editor_npcs() -> void:
+	if !World:
+		editor_npc_entities.clear()
+		return
+	for key in editor_npc_entities.keys():
+		World.despawn_entity(editor_npc_entities[key])
+	editor_npc_entities.clear()
+
+func _npc_key(world_pos: Vector2i) -> Vector3i:
+	return Vector3i(world_pos.x, world_pos.y, active_z)
+
+func clear_editor_live_items() -> void:
+	if !World:
+		editor_live_item_rules.clear()
+		return
+	for key in editor_live_item_rules.keys():
+		var rule: Dictionary = editor_live_item_rules[key]
+		var pos := _world_pos_from_local(_rule_pos_from_variant(rule.get("pos", [])))
+		World.remove_ground_item(pos, str(rule.get("item_id", "")), int(rule.get("amount", 0)))
+	editor_live_item_rules.clear()
+
+func _active_level_key() -> String:
+	return _level_key(active_z)
+
+func _local_pos_from_world(world_pos: Vector2i) -> Vector2i:
+	return world_pos - selectedChunkPos
+
+func _world_pos_from_local(local_pos: Vector2i) -> Vector2i:
+	return selectedChunkPos + local_pos
+
+func _pos_key(pos: Vector2i) -> String:
+	return "%d,%d" % [pos.x, pos.y]
+
+func _item_rule_key(pos: Vector2i, item_id: String) -> String:
+	return _pos_key(pos) + ":" + item_id
+
+func _rule_pos_array(pos: Vector2i) -> Array:
+	return [pos.x, pos.y]
+
+func _get_level_rule_dict(store: Dictionary, key: String) -> Dictionary:
+	if !store.has(key) or !(store[key] is Dictionary):
+		store[key] = {}
+	return store[key]
+
+func _set_npc_rule(world_pos: Vector2i, race_id: String) -> void:
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules := _get_level_rule_dict(editor_npc_rules_by_level, _active_level_key())
+	var rule := {
+		"type": "spawn_entity",
+		"entity": race_id,
+		"pos": _rule_pos_array(local_pos),
+		"job": _npc_job_for_race(race_id)
+	}
+	if _is_sapient_race(race_id):
+		var dialogue_profile := NpcDialogueProfileText.text.strip_edges() if NpcDialogueProfileText else ""
+		if !dialogue_profile.is_empty():
+			rule["dialogue_profile"] = dialogue_profile
+	rules[_pos_key(local_pos)] = rule
+
+func _remove_npc_rule(world_pos: Vector2i) -> void:
+	var key := _active_level_key()
+	if !editor_npc_rules_by_level.has(key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules: Dictionary = editor_npc_rules_by_level[key]
+	rules.erase(_pos_key(local_pos))
+
+func _add_item_rule(world_pos: Vector2i, item_id: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var level_key := _active_level_key()
+	var rules := _get_level_rule_dict(editor_item_rules_by_level, level_key)
+	var key := _item_rule_key(local_pos, item_id)
+	var rule: Dictionary = rules.get(key, {
+		"type": "spawn_item",
+		"item_id": item_id,
+		"amount": 0,
+		"pos": _rule_pos_array(local_pos)
+	})
+	rule["amount"] = int(rule.get("amount", 0)) + amount
+	rules[key] = rule
+	editor_live_item_rules[key] = rule.duplicate(true)
+
+func _remove_item_rule(world_pos: Vector2i, item_id: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	var level_key := _active_level_key()
+	if !editor_item_rules_by_level.has(level_key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var key := _item_rule_key(local_pos, item_id)
+	var rules: Dictionary = editor_item_rules_by_level[level_key]
+	if !rules.has(key):
+		return
+	var rule: Dictionary = rules[key]
+	var remaining := int(rule.get("amount", 0)) - amount
+	if remaining > 0:
+		rule["amount"] = remaining
+		rules[key] = rule
+		editor_live_item_rules[key] = rule.duplicate(true)
+	else:
+		rules.erase(key)
+		editor_live_item_rules.erase(key)
+
+func _clear_editor_rule_state() -> void:
+	editor_npc_rules_by_level.clear()
+	editor_item_rules_by_level.clear()
+	editor_other_rules_by_level.clear()
 
 func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
 	var points = Editor.get_shape_points(shape_type, p1, p2, filled, perfect)
@@ -358,6 +605,8 @@ func _reset_level_edit_state() -> void:
 func _clear_current_chunk() -> void:
 	if !World:
 		return
+	clear_editor_npcs()
+	clear_editor_live_items()
 	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
 		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
 			World.place_tile(x, y, "void")
@@ -495,6 +744,132 @@ func _filter_rules_for_size(rules: Array, size: Vector2i) -> Array:
 		filtered.append(rule.duplicate(true))
 	return filtered
 
+func _is_spawn_entity_rule(rule: Dictionary) -> bool:
+	var type_name := str(rule.get("type", ""))
+	return type_name == "spawn_entity" or type_name == "spawn_point"
+
+func _is_spawn_item_rule(rule: Dictionary) -> bool:
+	return str(rule.get("type", "")) == "spawn_item"
+
+func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
+	var unmanaged: Array = []
+	var raw_rules: Variant = level_data.get("rules", [])
+	if raw_rules is Array:
+		for rule_variant in raw_rules:
+			if !(rule_variant is Dictionary):
+				continue
+			var rule: Dictionary = rule_variant
+			if _is_spawn_entity_rule(rule):
+				var race_id := str(rule.get("entity", rule.get("race_id", "")))
+				if !race_id.is_empty() and rule.has("pos"):
+					var pos := _rule_pos_from_variant(rule["pos"])
+					var rules := _get_level_rule_dict(editor_npc_rules_by_level, key)
+					var stored_rule := {
+						"type": "spawn_entity",
+						"entity": race_id,
+						"pos": _rule_pos_array(pos),
+						"job": str(rule.get("job", "")).strip_edges()
+					}
+					if str(stored_rule["job"]).is_empty():
+						stored_rule["job"] = _default_job_for_race(race_id)
+					if _is_sapient_race(race_id):
+						var dialogue_profile := str(rule.get("dialogue_profile", "")).strip_edges()
+						if !dialogue_profile.is_empty():
+							stored_rule["dialogue_profile"] = dialogue_profile
+					rules[_pos_key(pos)] = stored_rule
+					continue
+			elif _is_spawn_item_rule(rule):
+				var item_id := str(rule.get("item_id", ""))
+				var amount := int(rule.get("amount", 0))
+				if !item_id.is_empty() and amount > 0 and rule.has("pos"):
+					var pos := _rule_pos_from_variant(rule["pos"])
+					var rules := _get_level_rule_dict(editor_item_rules_by_level, key)
+					var stored_rule := rule.duplicate(true)
+					stored_rule["type"] = "spawn_item"
+					stored_rule["item_id"] = item_id
+					stored_rule["amount"] = amount
+					stored_rule["pos"] = _rule_pos_array(pos)
+					rules[_item_rule_key(pos, item_id)] = stored_rule
+					continue
+			unmanaged.append(rule.duplicate(true))
+	if unmanaged.is_empty():
+		level_data.erase("rules")
+	else:
+		level_data["rules"] = unmanaged
+	editor_other_rules_by_level[key] = unmanaged
+
+func _split_editor_rules_from_levels(imported_levels: Dictionary) -> void:
+	for key in imported_levels.keys():
+		var value: Variant = imported_levels[key]
+		if value is Dictionary:
+			_split_editor_rules_for_level(str(key), value)
+
+func _rules_for_level(key: String) -> Array:
+	var result: Array = []
+	for rule in editor_other_rules_by_level.get(key, []):
+		if rule is Dictionary:
+			result.append(rule.duplicate(true))
+	var npc_rules: Dictionary = editor_npc_rules_by_level.get(key, {})
+	var npc_keys: Array = npc_rules.keys()
+	npc_keys.sort()
+	for npc_key in npc_keys:
+		result.append(npc_rules[npc_key].duplicate(true))
+	var item_rules: Dictionary = editor_item_rules_by_level.get(key, {})
+	var item_keys: Array = item_rules.keys()
+	item_keys.sort()
+	for item_key in item_keys:
+		result.append(item_rules[item_key].duplicate(true))
+	return result
+
+func _sync_level_rules_into(key: String, level_data: Dictionary) -> void:
+	var rules := _rules_for_level(key)
+	if rules.is_empty():
+		level_data.erase("rules")
+	else:
+		level_data["rules"] = rules
+
+func _sync_all_level_rules() -> void:
+	var seen := {}
+	for key in levels.keys():
+		seen[str(key)] = true
+	for key in editor_other_rules_by_level.keys():
+		seen[str(key)] = true
+	for key in editor_npc_rules_by_level.keys():
+		seen[str(key)] = true
+	for key in editor_item_rules_by_level.keys():
+		seen[str(key)] = true
+	for key in seen.keys():
+		var level_data: Dictionary = levels.get(key, {})
+		_sync_level_rules_into(key, level_data)
+		if _level_has_non_void(level_data) or _level_has_rules(level_data):
+			levels[key] = level_data
+		else:
+			levels.erase(key)
+
+func _apply_editor_rules_for_level(z: int) -> void:
+	var key := _level_key(z)
+	var npc_rules: Dictionary = editor_npc_rules_by_level.get(key, {})
+	var npc_keys: Array = npc_rules.keys()
+	npc_keys.sort()
+	for npc_key in npc_keys:
+		var rule: Dictionary = npc_rules[npc_key]
+		var race_id := str(rule.get("entity", rule.get("race_id", "")))
+		if race_id.is_empty():
+			continue
+		place_npc(_world_pos_from_local(_rule_pos_from_variant(rule.get("pos", []))), race_id)
+	var item_rules: Dictionary = editor_item_rules_by_level.get(key, {})
+	var item_keys: Array = item_rules.keys()
+	item_keys.sort()
+	for item_key in item_keys:
+		var rule: Dictionary = item_rules[item_key]
+		var item_id := str(rule.get("item_id", ""))
+		var amount := int(rule.get("amount", 0))
+		if item_id.is_empty() or amount <= 0:
+			continue
+		var pos := _world_pos_from_local(_rule_pos_from_variant(rule.get("pos", [])))
+		World.drop_item(pos, item_id, amount)
+		editor_live_item_rules[item_key] = rule.duplicate(true)
+
 func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i) -> Dictionary:
 	var source_tiles := _decode_level_tiles(level_data, source_size)
 	var target_tiles: Array = []
@@ -522,13 +897,10 @@ func _capture_active_level() -> void:
 	if active_tool:
 		active_tool.on_deactivate()
 	var key: String = _level_key(active_z)
-	var previous: Dictionary = levels.get(key, {})
-	var rules: Array = previous.get("rules", [])
 	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z, structure_size)
 	level_data.erase("id")
-	if !rules.is_empty():
-		level_data["rules"] = rules
-	if _level_has_non_void(level_data) or !rules.is_empty():
+	_sync_level_rules_into(key, level_data)
+	if _level_has_non_void(level_data) or _level_has_rules(level_data):
 		levels[key] = level_data
 	else:
 		levels.erase(key)
@@ -536,6 +908,8 @@ func _capture_active_level() -> void:
 func _apply_level(z: int) -> void:
 	if !World:
 		return
+	clear_editor_npcs()
+	clear_editor_live_items()
 	World.set_active_z(z)
 	active_z = z
 	_clear_current_chunk()
@@ -543,6 +917,7 @@ func _apply_level(z: int) -> void:
 	if levels.has(key):
 		var level_data: Dictionary = levels[key]
 		Editor.import_from_rle(level_data.get("blueprint", ""), level_data.get("palette", []), selectedChunkPos, z, structure_size)
+	_apply_editor_rules_for_level(z)
 	_reset_level_edit_state()
 	_update_z_label()
 	update_editor_visuals()
@@ -558,6 +933,9 @@ func new_structure() -> void:
 		return
 	if active_tool:
 		active_tool.on_deactivate()
+	clear_editor_npcs()
+	clear_editor_live_items()
+	_clear_editor_rule_state()
 	levels.clear()
 	structure_size = Vector2i(CHUNK_SIZE, CHUNK_SIZE)
 	set_current_structure_details("", "building", structure_size, ["north", "east", "south", "west"], "res://data/structures/structures.json")
@@ -573,6 +951,9 @@ func import_structure(structure_data: Dictionary) -> void:
 		return
 	if active_tool:
 		active_tool.on_deactivate()
+	clear_editor_npcs()
+	clear_editor_live_items()
+	_clear_editor_rule_state()
 	var imported_levels: Dictionary = {}
 	var root_size := _structure_size_from_variant(structure_data.get("size", []))
 	structure_size = root_size
@@ -602,6 +983,7 @@ func import_structure(structure_data: Dictionary) -> void:
 			level_zero["rules"] = structure_data["rules"]
 		imported_levels["0"] = level_zero
 
+	_split_editor_rules_from_levels(imported_levels)
 	var levels_to_clear: Array = levels.keys()
 	for key in imported_levels.keys():
 		if !levels_to_clear.has(key):
@@ -626,6 +1008,7 @@ func set_current_structure_details(id: String, type: String, size: Vector2i, dun
 
 func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dictionary:
 	_capture_active_level()
+	_sync_all_level_rules()
 	footprint = _normalize_structure_size(footprint)
 	var source_size := structure_size
 	var result_levels: Dictionary = {}

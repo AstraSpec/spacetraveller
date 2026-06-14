@@ -9,7 +9,6 @@
 #include "data/item_db.h"
 #include "data/job_db.h"
 #include "data/name_db.h"
-#include "data/npc_role_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
 #include "core/faction.h"
@@ -78,16 +77,24 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         }
     }
 
-    if (race_db->has_tag(race_id, "SAPIENT")) {
-        ledger.init_relationship(id);
-        Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
-        JobDb* job_db = JobDb::get_singleton();
-        const JobInfo* job_info = nullptr;
-        if (job_db) {
-            job_info = overrides.job.is_empty() ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(overrides.job);
-        }
+    bool sapient = race_db->has_tag(race_id, "SAPIENT");
+    Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
+    JobDb* job_db = JobDb::get_singleton();
+    const JobInfo* job_info = nullptr;
+    String default_job = sapient ? String("scavenger") : String("monster");
+    if (job_db) {
+        job_info = overrides.job.is_empty()
+            ? (sapient ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(default_job))
+            : job_db->get_job_info(overrides.job);
+    }
+    String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : default_job);
+    if (!job_info && job_db) {
+        job_info = job_db->get_job_info(job);
+    }
 
-        String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : String("scavenger"));
+    if (sapient) {
+        ledger.init_relationship(id);
+
         String dialogue_profile = !overrides.dialogue_profile.is_empty() ? overrides.dialogue_profile : (job_info ? job_info->dialogue_profile : String("scavenger"));
         ledger.init_social_profile(id, job, dialogue_profile);
 
@@ -118,30 +125,17 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     }
 
     AIData& ai = ledger.ai_data[id];
-    bool sapient = race_db->has_tag(race_id, "SAPIENT");
-    ai.role = overrides.role.is_empty()
-        ? (sapient ? String("civilian") : String("monster"))
-        : overrides.role.to_lower();
-
     String default_attitude = Faction::are_hostile(race->faction, String("human"))
         ? String("hostile")
         : String("neutral");
     String default_ai_state = "wander";
 
-    NpcRoleDb* role_db = NpcRoleDb::get_singleton();
-    if (role_db) {
-        const NpcRoleInfo* role_info = role_db->get_role_info(ai.role);
-        if (role_info) {
-            if (!role_info->default_attitude.is_empty()) {
-                default_attitude = role_info->default_attitude;
-            }
-            if (!role_info->default_ai_state.is_empty()) {
-                default_ai_state = role_info->default_ai_state;
-            }
-            if (sapient && overrides.dialogue_profile.is_empty() && !role_info->default_dialogue_profile.is_empty()) {
-                SocialProfileData& profile = ledger.social_profiles[id];
-                profile.dialogue_profile = role_info->default_dialogue_profile;
-            }
+    if (job_info) {
+        if (!job_info->default_attitude.is_empty()) {
+            default_attitude = job_info->default_attitude;
+        }
+        if (!job_info->default_ai_state.is_empty()) {
+            default_ai_state = job_info->default_ai_state;
         }
     }
 

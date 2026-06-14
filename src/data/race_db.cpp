@@ -11,6 +11,8 @@ void RaceDb::_bind_methods() {
     ClassDB::bind_static_method("RaceDb", D_METHOD("get_singleton"), &RaceDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &RaceDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_ids"), &RaceDb::get_ids);
+    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &RaceDb::has_tag);
+    ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), static_cast<Vector2i (RaceDb::*)(const String&) const>(&RaceDb::get_atlas_coords));
 }
 
 RaceDb::RaceDb() {}

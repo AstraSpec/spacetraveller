@@ -142,7 +142,6 @@ Dictionary AIController::serialize(const AIData& data) {
     d["state"] = static_cast<int>(data.state);
     d["state_name"] = state_to_string(data.state);
     d["attitude"] = data.attitude;
-    d["role"] = data.role;
     d["perception_tier"] = static_cast<int>(data.perception_tier);
     d["wander_center_x"] = data.wander_center.x;
     d["wander_center_y"] = data.wander_center.y;
@@ -159,7 +158,6 @@ void AIController::deserialize(AIData& data, const Dictionary& dict) {
         data.state = static_cast<AIState>(static_cast<int>(dict.get("state", 0)));
     }
     data.attitude = String(dict.get("attitude", "neutral")).to_lower();
-    data.role = String(dict.get("role", "none")).to_lower();
     data.perception_tier = static_cast<PerceptionTier>(static_cast<int>(dict.get("perception_tier", 0)));
     data.wander_center = Vector2i(
         static_cast<int>(dict.get("wander_center_x", 0)),

@@ -2,6 +2,9 @@
   "blacksmith": {
     "display_name": "Blacksmith",
     "dialogue_profile": "blacksmith",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "shopkeeper"],
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["blacksmith_gather"],
@@ -14,6 +17,9 @@
   "scavenger": {
     "display_name": "Scavenger",
     "dialogue_profile": "scavenger",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander",
+    "tags": ["civilian", "wanderer"],
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["scavenger_gather"],
@@ -22,5 +28,50 @@
       "targets": "scavenger_quest_targets",
       "rewards": "scavenger_quest_rewards"
     }
+  },
+  "adventurer": {
+    "display_name": "Adventurer",
+    "dialogue_profile": "adventurer",
+    "default_attitude": "friendly",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "adventurer"],
+    "spawn_weight": 0,
+    "traits": []
+  },
+  "guard": {
+    "display_name": "Guard",
+    "dialogue_profile": "guard",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander",
+    "tags": ["civilian"],
+    "spawn_weight": 0,
+    "traits": []
+  },
+  "prisoner": {
+    "display_name": "Prisoner",
+    "dialogue_profile": "prisoner",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander",
+    "tags": ["civilian"],
+    "spawn_weight": 0,
+    "traits": []
+  },
+  "monster": {
+    "display_name": "Monster",
+    "dialogue_profile": "",
+    "default_attitude": "hostile",
+    "default_ai_state": "wander",
+    "tags": ["monster", "hostile"],
+    "spawn_weight": 0,
+    "traits": []
+  },
+  "animal": {
+    "display_name": "Animal",
+    "dialogue_profile": "",
+    "default_attitude": "neutral",
+    "default_ai_state": "wander",
+    "tags": ["animal"],
+    "spawn_weight": 0,
+    "traits": []
   }
 }

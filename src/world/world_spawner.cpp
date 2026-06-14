@@ -67,7 +67,6 @@ static bool spawn_npc_at(
     const String& p_job,
     const String& p_dialogue_profile,
     const String& p_attitude,
-    const String& p_role,
     const String& p_ai_state,
     uint32_t p_world_seed,
     float p_spawn_turn_time,
@@ -83,7 +82,6 @@ static bool spawn_npc_at(
     overrides.job = p_job;
     overrides.dialogue_profile = p_dialogue_profile;
     overrides.attitude = p_attitude;
-    overrides.role = p_role;
     overrides.ai_state = p_ai_state;
 
     return EntityFactory::create_npc(
@@ -120,7 +118,6 @@ static bool spawn_with_rule(
         p_rule.job,
         p_rule.dialogue_profile,
         p_rule.attitude,
-        p_rule.role,
         p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
@@ -151,7 +148,6 @@ static bool spawn_with_structure_rule(
         p_rule.job,
         p_rule.dialogue_profile,
         p_rule.attitude,
-        p_rule.role,
         p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
@@ -333,6 +329,53 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     for (uint64_t packed : p_newly_seen_cells) {
         Vector3i pos3 = WorldCoords::unpack_coords_3d(packed);
         Vector2i pos(pos3.x, pos3.y);
+
+        DungeonStructureContext dungeon_structure = p_generator.get_dungeon_structure_context(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+        if (dungeon_structure.valid) {
+            if (p_spawn_state.has_attempted(packed)) continue;
+
+            StructureDb* structure_db = StructureDb::get_singleton();
+            const StructureInfo* structure = structure_db ? structure_db->get_structure_info(dungeon_structure.structure_id) : nullptr;
+            if (structure) {
+                auto level_it = structure->levels.find(dungeon_structure.local_z);
+                if (level_it != structure->levels.end()) {
+                    const StructureLevelInfo& level = level_it->second;
+
+                    bool spawned_from_rule = false;
+                    bool custom_loot_rule_matched = false;
+                    for (const StructureRuleInfo& rule : level.rules) {
+                        if (rule.pos != dungeon_structure.local_pos) continue;
+
+                        switch (rule.type) {
+                            case RuleType::SPAWN_LOOT_TABLE:
+                                custom_loot_rule_matched = true;
+                                apply_structure_loot_rule(p_world_seed, dungeon_structure.structure_id, rule, pos, p_bubble);
+                                break;
+                            case RuleType::SPAWN_ITEM:
+                                custom_loot_rule_matched = true;
+                                apply_structure_spawn_item(pos, rule, p_bubble);
+                                break;
+                            case RuleType::SPAWN_ENTITY:
+                                if (!spawned_from_rule) {
+                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                }
+                                break;
+                            case RuleType::SET_METADATA:
+                                p_bubble.set_tile_metadata(pos, rule.params);
+                                break;
+                        }
+                    }
+
+                    if (!custom_loot_rule_matched) {
+                        uint16_t tile_id = p_bubble.query_tile_id(pos.x, pos.y);
+                        apply_tile_spawn_loot(p_world_seed, dungeon_structure.structure_id, tile_id, pos, p_bubble);
+                    }
+                }
+
+                p_spawn_state.mark_attempted(packed);
+            }
+            continue;
+        }
 
         if (p_generator.is_dungeon_floor_loot_candidate(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed))) {
             if (p_spawn_state.has_attempted(packed)) continue;

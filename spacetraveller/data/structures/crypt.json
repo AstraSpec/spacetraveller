@@ -105,12 +105,34 @@
                     "dungeon_wall",
                     "dungeon_floor",
                     "iron_bars"
+                ],
+                "rules": [
+                    {
+                        "dialogue_profile": "prisoner",
+                        "entity": "goblin",
+                        "job": "prisoner",
+                        "pos": [
+                            3,
+                            2
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_profile": "prisoner",
+                        "entity": "goblin",
+                        "job": "prisoner",
+                        "pos": [
+                            8,
+                            9
+                        ],
+                        "type": "spawn_entity"
+                    }
                 ]
             }
         },
         "size": [
-            11.0,
-            11.0
+            11,
+            11
         ],
         "type": "crypt_room"
     },
@@ -140,12 +162,12 @@
         "type": "crypt_room"
     },
     {
-        "id": "crypt_sarc",
         "dungeon_room": {
             "entrances": [
                 "south"
             ]
         },
+        "id": "crypt_sarc",
         "levels": {
             "0": {
                 "blueprint": "(4x0, 13x1, 8x0, 1x1, 11x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 4x2, 1x4, 1x5, 1x4, 4x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 1x2, 1x3, 3x2, 1x4, 3x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 3x2, 1x6, 1x2, 1x4, 1x2, 1x6, 3x2, 1x1, 4x0, 5x1, 1x2, 1x1, 3x2, 1x4, 3x2, 1x1, 1x2, 3x1, 2x0, 1x1, 1x7, 1x1, 3x2, 1x1, 1x2, 1x6, 1x2, 1x4, 1x2, 1x6, 1x2, 1x1, 3x2, 1x1, 2x0, 1x1, 1x2, 1x8, 1x2, 3x1, 3x2, 1x4, 3x2, 3x1, 1x2, 1x1, 2x0, 1x1, 1x7, 1x1, 5x2, 1x6, 1x2, 1x4, 1x2, 1x6, 5x2, 1x1, 2x0, 3x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 3x1, 2x0, 1x1, 3x2, 1x3, 1x2, 1x3, 1x2, 1x9, 1x2, 1x3, 1x2, 1x3, 3x2, 1x1, 1x7, 1x1, 2x0, 1x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 1x8, 1x2, 1x1, 2x0, 1x1, 7x2, 1x9, 7x2, 1x1, 1x7, 1x1, 2x0, 19x1)",
@@ -190,8 +212,8 @@
             }
         },
         "size": [
-            15,
-            15
+            15.0,
+            15.0
         ],
         "type": "crypt_room"
     }

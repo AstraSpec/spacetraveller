@@ -1,0 +1,12 @@
+{
+  "id": "prisoner",
+  "priority": 140,
+  "start": "start",
+  "selector": { "job": "prisoner" },
+  "nodes": {
+    "start": {
+      "npc": "{npc_name} watches you quietly from the shadows.",
+      "options": []
+    }
+  }
+}

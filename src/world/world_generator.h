@@ -26,6 +26,13 @@ struct BiomeInfo {
     uint16_t border_tile_id = 0;
 };
 
+struct DungeonStructureContext {
+    bool valid = false;
+    String structure_id;
+    Vector2i local_pos;
+    int local_z = 0;
+};
+
 class WorldGenerator {
 private:
     std::unordered_map<uint64_t, uint32_t> region_chunks;
@@ -107,6 +114,7 @@ public:
     uint8_t get_chunk_rotation_for_cell(int x, int y) const;
     String get_structure_id_for_chunk(uint16_t p_chunk_id) const;
     String get_structure_id_for_cell(int x, int y, int world_seed) const;
+    DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
     bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);

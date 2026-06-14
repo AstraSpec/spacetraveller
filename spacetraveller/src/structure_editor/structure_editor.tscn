@@ -11,14 +11,21 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "ItemAmountInput", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
 TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGrid")
 ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemGrid")
+NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcGrid")
 ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
+NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
+NpcJobText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobText")
+NpcJobPopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobPopup")
+NpcDialogueProfileContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer")
+NpcDialogueProfileText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer/NpcDialogueProfileText")
+NpcDialogueProfilePopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer/NpcDialogueProfilePopup")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
@@ -118,6 +125,57 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="ItemGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+script = ExtResource("4_06qem")
+
+[node name="NPCs" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="NpcOptions" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="NpcJobContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
+layout_mode = 2
+
+[node name="JobLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer"]
+layout_mode = 2
+text = "Job:"
+
+[node name="NpcJobText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NpcJobPopup" type="MenuButton" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer"]
+layout_mode = 2
+text = "Pick"
+
+[node name="NpcDialogueProfileContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
+visible = false
+layout_mode = 2
+
+[node name="DialogueProfileLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+layout_mode = 2
+text = "Dialogue:"
+
+[node name="NpcDialogueProfileText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NpcDialogueProfilePopup" type="MenuButton" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+layout_mode = 2
+text = "Pick"
+
+[node name="NpcScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NpcGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
