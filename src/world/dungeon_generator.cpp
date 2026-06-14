@@ -2,6 +2,7 @@
 #include "core/rng.h"
 #include "core/world_coords.h"
 #include "data/dungeon_db.h"
+#include "data/structure_db.h"
 #include <algorithm>
 
 using namespace godot;
@@ -70,6 +71,7 @@ static constexpr int ROOM_LATERAL_MIN = -5;
 static constexpr int ROOM_LATERAL_MAX = 5;
 static constexpr int ATTEMPTS_PER_TARGET_ROOM = 40;
 static constexpr int FIRST_ROOM_EXIT_LIMIT = 4;
+static const char* CRYPT_ROOM_STRUCTURE_TYPE = "crypt_room";
 
 static Vector2i room_center(const PlacedDungeonRoom& p_room) {
     return Vector2i(
@@ -162,6 +164,7 @@ public:
             entrance_chunk.y * WorldCoords::CHUNK_SIZE
         );
         const Vector2i entrance_center = entrance_origin + Vector2i(WorldCoords::CHUNK_SIZE / 2, WorldCoords::CHUNK_SIZE / 2);
+        blocked_room_bounds.push_back(DungeonRect{entrance_origin, Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE)});
 
         if (!add_first_room(entrance_origin, entrance_center)) {
             finalize_layout(layout);
@@ -180,6 +183,7 @@ private:
     DungeonLayout layout;
     std::vector<int> room_exit_counts;
     std::vector<int> room_exit_limits;
+    std::vector<DungeonRect> blocked_room_bounds;
 
     void push_corridor_cell(DungeonCorridor& p_corridor, const Vector2i& p_cell) const {
         for (const Vector2i& existing : p_corridor.cells) {
@@ -251,7 +255,7 @@ private:
         return 4;
     }
 
-    bool add_room(const Vector2i& p_origin, const Vector2i& p_size) {
+    bool add_room(const Vector2i& p_origin, const Vector2i& p_size, const String& p_structure_id = String()) {
         if (p_size.x <= 2 || p_size.y <= 2) return false;
         DungeonRect bounds{p_origin, p_size};
         for (const PlacedDungeonRoom& existing : layout.rooms) {
@@ -259,13 +263,67 @@ private:
                 return false;
             }
         }
+        for (const DungeonRect& blocked : blocked_room_bounds) {
+            if (DungeonGenerator::rects_overlap(blocked, bounds, ROOM_OVERLAP_PADDING)) {
+                return false;
+            }
+        }
 
         PlacedDungeonRoom room;
         room.bounds = bounds;
+        room.structure_id = p_structure_id;
         layout.rooms.push_back(room);
         room_exit_counts.push_back(0);
         room_exit_limits.push_back(random_exit_limit());
         return true;
+    }
+
+    uint8_t side_mask_for_direction(const Vector2i& p_dir) const {
+        if (p_dir.x > 0) return DUNGEON_ROOM_ENTRANCE_EAST;
+        if (p_dir.x < 0) return DUNGEON_ROOM_ENTRANCE_WEST;
+        if (p_dir.y > 0) return DUNGEON_ROOM_ENTRANCE_SOUTH;
+        if (p_dir.y < 0) return DUNGEON_ROOM_ENTRANCE_NORTH;
+        return 0;
+    }
+
+    bool structure_allows_side(const String& p_structure_id, const Vector2i& p_side_dir) const {
+        if (p_structure_id.is_empty()) return true;
+
+        StructureDb* structure_db = StructureDb::get_singleton();
+        const uint8_t side_mask = side_mask_for_direction(p_side_dir);
+        const uint8_t room_mask = structure_db ? structure_db->get_dungeon_room_entrance_mask(p_structure_id) : DUNGEON_ROOM_ENTRANCE_ALL;
+        return side_mask == 0 || (room_mask & side_mask) != 0;
+    }
+
+    bool room_allows_side(const PlacedDungeonRoom& p_room, const Vector2i& p_side_dir) const {
+        return structure_allows_side(p_room.structure_id, p_side_dir);
+    }
+
+    String pick_authored_room_structure(const Vector2i& p_required_entry_side) {
+        StructureDb* structure_db = StructureDb::get_singleton();
+        const std::vector<String>* structures = structure_db ? structure_db->get_structure_ids_by_type(CRYPT_ROOM_STRUCTURE_TYPE) : nullptr;
+        if (!structures || structures->empty()) {
+            return "";
+        }
+
+        std::vector<String> candidates;
+        candidates.reserve(structures->size());
+        for (const String& structure_id : *structures) {
+            if (structure_allows_side(structure_id, p_required_entry_side)) {
+                candidates.push_back(structure_id);
+            }
+        }
+
+        if (candidates.empty()) {
+            return "";
+        }
+
+        return candidates[rng.range(0, static_cast<int>(candidates.size()) - 1)];
+    }
+
+    Vector2i room_size_for_structure(const String& p_structure_id) const {
+        StructureDb* structure_db = StructureDb::get_singleton();
+        return structure_db ? structure_db->get_structure_size(p_structure_id) : Vector2i();
     }
 
     Vector2i random_room_size() {
@@ -409,6 +467,8 @@ private:
             Vector2i(0, -1)
         };
         int attempts = 0;
+        const int target_authored_rooms = std::max(0, p_target_rooms - 1) / 2;
+        int authored_rooms_placed = 0;
         while ((int)layout.rooms.size() < p_target_rooms && attempts < p_target_rooms * ATTEMPTS_PER_TARGET_ROOM) {
             attempts++;
             if (layout.rooms.empty()) break;
@@ -419,9 +479,22 @@ private:
             const PlacedDungeonRoom& parent = layout.rooms[parent_index];
             const Vector2i parent_center = room_center(parent);
             const Vector2i dir = directions[rng.range(0, 3)];
+            if (!room_allows_side(parent, dir)) continue;
             const Vector2i perp(-dir.y, dir.x);
 
-            Vector2i size = random_room_size();
+            String structure_id;
+            Vector2i size;
+            const int rooms_remaining = p_target_rooms - static_cast<int>(layout.rooms.size());
+            const int authored_rooms_remaining = target_authored_rooms - authored_rooms_placed;
+            if (authored_rooms_remaining > 0 && rng.range(1, rooms_remaining) <= authored_rooms_remaining) {
+                structure_id = pick_authored_room_structure(Vector2i(-dir.x, -dir.y));
+                size = room_size_for_structure(structure_id);
+            }
+            if (structure_id.is_empty() || size.x <= 2 || size.y <= 2) {
+                structure_id = "";
+                size = random_room_size();
+            }
+
             const int parent_extent = (dir.x != 0) ? parent.bounds.size.x / 2 : parent.bounds.size.y / 2;
             const int room_extent = (dir.x != 0) ? size.x / 2 : size.y / 2;
             const int distance = parent_extent + room_extent + rng.range(ROOM_DISTANCE_MIN, ROOM_DISTANCE_MAX);
@@ -429,7 +502,7 @@ private:
             Vector2i new_center = parent_center + Vector2i(dir.x * distance, dir.y * distance) + Vector2i(perp.x * lateral, perp.y * lateral);
             Vector2i origin(new_center.x - size.x / 2, new_center.y - size.y / 2);
 
-            if (!add_room(origin, size)) continue;
+            if (!add_room(origin, size, structure_id)) continue;
 
             const int placed_index = static_cast<int>(layout.rooms.size()) - 1;
             if (!add_room_corridor(parent_index, placed_index, dir)) {
@@ -437,6 +510,9 @@ private:
                 room_exit_counts.pop_back();
                 room_exit_limits.pop_back();
                 continue;
+            }
+            if (!structure_id.is_empty()) {
+                authored_rooms_placed++;
             }
         }
     }

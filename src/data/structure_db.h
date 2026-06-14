@@ -12,6 +12,17 @@
 
 namespace godot {
 
+enum DungeonRoomEntranceMask : uint8_t {
+    DUNGEON_ROOM_ENTRANCE_NORTH = 1 << 0,
+    DUNGEON_ROOM_ENTRANCE_SOUTH = 1 << 1,
+    DUNGEON_ROOM_ENTRANCE_EAST = 1 << 2,
+    DUNGEON_ROOM_ENTRANCE_WEST = 1 << 3,
+    DUNGEON_ROOM_ENTRANCE_ALL = DUNGEON_ROOM_ENTRANCE_NORTH |
+        DUNGEON_ROOM_ENTRANCE_SOUTH |
+        DUNGEON_ROOM_ENTRANCE_EAST |
+        DUNGEON_ROOM_ENTRANCE_WEST
+};
+
 enum class RuleType : uint8_t {
     SPAWN_ENTITY,
     SPAWN_LOOT_TABLE,
@@ -50,6 +61,7 @@ struct StructureInfo {
     std::unordered_map<int, StructureLevelInfo> levels;
     String type = "";
     Vector2i size = Vector2i(24, 24);
+    uint8_t dungeon_room_entrance_mask = DUNGEON_ROOM_ENTRANCE_ALL;
 };
 
 class StructureDb : public Object, public DataBase<StructureInfo, StructureDb> {
@@ -77,6 +89,7 @@ public:
     // Fast C++ access
     const StructureInfo* get_structure_info(const String &p_id) const;
     const std::vector<String>* get_structure_ids_by_type(const String& p_type) const;
+    uint8_t get_dungeon_room_entrance_mask(const String& p_structure_id) const;
     Vector2i get_structure_size(const String &p_structure_id) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const;

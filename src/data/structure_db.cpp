@@ -37,6 +37,59 @@ static int variant_to_level(const Variant& p_value, int p_default = 0) {
     return static_cast<int>(p_value);
 }
 
+static bool parse_dungeon_room_side(const String& p_side, uint8_t& r_mask) {
+    if (p_side == "north" || p_side == "n") {
+        r_mask |= DUNGEON_ROOM_ENTRANCE_NORTH;
+        return true;
+    }
+    if (p_side == "south" || p_side == "s") {
+        r_mask |= DUNGEON_ROOM_ENTRANCE_SOUTH;
+        return true;
+    }
+    if (p_side == "east" || p_side == "e") {
+        r_mask |= DUNGEON_ROOM_ENTRANCE_EAST;
+        return true;
+    }
+    if (p_side == "west" || p_side == "w") {
+        r_mask |= DUNGEON_ROOM_ENTRANCE_WEST;
+        return true;
+    }
+    if (p_side == "all") {
+        r_mask |= DUNGEON_ROOM_ENTRANCE_ALL;
+        return true;
+    }
+    return false;
+}
+
+static uint8_t parse_dungeon_room_entrance_mask(const Dictionary& p_data, const String& p_structure_id) {
+    if (!p_data.has("dungeon_room")) {
+        return DUNGEON_ROOM_ENTRANCE_ALL;
+    }
+
+    Variant room_var = p_data["dungeon_room"];
+    if (room_var.get_type() != Variant::DICTIONARY) {
+        UtilityFunctions::push_error("[StructureDb] dungeon_room must be a dictionary in structure ", p_structure_id);
+        return DUNGEON_ROOM_ENTRANCE_ALL;
+    }
+
+    Dictionary room_data = room_var;
+    Variant entrances_var = room_data.get("entrances", Variant());
+    if (entrances_var.get_type() != Variant::ARRAY) {
+        return DUNGEON_ROOM_ENTRANCE_ALL;
+    }
+
+    Array entrances = entrances_var;
+    uint8_t mask = 0;
+    for (int i = 0; i < entrances.size(); i++) {
+        String side = String(entrances[i]).to_lower();
+        if (!parse_dungeon_room_side(side, mask)) {
+            UtilityFunctions::push_error("[StructureDb] Unknown dungeon room entrance side in structure ", p_structure_id, ": ", side);
+        }
+    }
+
+    return mask;
+}
+
 static void parse_rules(
     const Array& p_rules,
     const String& p_structure_id,
@@ -189,6 +242,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
     info.type = String(p_data.get("type", ""));
+    info.dungeon_room_entrance_mask = parse_dungeon_room_entrance_mask(p_data, structure_id);
     info.size = variant_to_vector2i(p_data.get("size", Array()), Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE));
     if (info.size.x <= 0 || info.size.y <= 0) {
         info.size = Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE);
@@ -280,6 +334,11 @@ const StructureInfo* StructureDb::get_structure_info(const String &p_id) const {
 const std::vector<String>* StructureDb::get_structure_ids_by_type(const String& p_type) const {
     auto it = structures_by_type.find(p_type);
     return it != structures_by_type.end() ? &it->second : nullptr;
+}
+
+uint8_t StructureDb::get_dungeon_room_entrance_mask(const String& p_structure_id) const {
+    const StructureInfo* info = get_info(p_structure_id);
+    return info ? info->dungeon_room_entrance_mask : DUNGEON_ROOM_ENTRANCE_ALL;
 }
 
 Vector2i StructureDb::get_structure_size(const String &p_structure_id) const {

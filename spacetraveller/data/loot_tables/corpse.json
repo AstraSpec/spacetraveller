@@ -4,8 +4,8 @@
     "rolls_min": 0,
     "rolls_max": 1,
     "entries": [
-      { "item_id": "bone", "weight": 60, "amount_min": 1, "amount_max": 1, "chance": 0.45 },
-      { "item_id": "spider_silk", "weight": 40, "amount_min": 1, "amount_max": 1, "chance": 0.2 }
+      { "item_id": "bone", "weight": 60, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "spider_silk", "weight": 40, "amount_min": 1, "amount_max": 1 }
     ]
   },
   {
@@ -14,7 +14,7 @@
     "rolls_max": 3,
     "entries": [
       { "item_id": "bone", "weight": 80, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "rope", "weight": 20, "amount_min": 1, "amount_max": 1, "chance": 0.25 }
+      { "item_id": "rope", "weight": 20, "amount_min": 1, "amount_max": 1 }
     ]
   },
   {

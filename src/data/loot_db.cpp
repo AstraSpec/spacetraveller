@@ -78,9 +78,6 @@ LootTableInfo LootDb::_parse_row(const Dictionary &p_data) {
         if (entry.amount_min < 1) entry.amount_min = 1;
         if (entry.amount_max < 1) entry.amount_max = 1;
         if (entry.amount_min > entry.amount_max) std::swap(entry.amount_min, entry.amount_max);
-        entry.chance = static_cast<float>(static_cast<double>(entry_data.get("chance", 1.0)));
-        if (entry.chance < 0.0f) entry.chance = 0.0f;
-        if (entry.chance > 1.0f) entry.chance = 1.0f;
 
         info.total_weight += entry.weight;
         entry.cumulative_weight = info.total_weight;
@@ -163,7 +160,6 @@ bool LootDb::_roll_table_internal(uint16_t p_table_id, Rng::Seeded &p_rng, std::
             used_indices[chosen_index] = true;
             used_count++;
         }
-        if (!p_rng.chance(chosen->chance)) continue;
 
         if (chosen->table_id != 0) {
             produced = _roll_table_internal(chosen->table_id, p_rng, r_out, p_depth + 1) || produced;

@@ -2,15 +2,57 @@
   {
     "id": "dungeon_wall",
     "name": "Dungeon Wall",
-    "atlas": [ 9, 2 ],
+    "atlas": [ [9, 2], [9, 2], [9, 2], [10, 2], [12, 2] ],
     "solid": true,
     "tags": []
   },
   {
     "id": "dungeon_floor",
     "name": "Dungeon Floor",
-    "atlas": [ 20, 3 ],
+    "atlas": [ [20, 3], [21, 3] ],
     "solid": false,
     "tags": ["GROUND"]
+  },
+  {
+    "id": "iron_bars",
+    "name": "Iron Bars",
+    "atlas": [ 6, 40 ],
+    "solid": true,
+    "tags": ["TRANSPARENT"]
+  },
+  {
+    "id": "coffin",
+    "name": "Coffin",
+    "atlas": [ [42, 25], [42, 25], [42, 25], [43, 25] ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "sarcophagus",
+    "name": "Sarcophagus",
+    "atlas": [ 44, 25 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "candelabra",
+    "name": "Candelabra",
+    "atlas": [ [45, 25], [46, 25] ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "skull_pike",
+    "name": "Skull Pike",
+    "atlas": [ 39, 25 ],
+    "solid": true,
+    "tags": ["TRANSPARENT"]
+  },
+  {
+    "id": "dungeon_stuff",
+    "name": "Dungeon Stuff",
+    "atlas": [ 38, 25 ],
+    "solid": false,
+    "tags": []
   }
 ]

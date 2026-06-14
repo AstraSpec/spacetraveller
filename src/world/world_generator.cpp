@@ -740,6 +740,13 @@ uint16_t WorldGenerator::get_dungeon_tile(int x, int y, int z, int world_seed) {
             if (is_door) {
                 return id_dungeon_door;
             }
+            if (!room.structure_id.is_empty()) {
+                const int local_x = x - room.bounds.origin.x;
+                const int local_y = y - room.bounds.origin.y;
+                StructureDb* structure_db = s_db ? s_db : StructureDb::get_singleton();
+                const uint16_t tile_id = structure_db ? structure_db->get_tile_at(room.structure_id, local_x, local_y, 0) : 0;
+                return (tile_id != 0 && tile_id != id_void) ? tile_id : id_void;
+            }
             if (DungeonGenerator::room_boundary_has_point(room.bounds, x, y)) {
                 return id_dungeon_wall;
             }
@@ -779,6 +786,11 @@ uint16_t WorldGenerator::get_dungeon_tile(int x, int y, int z, int world_seed) {
     }
 
     return id_void;
+}
+
+bool WorldGenerator::is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed) {
+    setup_biome_rules();
+    return get_dungeon_tile(x, y, z, world_seed) == id_dungeon_floor;
 }
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {

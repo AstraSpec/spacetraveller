@@ -18,6 +18,7 @@ struct DungeonRect {
 
 struct PlacedDungeonRoom {
     DungeonRect bounds;
+    String structure_id;
 };
 
 struct DungeonCorridor {

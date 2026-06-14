@@ -64,7 +64,7 @@
     "name": "Bone",
     "description": "A small bone, hard and useful for tools or needles.",
     "type": "material",
-    "atlas": [ 9, 38 ],
+    "atlas": [ 0, 38 ],
     "weight": 0.3,
     "volume": 0.15,
     "tags": []
@@ -124,9 +124,79 @@
     "name": "Torch",
     "description": "A burning stick, able to produce lots of light.",
     "type": "consumable",
-    "atlas": [ 8, 45 ],
+    "atlas": [ 8, 42 ],
     "weight": 0.3,
     "volume": 0.15,
     "tags":[]
+  },
+  {
+    "id": "tattered_book",
+    "name": "Tattered Book",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 35, 14 ],
+    "weight": 0.4,
+    "volume": 0.2,
+    "tags": []
+  },
+  {
+    "id": "candle",
+    "name": "Candle",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 7, 42 ],
+    "weight": 0.1,
+    "volume": 0.05,
+    "tags": []
+  },
+  {
+    "id": "human_skull",
+    "name": "Human Skull",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 1, 38 ],
+    "weight": 0.5,
+    "volume": 0.25,
+    "tags": []
+  },
+  {
+    "id": "bronze_coin",
+    "name": "Bronze Coin",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 6, 46 ],
+    "weight": 0.01,
+    "volume": 0.01,
+    "tags": []
+  },
+  {
+    "id": "silver_coin",
+    "name": "Silver Coin",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 7, 46 ],
+    "weight": 0.01,
+    "volume": 0.01,
+    "tags": []
+  },
+  {
+    "id": "golden_coin",
+    "name": "Golden Coin",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 8, 46 ],
+    "weight": 0.01,
+    "volume": 0.01,
+    "tags": []
+  },
+  {
+    "id": "rusty_sword",
+    "name": "Rusty Sword",
+    "description": "PLACEHOLDER",
+    "type": "material",
+    "atlas": [ 32, 7 ],
+    "weight": 1.2,
+    "volume": 0.6,
+    "tags": []
   }
 ]

@@ -31,12 +31,20 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "crypt_entrance"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "south",
+                "east",
+                "west"
+            ]
+        },
         "id": "crypt_table",
         "levels": {
             "0": {
@@ -56,117 +64,134 @@
         "type": "crypt_room"
     },
     {
-        "id": "crypt_book",
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "south"
+            ]
+        },
+        "id": "crypt_books",
         "levels": {
             "0": {
-                "blueprint": "(7x0, 1x1, 3x2, 2x0, 3x3, 1x2, 2x0, 4x2, 2x0, 1x2, 3x3, 2x0, 4x2, 2x0, 3x3, 1x2, 1x0, 12x4)",
+                "blueprint": "(11x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 7x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 7x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 3x4, 1x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 1x2, 3x5, 1x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 5x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 11x0, 277x1)",
                 "palette": [
                     "dungeon_wall",
-                    "chest",
+                    "void",
                     "dungeon_floor",
                     "bookcase",
-                    "void"
+                    "table",
+                    "chair"
                 ]
             }
         },
         "size": [
-            6.0,
-            9.0
+            11.0,
+            13.0
         ],
         "type": "crypt_room"
     },
     {
-        "id": "crypt_pot",
-        "levels": {
-            "0": {
-                "blueprint": "(6x0, 4x1, 1x0, 4x2, 1x0, 4x1, 1x0, 4x2, 1x3, 4x1, 1x0, 1x4, 3x2, 1x0, 4x1, 1x0, 4x2, 1x0, 4x1, 1x0, 5x2, 4x1, 1x0, 5x2, 4x1, 1x0, 2x2, 1x4, 2x2, 4x1, 6x0, 4x1)",
-                "palette": [
-                    "dungeon_wall",
-                    "void",
-                    "dungeon_floor",
-                    "w_door_c",
-                    "pot"
-                ]
-            }
+        "dungeon_room": {
+            "entrances": [
+                "east",
+                "west"
+            ]
         },
-        "size": [
-            10.0,
-            9.0
-        ],
-        "type": "crypt_room"
-    },
-    {
-        "id": "crypt_chest",
-        "levels": {
-            "0": {
-                "blueprint": "(10x0, 5x1, 1x0, 4x2, 1x0, 3x2, 1x0, 5x1, 1x0, 4x2, 1x3, 1x2, 1x4, 1x2, 1x3, 5x1, 1x0, 4x2, 1x0, 3x2, 1x0, 5x1, 1x0, 3x2, 6x0, 5x1, 1x0, 3x2, 1x0, 10x1, 1x0, 3x2, 1x0, 10x1, 1x0, 3x2, 1x0, 10x1, 5x0, 10x1)",
-                "palette": [
-                    "dungeon_wall",
-                    "void",
-                    "dungeon_floor",
-                    "w_door_c",
-                    "chest"
-                ]
-            }
-        },
-        "size": [
-            15.0,
-            9.0
-        ],
-        "type": "crypt_room"
-    },
-    {
         "id": "crypt_prison",
         "levels": {
             "0": {
-                "blueprint": "(13x0, 10x1, 2x0, 10x1, 2x0, 10x2, 2x0, 10x1, 2x0, 10x2, 2x0, 10x1, 2x0, 10x1, 13x0)",
+                "blueprint": "(12x0, 9x1, 2x0, 9x1, 2x0, 9x2, 2x0, 9x1, 2x0, 9x1, 2x0, 9x1, 2x0, 9x2, 2x0, 9x1, 2x0, 9x1, 12x0)",
                 "palette": [
                     "dungeon_wall",
                     "dungeon_floor",
-                    "w_window_c"
+                    "iron_bars"
                 ]
             }
         },
         "size": [
-            12.0,
-            9.0
+            11.0,
+            11.0
         ],
         "type": "crypt_room"
     },
     {
-        "id": "crypt_L",
-        "levels": {
-            "0": {
-                "blueprint": "(5x0, 5x1, 1x0, 3x2, 1x0, 5x1, 1x0, 3x3, 1x0, 5x1, 1x0, 3x2, 1x0, 5x1, 1x0, 3x3, 1x0, 5x1, 1x0, 3x2, 7x0, 8x2, 2x0, 8x2, 11x0)",
-                "palette": [
-                    "dungeon_wall",
-                    "void",
-                    "dungeon_floor",
-                    "road_flagstone"
-                ]
-            }
+        "dungeon_room": {
+            "entrances": [
+                "south",
+                "east"
+            ]
         },
-        "size": [
-            10.0,
-            9.0
-        ],
-        "type": "crypt_room"
-    },
-    {
-        "id": "crypt_maze",
+        "id": "crypt_coffin",
         "levels": {
             "0": {
-                "blueprint": "(4x0, 2x1, 4x0, 7x1, 2x0, 1x1, 1x0, 1x1, 3x0, 1x1, 2x0, 1x1, 1x0, 1x1, 1x0, 1x1, 6x0, 1x1, 1x0, 3x1, 1x0, 4x1, 1x0, 1x1, 1x0, 4x1, 3x0, 1x1, 1x0, 2x1, 1x0, 1x1, 1x0, 1x1, 1x0, 1x1, 1x0, 1x1, 2x0, 1x1, 1x0, 1x1, 3x0, 1x1, 1x0, 18x2)",
+                "blueprint": "(8x0, 5x1, 2x0, 1x1, 4x2, 2x0, 1x1, 4x2, 2x0, 1x1, 2x2, 2x1, 2x0, 1x1, 2x2, 1x1, 8x0, 1x3)",
                 "palette": [
                     "dungeon_wall",
+                    "coffin",
                     "dungeon_floor",
                     "void"
                 ]
             }
         },
         "size": [
-            9.0,
-            11.0
+            7.0,
+            7.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "id": "crypt_sarc",
+        "dungeon_room": {
+            "entrances": [
+                "south"
+            ]
+        },
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 13x1, 8x0, 1x1, 11x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 4x2, 1x4, 1x5, 1x4, 4x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 1x2, 1x3, 3x2, 1x4, 3x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 3x2, 1x6, 1x2, 1x4, 1x2, 1x6, 3x2, 1x1, 4x0, 5x1, 1x2, 1x1, 3x2, 1x4, 3x2, 1x1, 1x2, 3x1, 2x0, 1x1, 1x7, 1x1, 3x2, 1x1, 1x2, 1x6, 1x2, 1x4, 1x2, 1x6, 1x2, 1x1, 3x2, 1x1, 2x0, 1x1, 1x2, 1x8, 1x2, 3x1, 3x2, 1x4, 3x2, 3x1, 1x2, 1x1, 2x0, 1x1, 1x7, 1x1, 5x2, 1x6, 1x2, 1x4, 1x2, 1x6, 5x2, 1x1, 2x0, 3x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 3x1, 2x0, 1x1, 3x2, 1x3, 1x2, 1x3, 1x2, 1x9, 1x2, 1x3, 1x2, 1x3, 3x2, 1x1, 1x7, 1x1, 2x0, 1x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 1x8, 1x2, 1x1, 2x0, 1x1, 7x2, 1x9, 7x2, 1x1, 1x7, 1x1, 2x0, 19x1)",
+                "palette": [
+                    "void",
+                    "dungeon_wall",
+                    "alley_bricks",
+                    "candelabra",
+                    "grass",
+                    "sarcophagus",
+                    "skull_pike",
+                    "dungeon_stuff",
+                    "w_door_c",
+                    "dirt"
+                ]
+            }
+        },
+        "size": [
+            21.0,
+            18.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "south",
+                "east",
+                "west"
+            ]
+        },
+        "id": "crypt_star",
+        "levels": {
+            "0": {
+                "blueprint": "(5x0, 5x1, 10x0, 1x1, 3x2, 1x1, 10x0, 1x1, 3x2, 1x1, 8x0, 3x1, 3x2, 3x1, 6x0, 1x1, 7x2, 1x1, 3x0, 4x1, 7x2, 5x1, 13x2, 2x1, 13x2, 2x1, 13x2, 5x1, 7x2, 4x1, 3x0, 1x1, 7x2, 1x1, 6x0, 3x1, 3x2, 3x1, 8x0, 1x1, 3x2, 1x1, 10x0, 1x1, 3x2, 1x1, 10x0, 5x1, 5x0)",
+                "palette": [
+                    "void",
+                    "dungeon_wall",
+                    "dungeon_floor"
+                ]
+            }
+        },
+        "size": [
+            15,
+            15
         ],
         "type": "crypt_room"
     }

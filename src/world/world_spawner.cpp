@@ -19,6 +19,11 @@
 
 namespace godot {
 
+static constexpr float DUNGEON_FLOOR_LOOT_CHANCE = 0.05f;
+static constexpr uint64_t DUNGEON_FLOOR_LOOT_CHANCE_SALT = 0x44554E464C4F4F52ULL; // "DUNFLOOR"
+static constexpr uint64_t DUNGEON_FLOOR_LOOT_ROLL_SALT = 0x44554E4C4F4F5452ULL; // "DUNLOOTR"
+static const char* DUNGEON_FLOOR_LOOT_TABLE = "dungeon_floor_items";
+
 static bool tile_allows_rule(uint16_t p_tile_id, const SpawnRuleInfo& p_rule) {
     TileDb* tile_db = TileDb::get_singleton();
     if (!tile_db) return false;
@@ -244,6 +249,36 @@ static void apply_tile_spawn_loot(
     roll_loot_table_at(p_world_seed, tile->spawn_loot_table, get_tile_spawn_loot_salt(p_structure_id, p_tile_id), p_pos, p_bubble);
 }
 
+static void apply_dungeon_floor_loot(
+    uint32_t p_world_seed,
+    int p_z,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble
+) {
+    LootDb* loot_db = LootDb::get_singleton();
+    if (!loot_db) return;
+
+    const uint16_t loot_table_id = loot_db->get_loot_table_id(DUNGEON_FLOOR_LOOT_TABLE);
+    if (loot_table_id == 0) return;
+
+    const uint64_t z_salt = static_cast<uint64_t>(static_cast<uint32_t>(p_z));
+    Rng::Seeded chance_rng = Rng::at(
+        p_world_seed,
+        p_pos,
+        Rng::LOOT,
+        DUNGEON_FLOOR_LOOT_CHANCE_SALT ^ (z_salt << 32)
+    );
+    if (!chance_rng.chance(DUNGEON_FLOOR_LOOT_CHANCE)) return;
+
+    roll_loot_table_at(
+        p_world_seed,
+        loot_table_id,
+        DUNGEON_FLOOR_LOOT_ROLL_SALT ^ (z_salt << 32),
+        p_pos,
+        p_bubble
+    );
+}
+
 static bool apply_structure_spawn_rule(
     uint32_t p_world_seed,
     float p_spawn_turn_time,
@@ -298,6 +333,14 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     for (uint64_t packed : p_newly_seen_cells) {
         Vector3i pos3 = WorldCoords::unpack_coords_3d(packed);
         Vector2i pos(pos3.x, pos3.y);
+
+        if (p_generator.is_dungeon_floor_loot_candidate(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed))) {
+            if (p_spawn_state.has_attempted(packed)) continue;
+            p_spawn_state.mark_attempted(packed);
+            apply_dungeon_floor_loot(p_world_seed, pos3.z, pos, p_bubble);
+            continue;
+        }
+
         uint16_t chunk_id = p_generator.get_chunk_id_for_cell(pos.x, pos.y);
 
         String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, static_cast<int>(p_world_seed));

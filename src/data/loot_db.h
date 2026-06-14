@@ -24,7 +24,6 @@ struct LootEntry {
     int cumulative_weight = 0;
     int amount_min = 1;
     int amount_max = 1;
-    float chance = 1.0f;
 };
 
 struct LootTableInfo {
