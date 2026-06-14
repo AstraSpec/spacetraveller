@@ -16,6 +16,7 @@ var _last_click_msec: int = 0
 const DOUBLE_CLICK_MSEC := 350
 
 func _ready() -> void:
+	hide()
 	structureEditor.open_load.connect(open)
 	LoadContainer.activate_on_single_click = false
 	
@@ -77,10 +78,18 @@ func _update_buttons() -> void:
 func _on_load_pressed() -> void:
 	if selectedID == "": return
 	
+	var source_path := DbAccess.find_structure_file(selectedID)
+	if source_path.is_empty():
+		source_path = DbAccess.DIR_FILEPATH.path_join("structures.json")
 	var structure_data: Dictionary = {
 		"id": selectedID,
+		"type": StructureDb.get_structure_type(selectedID),
 		"size": StructureDb.get_structure_size(selectedID),
-		"levels": StructureDb.get_levels(selectedID)
+		"levels": StructureDb.get_levels(selectedID),
+		"filepath": source_path,
+		"dungeon_room": {
+			"entrances": StructureDb.get_dungeon_room_entrances(selectedID)
+		}
 	}
 	var structure_levels: Dictionary = structure_data["levels"]
 	

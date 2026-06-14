@@ -7,8 +7,8 @@ signal open_load
 @export var Editor :StructureEditor
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
-@export var TileGrid :GridContainer
-@export var ItemGrid :GridContainer
+@export var TileGrid :FlowContainer
+@export var ItemGrid :FlowContainer
 @export var ItemAmountInput :SpinBox
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
@@ -44,6 +44,10 @@ var playerOffset :Vector2
 var active_z :int = 0
 var levels :Dictionary = {}
 var structure_size :Vector2i = Vector2i(24, 24)
+var current_structure_id :String = ""
+var current_structure_type :String = "building"
+var current_structure_path :String = "res://data/structures/structures.json"
+var current_dungeon_room_entrances :Array = ["north", "east", "south", "west"]
 
 var undo_stack : Array = []
 var redo_stack : Array = []
@@ -445,7 +449,7 @@ func _append_rle_run(parts: PackedStringArray, palette: Array, id_to_index: Dict
 		palette.append(tile_id)
 	parts.append("%dx%d" % [count, int(id_to_index[tile_id])])
 
-func _encode_tiles_to_level(tiles: Array, size: Vector2i) -> Dictionary:
+func _encode_tiles_to_level(tiles: Array) -> Dictionary:
 	var palette: Array = []
 	var id_to_index: Dictionary = {}
 	var parts := PackedStringArray()
@@ -506,7 +510,7 @@ func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, targe
 					tile_id = str(source_tiles[source_index])
 			target_tiles[target_index] = tile_id
 
-	var compact_level := _encode_tiles_to_level(target_tiles, target_size)
+	var compact_level := _encode_tiles_to_level(target_tiles)
 	var rules := _filter_rules_for_size(level_data.get("rules", []), target_size)
 	if level_data.has("rules"):
 		compact_level["rules"] = rules
@@ -556,6 +560,7 @@ func new_structure() -> void:
 		active_tool.on_deactivate()
 	levels.clear()
 	structure_size = Vector2i(CHUNK_SIZE, CHUNK_SIZE)
+	set_current_structure_details("", "building", structure_size, ["north", "east", "south", "west"], "res://data/structures/structures.json")
 	active_z = 0
 	World.set_active_z(active_z)
 	_clear_current_chunk()
@@ -571,6 +576,18 @@ func import_structure(structure_data: Dictionary) -> void:
 	var imported_levels: Dictionary = {}
 	var root_size := _structure_size_from_variant(structure_data.get("size", []))
 	structure_size = root_size
+	var dungeon_entrances: Array = []
+	var dungeon_room_var: Variant = structure_data.get("dungeon_room", {})
+	if dungeon_room_var is Dictionary:
+		var dungeon_room: Dictionary = dungeon_room_var
+		dungeon_entrances = dungeon_room.get("entrances", []).duplicate()
+	set_current_structure_details(
+		str(structure_data.get("id", "")),
+		str(structure_data.get("type", "building")),
+		root_size,
+		dungeon_entrances,
+		str(structure_data.get("filepath", "res://data/structures/structures.json"))
+	)
 	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
 		var raw_levels: Dictionary = structure_data["levels"]
 		for key in raw_levels.keys():
@@ -598,6 +615,14 @@ func import_structure(structure_data: Dictionary) -> void:
 
 	levels = imported_levels
 	_apply_level(0)
+
+func set_current_structure_details(id: String, type: String, size: Vector2i, dungeon_entrances: Array = [], filepath: String = "") -> void:
+	current_structure_id = id.strip_edges()
+	current_structure_type = type.strip_edges() if !type.strip_edges().is_empty() else "building"
+	structure_size = _normalize_structure_size(size)
+	current_dungeon_room_entrances = dungeon_entrances.duplicate()
+	if !filepath.strip_edges().is_empty():
+		current_structure_path = filepath.strip_edges()
 
 func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dictionary:
 	_capture_active_level()

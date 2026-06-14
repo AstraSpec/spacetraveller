@@ -104,9 +104,16 @@ public:
     }
 
     Array get_ids() const {
-        Array ids;
+        std::vector<String> sorted_ids;
+        sorted_ids.reserve(cache.size());
         for (const auto& pair : cache) {
-            ids.push_back(pair.first);
+            sorted_ids.push_back(pair.first);
+        }
+        std::sort(sorted_ids.begin(), sorted_ids.end());
+
+        Array ids;
+        for (const String& id : sorted_ids) {
+            ids.push_back(id);
         }
         return ids;
     }

@@ -217,6 +217,9 @@ void StructureDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_palette", "id"), &StructureDb::get_palette);
     ClassDB::bind_method(D_METHOD("get_levels", "id"), &StructureDb::get_levels);
     ClassDB::bind_method(D_METHOD("get_structure_size", "id"), &StructureDb::get_structure_size);
+    ClassDB::bind_method(D_METHOD("get_structure_type", "id"), &StructureDb::get_structure_type);
+    ClassDB::bind_method(D_METHOD("get_structure_types"), &StructureDb::get_structure_types);
+    ClassDB::bind_method(D_METHOD("get_dungeon_room_entrances", "id"), &StructureDb::get_dungeon_room_entrances);
 }
 
 StructureDb::StructureDb() {}
@@ -324,6 +327,46 @@ Dictionary StructureDb::get_levels(const String &p_id) const {
         result[String::num_int64(z)] = level_data;
     }
 
+    return result;
+}
+
+String StructureDb::get_structure_type(const String &p_id) const {
+    const StructureInfo* info = get_info(p_id);
+    return info ? info->type : "";
+}
+
+Array StructureDb::get_structure_types() const {
+    std::vector<String> types;
+    types.reserve(structures_by_type.size());
+    for (const auto& pair : structures_by_type) {
+        if (!pair.first.is_empty()) {
+            types.push_back(pair.first);
+        }
+    }
+    std::sort(types.begin(), types.end());
+
+    Array result;
+    for (const String& type : types) {
+        result.push_back(type);
+    }
+    return result;
+}
+
+Array StructureDb::get_dungeon_room_entrances(const String& p_structure_id) const {
+    Array result;
+    const uint8_t mask = get_dungeon_room_entrance_mask(p_structure_id);
+    if (mask & DUNGEON_ROOM_ENTRANCE_NORTH) {
+        result.push_back("north");
+    }
+    if (mask & DUNGEON_ROOM_ENTRANCE_EAST) {
+        result.push_back("east");
+    }
+    if (mask & DUNGEON_ROOM_ENTRANCE_SOUTH) {
+        result.push_back("south");
+    }
+    if (mask & DUNGEON_ROOM_ENTRANCE_WEST) {
+        result.push_back("west");
+    }
     return result;
 }
 

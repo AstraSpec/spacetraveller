@@ -1,4 +1,4 @@
-extends GridContainer
+extends FlowContainer
 
 signal selection_changed(id: String, is_primary: bool)
 

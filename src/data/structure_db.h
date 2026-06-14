@@ -85,6 +85,9 @@ public:
     String get_blueprint(const String &p_id) const;
     Array get_palette(const String &p_id) const;
     Dictionary get_levels(const String &p_id) const;
+    String get_structure_type(const String &p_id) const;
+    Array get_structure_types() const;
+    Array get_dungeon_room_entrances(const String& p_structure_id) const;
 
     // Fast C++ access
     const StructureInfo* get_structure_info(const String &p_id) const;

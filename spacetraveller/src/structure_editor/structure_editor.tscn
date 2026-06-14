@@ -59,7 +59,7 @@ theme_override_constants/margin_bottom = 16
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="Canvas/MarginContainer"]
 layout_mode = 2
-ratio = 0.25
+ratio = 0.33
 alignment_horizontal = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer"]
@@ -87,12 +87,11 @@ current_tab = 0
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="TileGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+[node name="TileGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
-columns = 7
 script = ExtResource("4_06qem")
 
 [node name="Items" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
@@ -118,12 +117,11 @@ value = 1.0
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemGrid" type="GridContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
+[node name="ItemGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
-columns = 8
 script = ExtResource("4_06qem")
 
 [node name="CoordsLabel" type="Label" parent="Canvas/MarginContainer"]
@@ -169,11 +167,11 @@ layout_mode = 2
 layout_mode = 2
 text = "Z: 0"
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "TypeText", "TypePopup", "DirsContainer", "NorthCheck", "EastCheck", "SouthCheck", "WestCheck", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 oversampling_override = 1.0
 title = "Save Structure"
 initial_position = 1
-size = Vector2i(400, 400)
+size = Vector2i(400, 450)
 visible = false
 popup_window = true
 script = ExtResource("5_dh32f")
@@ -182,6 +180,13 @@ Editor = NodePath("../Editor")
 StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
 WidthText = NodePath("MarginContainer/VBoxContainer/SizeContainer/WidthText")
 HeightText = NodePath("MarginContainer/VBoxContainer/SizeContainer/HeightText")
+TypeText = NodePath("MarginContainer/VBoxContainer/TypeContainer/TypeText")
+TypePopup = NodePath("MarginContainer/VBoxContainer/TypeContainer/TypePopup")
+DirsContainer = NodePath("MarginContainer/VBoxContainer/DirsContainer")
+NorthCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/N")
+EastCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/E")
+SouthCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/S")
+WestCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/W")
 CreateButton = NodePath("MarginContainer/VBoxContainer/CreateButton")
 ExistingButton = NodePath("MarginContainer/VBoxContainer/ExistingButton")
 CreateFP = NodePath("MarginContainer/VBoxContainer/CreateFP")
@@ -240,6 +245,53 @@ min_value = 1.0
 max_value = 24.0
 value = 24.0
 rounded = true
+
+[node name="TypeContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Type" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/TypeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Type: "
+
+[node name="TypeText" type="LineEdit" parent="SaveWindow/MarginContainer/VBoxContainer/TypeContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "building"
+
+[node name="TypePopup" type="MenuButton" parent="SaveWindow/MarginContainer/VBoxContainer/TypeContainer"]
+layout_mode = 2
+text = "Pick"
+
+[node name="DirsContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Dirs" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/DirsContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Dirs: "
+
+[node name="N" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer/DirsContainer"]
+layout_mode = 2
+button_pressed = true
+text = "North"
+
+[node name="E" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer/DirsContainer"]
+layout_mode = 2
+button_pressed = true
+text = "East"
+
+[node name="S" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer/DirsContainer"]
+layout_mode = 2
+button_pressed = true
+text = "South"
+
+[node name="W" type="CheckBox" parent="SaveWindow/MarginContainer/VBoxContainer/DirsContainer"]
+layout_mode = 2
+button_pressed = true
+text = "West"
 
 [node name="2" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)
@@ -313,7 +365,7 @@ auto_translate_mode = 1
 oversampling_override = 1.0
 title = "Load Structure"
 initial_position = 1
-size = Vector2i(400, 400)
+size = Vector2i(400, 450)
 visible = false
 popup_window = true
 script = ExtResource("6_fdwd8")

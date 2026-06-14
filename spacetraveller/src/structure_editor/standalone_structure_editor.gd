@@ -11,6 +11,7 @@ const TILESHEET := preload("res://gfx/urizen.png")
 func _ready() -> void:
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
+	ItemDb.initialize_data()
 
 	World.setup_renderer()
 	var renderer := World.get_renderer()

@@ -113,3 +113,6 @@ static func _find_file_with_id(id: String, path: String) -> String:
 		fileName = dir.get_next()
 	
 	return ""
+
+static func find_structure_file(id: String) -> String:
+	return _find_file_with_id(id, DIR_FILEPATH)
