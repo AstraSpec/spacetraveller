@@ -1,5 +1,37 @@
 [
   {
+    "id": "fiber_tunic",
+    "name": "Fiber Tunic",
+    "description": "A simple fiber tunic. Uncomfortable but warm.",
+    "type": "clothing",
+    "atlas": [ 3, 26 ],
+    "weight": 0.5,
+    "volume": 1.0,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "torso",
+      "layer": "middle",
+      "armor": 0.3,
+      "coverage": 0.8
+    }
+  },
+  {
+    "id": "fiber_pants",
+    "name": "Fiber Pants",
+    "description": "Simple fiber pants.",
+    "type": "clothing",
+    "atlas": [ 0, 28 ],
+    "weight": 0.4,
+    "volume": 0.8,
+    "tags": ["WEARABLE", "CLOTHING"],
+    "clothing": {
+      "part": "leg",
+      "layer": "middle",
+      "armor": 0.3,
+      "coverage": 0.9
+    }
+  },
+  {
     "id": "tunic_wool",
     "name": "Wool Tunic",
     "description": "A simple wool tunic. Comfortable and warm.",
@@ -34,7 +66,7 @@
   {
     "id": "iron_chestplate",
     "name": "Iron Chestplate",
-    "description": "A heavy iron chestplate. Provides excellent protection.",
+    "description": "A heavy iron chestplate.",
     "type": "clothing",
     "atlas": [ 26, 11 ],
     "weight": 10.0,

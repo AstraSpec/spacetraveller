@@ -4,10 +4,7 @@
     "rolls_min": 1,
     "rolls_max": 1,
     "entries": [
-      { "item_id": "iron_shard", "weight": 35 },
-      { "item_id": "bone_needle", "weight": 20 },
-      { "item_id": "fire_starter", "weight": 20 },
-      { "item_id": "wooden_sword", "weight": 15 },
+      { "item_id": "iron_ore", "weight": 35 },
       { "item_id": "torch", "weight": 10 }
     ]
   },

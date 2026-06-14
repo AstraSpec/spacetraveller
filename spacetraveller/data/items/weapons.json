@@ -1,18 +1,50 @@
 [
   {
-    "id": "wooden_sword",
-    "name": "Wooden Sword",
-    "description": "A crude blade of bound sticks. Better than bare hands.",
+    "id": "wooden_club",
+    "name": "Wooden Club",
+    "description": "A crude club of bound sticks. Better than bare hands.",
     "type": "weapon",
-    "atlas": [26, 6],
+    "atlas": [28, 7],
     "weight": 0.8,
     "volume": 0.4,
-    "tags": ["JOB_BLACKSMITH"],
+    "tags": [],
     "weapon": {
+      "style": "bash",
       "damage": 4.0,
       "grasp_required": 1,
-      "reach": 1,
-      "style": "bash"
+      "reach": 1
+    }
+  },
+  {
+    "id": "wooden_spear",
+    "name": "Wooden Spear",
+    "description": "A long pointed wooden blade for thrusts.",
+    "type": "weapon",
+    "atlas": [28, 8],
+    "weight": 0.5,
+    "volume": 0.2,
+    "tags": [],
+    "weapon": {
+      "style": "pierce",
+      "damage": 2.0,
+      "grasp_required": 2,
+      "reach": 2
+    }
+  },
+  {
+    "id": "iron_dagger",
+    "name": "Iron Dagger",
+    "description": "A short iron blade.",
+    "type": "weapon",
+    "atlas": [44, 6],
+    "weight": 1.4,
+    "volume": 0.6,
+    "tags": [],
+    "weapon": {
+      "style": "cut",
+      "damage": 4.0,
+      "grasp_required": 1,
+      "reach": 1
     }
   },
   {
@@ -23,12 +55,12 @@
     "atlas": [26, 6],
     "weight": 1.4,
     "volume": 0.6,
-    "tags": ["JOB_BLACKSMITH"],
+    "tags": [],
     "weapon": {
+      "style": "cut",
       "damage": 8.0,
       "grasp_required": 1,
-      "reach": 1,
-      "style": "cut"
+      "reach": 1
     }
   },
   {
@@ -36,15 +68,15 @@
     "name": "Iron Spear",
     "description": "A long pointed blade for thrusts.",
     "type": "weapon",
-    "atlas": [27, 6],
-    "weight": 0.5,
-    "volume": 0.2,
-    "tags": ["JOB_BLACKSMITH", "JOB_SCAVENGER"],
+    "atlas": [37, 8],
+    "weight": 1,
+    "volume": 1,
+    "tags": [],
     "weapon": {
+      "style": "pierce",
       "damage": 5.0,
       "grasp_required": 2,
-      "reach": 2,
-      "style": "pierce"
+      "reach": 2
     }
   }
 ]

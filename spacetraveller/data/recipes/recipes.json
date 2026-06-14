@@ -1,21 +1,67 @@
 [
   {
-    "id": "wooden_sword",
-    "name": "Wooden Sword",
-    "description": "Bind sticks with rope into a crude blade.",
+    "id": "rope",
+    "name": "Rope",
+    "time": 200.0,
+    "requirements": [
+      { "id": "fiber", "amount": 3 }
+    ],
+    "results": [
+      { "id": "rope", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_ingot",
+    "name": "Iron Ingot",
+    "time": 600.0,
+    "requirements": [
+      { "id": "iron_ore", "amount": 2 }
+    ],
+    "results": [
+      { "id": "iron_ingot", "amount": 1 }
+    ]
+  },
+  {
+    "id": "wooden_club",
+    "name": "Wooden Club",
     "time": 400.0,
     "requirements": [
       { "id": "stick", "amount": 3 },
       { "id": "rope", "amount": 1 }
     ],
     "results": [
-      { "id": "wooden_sword", "amount": 1 }
+      { "id": "wooden_club", "amount": 1 }
+    ]
+  },
+  {
+    "id": "wooden_spear",
+    "name": "Wooden Spear",
+    "time": 350.0,
+    "requirements": [
+      { "id": "stick", "amount": 2 },
+      { "id": "flint", "amount": 1 },
+      { "id": "rope", "amount": 1 }
+    ],
+    "results": [
+      { "id": "wooden_spear", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_dagger",
+    "name": "Iron Dagger",
+    "time": 650.0,
+    "requirements": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "results": [
+      { "id": "iron_dagger", "amount": 1 }
     ]
   },
   {
     "id": "torch",
     "name": "Torch",
-    "description": "Wrap spider silk around a stick for a makeshift torch.",
     "time": 300.0,
     "requirements": [
       { "id": "stick", "amount": 1 },
@@ -26,30 +72,27 @@
     ]
   },
   {
-    "id": "fire_starter",
-    "name": "Fire Starter",
-    "description": "Combine flint, stick, and silk into a fire-starting kit.",
-    "time": 200.0,
+    "id": "fiber_tunic",
+    "name": "Fiber Tunic",
+    "time": 500.0,
     "requirements": [
-      { "id": "flint", "amount": 1 },
-      { "id": "stick", "amount": 1 },
-      { "id": "spider_silk", "amount": 1 }
+      { "id": "fiber", "amount": 6 },
+      { "id": "rope", "amount": 1 }
     ],
     "results": [
-      { "id": "fire_starter", "amount": 1 }
+      { "id": "fiber_tunic", "amount": 1 }
     ]
   },
   {
-    "id": "bone_needle",
-    "name": "Bone Needle",
-    "description": "Carve a bone and thread it with spider silk.",
-    "time": 250.0,
+    "id": "fiber_pants",
+    "name": "Fiber Pants",
+    "time": 450.0,
     "requirements": [
-      { "id": "bone", "amount": 1 },
-      { "id": "spider_silk", "amount": 1 }
+      { "id": "fiber", "amount": 5 },
+      { "id": "rope", "amount": 1 }
     ],
     "results": [
-      { "id": "bone_needle", "amount": 1 }
+      { "id": "fiber_pants", "amount": 1 }
     ]
   }
 ]

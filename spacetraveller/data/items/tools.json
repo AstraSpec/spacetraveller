@@ -1,0 +1,32 @@
+[
+  {
+    "id": "stone_knife",
+    "name": "Stone Knife",
+    "description": "A sharp stone tool perfect for cutting and crafting.",
+    "type": "tool",
+    "atlas": [ 7, 21 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "stone_axe",
+    "name": "Stone Axe",
+    "description": "A stone head lashed to a handle, useful for chopping wood.",
+    "type": "tool",
+    "atlas": [ 7, 21 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "crude_hammer",
+    "name": "Crude Hammer",
+    "description": "A basic hammer used for simple clobbering.",
+    "type": "tool",
+    "atlas": [ 7, 21 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
+  }
+]

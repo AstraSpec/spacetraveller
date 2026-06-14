@@ -2,22 +2,52 @@
   {
     "id": "stick",
     "name": "Stick",
-    "description": "A dry branch, useful for torches or a rough blade.",
+    "description": "A wooden stick.",
     "type": "material",
     "atlas": [ 8, 23 ],
     "weight": 0.2,
     "volume": 0.1,
-    "tags": ["JOB_SCAVENGER"]
+    "tags": []
   },
   {
-    "id": "rope",
-    "name": "Rope",
-    "description": "Coiled cord. Good for binding or climbing.",
+    "id": "fiber",
+    "name": "Fiber",
+    "description": "Plant fibers that can be used to make clothing.",
     "type": "material",
-    "atlas": [ 8, 48 ],
+    "atlas": [ 19, 9 ],
+    "weight": 0.05,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "stone",
+    "name": "Stone",
+    "description": "A rock, a useful material.",
+    "type": "material",
+    "atlas": [ 19, 21 ],
     "weight": 0.5,
-    "volume": 0.3,
-    "tags": ["JOB_SCAVENGER"]
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "description": "A raw iron that can be smelted into an ingot.",
+    "type": "material",
+    "atlas": [ 7, 21 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "iron_ingot",
+    "name": "Iron Ingot",
+    "description": "An iron ingot.",
+    "type": "material",
+    "atlas": [ 5, 23 ],
+    "weight": 0.4,
+    "volume": 0.1,
+    "tags": []
   },
   {
     "id": "flint",
@@ -27,7 +57,7 @@
     "atlas": [ 14, 31 ],
     "weight": 0.1,
     "volume": 0.05,
-    "tags": ["JOB_SCAVENGER"]
+    "tags": []
   },
   {
     "id": "bone",
@@ -37,56 +67,66 @@
     "atlas": [ 9, 38 ],
     "weight": 0.3,
     "volume": 0.15,
-    "tags": ["JOB_SCAVENGER"]
+    "tags": []
+  },
+  {
+    "id": "rope",
+    "name": "Rope",
+    "description": "Coiled cord. Good for binding or climbing.",
+    "type": "material",
+    "atlas": [ 8, 48 ],
+    "weight": 0.5,
+    "volume": 0.3,
+    "tags": []
+  },
+  {
+    "id": "cloth_scrap",
+    "name": "Cloth Scrap",
+    "description": "A torn piece of fabric.",
+    "type": "material",
+    "atlas": [ 9, 39 ],
+    "weight": 0.05,
+    "volume": 0.02,
+    "tags": []
+  },
+  {
+    "id": "leather_scrap",
+    "name": "Leather Scrap",
+    "description": "A tough scrap of hide.",
+    "type": "material",
+    "atlas": [ 10, 39 ],
+    "weight": 0.08,
+    "volume": 0.02,
+    "tags": []
   },
   {
     "id": "spider_silk",
     "name": "Spider Silk",
-    "description": "Sticky strands from dungeon spiders. Burns slowly; good for wicks and wraps.",
+    "description": "Sticky strands from dungeon spiders.",
     "type": "material",
     "atlas": [ 4, 39 ],
     "weight": 0.05,
     "volume": 0.02,
-    "tags": ["JOB_SCAVENGER"]
+    "tags": []
   },
   {
-    "id": "iron_shard",
-    "name": "Iron Shard",
-    "description": "A jagged scrap of metal, perhaps from a broken weapon or trap.",
+    "id": "berry",
+    "name": "Berry",
+    "description": "A small handful of berries.",
     "type": "material",
-    "atlas": [ 7, 21 ],
-    "weight": 0.4,
-    "volume": 0.1,
-    "tags": ["JOB_BLACKSMITH"]
+    "atlas": [ 18, 17 ],
+    "weight": 0.05,
+    "volume": 0.02,
+    "tags": []
   },
   {
     "id": "torch",
     "name": "Torch",
-    "description": "A stick wrapped in spider silk, ready to light.",
+    "description": "A burning stick, able to produce lots of light.",
     "type": "consumable",
     "atlas": [ 8, 45 ],
     "weight": 0.3,
     "volume": 0.15,
-    "tags": ["JOB_BLACKSMITH", "JOB_SCAVENGER"]
-  },
-  {
-    "id": "fire_starter",
-    "name": "Fire Starter",
-    "description": "Flint, stick, and silk — everything needed to make fire.",
-    "type": "tool",
-    "atlas": [ 6, 45 ],
-    "weight": 0.35,
-    "volume": 0.2,
-    "tags": ["JOB_BLACKSMITH"]
-  },
-  {
-    "id": "bone_needle",
-    "name": "Bone Needle",
-    "description": "A sharpened bone with an eye of spider silk.",
-    "type": "tool",
-    "atlas": [ 10, 38 ],
-    "weight": 0.1,
-    "volume": 0.05,
-    "tags": ["JOB_BLACKSMITH"]
+    "tags":[]
   }
 ]
