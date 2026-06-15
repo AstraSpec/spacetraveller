@@ -27,6 +27,12 @@ struct BiomeInfo {
     uint16_t border_tile_id = 0;
 };
 
+struct BiomeLayer {
+    int z = 0;
+    uint32_t default_chunk_data = 0;
+    std::unordered_map<uint64_t, uint32_t> overrides;
+};
+
 struct DungeonStructureContext {
     bool valid = false;
     String structure_id;
@@ -36,7 +42,7 @@ struct DungeonStructureContext {
 
 class WorldGenerator {
 private:
-    std::unordered_map<uint64_t, uint32_t> region_chunks;
+    std::unordered_map<int, BiomeLayer> biome_layers;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
 
     // Performance Cache: Last Chunk
@@ -60,6 +66,7 @@ private:
     uint16_t id_alley_bricks = 0;
     uint16_t id_alley_flagstone = 0;
     uint16_t id_crypt_entrance = 0;
+    uint16_t id_dungeon = 0;
     uint16_t id_dungeon_floor = 0;
     uint16_t id_dungeon_wall = 0;
     uint16_t id_dungeon_door = 0;
@@ -79,6 +86,12 @@ private:
     class StructureDb* s_db = nullptr;
     class IdRegistry* id_reg = nullptr;
 
+    uint32_t get_default_biome_chunk_data(int p_z) const;
+    BiomeLayer& get_or_create_biome_layer(int p_z);
+    const BiomeLayer* get_biome_layer(int p_z) const;
+    std::unordered_map<uint64_t, uint32_t>& get_surface_biome_overrides();
+    void set_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, uint32_t p_data);
+    void stamp_dungeon_layout_biomes(const DungeonLayout& p_layout);
     uint16_t get_base_surface_tile(int x, int y, int world_seed);
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
@@ -111,10 +124,14 @@ public:
     Dictionary init_region(const Vector2i& regionPos, int world_seed, const Ref<FastNoiseLite>& biome_noise);
     uint16_t get_tile(int x, int y, int world_seed);
     uint16_t get_tile(int x, int y, int z, int world_seed);
+    uint32_t get_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, int p_world_seed);
+    uint16_t get_biome_id_for_chunk(int p_chunk_x, int p_chunk_y, int p_z, int p_world_seed);
+    uint16_t get_biome_id_for_cell(int x, int y, int z, int world_seed);
     uint16_t get_chunk_id_for_cell(int x, int y) const;
     uint8_t get_chunk_rotation_for_cell(int x, int y) const;
     String get_structure_id_for_chunk(uint16_t p_chunk_id) const;
     String get_structure_id_for_cell(int x, int y, int world_seed) const;
+    String get_structure_id_for_cell(int x, int y, int z, int world_seed) const;
     DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
     bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
     
@@ -126,9 +143,11 @@ public:
     }
 
     // Accessors for GameWorld to handle saving/loading
-    const std::unordered_map<uint64_t, uint32_t>& get_region_chunks() const { return region_chunks; }
-    void set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks) { region_chunks = chunks; last_chunk_valid = false; reset_dungeon_cache(); }
-    void clear_region_chunks() { region_chunks.clear(); last_chunk_valid = false; reset_dungeon_cache(); }
+    const std::unordered_map<uint64_t, uint32_t>& get_region_chunks() const;
+    const std::unordered_map<int, BiomeLayer>& get_biome_layers() const { return biome_layers; }
+    void set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks);
+    void set_biome_layers(const std::unordered_map<int, BiomeLayer>& layers);
+    void clear_region_chunks();
     void invalidate_cache() { last_chunk_valid = false; reset_dungeon_cache(); }
 };
 

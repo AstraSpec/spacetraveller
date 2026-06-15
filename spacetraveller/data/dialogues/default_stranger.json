@@ -31,7 +31,7 @@
       ]
     },
     "warm_reply": {
-      "npc": "\"Better for the asking. Most folk only come close when they want blood or coin.\"",
+      "npc": "\"Better for the asking. Most folk only come close when they want blood or coins.\"",
       "options": [
         {
           "text": "Then let us keep this civil.",

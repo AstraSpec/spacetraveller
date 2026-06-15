@@ -20,6 +20,76 @@ static int floor_div_chunk(int p_value) {
 WorldGenerator::WorldGenerator() {}
 WorldGenerator::~WorldGenerator() = default;
 
+uint32_t WorldGenerator::get_default_biome_chunk_data(int p_z) const {
+    uint16_t biome_id = id_void;
+    if (p_z == -1) {
+        biome_id = id_underground_earth;
+    } else if (p_z < -1) {
+        biome_id = id_solid_rock;
+    }
+    return biome_id;
+}
+
+BiomeLayer& WorldGenerator::get_or_create_biome_layer(int p_z) {
+    auto it = biome_layers.find(p_z);
+    if (it != biome_layers.end()) return it->second;
+
+    BiomeLayer layer;
+    layer.z = p_z;
+    layer.default_chunk_data = get_default_biome_chunk_data(p_z);
+    auto inserted = biome_layers.emplace(p_z, std::move(layer));
+    return inserted.first->second;
+}
+
+const BiomeLayer* WorldGenerator::get_biome_layer(int p_z) const {
+    auto it = biome_layers.find(p_z);
+    return it != biome_layers.end() ? &it->second : nullptr;
+}
+
+std::unordered_map<uint64_t, uint32_t>& WorldGenerator::get_surface_biome_overrides() {
+    return get_or_create_biome_layer(0).overrides;
+}
+
+void WorldGenerator::set_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, uint32_t p_data) {
+    get_or_create_biome_layer(p_z).overrides[WorldCoords::pack_coords(p_chunk_x, p_chunk_y)] = p_data;
+}
+
+void WorldGenerator::stamp_dungeon_layout_biomes(const DungeonLayout& p_layout) {
+    if (id_dungeon == 0) return;
+    const uint32_t dungeon_data = id_dungeon;
+
+    auto stamp_chunk = [&](int p_chunk_x, int p_chunk_y) {
+        set_biome_chunk_data(p_chunk_x, p_chunk_y, p_layout.z, dungeon_data);
+    };
+
+    auto stamp_cell = [&](int p_x, int p_y) {
+        stamp_chunk(floor_div_chunk(p_x), floor_div_chunk(p_y));
+    };
+
+    for (const PlacedDungeonRoom& room : p_layout.rooms) {
+        const int min_cx = floor_div_chunk(room.bounds.origin.x);
+        const int min_cy = floor_div_chunk(room.bounds.origin.y);
+        const int max_cx = floor_div_chunk(room.bounds.origin.x + room.bounds.size.x - 1);
+        const int max_cy = floor_div_chunk(room.bounds.origin.y + room.bounds.size.y - 1);
+        for (int cy = min_cy; cy <= max_cy; cy++) {
+            for (int cx = min_cx; cx <= max_cx; cx++) {
+                stamp_chunk(cx, cy);
+            }
+        }
+    }
+
+    auto stamp_cell_set = [&](const std::unordered_set<uint64_t>& p_cells) {
+        for (uint64_t key : p_cells) {
+            Vector2i cell = WorldCoords::unpack_coords(key);
+            stamp_cell(cell.x, cell.y);
+        }
+    };
+
+    stamp_cell_set(p_layout.corridor_cells);
+    stamp_cell_set(p_layout.corridor_wall_cells);
+    stamp_cell_set(p_layout.door_cells);
+}
+
 void WorldGenerator::reset_dungeon_cache() {
     dungeon_layout_cache.clear();
     dungeon_layout_cache_seed_valid = false;
@@ -35,7 +105,8 @@ void WorldGenerator::rebuild_dungeon_entrance_cache() {
     DungeonDb* dungeon_db = DungeonDb::get_singleton();
     if (!chunk_db || !dungeon_db) return;
 
-    for (const auto& pair : region_chunks) {
+    const auto& surface_chunks = get_region_chunks();
+    for (const auto& pair : surface_chunks) {
         const uint16_t chunk_id = static_cast<uint16_t>(pair.second & WorldCoords::ID_MASK);
         const ChunkInfo* chunk_info = chunk_db->get_chunk_info(chunk_id);
         if (!chunk_info || chunk_info->dungeon_type.is_empty()) continue;
@@ -70,6 +141,7 @@ void WorldGenerator::setup_biome_rules() {
     id_alley_bricks = id_reg->register_string("alley_bricks");
     id_alley_flagstone = id_reg->register_string("alley_flagstone");
     id_crypt_entrance = id_reg->register_string("crypt_entrance");
+    id_dungeon = id_reg->register_string("dungeon");
     id_dungeon_floor = id_reg->register_string("dungeon_floor");
     id_dungeon_wall = id_reg->register_string("dungeon_wall");
     id_dungeon_door = id_reg->register_string("w_door_c");
@@ -123,6 +195,7 @@ void WorldGenerator::setup_biome_rules() {
 
     reg_tiled("road", "road_bricks", "road_flagstone");
     reg_tiled("alley", "alley_bricks", "alley_flagstone");
+    reg_simple("dungeon", "dungeon_floor");
     reg_simple("plaza", "w_floor");
     reg_simple("gate", "gate_floor");
     reg_simple("palace", "palace_floor");
@@ -132,7 +205,8 @@ void WorldGenerator::setup_biome_rules() {
 Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed, const Ref<FastNoiseLite>& biome_noise) {
     setup_biome_rules();
     
-    region_chunks.clear();
+    biome_layers.clear();
+    auto& surface_chunks = get_surface_biome_overrides();
     last_chunk_valid = false;
     reset_dungeon_cache();
 
@@ -202,7 +276,7 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
 
             uint64_t key = WorldCoords::pack_coords(gx, gy);
 
-            region_chunks[key] = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
+            surface_chunks[key] = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
             result[key] = id_reg->get_string(chunk_id);
         }
     }
@@ -218,9 +292,10 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
 
     std::vector<uint16_t> grid(WorldCoords::REGION_SIZE * WorldCoords::REGION_SIZE, 0);
     std::vector<uint64_t> chunk_keys;
-    chunk_keys.reserve(region_chunks.size());
+    auto& surface_chunks = get_surface_biome_overrides();
+    chunk_keys.reserve(surface_chunks.size());
 
-    for (auto& pair : region_chunks) {
+    for (auto& pair : surface_chunks) {
         chunk_keys.push_back(pair.first);
         Vector2i pos = WorldCoords::unpack_coords(pair.first);
         int rel_x = pos.x - p_region_pos.x * WorldCoords::REGION_SIZE;
@@ -231,7 +306,7 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
     }
 
     for (uint64_t key : chunk_keys) {
-        uint32_t packed = region_chunks[key];
+        uint32_t packed = surface_chunks[key];
         uint16_t chunk_id = static_cast<uint16_t>(packed & WorldCoords::ID_MASK);
 
         auto it_rule = biome_rules.find(chunk_id);
@@ -249,8 +324,8 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
                 int gx = p_region_pos.x * WorldCoords::REGION_SIZE + nx;
                 int gy = p_region_pos.y * WorldCoords::REGION_SIZE + ny;
                 uint64_t n_key = WorldCoords::pack_coords(gx, gy);
-                auto n_it = region_chunks.find(n_key);
-                return (n_it != region_chunks.end()) ? static_cast<uint16_t>(n_it->second & WorldCoords::ID_MASK) : 0;
+                auto n_it = surface_chunks.find(n_key);
+                return (n_it != surface_chunks.end()) ? static_cast<uint16_t>(n_it->second & WorldCoords::ID_MASK) : 0;
             }
             return grid[ny * WorldCoords::REGION_SIZE + nx];
         };
@@ -272,7 +347,7 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
         check_neighbor(0, 1, WorldCoords::NEIGH_SOUTH);
         check_neighbor(-1, 0, WorldCoords::NEIGH_WEST);
 
-        region_chunks[key] = (packed & ~(WorldCoords::NEIGHBOR_MASK << WorldCoords::NEIGHBOR_SHIFT)) | (mask << WorldCoords::NEIGHBOR_SHIFT);
+        surface_chunks[key] = (packed & ~(WorldCoords::NEIGHBOR_MASK << WorldCoords::NEIGHBOR_SHIFT)) | (mask << WorldCoords::NEIGHBOR_SHIFT);
     }
 }
 
@@ -291,21 +366,43 @@ uint16_t WorldGenerator::pick_weighted_tile(const BiomeInfo& info, uint32_t hash
     return info.ground_tiles[0].id;
 }
 
+uint32_t WorldGenerator::get_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, int) {
+    setup_biome_rules();
+    const BiomeLayer* layer = get_biome_layer(p_z);
+    if (!layer) return get_default_biome_chunk_data(p_z);
+
+    uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
+    auto it = layer->overrides.find(chunk_key);
+    return it != layer->overrides.end() ? it->second : layer->default_chunk_data;
+}
+
+uint16_t WorldGenerator::get_biome_id_for_chunk(int p_chunk_x, int p_chunk_y, int p_z, int p_world_seed) {
+    return static_cast<uint16_t>(get_biome_chunk_data(p_chunk_x, p_chunk_y, p_z, p_world_seed) & WorldCoords::ID_MASK);
+}
+
+uint16_t WorldGenerator::get_biome_id_for_cell(int x, int y, int z, int world_seed) {
+    return get_biome_id_for_chunk(floor_div_chunk(x), floor_div_chunk(y), z, world_seed);
+}
+
 uint16_t WorldGenerator::get_chunk_id_for_cell(int x, int y) const {
-    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cx = floor_div_chunk(x);
+    int cy = floor_div_chunk(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
-    auto it = region_chunks.find(chunk_key);
-    if (it == region_chunks.end()) return id_void;
+    const BiomeLayer* layer = get_biome_layer(0);
+    if (!layer) return id_void;
+    auto it = layer->overrides.find(chunk_key);
+    if (it == layer->overrides.end()) return id_void;
     return static_cast<uint16_t>(it->second & WorldCoords::ID_MASK);
 }
 
 uint8_t WorldGenerator::get_chunk_rotation_for_cell(int x, int y) const {
-    int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-    int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
+    int cx = floor_div_chunk(x);
+    int cy = floor_div_chunk(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
-    auto it = region_chunks.find(chunk_key);
-    if (it == region_chunks.end()) return WorldCoords::ROT_SOUTH;
+    const BiomeLayer* layer = get_biome_layer(0);
+    if (!layer) return WorldCoords::ROT_SOUTH;
+    auto it = layer->overrides.find(chunk_key);
+    if (it == layer->overrides.end()) return WorldCoords::ROT_SOUTH;
     return static_cast<uint8_t>((it->second >> WorldCoords::ORIENTATION_SHIFT) & WorldCoords::ROTATION_MASK);
 }
 
@@ -321,6 +418,10 @@ String WorldGenerator::get_structure_id_for_chunk(uint16_t p_chunk_id) const {
 }
 
 String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) const {
+    return get_structure_id_for_cell(x, y, 0, world_seed);
+}
+
+String WorldGenerator::get_structure_id_for_cell(int x, int y, int z, int world_seed) const {
     uint16_t chunk_id = get_chunk_id_for_cell(x, y);
     ChunkDb* chunk_db = ChunkDb::get_singleton();
     const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(chunk_id) : nullptr;
@@ -331,12 +432,17 @@ String WorldGenerator::get_structure_id_for_cell(int x, int y, int world_seed) c
 
     StructureDb* structure_db = StructureDb::get_singleton();
     const std::vector<String>* structures = structure_db ? structure_db->get_structure_ids_by_type(chunk_info->structure_type) : nullptr;
+    String structure_id;
     if (!structures || structures->empty()) {
-        return "house01";
+        structure_id = "house01";
+    } else {
+        uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(cx, cy), Rng::BIOME);
+        structure_id = (*structures)[h % structures->size()];
     }
 
-    uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(cx, cy), Rng::BIOME);
-    return (*structures)[h % structures->size()];
+    const StructureInfo* structure = structure_db ? structure_db->get_structure_info(structure_id) : nullptr;
+    if (!structure || structure->levels.find(z) == structure->levels.end()) return "";
+    return structure_id;
 }
 
 uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
@@ -345,8 +451,13 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
 
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
-        auto it = region_chunks.find(chunk_key);
-        if (it == region_chunks.end()) {
+        const BiomeLayer* surface_layer = get_biome_layer(0);
+        if (!surface_layer) {
+            last_chunk_valid = false;
+            return id_void;
+        }
+        auto it = surface_layer->overrides.find(chunk_key);
+        if (it == surface_layer->overrides.end()) {
             last_chunk_valid = false;
             return id_void;
         }
@@ -501,8 +612,10 @@ uint16_t WorldGenerator::get_road_surface_feature_tile(int x, int y, uint16_t ba
 
     auto roadside_candidate_count_for_chunk = [&](int p_chunk_x, int p_chunk_y) -> int {
         const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
-        auto chunk_it = region_chunks.find(chunk_key);
-        if (chunk_it == region_chunks.end()) return 0;
+        const BiomeLayer* surface_layer = get_biome_layer(0);
+        if (!surface_layer) return 0;
+        auto chunk_it = surface_layer->overrides.find(chunk_key);
+        if (chunk_it == surface_layer->overrides.end()) return 0;
 
         const uint16_t chunk_id = static_cast<uint16_t>(chunk_it->second & WorldCoords::ID_MASK);
         if (!chunk_db->has_tag(chunk_id, road_tag_id)) return 0;
@@ -530,8 +643,10 @@ uint16_t WorldGenerator::get_road_surface_feature_tile(int x, int y, uint16_t ba
         candidate.index = p_index;
 
         const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
-        auto chunk_it = region_chunks.find(chunk_key);
-        if (chunk_it == region_chunks.end()) return candidate;
+        const BiomeLayer* surface_layer = get_biome_layer(0);
+        if (!surface_layer) return candidate;
+        auto chunk_it = surface_layer->overrides.find(chunk_key);
+        if (chunk_it == surface_layer->overrides.end()) return candidate;
 
         const uint16_t chunk_id = static_cast<uint16_t>(chunk_it->second & WorldCoords::ID_MASK);
         if (!chunk_db->has_tag(chunk_id, road_tag_id)) return candidate;
@@ -736,6 +851,7 @@ DungeonLayout* WorldGenerator::get_or_create_dungeon_layout(
     }
 
     DungeonLayout layout = DungeonGenerator::build_layout(*info, p_entrance_chunk, p_world_seed);
+    stamp_dungeon_layout_biomes(layout);
     auto inserted = dungeon_layout_cache.emplace(key, layout);
     return &inserted.first->second;
 }
@@ -884,8 +1000,10 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
         int cx = (x >= 0) ? (x / WorldCoords::CHUNK_SIZE) : ((x - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
         int cy = (y >= 0) ? (y / WorldCoords::CHUNK_SIZE) : ((y - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
         uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
-        auto it = region_chunks.find(chunk_key);
-        if (it != region_chunks.end()) {
+        const BiomeLayer* surface_layer = get_biome_layer(0);
+        if (surface_layer) {
+            auto it = surface_layer->overrides.find(chunk_key);
+            if (it == surface_layer->overrides.end()) return id_void;
             uint8_t rotation = static_cast<uint8_t>(it->second >> WorldCoords::ORIENTATION_SHIFT);
             int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
             int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
@@ -897,7 +1015,7 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
                 case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break;
             }
 
-            String structure_id = get_structure_id_for_cell(x, y, world_seed);
+            String structure_id = get_structure_id_for_cell(x, y, z, world_seed);
             uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, z);
             if (tile_id != id_void) return tile_id;
         }
@@ -909,4 +1027,35 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
     if (z == -1) return id_underground_earth;
     if (z < -1) return id_solid_rock;
     return id_air;
+}
+
+const std::unordered_map<uint64_t, uint32_t>& WorldGenerator::get_region_chunks() const {
+    static const std::unordered_map<uint64_t, uint32_t> empty;
+    const BiomeLayer* layer = get_biome_layer(0);
+    return layer ? layer->overrides : empty;
+}
+
+void WorldGenerator::set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks) {
+    setup_biome_rules();
+    biome_layers.clear();
+    BiomeLayer layer;
+    layer.z = 0;
+    layer.default_chunk_data = get_default_biome_chunk_data(0);
+    layer.overrides = chunks;
+    biome_layers[0] = std::move(layer);
+    last_chunk_valid = false;
+    reset_dungeon_cache();
+}
+
+void WorldGenerator::set_biome_layers(const std::unordered_map<int, BiomeLayer>& layers) {
+    setup_biome_rules();
+    biome_layers = layers;
+    last_chunk_valid = false;
+    reset_dungeon_cache();
+}
+
+void WorldGenerator::clear_region_chunks() {
+    biome_layers.clear();
+    last_chunk_valid = false;
+    reset_dungeon_cache();
 }

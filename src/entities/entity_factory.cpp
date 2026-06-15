@@ -56,7 +56,7 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     const RaceInfo* race = race_db->get_race_info(race_id);
     if (!race) return EntityPool::INVALID_ID;
 
-    uint32_t id = ledger.spawn_entity(pos, race->atlas.x, race->atlas.y, race_id);
+    uint32_t id = ledger.spawn_entity(pos, bubble.get_active_z(), race->atlas.x, race->atlas.y, race_id);
     if (id == EntityPool::INVALID_ID) return id;
 
     LocomotionData& loco = ledger.locomotion_data[id];

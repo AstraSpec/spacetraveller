@@ -1,16 +1,5 @@
 [
   {
-    "id": "tree_smashed",
-    "rolls_min": 1,
-    "rolls_max": 3,
-    "allow_duplicates": true,
-    "entries": [
-      { "item_id": "stick", "weight": 80, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "rope", "weight": 10, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "flint", "weight": 10, "amount_min": 1, "amount_max": 1 }
-    ]
-  },
-  {
     "id": "house_chest_basic",
     "rolls_min": 2,
     "rolls_max": 4,
@@ -55,6 +44,18 @@
       { "item_id": "rusty_sword", "weight": 3,  "amount_min": 1, "amount_max": 1 },
       { "item_id": "flint", "weight": 8, "amount_min": 1, "amount_max": 1 },
       { "item_id": "iron_ore", "weight": 3,  "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "forest_floor_items",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "none": true, "weight": 50 },
+      { "item_id": "stone", "weight": 30, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 1, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stick", "weight": 5, "amount_min": 1, "amount_max": 1 }
     ]
   }
 ]

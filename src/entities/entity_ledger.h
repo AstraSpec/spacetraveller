@@ -64,6 +64,7 @@ public:
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
     uint32_t spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y, const String& race_id);
+    uint32_t spawn_entity(const Vector2i& pos, int z, uint16_t atlas_x, uint16_t atlas_y, const String& race_id);
     uint32_t spawn_player(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y);
     void destroy_entity(uint32_t id);
 

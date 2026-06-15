@@ -20,14 +20,14 @@
 
 namespace godot {
 
-static constexpr float DUNGEON_FLOOR_LOOT_CHANCE = 0.05f;
-static constexpr uint64_t DUNGEON_FLOOR_LOOT_CHANCE_SALT = 0x44554E464C4F4F52ULL; // "DUNFLOOR"
+static constexpr float DUNGEON_FLOOR_LOOT_CHANCE = 0.04f;
 static constexpr uint64_t DUNGEON_FLOOR_LOOT_ROLL_SALT = 0x44554E4C4F4F5452ULL; // "DUNLOOTR"
 static const char* DUNGEON_FLOOR_LOOT_TABLE = "dungeon_floor_items";
-static constexpr float FOREST_FLOOR_STONE_CHANCE = 0.005f;
-static constexpr uint64_t FOREST_FLOOR_STONE_SALT = 0x464F5253544F4E45ULL; // "FORSTONE"
+static constexpr float FOREST_FLOOR_LOOT_CHANCE = 0.0061f;
+static constexpr uint64_t FOREST_FLOOR_LOOT_ROLL_SALT = 0x464F524C4F4F5452ULL; // "FORLOOTR"
 static const char* FOREST_CHUNK_ID = "forest";
-static const char* FOREST_STONE_ITEM_ID = "stone";
+static const char* DUNGEON_CHUNK_ID = "dungeon";
+static const char* FOREST_FLOOR_LOOT_TABLE = "forest_floor_items";
 
 static bool tile_allows_rule(uint16_t p_tile_id, const SpawnRuleInfo& p_rule) {
     TileDb* tile_db = TileDb::get_singleton();
@@ -250,62 +250,48 @@ static void apply_tile_spawn_loot(
     roll_loot_table_at(p_world_seed, tile->spawn_loot_table, get_tile_spawn_loot_salt(p_structure_id, p_tile_id), p_pos, p_bubble);
 }
 
-static void apply_dungeon_floor_loot(
+static void apply_ambient_biome_loot(
     uint32_t p_world_seed,
-    int p_z,
-    const Vector2i& p_pos,
-    WorldBubble& p_bubble
-) {
-    LootDb* loot_db = LootDb::get_singleton();
-    if (!loot_db) return;
-
-    const uint16_t loot_table_id = loot_db->get_loot_table_id(DUNGEON_FLOOR_LOOT_TABLE);
-    if (loot_table_id == 0) return;
-
-    const uint64_t z_salt = static_cast<uint64_t>(static_cast<uint32_t>(p_z));
-    Rng::Seeded chance_rng = Rng::at(
-        p_world_seed,
-        p_pos,
-        Rng::LOOT,
-        DUNGEON_FLOOR_LOOT_CHANCE_SALT ^ (z_salt << 32)
-    );
-    if (!chance_rng.chance(DUNGEON_FLOOR_LOOT_CHANCE)) return;
-
-    roll_loot_table_at(
-        p_world_seed,
-        loot_table_id,
-        DUNGEON_FLOOR_LOOT_ROLL_SALT ^ (z_salt << 32),
-        p_pos,
-        p_bubble
-    );
-}
-
-// TEMPORARY until we get item drops sorted
-static void apply_forest_floor_stone(
-    uint32_t p_world_seed,
-    uint16_t p_chunk_id,
+    const Vector3i& p_pos3,
+    uint16_t p_biome_id,
+    uint16_t p_tile_id,
     const Vector2i& p_pos,
     WorldBubble& p_bubble
 ) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
-    if (!id_reg || p_chunk_id != id_reg->get_id(FOREST_CHUNK_ID)) return;
+    LootDb* loot_db = LootDb::get_singleton();
+    if (!id_reg || !loot_db) return;
 
     TileDb* tile_db = TileDb::get_singleton();
-    const uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
-    const TileInfo* tile = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+    const TileInfo* tile = tile_db ? tile_db->get_tile_info(p_tile_id) : nullptr;
     if (!tile) return;
 
-    TagRegistry* tag_reg = TagRegistry::get_singleton();
-    const uint16_t ground_tag_id = tag_reg ? tag_reg->get_tag_id("GROUND") : 0;
-    if (ground_tag_id == 0 || !TagRegistry::has_tag(ground_tag_id, tile->tags)) return;
+    uint16_t loot_table_id = 0;
+    float chance = 0.0f;
+    uint64_t salt = 0;
 
-    Rng::Seeded stone_rng = Rng::at(p_world_seed, p_pos, Rng::LOOT, FOREST_FLOOR_STONE_SALT);
-    if (!stone_rng.chance(FOREST_FLOOR_STONE_CHANCE)) return;
+    if (p_pos3.z == 0 && p_biome_id == id_reg->get_id(FOREST_CHUNK_ID)) {
+        TagRegistry* tag_reg = TagRegistry::get_singleton();
+        const uint16_t ground_tag_id = tag_reg ? tag_reg->get_tag_id("GROUND") : 0;
+        if (ground_tag_id == 0 || !TagRegistry::has_tag(ground_tag_id, tile->tags)) return;
 
-    const uint16_t stone_id = id_reg->get_id(FOREST_STONE_ITEM_ID);
-    if (stone_id != 0) {
-        p_bubble.drop_item(p_pos, stone_id, 1);
+        loot_table_id = loot_db->get_loot_table_id(FOREST_FLOOR_LOOT_TABLE);
+        chance = FOREST_FLOOR_LOOT_CHANCE;
+        salt = FOREST_FLOOR_LOOT_ROLL_SALT;
+    } else if (p_biome_id == id_reg->get_id(DUNGEON_CHUNK_ID) && p_tile_id == id_reg->get_id("dungeon_floor")) {
+        loot_table_id = loot_db->get_loot_table_id(DUNGEON_FLOOR_LOOT_TABLE);
+        chance = DUNGEON_FLOOR_LOOT_CHANCE;
+        salt = DUNGEON_FLOOR_LOOT_ROLL_SALT ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_pos3.z)) << 32);
+    } else {
+        return;
     }
+
+    if (loot_table_id == 0) return;
+
+    Rng::Seeded chance_rng = Rng::at(p_world_seed, p_pos, Rng::LOOT, salt);
+    if (!chance_rng.chance(chance)) return;
+
+    roll_loot_table_at(p_world_seed, loot_table_id, salt, p_pos, p_bubble);
 }
 
 static bool apply_structure_spawn_rule(
@@ -399,9 +385,12 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                         }
                     }
 
+                    const uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
                     if (!custom_loot_rule_matched) {
-                        uint16_t tile_id = p_bubble.query_tile_id(pos.x, pos.y);
                         apply_tile_spawn_loot(p_world_seed, dungeon_structure.structure_id, tile_id, pos, p_bubble);
+
+                        const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+                        apply_ambient_biome_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
                     }
                 }
 
@@ -410,16 +399,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
             continue;
         }
 
-        if (p_generator.is_dungeon_floor_loot_candidate(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed))) {
-            if (p_spawn_state.has_attempted(packed)) continue;
-            p_spawn_state.mark_attempted(packed);
-            apply_dungeon_floor_loot(p_world_seed, pos3.z, pos, p_bubble);
-            continue;
-        }
-
-        uint16_t chunk_id = p_generator.get_chunk_id_for_cell(pos.x, pos.y);
-
-        String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, static_cast<int>(p_world_seed));
+        String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         if (!structure_id.is_empty()) {
             if (p_spawn_state.has_attempted(packed)) continue;
 
@@ -477,16 +457,20 @@ void WorldSpawner::spawn_for_newly_seen_cells(
             continue;
         }
 
-        if (!spawn_db) continue;
         if (p_spawn_state.has_attempted(packed)) continue;
+        p_spawn_state.mark_attempted(packed);
+
+        uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+        uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
+        apply_ambient_biome_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+
+        if (!spawn_db) continue;
         if (p_bubble.get_entity_at(pos.x, pos.y) != nullptr) continue;
         if (p_entity_archive.has_frozen_entity(packed)) continue;
 
-        spawn_db->get_matching_rules(chunk_id, "free_cell", rules);
+        spawn_db->get_matching_rules(biome_id, "free_cell", rules);
         if (rules.empty()) continue;
 
-        p_spawn_state.mark_attempted(packed);
-        apply_forest_floor_stone(p_world_seed, chunk_id, pos, p_bubble);
         Rng::Seeded rule_rng = Rng::at(p_world_seed, pos, Rng::SPAWN_RULE);
         const SpawnRuleInfo* rule = spawn_db->pick_weighted_rule(rules, rule_rng);
         if (rule) spawn_with_rule(p_world_seed, p_spawn_turn_time, pos, *rule, p_bubble, p_ledger, p_tracker, p_scheduler);

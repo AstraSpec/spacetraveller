@@ -6,7 +6,11 @@
 using namespace godot;
 
 uint32_t EntityLedger::spawn_entity(const Vector2i& pos, uint16_t atlas_x, uint16_t atlas_y, const String& race_id) {
-    uint32_t id = entity_pool.create_entity(pos.x, pos.y, atlas_x, atlas_y);
+    return spawn_entity(pos, 0, atlas_x, atlas_y, race_id);
+}
+
+uint32_t EntityLedger::spawn_entity(const Vector2i& pos, int z, uint16_t atlas_x, uint16_t atlas_y, const String& race_id) {
+    uint32_t id = entity_pool.create_entity(pos.x, pos.y, z, atlas_x, atlas_y);
     
     Anatomy::init(anatomy_data[id], race_id);
     Clothing::init(clothing_data[id]);
