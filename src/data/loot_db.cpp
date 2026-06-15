@@ -12,6 +12,7 @@ void LootDb::_bind_methods() {
     ClassDB::bind_static_method("LootDb", D_METHOD("get_singleton"), &LootDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &LootDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_ids"), &LootDb::get_ids);
+    ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &LootDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("roll_table", "table_id", "world_seed", "pos", "stream"), &LootDb::roll_table_for_position);
 }
 
@@ -59,6 +60,11 @@ LootTableInfo LootDb::_parse_row(const Dictionary &p_data) {
         LootEntry entry;
         String item_id = String(entry_data.get("item_id", ""));
         String table_id = String(entry_data.get("table_id", ""));
+        entry.none = bool(entry_data.get("none", false));
+        if (entry.none && (!item_id.is_empty() || !table_id.is_empty())) {
+            UtilityFunctions::push_error("[LootDb] Entry in loot table ", info.id, " cannot combine none with item_id or table_id");
+            continue;
+        }
         if (reg && !item_id.is_empty()) entry.item_id = reg->get_id(item_id);
         if (reg && !table_id.is_empty()) entry.table_id = reg->register_string(table_id);
 
@@ -66,8 +72,8 @@ LootTableInfo LootDb::_parse_row(const Dictionary &p_data) {
             UtilityFunctions::push_error("[LootDb] Unknown item_id in loot table ", info.id, ": ", item_id);
             continue;
         }
-        if (entry.item_id == 0 && entry.table_id == 0) {
-            UtilityFunctions::push_error("[LootDb] Entry in loot table ", info.id, " has neither item_id nor table_id");
+        if (entry.item_id == 0 && entry.table_id == 0 && !entry.none) {
+            UtilityFunctions::push_error("[LootDb] Entry in loot table ", info.id, " has neither item_id, table_id, nor none");
             continue;
         }
 
@@ -75,8 +81,8 @@ LootTableInfo LootDb::_parse_row(const Dictionary &p_data) {
         if (entry.weight <= 0) continue;
         entry.amount_min = int(entry_data.get("amount_min", entry_data.get("amount", 1)));
         entry.amount_max = int(entry_data.get("amount_max", entry.amount_min));
-        if (entry.amount_min < 1) entry.amount_min = 1;
-        if (entry.amount_max < 1) entry.amount_max = 1;
+        if (entry.amount_min < 0) entry.amount_min = 0;
+        if (entry.amount_max < 0) entry.amount_max = 0;
         if (entry.amount_min > entry.amount_max) std::swap(entry.amount_min, entry.amount_max);
 
         info.total_weight += entry.weight;
@@ -112,6 +118,10 @@ const LootTableInfo* LootDb::get_loot_table(uint16_t p_id) const {
 uint16_t LootDb::get_loot_table_id(const String &p_id) const {
     IdRegistry* reg = IdRegistry::get_singleton();
     return reg ? reg->get_id(p_id) : 0;
+}
+
+Vector2i LootDb::get_atlas_coords(const String &) const {
+    return Vector2i(71, 18);
 }
 
 bool LootDb::roll_table(uint16_t p_table_id, Rng::Seeded &p_rng, std::vector<LootStack> &r_out) const {
@@ -169,6 +179,8 @@ bool LootDb::_roll_table_internal(uint16_t p_table_id, Rng::Seeded &p_rng, std::
                 r_out.push_back({chosen->item_id, amount});
                 produced = true;
             }
+        } else if (chosen->none) {
+            continue;
         }
     }
 

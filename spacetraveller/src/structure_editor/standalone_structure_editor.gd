@@ -12,6 +12,7 @@ func _ready() -> void:
 	TileDb.initialize_data()
 	StructureDb.initialize_data()
 	ItemDb.initialize_data()
+	LootDb.initialize_data()
 	RaceDb.initialize_data()
 	JobDb.initialize_data()
 

@@ -20,6 +20,7 @@ struct LootStack {
 struct LootEntry {
     uint16_t item_id = 0;
     uint16_t table_id = 0;
+    bool none = false;
     int weight = 1;
     int cumulative_weight = 0;
     int amount_min = 1;
@@ -59,6 +60,7 @@ public:
     const LootTableInfo* get_loot_table(const String &p_id) const;
     const LootTableInfo* get_loot_table(uint16_t p_id) const;
     uint16_t get_loot_table_id(const String &p_id) const;
+    Vector2i get_atlas_coords(const String &p_id) const;
 
     bool roll_table(uint16_t p_table_id, Rng::Seeded &p_rng, std::vector<LootStack> &r_out) const;
     Array roll_table_for_position(const String &p_table_id, int p_world_seed, const Vector2i &p_pos, int p_stream) const;

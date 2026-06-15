@@ -126,6 +126,78 @@
                             9
                         ],
                         "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            1,
+                            9
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            2,
+                            1
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            3,
+                            8
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            4,
+                            2
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            5,
+                            9
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            6,
+                            1
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            6,
+                            9
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            8,
+                            2
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blood_splatter",
+                        "pos": [
+                            9,
+                            8
+                        ],
+                        "type": "spawn_loot_table"
                     }
                 ]
             }
@@ -214,6 +286,118 @@
         "size": [
             15.0,
             15.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "crypt_ellipsis",
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 7x1, 4x0, 3x1, 5x2, 3x1, 2x0, 1x1, 9x2, 1x1, 1x0, 2x1, 9x2, 3x1, 11x2, 2x1, 11x2, 2x1, 11x2, 2x1, 11x2, 2x1, 11x2, 3x1, 9x2, 2x1, 1x0, 1x1, 9x2, 1x1, 2x0, 3x1, 5x2, 3x1, 4x0, 7x1, 3x0)",
+                "palette": [
+                    "void",
+                    "dungeon_wall",
+                    "dungeon_floor"
+                ]
+            }
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "crypt_chest",
+        "levels": {
+            "0": {
+                "blueprint": "(10x0, 7x1, 2x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 2x1, 3x3, 2x1, 2x0, 2x1, 1x3, 1x4, 1x3, 2x1, 2x0, 2x1, 3x3, 2x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 7x1, 10x0)",
+                "palette": [
+                    "dungeon_wall",
+                    "dungeon_floor",
+                    "skull_pike",
+                    "w_floor",
+                    "chest"
+                ]
+            }
+        },
+        "size": [
+            9.0,
+            11.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north"
+            ]
+        },
+        "id": "crypt_locked",
+        "levels": {
+            "0": {
+                "blueprint": "(10x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 1x1, 5x3, 1x1, 2x0, 1x1, 1x3, 3x1, 1x3, 1x1, 2x0, 1x1, 1x3, 3x1, 1x3, 1x1, 2x0, 1x1, 1x3, 1x1, 1x4, 1x1, 1x3, 1x1, 10x0)",
+                "palette": [
+                    "dungeon_wall",
+                    "dungeon_floor",
+                    "candelabra",
+                    "iron_bars",
+                    "chest"
+                ]
+            }
+        },
+        "size": [
+            9.0,
+            11.0
+        ],
+        "type": "crypt_room"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "west"
+            ]
+        },
+        "id": "crypt_hidden",
+        "levels": {
+            "0": {
+                "blueprint": "(9x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 9x0, 1x2, 1x3, 3x4, 1x5, 1x6, 2x2, 1x7, 4x4, 1x6, 2x2, 4x4, 1x8, 1x9, 1x2, 16x10)",
+                "palette": [
+                    "dungeon_wall",
+                    "dungeon_floor",
+                    "w_wall",
+                    "wardrobe",
+                    "w_floor",
+                    "dresser",
+                    "bed_double",
+                    "chest",
+                    "chair",
+                    "table",
+                    "void"
+                ]
+            }
+        },
+        "size": [
+            8.0,
+            13.0
         ],
         "type": "crypt_room"
     }
