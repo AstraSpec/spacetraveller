@@ -84,52 +84,80 @@
     "tags": ["GROUND", "VEGETATION"]
   },
   {
+    "id": "bush_stalk",
+    "name": "Stalk Bush",
+    "atlas": [[ 12, 9 ], [ 13, 9 ], [ 14, 9 ]],
+    "solid": false,
+    "tags": ["GROUND", "VEGETATION"]
+  },
+  {
+    "id": "bush",
+    "name": "Bush",
+    "atlas": [[ 19, 9 ], [ 20, 9 ]],
+    "solid": false,
+    "tags": ["SMASHABLE", "VEGETATION"],
+    "smash_loot_table": "bush_smashed"
+  },
+  {
+    "id": "water",
+    "name": "Water",
+    "atlas": [ 19, 5 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
     "id": "w_wall",
     "name": "Wooden Wall",
     "atlas": [ 0, 4 ],
     "solid": true,
-    "tags": ["SMASHABLE", "WALL"]
+    "tags": ["SMASHABLE", "WALL"],
+    "smash_loot_table": "w_smashed"
   },
   {
     "id": "w_door_c",
     "name": "Wooden Door",
     "atlas": [ 4, 1 ],
     "solid": true,
-    "tags": ["CAN_OPEN"],
-    "opens_to": "w_door_o"
+    "tags": ["SMASHABLE", "CAN_OPEN"],
+    "opens_to": "w_door_o",
+    "smash_loot_table": "w_smashed"
   },
   {
     "id": "w_door_o",
     "name": "Open Wooden Door",
     "atlas": [ 13, 1 ],
     "solid": false,
-    "tags": ["CAN_CLOSE"],
-    "closes_to": "w_door_c"
+    "tags": ["SMASHABLE", "CAN_CLOSE"],
+    "closes_to": "w_door_c",
+    "smash_loot_table": "w_smashed"
   },
   {
     "id": "w_window_c",
     "name": "Wooden Window",
     "atlas": [ 12, 4 ],
     "solid": true,
-    "tags": ["TRANSPARENT", "CAN_OPEN", "CAN_CLOSE"],
+    "tags": ["TRANSPARENT", "CAN_OPEN", "CAN_CLOSE", "SMASHABLE"],
     "opens_to": "w_window_o",
-    "closes_to": "w_window_curtain"
+    "closes_to": "w_window_curtain",
+    "smash_loot_table": "glass_smashed"
   },
   {
     "id": "w_window_o",
     "name": "Open Wooden Window",
     "atlas": [ 13, 4 ],
     "solid": false,
-    "tags": ["TRANSPARENT", "CAN_CLOSE"],
-    "closes_to": "w_window_c"
+    "tags": ["TRANSPARENT", "CAN_CLOSE", "SMASHABLE"],
+    "closes_to": "w_window_c",
+    "smash_loot_table": "glass_smashed"
   },
   {
     "id": "w_window_curtain",
     "name": "Curtain Wooden Window",
     "atlas": [ 14, 4 ],
     "solid": true,
-    "tags": ["CAN_OPEN"],
-    "opens_to": "w_window_c"
+    "tags": ["CAN_OPEN", "SMASHABLE"],
+    "opens_to": "w_window_c",
+    "smash_loot_table": "glass_smashed"
   },
   {
     "id": "stairs_down",
@@ -199,13 +227,15 @@
     "name": "Underground Earth",
     "atlas": [ 8, 2 ],
     "solid": true,
-    "tags": ["GROUND", "WALL"]
+    "tags": ["GROUND", "SMASHABLE"],
+    "smash_loot_table": "dirt_smashed"
   },
   {
     "id": "solid_rock",
     "name": "Solid Rock",
     "atlas": [ 1, 2 ],
     "solid": true,
-    "tags": ["WALL"]
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "rock_smashed"
   }
 ]

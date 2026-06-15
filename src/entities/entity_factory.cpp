@@ -125,9 +125,9 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     }
 
     AIData& ai = ledger.ai_data[id];
-    String default_attitude = Faction::are_hostile(race->faction, String("human"))
-        ? String("hostile")
-        : String("neutral");
+    String default_attitude = race->faction.is_empty()
+        ? String("neutral")
+        : String("hostile");
     String default_ai_state = "wander";
 
     if (job_info) {

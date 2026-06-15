@@ -78,22 +78,36 @@ void WorldGenerator::setup_biome_rules() {
         uint16_t b_id = id_reg->register_string(name);
         BiomeInfo info;
         for (const auto& t : tiles) {
-            info.ground_tiles.push_back({id_reg->register_string(t.first), t.second});
+            int weight = t.second < 0 ? 0 : t.second;
+            info.ground_tiles.push_back({id_reg->register_string(t.first), weight});
+            info.total_weight += weight;
         }
         biome_rules[b_id] = info;
     };
 
     reg_biome("plains", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("forest", {{"tree_oak", 30}, {"grass", 56}, {"dirt", 14}});
     reg_biome("building", {{"grass", 80}, {"dirt", 20}});
     reg_biome("tavern", {{"grass", 80}, {"dirt", 20}});
     reg_biome("adventurer_guild", {{"grass", 80}, {"dirt", 20}});
     reg_biome("crypt_entrance", {{"grass", 80}, {"dirt", 20}});
+    reg_biome("forest", {
+        {"grass", 960}, 
+        {"dirt", 280},
+        {"bush_stalk", 200},
+        {"tree_oak", 120},
+        {"tree_birch", 60},
+        {"tree_poplar", 60},
+        {"bush", 30},
+        {"tree_stump", 10},
+        {"tree_dead", 10},
+        {"water", 1}
+    });
 
     auto reg_simple = [&](const String& name, const String& tile) {
         uint16_t b_id = id_reg->register_string(name);
         BiomeInfo info;
         info.ground_tiles.push_back({id_reg->register_string(tile), 100});
+        info.total_weight = 100;
         biome_rules[b_id] = info;
     };
 
@@ -101,6 +115,7 @@ void WorldGenerator::setup_biome_rules() {
         uint16_t b_id = id_reg->register_string(name);
         BiomeInfo info;
         info.ground_tiles.push_back({id_reg->register_string(tile), 100});
+        info.total_weight = 100;
         info.auto_tiled = true;
         info.border_tile_id = id_reg->register_string(border);
         biome_rules[b_id] = info;
@@ -261,14 +276,19 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
     }
 }
 
-uint16_t WorldGenerator::pick_weighted_tile(const BiomeInfo& info, uint32_t roll) {
+uint16_t WorldGenerator::pick_weighted_tile(const BiomeInfo& info, uint32_t hash) {
+    if (info.ground_tiles.empty()) return id_void;
     if (info.ground_tiles.size() == 1) return info.ground_tiles[0].id;
+    if (info.total_weight <= 0) return info.ground_tiles[0].id;
+
+    uint32_t roll = hash % static_cast<uint32_t>(info.total_weight);
     int cumulative = 0;
     for (const auto& tile : info.ground_tiles) {
+        if (tile.weight <= 0) continue;
         cumulative += tile.weight;
         if (roll < (uint32_t)cumulative) return tile.id;
     }
-    return info.ground_tiles.empty() ? id_void : info.ground_tiles[0].id;
+    return info.ground_tiles[0].id;
 }
 
 uint16_t WorldGenerator::get_chunk_id_for_cell(int x, int y) const {
@@ -379,7 +399,7 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
 
     if (last_biome_ptr) {
         uint32_t h = get_hash(x, y, static_cast<uint32_t>(world_seed));
-        return pick_weighted_tile(*last_biome_ptr, h % 100);
+        return pick_weighted_tile(*last_biome_ptr, h);
     }
 
     return id_void;

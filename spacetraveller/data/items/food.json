@@ -1,0 +1,22 @@
+[
+  {
+    "id": "apple",
+    "name": "Apple",
+    "description": "A juicy apple.",
+    "type": "food",
+    "atlas": [ 3, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "berry",
+    "name": "Berry",
+    "description": "A small handful of berries.",
+    "type": "food",
+    "atlas": [ 18, 17 ],
+    "weight": 0.05,
+    "volume": 0.02,
+    "tags": []
+  }
+]

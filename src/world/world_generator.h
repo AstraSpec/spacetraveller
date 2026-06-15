@@ -21,6 +21,7 @@ struct BiomeTile {
 
 struct BiomeInfo {
     std::vector<BiomeTile> ground_tiles;
+    int total_weight = 0;
     std::unordered_map<uint16_t, uint16_t> fixed_overrides;
     bool auto_tiled = false;
     uint16_t border_tile_id = 0;
@@ -118,7 +119,7 @@ public:
     bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);
-    uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t roll);
+    uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t hash);
     
     uint32_t get_hash(int x, int y, uint32_t seed) const {
         return static_cast<uint32_t>(Rng::hash_pos(seed, Vector2i(x, y), Rng::BIOME) >> 32);

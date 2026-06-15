@@ -10,11 +10,31 @@
     "tags": []
   },
   {
+    "id": "wooden_log",
+    "name": "Log",
+    "description": "A wooden log cut from a tree.",
+    "type": "material",
+    "atlas": [ 0, 23 ],
+    "weight": 0.4,
+    "volume": 0.2,
+    "tags": []
+  },
+  {
+    "id": "wooden_plank",
+    "name": "Wooden Plank",
+    "description": "A wooden plank crafted from a log.",
+    "type": "material",
+    "atlas": [ 9, 23 ],
+    "weight": 0.4,
+    "volume": 0.2,
+    "tags": []
+  },
+  {
     "id": "fiber",
     "name": "Fiber",
     "description": "Plant fibers that can be used to make clothing.",
     "type": "material",
-    "atlas": [ 19, 9 ],
+    "atlas": [ 13, 23 ],
     "weight": 0.05,
     "volume": 0.1,
     "tags": []
@@ -25,6 +45,46 @@
     "description": "A rock, a useful material.",
     "type": "material",
     "atlas": [ 19, 21 ],
+    "weight": 0.5,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "dirt",
+    "name": "Dirt",
+    "description": "Filthy...",
+    "type": "material",
+    "atlas": [ 20, 21 ],
+    "weight": 0.5,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "brick",
+    "name": "Brick",
+    "description": "A brick, useful for building.",
+    "type": "material",
+    "atlas": [ 10, 23 ],
+    "weight": 0.5,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "glass_shard",
+    "name": "Glass Shard",
+    "description": "Careful not to cut yourself.",
+    "type": "material",
+    "atlas": [ 11, 23 ],
+    "weight": 0.5,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "ceramic_shard",
+    "name": "Ceramic Shard",
+    "description": "A shard from a destroyed ceramic work.",
+    "type": "material",
+    "atlas": [ 12, 23 ],
     "weight": 0.5,
     "volume": 0.1,
     "tags": []
@@ -105,16 +165,6 @@
     "description": "Sticky strands from dungeon spiders.",
     "type": "material",
     "atlas": [ 4, 39 ],
-    "weight": 0.05,
-    "volume": 0.02,
-    "tags": []
-  },
-  {
-    "id": "berry",
-    "name": "Berry",
-    "description": "A small handful of berries.",
-    "type": "material",
-    "atlas": [ 18, 17 ],
     "weight": 0.05,
     "volume": 0.02,
     "tags": []

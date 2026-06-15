@@ -4,7 +4,8 @@
     "name": "Dungeon Wall",
     "atlas": [ [9, 2], [9, 2], [9, 2], [10, 2], [12, 2] ],
     "solid": true,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "brick_smashed"
   },
   {
     "id": "dungeon_floor",
@@ -25,34 +26,36 @@
     "name": "Coffin",
     "atlas": [ [42, 25], [42, 25], [42, 25], [43, 25] ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "sarcophagus",
     "name": "Sarcophagus",
     "atlas": [ 44, 25 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "candelabra",
     "name": "Candelabra",
     "atlas": [ [45, 25], [46, 25] ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"]
   },
   {
     "id": "skull_pike",
     "name": "Skull Pike",
     "atlas": [ 39, 25 ],
     "solid": true,
-    "tags": ["TRANSPARENT"]
+    "tags": ["TRANSPARENT", "SMASHABLE"]
   },
   {
     "id": "dungeon_stuff",
     "name": "Dungeon Stuff",
     "atlas": [ 38, 25 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"]
   }
 ]

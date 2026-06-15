@@ -12,85 +12,97 @@
     "name": "Toilet",
     "atlas": [ 61, 13 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "ceramic_smashed"
   },
   {
     "id": "bed",
     "name": "Bed",
     "atlas": [ 0, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "bed_double",
     "name": "Double Bed",
     "atlas": [ 1, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
     "id": "bookcase",
     "name": "Bookcase",
     "atlas": [ 2, 36 ],
     "solid": true,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
     "id": "dresser",
     "name": "Dresser",
     "atlas": [ 4, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "chair",
     "name": "Chair",
     "atlas": [ 5, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "table",
     "name": "Table",
     "atlas": [ 6, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "bar",
     "name": "Bar",
     "atlas": [ 7, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "barrel",
     "name": "Barrel",
     "atlas": [ 11, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "barrel_wine",
     "name": "Wine Barrel",
     "atlas": [ 12, 36 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "wardrobe",
     "name": "Wardrobe",
     "atlas": [ 13, 36 ],
     "solid": true,
-    "tags": ["HIDDEN_ITEMS", "CONTAINER"],
-    "spawn_loot_table": "wardrobe_basic"
+    "tags": ["HIDDEN_ITEMS", "CONTAINER", "SMASHABLE"],
+    "spawn_loot_table": "wardrobe_basic",
+    "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
     "id": "pot",
     "name": "Pot",
     "atlas": [ 26, 25 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "ceramic_smashed"
   },
   {
     "id": "anvil",
@@ -104,7 +116,8 @@
     "name": "Fireplace",
     "atlas": [ 30, 25 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "brick_smashed"
   },
   {
     "id": "hanging_sign",
@@ -118,6 +131,7 @@
     "name": "Sign",
     "atlas": [ 28, 20 ],
     "solid": false,
-    "tags": []
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   }
 ]

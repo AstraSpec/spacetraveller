@@ -1,0 +1,98 @@
+[
+  {
+    "id": "tree_smashed",
+    "rolls_min": 2,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "stick", "weight": 50, "amount_min": 3, "amount_max": 7 },
+      { "item_id": "wooden_log", "weight": 50, "amount_min": 3, "amount_max": 5 },
+      { "item_id": "apple", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "bush_smashed",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "fiber", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "berry", "weight": 2, "amount_min": 0, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "dirt_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "dirt", "weight": 1, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "rock_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stone", "weight": 1, "amount_min": 1, "amount_max": 4 }
+    ]
+  },
+  {
+    "id": "w_smashed",
+    "rolls_min": 2,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "stick", "weight": 1, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "wooden_plank", "weight": 1, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "wooden_furniture_small_smashed",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 1, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "wooden_plank", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "wooden_furniture_large_smashed",
+    "rolls_min": 2,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "stick", "weight": 1, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "wooden_plank", "weight": 1, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "glass_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "glass_shard", "weight": 1, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "ceramic_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "ceramic_shard", "weight": 1, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "brick_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "brick", "weight": 1, "amount_min": 1, "amount_max": 3 }
+    ]
+  }
+]

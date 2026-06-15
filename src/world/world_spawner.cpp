@@ -8,6 +8,7 @@
 #include "data/spawn_db.h"
 #include "data/structure_db.h"
 #include "data/tile_db.h"
+#include "core/id_registry.h"
 #include "core/rng.h"
 #include "core/tag_registry.h"
 #include "core/world_coords.h"
@@ -23,6 +24,10 @@ static constexpr float DUNGEON_FLOOR_LOOT_CHANCE = 0.05f;
 static constexpr uint64_t DUNGEON_FLOOR_LOOT_CHANCE_SALT = 0x44554E464C4F4F52ULL; // "DUNFLOOR"
 static constexpr uint64_t DUNGEON_FLOOR_LOOT_ROLL_SALT = 0x44554E4C4F4F5452ULL; // "DUNLOOTR"
 static const char* DUNGEON_FLOOR_LOOT_TABLE = "dungeon_floor_items";
+static constexpr float FOREST_FLOOR_STONE_CHANCE = 0.005f;
+static constexpr uint64_t FOREST_FLOOR_STONE_SALT = 0x464F5253544F4E45ULL; // "FORSTONE"
+static const char* FOREST_CHUNK_ID = "forest";
+static const char* FOREST_STONE_ITEM_ID = "stone";
 
 static bool tile_allows_rule(uint16_t p_tile_id, const SpawnRuleInfo& p_rule) {
     TileDb* tile_db = TileDb::get_singleton();
@@ -275,6 +280,34 @@ static void apply_dungeon_floor_loot(
     );
 }
 
+// TEMPORARY until we get item drops sorted
+static void apply_forest_floor_stone(
+    uint32_t p_world_seed,
+    uint16_t p_chunk_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble
+) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg || p_chunk_id != id_reg->get_id(FOREST_CHUNK_ID)) return;
+
+    TileDb* tile_db = TileDb::get_singleton();
+    const uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
+    const TileInfo* tile = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+    if (!tile) return;
+
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    const uint16_t ground_tag_id = tag_reg ? tag_reg->get_tag_id("GROUND") : 0;
+    if (ground_tag_id == 0 || !TagRegistry::has_tag(ground_tag_id, tile->tags)) return;
+
+    Rng::Seeded stone_rng = Rng::at(p_world_seed, p_pos, Rng::LOOT, FOREST_FLOOR_STONE_SALT);
+    if (!stone_rng.chance(FOREST_FLOOR_STONE_CHANCE)) return;
+
+    const uint16_t stone_id = id_reg->get_id(FOREST_STONE_ITEM_ID);
+    if (stone_id != 0) {
+        p_bubble.drop_item(p_pos, stone_id, 1);
+    }
+}
+
 static bool apply_structure_spawn_rule(
     uint32_t p_world_seed,
     float p_spawn_turn_time,
@@ -453,6 +486,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         if (rules.empty()) continue;
 
         p_spawn_state.mark_attempted(packed);
+        apply_forest_floor_stone(p_world_seed, chunk_id, pos, p_bubble);
         Rng::Seeded rule_rng = Rng::at(p_world_seed, pos, Rng::SPAWN_RULE);
         const SpawnRuleInfo* rule = spawn_db->pick_weighted_rule(rules, rule_rng);
         if (rule) spawn_with_rule(p_world_seed, p_spawn_turn_time, pos, *rule, p_bubble, p_ledger, p_tracker, p_scheduler);
