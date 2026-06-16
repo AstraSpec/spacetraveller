@@ -283,6 +283,7 @@ static bool apply_ambient_chunk_entity(
 
     Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN_RULE, salt);
     const EntityGroupEntry* entry = group_db->pick_weighted_entry(chunk_info->ambient_entity_group, group_rng);
+    if (entry && entry->none) return false;
     if (!entry || entry->entity.is_empty()) return false;
     if (!tile_allows_entity_spawn(entry->entity, p_tile_id)) return false;
 
@@ -353,6 +354,7 @@ static bool apply_structure_spawn_group_rule(
 
     Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN, get_structure_group_salt(p_structure_id, p_rule));
     const EntityGroupEntry* entry = group_db->pick_weighted_entry(p_rule.entity_group, group_rng);
+    if (entry && entry->none) return false;
     if (!entry || entry->entity.is_empty()) return false;
 
     uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
@@ -446,11 +448,14 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                     }
 
                     const uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
+                    const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
                     if (!custom_loot_rule_matched) {
                         apply_tile_spawn_loot(p_world_seed, dungeon_structure.structure_id, tile_id, pos, p_bubble);
 
-                        const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
                         apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+                    }
+                    if (!spawned_from_rule) {
+                        apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
                     }
                 }
 

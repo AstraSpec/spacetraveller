@@ -13,6 +13,7 @@ namespace godot {
 
 struct EntityGroupEntry {
     String entity;
+    bool none = false;
     int weight = 1;
     int cumulative_weight = 0;
     String job;

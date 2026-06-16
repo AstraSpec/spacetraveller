@@ -92,6 +92,8 @@
     "id": "dungeon",
     "atlas": [ 72, 18 ],
     "tile_group": "dungeon_floor",
+    "ambient_entity_group": "dungeon_entities",
+    "ambient_entity_chance": 0.008,
     "ambient_loot_table": "dungeon_floor_items",
     "ambient_loot_chance": 0.04
   }

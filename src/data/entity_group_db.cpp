@@ -27,8 +27,13 @@ EntityGroupInfo EntityGroupDb::_parse_row(const Dictionary &p_data) {
 
         EntityGroupEntry entry;
         entry.entity = String(entry_data.get("entity", entry_data.get("race_id", "")));
-        if (entry.entity.is_empty()) {
-            UtilityFunctions::push_error("[EntityGroupDb] Entry in entity group ", info.id, " has no entity");
+        entry.none = bool(entry_data.get("none", false));
+        if (entry.none && !entry.entity.is_empty()) {
+            UtilityFunctions::push_error("[EntityGroupDb] Entry in entity group ", info.id, " cannot combine none with entity");
+            continue;
+        }
+        if (!entry.none && entry.entity.is_empty()) {
+            UtilityFunctions::push_error("[EntityGroupDb] Entry in entity group ", info.id, " has neither entity nor none");
             continue;
         }
 

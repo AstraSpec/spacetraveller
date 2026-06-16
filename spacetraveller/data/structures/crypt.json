@@ -108,24 +108,20 @@
                 ],
                 "rules": [
                     {
-                        "dialogue_profile": "prisoner",
-                        "entity": "goblin",
-                        "job": "prisoner",
+                        "entity_group": "crypt_prisoner_goblin",
                         "pos": [
                             3,
                             2
                         ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity_group"
                     },
                     {
-                        "dialogue_profile": "prisoner",
-                        "entity": "goblin",
-                        "job": "prisoner",
+                        "entity_group": "crypt_prisoner_goblin",
                         "pos": [
                             8,
                             9
                         ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity_group"
                     }
                 ]
             }

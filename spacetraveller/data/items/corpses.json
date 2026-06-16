@@ -58,5 +58,25 @@
     "weight": 25.0,
     "volume": 14.0,
     "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_deepling",
+    "name": "Deepling Corpse",
+    "description": "The pale remains of a fallen deepling.",
+    "type": "misc",
+    "atlas": [ 115, 41 ],
+    "weight": 22.0,
+    "volume": 12.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_pale_spider",
+    "name": "Pale Spider Corpse",
+    "description": "The curled remains of a pale spider.",
+    "type": "misc",
+    "atlas": [ 13, 16 ],
+    "weight": 3.0,
+    "volume": 2.0,
+    "tags": ["ALWAYS_TOP"]
   }
 ]

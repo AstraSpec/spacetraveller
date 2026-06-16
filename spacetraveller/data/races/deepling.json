@@ -1,0 +1,30 @@
+{
+  "id": "deepling",
+  "name": "Deepling",
+  "atlas": [114, 41],
+  "perception_tier": "raycast",
+  "base_hp": 70,
+  "speed": 1.0,
+  "base_damage": 8,
+  "base_stamina": 75,
+  "corpse_item": "corpse_deepling",
+  "death_loot_table": "human_death",
+  "combat_style": "default",
+  "faction": "enemy",
+  "traversal_profile": "smart_walker",
+  "parts": [
+    { "id": "torso", "parent": "", "count": 1, "height": "MID" },
+    { "id": "head", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "neck", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "arm", "parent": "torso", "count": 2, "height": "MID" },
+    { "id": "leg", "parent": "torso", "count": 2, "height": "LOW" },
+    { "id": "eye", "parent": "head", "count": 2, "height": "HIGH" },
+    { "id": "nose", "parent": "head", "count": 1, "height": "HIGH" },
+    { "id": "mouth", "parent": "head", "count": 1, "height": "HIGH" },
+    { "id": "ear", "parent": "head", "count": 2, "height": "HIGH" },
+    { "id": "hand", "parent": "arm", "count": 1, "height": "MID" },
+    { "id": "foot", "parent": "leg", "count": 1, "height": "LOW" },
+    { "id": "finger", "parent": "hand", "count": 4, "height": "MID" },
+    { "id": "toe", "parent": "foot", "count": 4, "height": "LOW" }
+  ]
+}
