@@ -20,6 +20,11 @@ struct ChunkInfo {
     float wilderness_spawn_chance = 0.0f;
     String structure_type;
     String dungeon_type;
+    String tile_group;
+    String ambient_entity_group;
+    float ambient_entity_chance = 0.0f;
+    uint16_t ambient_loot_table = 0;
+    float ambient_loot_chance = 0.0f;
     std::vector<ChunkFeatureSpawnInfo> feature_spawns;
 };
 

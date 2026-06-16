@@ -13,6 +13,7 @@ func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
 
 	TileDb.initialize_data()
+	TileGroupDb.initialize_data()
 	BodyPartDb.initialize_data()
 	RaceDb.initialize_data()
 	ChunkDb.initialize_data()

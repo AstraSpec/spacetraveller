@@ -1,0 +1,54 @@
+[
+  {
+    "id": "grass_dirt",
+    "entries": [
+      { "tile": "grass", "weight": 80 },
+      { "tile": "dirt", "weight": 20 }
+    ]
+  },
+  {
+    "id": "forest_floor",
+    "entries": [
+      { "tile": "grass", "weight": 960 },
+      { "tile": "dirt", "weight": 280 },
+      { "tile": "bush_stalk", "weight": 200 },
+      { "tile": "tree_oak", "weight": 120 },
+      { "tile": "tree_birch", "weight": 60 },
+      { "tile": "tree_poplar", "weight": 60 },
+      { "tile": "bush", "weight": 30 },
+      { "tile": "tree_stump", "weight": 10 },
+      { "tile": "tree_dead", "weight": 10 },
+      { "tile": "water", "weight": 1 }
+    ]
+  },
+  {
+    "id": "dungeon_floor",
+    "entries": [
+      { "tile": "dungeon_floor", "weight": 1 }
+    ]
+  },
+  {
+    "id": "wood_floor",
+    "entries": [
+      { "tile": "w_floor", "weight": 1 }
+    ]
+  },
+  {
+    "id": "gate_floor",
+    "entries": [
+      { "tile": "gate_floor", "weight": 1 }
+    ]
+  },
+  {
+    "id": "palace_floor",
+    "entries": [
+      { "tile": "palace_floor", "weight": 1 }
+    ]
+  },
+  {
+    "id": "wood_wall",
+    "entries": [
+      { "tile": "w_wall", "weight": 1 }
+    ]
+  }
+]

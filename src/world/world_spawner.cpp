@@ -4,12 +4,11 @@
 #include "entity_archive.h"
 #include "world_generator.h"
 #include "turn_scheduler.h"
+#include "data/chunk_db.h"
 #include "data/loot_db.h"
 #include "data/entity_group_db.h"
-#include "data/spawn_db.h"
 #include "data/structure_db.h"
 #include "data/tile_db.h"
-#include "core/id_registry.h"
 #include "core/rng.h"
 #include "core/tag_registry.h"
 #include "core/world_coords.h"
@@ -21,30 +20,24 @@
 
 namespace godot {
 
-static constexpr float DUNGEON_FLOOR_LOOT_CHANCE = 0.04f;
-static constexpr uint64_t DUNGEON_FLOOR_LOOT_ROLL_SALT = 0x44554E4C4F4F5452ULL; // "DUNLOOTR"
-static const char* DUNGEON_FLOOR_LOOT_TABLE = "dungeon_floor_items";
-static constexpr float FOREST_FLOOR_LOOT_CHANCE = 0.0061f;
-static constexpr uint64_t FOREST_FLOOR_LOOT_ROLL_SALT = 0x464F524C4F4F5452ULL; // "FORLOOTR"
-static const char* FOREST_CHUNK_ID = "forest";
-static const char* DUNGEON_CHUNK_ID = "dungeon";
-static const char* FOREST_FLOOR_LOOT_TABLE = "forest_floor_items";
-
-static bool tile_allows_rule(uint16_t p_tile_id, const SpawnRuleInfo& p_rule) {
-    TileDb* tile_db = TileDb::get_singleton();
-    if (!tile_db) return false;
-    const TileInfo* tile = tile_db->get_tile_info(p_tile_id);
-    if (!tile) return false;
-    if (!TraversalRules::can_race_enter(p_rule.race_id, p_tile_id)) return false;
-    if (!p_rule.tile_tags.empty() && !TagRegistry::has_tag_any(tile->tags, p_rule.tile_tags)) return false;
-    return true;
-}
+static constexpr uint64_t AMBIENT_LOOT_ROLL_SALT = 0x414D424C4F4F5452ULL; // "AMBLOOTR"
+static constexpr uint64_t AMBIENT_ENTITY_ROLL_SALT = 0x414D42454E545254ULL; // "AMBENTRT"
 
 static bool tile_allows_entity_spawn(const String& p_race_id, uint16_t p_tile_id) {
     TileDb* tile_db = TileDb::get_singleton();
     if (!tile_db) return false;
     const TileInfo* tile = tile_db->get_tile_info(p_tile_id);
     return tile && TraversalRules::can_race_enter(p_race_id, p_tile_id);
+}
+
+static bool tile_has_ground_tag(uint16_t p_tile_id) {
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) return false;
+
+    const TileInfo* tile = tile_db->get_tile_info(p_tile_id);
+    const uint16_t ground_tag_id = tag_reg->get_tag_id("GROUND");
+    return tile && ground_tag_id != 0 && TagRegistry::has_tag(ground_tag_id, tile->tags);
 }
 
 static int floor_div_chunk(int p_value) {
@@ -101,38 +94,6 @@ static bool spawn_npc_at(
         overrides,
         p_spawn_turn_time
     ) != EntityPool::INVALID_ID;
-}
-
-static bool spawn_with_rule(
-    uint32_t p_world_seed,
-    float p_spawn_turn_time,
-    const Vector2i& p_pos,
-    const SpawnRuleInfo& p_rule,
-    WorldBubble& p_bubble,
-    EntityLedger& p_ledger,
-    EntityTracker& p_tracker,
-    TurnScheduler& p_scheduler
-) {
-    uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
-    if (!tile_allows_rule(tile_id, p_rule)) return false;
-
-    Rng::Seeded spawn_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN);
-    if (!spawn_rng.chance(p_rule.chance)) return false;
-
-    return spawn_npc_at(
-        p_rule.race_id,
-        p_rule.job,
-        p_rule.dialogue_profile,
-        p_rule.attitude,
-        p_rule.ai_state,
-        p_world_seed,
-        p_spawn_turn_time,
-        p_pos,
-        p_ledger,
-        p_tracker,
-        p_bubble,
-        p_scheduler
-    );
 }
 
 static bool spawn_with_structure_rule(
@@ -259,7 +220,21 @@ static void apply_tile_spawn_loot(
     roll_loot_table_at(p_world_seed, tile->spawn_loot_table, get_tile_spawn_loot_salt(p_structure_id, p_tile_id), p_pos, p_bubble);
 }
 
-static void apply_ambient_biome_loot(
+static uint64_t get_ambient_loot_salt(uint16_t p_biome_id, uint16_t p_loot_table, int p_z) {
+    return AMBIENT_LOOT_ROLL_SALT
+        ^ (static_cast<uint64_t>(p_biome_id) << 48)
+        ^ (static_cast<uint64_t>(p_loot_table) << 32)
+        ^ static_cast<uint32_t>(p_z);
+}
+
+static uint64_t get_ambient_entity_salt(uint16_t p_biome_id, const String& p_entity_group, int p_z) {
+    return AMBIENT_ENTITY_ROLL_SALT
+        ^ (static_cast<uint64_t>(p_biome_id) << 48)
+        ^ static_cast<uint32_t>(p_entity_group.hash())
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_z)) << 32);
+}
+
+static void apply_ambient_chunk_loot(
     uint32_t p_world_seed,
     const Vector3i& p_pos3,
     uint16_t p_biome_id,
@@ -267,40 +242,64 @@ static void apply_ambient_biome_loot(
     const Vector2i& p_pos,
     WorldBubble& p_bubble
 ) {
-    IdRegistry* id_reg = IdRegistry::get_singleton();
-    LootDb* loot_db = LootDb::get_singleton();
-    if (!id_reg || !loot_db) return;
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(p_biome_id) : nullptr;
+    if (!chunk_info || chunk_info->ambient_loot_table == 0 || chunk_info->ambient_loot_chance <= 0.0f) return;
+    if (!tile_has_ground_tag(p_tile_id)) return;
 
-    TileDb* tile_db = TileDb::get_singleton();
-    const TileInfo* tile = tile_db ? tile_db->get_tile_info(p_tile_id) : nullptr;
-    if (!tile) return;
-
-    uint16_t loot_table_id = 0;
-    float chance = 0.0f;
-    uint64_t salt = 0;
-
-    if (p_pos3.z == 0 && p_biome_id == id_reg->get_id(FOREST_CHUNK_ID)) {
-        TagRegistry* tag_reg = TagRegistry::get_singleton();
-        const uint16_t ground_tag_id = tag_reg ? tag_reg->get_tag_id("GROUND") : 0;
-        if (ground_tag_id == 0 || !TagRegistry::has_tag(ground_tag_id, tile->tags)) return;
-
-        loot_table_id = loot_db->get_loot_table_id(FOREST_FLOOR_LOOT_TABLE);
-        chance = FOREST_FLOOR_LOOT_CHANCE;
-        salt = FOREST_FLOOR_LOOT_ROLL_SALT;
-    } else if (p_biome_id == id_reg->get_id(DUNGEON_CHUNK_ID) && p_tile_id == id_reg->get_id("dungeon_floor")) {
-        loot_table_id = loot_db->get_loot_table_id(DUNGEON_FLOOR_LOOT_TABLE);
-        chance = DUNGEON_FLOOR_LOOT_CHANCE;
-        salt = DUNGEON_FLOOR_LOOT_ROLL_SALT ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_pos3.z)) << 32);
-    } else {
-        return;
-    }
-
-    if (loot_table_id == 0) return;
-
+    uint64_t salt = get_ambient_loot_salt(p_biome_id, chunk_info->ambient_loot_table, p_pos3.z);
     Rng::Seeded chance_rng = Rng::at(p_world_seed, p_pos, Rng::LOOT, salt);
-    if (!chance_rng.chance(chance)) return;
+    if (!chance_rng.chance(chunk_info->ambient_loot_chance)) return;
 
-    roll_loot_table_at(p_world_seed, loot_table_id, salt, p_pos, p_bubble);
+    roll_loot_table_at(p_world_seed, chunk_info->ambient_loot_table, salt, p_pos, p_bubble);
+}
+
+static bool apply_ambient_chunk_entity(
+    uint32_t p_world_seed,
+    float p_spawn_turn_time,
+    const Vector3i& p_pos3,
+    uint16_t p_biome_id,
+    uint16_t p_tile_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
+    EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
+    TurnScheduler& p_scheduler
+) {
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(p_biome_id) : nullptr;
+    if (!chunk_info || chunk_info->ambient_entity_group.is_empty() || chunk_info->ambient_entity_chance <= 0.0f) return false;
+    if (!tile_has_ground_tag(p_tile_id)) return false;
+    if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr) return false;
+    if (p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_pos3.z))) return false;
+
+    uint64_t salt = get_ambient_entity_salt(p_biome_id, chunk_info->ambient_entity_group, p_pos3.z);
+    Rng::Seeded chance_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN, salt);
+    if (!chance_rng.chance(chunk_info->ambient_entity_chance)) return false;
+
+    EntityGroupDb* group_db = EntityGroupDb::get_singleton();
+    if (!group_db) return false;
+
+    Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN_RULE, salt);
+    const EntityGroupEntry* entry = group_db->pick_weighted_entry(chunk_info->ambient_entity_group, group_rng);
+    if (!entry || entry->entity.is_empty()) return false;
+    if (!tile_allows_entity_spawn(entry->entity, p_tile_id)) return false;
+
+    return spawn_npc_at(
+        entry->entity,
+        entry->job,
+        entry->dialogue_profile,
+        entry->attitude,
+        entry->ai_state,
+        p_world_seed,
+        p_spawn_turn_time,
+        p_pos,
+        p_ledger,
+        p_tracker,
+        p_bubble,
+        p_scheduler
+    );
 }
 
 static bool apply_structure_spawn_rule(
@@ -401,9 +400,6 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     TurnScheduler& p_scheduler,
     WorldSpawnState& p_spawn_state
 ) {
-    SpawnDb* spawn_db = SpawnDb::get_singleton();
-
-    std::vector<const SpawnRuleInfo*> rules;
     for (uint64_t packed : p_newly_seen_cells) {
         Vector3i pos3 = WorldCoords::unpack_coords_3d(packed);
         Vector2i pos(pos3.x, pos3.y);
@@ -454,7 +450,7 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                         apply_tile_spawn_loot(p_world_seed, dungeon_structure.structure_id, tile_id, pos, p_bubble);
 
                         const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
-                        apply_ambient_biome_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+                        apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
                     }
                 }
 
@@ -531,18 +527,8 @@ void WorldSpawner::spawn_for_newly_seen_cells(
 
         uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
-        apply_ambient_biome_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
-
-        if (!spawn_db) continue;
-        if (p_bubble.get_entity_at(pos.x, pos.y) != nullptr) continue;
-        if (p_entity_archive.has_frozen_entity(packed)) continue;
-
-        spawn_db->get_matching_rules(biome_id, "free_cell", rules);
-        if (rules.empty()) continue;
-
-        Rng::Seeded rule_rng = Rng::at(p_world_seed, pos, Rng::SPAWN_RULE);
-        const SpawnRuleInfo* rule = spawn_db->pick_weighted_rule(rules, rule_rng);
-        if (rule) spawn_with_rule(p_world_seed, p_spawn_turn_time, pos, *rule, p_bubble, p_ledger, p_tracker, p_scheduler);
+        apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+        apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
     }
 }
 

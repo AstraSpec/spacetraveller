@@ -4,10 +4,12 @@
 #include "data/chunk_db.h"
 #include "data/dungeon_db.h"
 #include "data/feature_db.h"
+#include "data/tile_group_db.h"
 #include "core/tag_registry.h"
 #include "city_generation.h"
 #include "dungeon_generator.h"
 #include "gen_grid.h"
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -146,42 +148,35 @@ void WorldGenerator::setup_biome_rules() {
     id_dungeon_wall = id_reg->register_string("dungeon_wall");
     id_dungeon_door = id_reg->register_string("w_door_c");
 
-    auto reg_biome = [&](const String& name, const std::vector<std::pair<String, int>>& tiles) {
+    auto reg_tile_group = [&](const String& name, const String& tile_group_id) {
         uint16_t b_id = id_reg->register_string(name);
-        BiomeInfo info;
-        for (const auto& t : tiles) {
-            int weight = t.second < 0 ? 0 : t.second;
-            info.ground_tiles.push_back({id_reg->register_string(t.first), weight});
-            info.total_weight += weight;
+        TileGroupDb* tile_group_db = TileGroupDb::get_singleton();
+        const TileGroupInfo* tile_group = tile_group_db ? tile_group_db->get_tile_group(tile_group_id) : nullptr;
+        if (!tile_group || tile_group->entries.empty() || tile_group->total_weight <= 0) {
+            UtilityFunctions::push_error("[WorldGenerator] Missing tile group for biome ", name, ": ", tile_group_id);
+            return;
         }
-        biome_rules[b_id] = info;
-    };
 
-    reg_biome("plains", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("building", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("tavern", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("adventurer_guild", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("crypt_entrance", {{"grass", 80}, {"dirt", 20}});
-    reg_biome("forest", {
-        {"grass", 960}, 
-        {"dirt", 280},
-        {"bush_stalk", 200},
-        {"tree_oak", 120},
-        {"tree_birch", 60},
-        {"tree_poplar", 60},
-        {"bush", 30},
-        {"tree_stump", 10},
-        {"tree_dead", 10},
-        {"water", 1}
-    });
-
-    auto reg_simple = [&](const String& name, const String& tile) {
-        uint16_t b_id = id_reg->register_string(name);
         BiomeInfo info;
-        info.ground_tiles.push_back({id_reg->register_string(tile), 100});
-        info.total_weight = 100;
+        for (const TileGroupEntryInfo& entry : tile_group->entries) {
+            if (entry.tile_id == 0 || entry.weight <= 0) continue;
+            info.ground_tiles.push_back({entry.tile_id, entry.weight});
+            info.total_weight += entry.weight;
+        }
+        if (info.ground_tiles.empty() || info.total_weight <= 0) return;
         biome_rules[b_id] = info;
     };
+
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    if (chunk_db) {
+        Array chunk_ids = chunk_db->get_ids();
+        for (int i = 0; i < chunk_ids.size(); i++) {
+            String chunk_id = String(chunk_ids[i]);
+            const ChunkInfo* chunk_info = chunk_db->get_chunk_info(chunk_id);
+            if (!chunk_info || chunk_info->tile_group.is_empty()) continue;
+            reg_tile_group(chunk_id, chunk_info->tile_group);
+        }
+    }
 
     auto reg_tiled = [&](const String& name, const String& tile, const String& border) {
         uint16_t b_id = id_reg->register_string(name);
@@ -195,11 +190,6 @@ void WorldGenerator::setup_biome_rules() {
 
     reg_tiled("road", "road_bricks", "road_flagstone");
     reg_tiled("alley", "alley_bricks", "alley_flagstone");
-    reg_simple("dungeon", "dungeon_floor");
-    reg_simple("plaza", "w_floor");
-    reg_simple("gate", "gate_floor");
-    reg_simple("palace", "palace_floor");
-    reg_simple("wall", "w_wall");
 }
 
 Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed, const Ref<FastNoiseLite>& biome_noise) {

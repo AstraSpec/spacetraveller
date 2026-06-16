@@ -10,6 +10,8 @@ const TILESHEET := preload("res://gfx/urizen.png")
 
 func _ready() -> void:
 	TileDb.initialize_data()
+	TileGroupDb.initialize_data()
+	ChunkDb.initialize_data()
 	StructureDb.initialize_data()
 	ItemDb.initialize_data()
 	LootDb.initialize_data()

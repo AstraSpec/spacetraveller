@@ -1,15 +1,22 @@
 [
   {
     "id": "forest",
-    "atlas": [ 0, 8 ]
+    "atlas": [ 0, 8 ],
+    "tile_group": "forest_floor",
+    "ambient_entity_group": "forest_animals",
+    "ambient_entity_chance": 0.0006,
+    "ambient_loot_table": "forest_floor_items",
+    "ambient_loot_chance": 0.0061
   },
   {
     "id": "plains",
-    "atlas": [ 16, 0 ]
+    "atlas": [ 16, 0 ],
+    "tile_group": "grass_dirt"
   },
   {
     "id": "crypt_entrance",
     "atlas": [ 40, 2 ],
+    "tile_group": "grass_dirt",
     "wilderness_spawn_chance": 0.001,
     "structure_type": "crypt_entrance",
     "dungeon_type": "crypt"
@@ -30,24 +37,28 @@
   {
     "id": "building",
     "atlas": [ 58, 8 ],
+    "tile_group": "grass_dirt",
     "city_spawn_weight": 40,
     "structure_type": "building"
   },
   {
     "id": "tavern",
     "atlas": [ 60, 8 ],
+    "tile_group": "grass_dirt",
     "city_spawn_weight": 2,
     "structure_type": "tavern"
   },
   {
     "id": "adventurer_guild",
     "atlas": [ 59, 8 ],
+    "tile_group": "grass_dirt",
     "city_spawn_weight": 1,
     "structure_type": "adventurer_guild"
   },
   {
     "id": "palace",
-    "atlas": [ 32, 2 ]
+    "atlas": [ 32, 2 ],
+    "tile_group": "palace_floor"
   },
   {
     "id": "alley",
@@ -64,14 +75,24 @@
   },
   {
     "id": "gate",
-    "atlas": [ 3, 40 ]
+    "atlas": [ 3, 40 ],
+    "tile_group": "gate_floor"
   },
   {
     "id": "plaza",
-    "atlas": [ 69, 5 ]
+    "atlas": [ 69, 5 ],
+    "tile_group": "wood_floor"
   },
   {
     "id": "wall",
-    "atlas": [ 56, 0 ]
+    "atlas": [ 56, 0 ],
+    "tile_group": "wood_wall"
+  },
+  {
+    "id": "dungeon",
+    "atlas": [ 72, 18 ],
+    "tile_group": "dungeon_floor",
+    "ambient_loot_table": "dungeon_floor_items",
+    "ambient_loot_chance": 0.04
   }
 ]

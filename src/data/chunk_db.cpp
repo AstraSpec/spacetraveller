@@ -58,6 +58,18 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     if (info.wilderness_spawn_chance > 1.0f) info.wilderness_spawn_chance = 1.0f;
     info.structure_type = String(p_data.get("structure_type", ""));
     info.dungeon_type = String(p_data.get("dungeon_type", ""));
+    info.tile_group = String(p_data.get("tile_group", ""));
+    info.ambient_entity_group = String(p_data.get("ambient_entity_group", ""));
+    info.ambient_entity_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_entity_chance", 0.0)));
+    if (info.ambient_entity_chance < 0.0f) info.ambient_entity_chance = 0.0f;
+    if (info.ambient_entity_chance > 1.0f) info.ambient_entity_chance = 1.0f;
+    String ambient_loot_table = String(p_data.get("ambient_loot_table", ""));
+    if (!ambient_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        info.ambient_loot_table = IdRegistry::get_singleton()->register_string(ambient_loot_table);
+    }
+    info.ambient_loot_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_loot_chance", 0.0)));
+    if (info.ambient_loot_chance < 0.0f) info.ambient_loot_chance = 0.0f;
+    if (info.ambient_loot_chance > 1.0f) info.ambient_loot_chance = 1.0f;
 
     Variant feature_spawns_var = p_data.get("feature_spawns", Array());
     if (feature_spawns_var.get_type() == Variant::ARRAY) {
