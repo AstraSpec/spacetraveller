@@ -25,6 +25,7 @@ enum DungeonRoomEntranceMask : uint8_t {
 
 enum class RuleType : uint8_t {
     SPAWN_ENTITY,
+    SPAWN_ENTITY_GROUP,
     SPAWN_LOOT_TABLE,
     SPAWN_ITEM,
     SET_METADATA
@@ -34,6 +35,7 @@ struct StructureRuleInfo {
     RuleType type = RuleType::SPAWN_ENTITY;
     Vector2i pos;
     String entity;
+    String entity_group;
     String job;
     String dialogue_profile;
     String attitude;

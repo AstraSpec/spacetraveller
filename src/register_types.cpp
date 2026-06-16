@@ -19,6 +19,7 @@
 #include "data/quest_db.h"
 #include "data/job_db.h"
 #include "data/spawn_db.h"
+#include "data/entity_group_db.h"
 #include "data/loot_db.h"
 #include "data/feature_db.h"
 #include "data/dungeon_db.h"
@@ -56,6 +57,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(QuestDb);
 	GDREGISTER_CLASS(JobDb);
 	GDREGISTER_CLASS(SpawnDb);
+	GDREGISTER_CLASS(EntityGroupDb);
 	GDREGISTER_CLASS(LootDb);
 	GDREGISTER_CLASS(FeatureDb);
 	GDREGISTER_CLASS(DungeonDb);
@@ -106,6 +108,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	SpawnDb::create_singleton();
 	Engine::get_singleton()->register_singleton("SpawnDb", SpawnDb::get_singleton());
+
+	EntityGroupDb::create_singleton();
+	Engine::get_singleton()->register_singleton("EntityGroupDb", EntityGroupDb::get_singleton());
 
 	LootDb::create_singleton();
 	Engine::get_singleton()->register_singleton("LootDb", LootDb::get_singleton());
@@ -172,6 +177,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("SpawnDb");
 	SpawnDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("EntityGroupDb");
+	EntityGroupDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("LootDb");
 	LootDb::delete_singleton();

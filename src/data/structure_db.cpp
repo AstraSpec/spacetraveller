@@ -15,6 +15,10 @@ static bool parse_rule_type(const String& p_type, RuleType& r_type) {
         r_type = RuleType::SPAWN_ENTITY;
         return true;
     }
+    if (p_type == "spawn_entity_group") {
+        r_type = RuleType::SPAWN_ENTITY_GROUP;
+        return true;
+    }
     if (p_type == "spawn_loot_table") {
         r_type = RuleType::SPAWN_LOOT_TABLE;
         return true;
@@ -105,6 +109,7 @@ static void parse_rules(
         StructureRuleInfo rule;
         rule.pos = p_db->variant_to_vector2i(rule_data.get("pos", Array()), Vector2i());
         rule.entity = String(rule_data.get("entity", rule_data.get("race_id", "")));
+        rule.entity_group = String(rule_data.get("entity_group", rule_data.get("entity_group_id", "")));
         rule.job = String(rule_data.get("job", ""));
         rule.dialogue_profile = String(rule_data.get("dialogue_profile", ""));
         rule.attitude = String(rule_data.get("attitude", ""));

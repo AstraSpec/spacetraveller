@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -20,6 +20,7 @@ TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/T
 ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemGrid")
 NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcGrid")
 LootGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot/LootScroll/LootGrid")
+EntityGroupGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups/EntityGroupScroll/EntityGroupGrid")
 ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
 NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
 NpcJobText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobText")
@@ -193,6 +194,22 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="LootGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot/LootScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+script = ExtResource("4_06qem")
+
+[node name="Entity Groups" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 4
+
+[node name="EntityGroupScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EntityGroupGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups/EntityGroupScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0

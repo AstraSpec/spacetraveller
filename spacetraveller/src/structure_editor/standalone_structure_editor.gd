@@ -15,6 +15,7 @@ func _ready() -> void:
 	LootDb.initialize_data()
 	RaceDb.initialize_data()
 	JobDb.initialize_data()
+	EntityGroupDb.initialize_data()
 
 	World.setup_renderer()
 	var renderer := World.get_renderer()

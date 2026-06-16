@@ -11,6 +11,7 @@ signal open_load
 @export var ItemGrid :FlowContainer
 @export var NpcGrid :FlowContainer
 @export var LootGrid :FlowContainer
+@export var EntityGroupGrid :FlowContainer
 @export var ItemAmountInput :SpinBox
 @export var NpcJobContainer :HBoxContainer
 @export var NpcJobText :LineEdit
@@ -62,12 +63,15 @@ var editor_npc_rules_by_level :Dictionary = {}
 var editor_item_rules_by_level :Dictionary = {}
 var editor_loot_table_rules_by_level :Dictionary = {}
 var editor_loot_table_sprites :Dictionary = {}
+var editor_entity_group_rules_by_level :Dictionary = {}
+var editor_entity_group_sprites :Dictionary = {}
 var editor_other_rules_by_level :Dictionary = {}
 
 var undo_stack : Array = []
 var redo_stack : Array = []
 const MAX_UNDOS = 100
 const LOOT_TABLE_ATLAS := Vector2i(71, 18)
+const ENTITY_GROUP_ATLAS := Vector2i(72, 18)
 
 func update_editor_visuals():
 	if World:
@@ -75,6 +79,7 @@ func update_editor_visuals():
 	elif FastTilemap:
 		FastTilemap.update_visuals(playerOffset)
 	_refresh_loot_table_markers()
+	_refresh_entity_group_markers()
 
 func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
@@ -108,6 +113,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	ItemGrid.start(spacing, ItemDb)
 	NpcGrid.start(spacing, RaceDb)
 	LootGrid.start(spacing, LootDb)
+	EntityGroupGrid.start(spacing, EntityGroupDb)
 	_setup_npc_option_menus()
 	_update_npc_options_for_race("")
 	
@@ -115,6 +121,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	ItemGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "item", is_primary))
 	NpcGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "npc", is_primary))
 	LootGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "loot_table", is_primary))
+	EntityGroupGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "entity_group", is_primary))
 	
 	update_editor_visuals()
 
@@ -259,6 +266,9 @@ func select_entry(id: String, type: String = "tile", is_primary: bool = true):
 			"loot_table":
 				tileID2 = id
 				tileType2 = "loot_table_erase"
+			"entity_group":
+				tileID2 = id
+				tileType2 = "entity_group_erase"
 	else:
 		tileID2 = id
 		tileType2 = type
@@ -380,6 +390,10 @@ func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount:
 			_set_loot_table_rule(world_pos, id)
 		"loot_table_erase":
 			_remove_loot_table_rule(world_pos)
+		"entity_group":
+			_set_entity_group_rule(world_pos, id)
+		"entity_group_erase":
+			_remove_entity_group_rule(world_pos)
 		_:
 			World.place_tile(world_pos.x, world_pos.y, id)
 
@@ -528,6 +542,27 @@ func _remove_loot_table_rule(world_pos: Vector2i) -> void:
 	rules.erase(_pos_key(local_pos))
 	_refresh_loot_table_markers()
 
+func _set_entity_group_rule(world_pos: Vector2i, entity_group_id: String) -> void:
+	if entity_group_id.is_empty():
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules := _get_level_rule_dict(editor_entity_group_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = {
+		"type": "spawn_entity_group",
+		"entity_group": entity_group_id,
+		"pos": _rule_pos_array(local_pos)
+	}
+	_refresh_entity_group_markers()
+
+func _remove_entity_group_rule(world_pos: Vector2i) -> void:
+	var key := _active_level_key()
+	if !editor_entity_group_rules_by_level.has(key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules: Dictionary = editor_entity_group_rules_by_level[key]
+	rules.erase(_pos_key(local_pos))
+	_refresh_entity_group_markers()
+
 func clear_editor_loot_table_markers() -> void:
 	for marker in editor_loot_table_sprites.values():
 		if is_instance_valid(marker):
@@ -570,11 +605,55 @@ func _refresh_loot_table_markers() -> void:
 		add_child(marker)
 		editor_loot_table_sprites[rule_key] = marker
 
+func clear_editor_entity_group_markers() -> void:
+	for marker in editor_entity_group_sprites.values():
+		if is_instance_valid(marker):
+			marker.queue_free()
+	editor_entity_group_sprites.clear()
+
+func _refresh_entity_group_markers() -> void:
+	clear_editor_entity_group_markers()
+	if !FastTilemap:
+		return
+	var tilesheet: Texture2D = FastTilemap.get_tilesheet()
+	if !tilesheet:
+		return
+	var rules: Dictionary = editor_entity_group_rules_by_level.get(_active_level_key(), {})
+	var cell_size := FastTilemap.get_cell_size()
+	for rule_key in rules.keys():
+		var rule: Dictionary = rules[rule_key]
+		var entity_group_id := str(rule.get("entity_group", ""))
+		if entity_group_id.is_empty():
+			continue
+		var atlas: Vector2i = ENTITY_GROUP_ATLAS
+		if atlas.x < 0 or atlas.y < 0:
+			continue
+		var local_pos := _rule_pos_from_variant(rule.get("pos", []))
+		var world_pos := _world_pos_from_local(local_pos)
+		var atlas_texture := AtlasTexture.new()
+		atlas_texture.atlas = tilesheet
+		atlas_texture.region = Rect2(
+			1 + atlas.x * (TILE_SIZE + 1),
+			1 + atlas.y * (TILE_SIZE + 1),
+			TILE_SIZE,
+			TILE_SIZE
+		)
+		var marker := Sprite2D.new()
+		marker.texture = atlas_texture
+		marker.centered = false
+		marker.modulate = Color(1, 1, 1, 0.7)
+		marker.z_index = 20
+		marker.position = (Vector2(world_pos.x, world_pos.y) - playerOffset) * cell_size
+		add_child(marker)
+		editor_entity_group_sprites[rule_key] = marker
+
 func _clear_editor_rule_state() -> void:
 	editor_npc_rules_by_level.clear()
 	editor_item_rules_by_level.clear()
 	editor_loot_table_rules_by_level.clear()
 	clear_editor_loot_table_markers()
+	editor_entity_group_rules_by_level.clear()
+	clear_editor_entity_group_markers()
 	editor_other_rules_by_level.clear()
 
 func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
@@ -687,11 +766,13 @@ func _clear_current_chunk(clear_rules: bool = false) -> void:
 	clear_editor_npcs()
 	clear_editor_live_items()
 	clear_editor_loot_table_markers()
+	clear_editor_entity_group_markers()
 	if clear_rules:
 		var key := _active_level_key()
 		editor_npc_rules_by_level.erase(key)
 		editor_item_rules_by_level.erase(key)
 		editor_loot_table_rules_by_level.erase(key)
+		editor_entity_group_rules_by_level.erase(key)
 		editor_other_rules_by_level.erase(key)
 	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
 		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
@@ -840,6 +921,9 @@ func _is_spawn_item_rule(rule: Dictionary) -> bool:
 func _is_spawn_loot_table_rule(rule: Dictionary) -> bool:
 	return str(rule.get("type", "")) == "spawn_loot_table"
 
+func _is_spawn_entity_group_rule(rule: Dictionary) -> bool:
+	return str(rule.get("type", "")) == "spawn_entity_group"
+
 func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 	var unmanaged: Array = []
 	var raw_rules: Variant = level_data.get("rules", [])
@@ -891,6 +975,17 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 						"pos": _rule_pos_array(pos)
 					}
 					continue
+			elif _is_spawn_entity_group_rule(rule):
+				var entity_group_id := str(rule.get("entity_group", rule.get("entity_group_id", ""))).strip_edges()
+				if !entity_group_id.is_empty() and rule.has("pos"):
+					var pos := _rule_pos_from_variant(rule["pos"])
+					var rules := _get_level_rule_dict(editor_entity_group_rules_by_level, key)
+					rules[_pos_key(pos)] = {
+						"type": "spawn_entity_group",
+						"entity_group": entity_group_id,
+						"pos": _rule_pos_array(pos)
+					}
+					continue
 			unmanaged.append(rule.duplicate(true))
 	if unmanaged.is_empty():
 		level_data.erase("rules")
@@ -924,6 +1019,11 @@ func _rules_for_level(key: String) -> Array:
 	loot_table_keys.sort()
 	for loot_table_key in loot_table_keys:
 		result.append(loot_table_rules[loot_table_key].duplicate(true))
+	var entity_group_rules: Dictionary = editor_entity_group_rules_by_level.get(key, {})
+	var entity_group_keys: Array = entity_group_rules.keys()
+	entity_group_keys.sort()
+	for entity_group_key in entity_group_keys:
+		result.append(entity_group_rules[entity_group_key].duplicate(true))
 	return result
 
 func _sync_level_rules_into(key: String, level_data: Dictionary) -> void:
@@ -944,6 +1044,8 @@ func _sync_all_level_rules() -> void:
 	for key in editor_item_rules_by_level.keys():
 		seen[str(key)] = true
 	for key in editor_loot_table_rules_by_level.keys():
+		seen[str(key)] = true
+	for key in editor_entity_group_rules_by_level.keys():
 		seen[str(key)] = true
 	for key in seen.keys():
 		var level_data: Dictionary = levels.get(key, {})
@@ -977,6 +1079,7 @@ func _apply_editor_rules_for_level(z: int) -> void:
 		World.drop_item(pos, item_id, amount)
 		editor_live_item_rules[item_key] = rule.duplicate(true)
 	_refresh_loot_table_markers()
+	_refresh_entity_group_markers()
 
 func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i) -> Dictionary:
 	var source_tiles := _decode_level_tiles(level_data, source_size)

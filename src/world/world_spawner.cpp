@@ -5,6 +5,7 @@
 #include "world_generator.h"
 #include "turn_scheduler.h"
 #include "data/loot_db.h"
+#include "data/entity_group_db.h"
 #include "data/spawn_db.h"
 #include "data/structure_db.h"
 #include "data/tile_db.h"
@@ -167,11 +168,19 @@ static bool spawn_with_structure_rule(
 static String rule_type_to_string(RuleType p_type) {
     switch (p_type) {
         case RuleType::SPAWN_ENTITY: return "spawn_entity";
+        case RuleType::SPAWN_ENTITY_GROUP: return "spawn_entity_group";
         case RuleType::SPAWN_LOOT_TABLE: return "spawn_loot_table";
         case RuleType::SPAWN_ITEM: return "spawn_item";
         case RuleType::SET_METADATA: return "set_metadata";
     }
     return "unknown";
+}
+
+static uint64_t get_structure_group_salt(const String& p_structure_id, const StructureRuleInfo& p_rule) {
+    return (static_cast<uint64_t>(static_cast<uint32_t>(p_structure_id.hash())) << 32)
+        ^ static_cast<uint32_t>(p_rule.entity_group.hash())
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_rule.pos.x)) << 16)
+        ^ static_cast<uint32_t>(p_rule.pos.y);
 }
 
 static uint64_t get_structure_rule_salt(const String& p_structure_id, const StructureRuleInfo& p_rule) {
@@ -314,15 +323,65 @@ static bool apply_structure_spawn_rule(
     }
 
     if (!spawn_with_structure_rule(p_world_seed, p_spawn_turn_time, p_pos, p_rule, p_bubble, p_ledger, p_tracker, p_scheduler)) {
+        UtilityFunctions::push_error("[WorldSpawner] Failed structure spawn rule: ", p_structure_id, " type=", rule_type_to_string(p_rule.type), " pos=", p_rule.pos, " entity=", p_rule.entity);
+        return false;
+    }
+
+    return true;
+}
+
+static bool apply_structure_spawn_group_rule(
+    uint32_t p_world_seed,
+    float p_spawn_turn_time,
+    const String& p_structure_id,
+    const StructureRuleInfo& p_rule,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
+    EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
+    TurnScheduler& p_scheduler
+) {
+    if (p_rule.entity_group.is_empty()) return false;
+
+    if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr
+        || p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_bubble.get_active_z()))) {
+        return false;
+    }
+
+    EntityGroupDb* group_db = EntityGroupDb::get_singleton();
+    if (!group_db) return false;
+
+    Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN, get_structure_group_salt(p_structure_id, p_rule));
+    const EntityGroupEntry* entry = group_db->pick_weighted_entry(p_rule.entity_group, group_rng);
+    if (!entry || entry->entity.is_empty()) return false;
+
+    uint16_t tile_id = p_bubble.query_tile_id(p_pos.x, p_pos.y);
+    if (!tile_allows_entity_spawn(entry->entity, tile_id)) return false;
+
+    if (!spawn_npc_at(
+        entry->entity,
+        entry->job,
+        entry->dialogue_profile,
+        entry->attitude,
+        entry->ai_state,
+        p_world_seed,
+        p_spawn_turn_time,
+        p_pos,
+        p_ledger,
+        p_tracker,
+        p_bubble,
+        p_scheduler
+    )) {
         UtilityFunctions::push_error(
-            "[WorldSpawner] Failed structure spawn rule: ",
+            "[WorldSpawner] Failed structure spawn group rule: ",
             p_structure_id,
-            " type=",
-            rule_type_to_string(p_rule.type),
+            " group=",
+            p_rule.entity_group,
+            " picked_entity=",
+            entry->entity,
             " pos=",
-            p_rule.pos,
-            " entity=",
-            p_rule.entity
+            p_rule.pos
         );
         return false;
     }
@@ -377,6 +436,11 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                             case RuleType::SPAWN_ENTITY:
                                 if (!spawned_from_rule) {
                                     spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                }
+                                break;
+                            case RuleType::SPAWN_ENTITY_GROUP:
+                                if (!spawned_from_rule) {
+                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
                                 }
                                 break;
                             case RuleType::SET_METADATA:
@@ -439,6 +503,11 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                         case RuleType::SPAWN_ENTITY:
                             if (!spawned_from_rule) {
                                 spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                            }
+                            break;
+                        case RuleType::SPAWN_ENTITY_GROUP:
+                            if (!spawned_from_rule) {
+                                spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
                             }
                             break;
                         case RuleType::SET_METADATA:
