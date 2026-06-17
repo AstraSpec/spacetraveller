@@ -9,6 +9,7 @@
 #include "data/entity_group_db.h"
 #include "data/structure_db.h"
 #include "data/tile_db.h"
+#include "core/id_registry.h"
 #include "core/rng.h"
 #include "core/tag_registry.h"
 #include "core/world_coords.h"
@@ -22,6 +23,7 @@ namespace godot {
 
 static constexpr uint64_t AMBIENT_LOOT_ROLL_SALT = 0x414D424C4F4F5452ULL; // "AMBLOOTR"
 static constexpr uint64_t AMBIENT_ENTITY_ROLL_SALT = 0x414D42454E545254ULL; // "AMBENTRT"
+static constexpr uint64_t WEB_SPIDER_ROLL_SALT = 0x5745425350494452ULL; // "WEBSPIDR"
 
 static bool tile_allows_entity_spawn(const String& p_race_id, uint16_t p_tile_id) {
     TileDb* tile_db = TileDb::get_singleton();
@@ -303,6 +305,52 @@ static bool apply_ambient_chunk_entity(
     );
 }
 
+static bool apply_webbed_floor_spider_spawn(
+    uint32_t p_world_seed,
+    float p_spawn_turn_time,
+    const Vector3i& p_pos3,
+    uint16_t p_tile_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
+    EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
+    TurnScheduler& p_scheduler
+) {
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (!id_reg) return false;
+
+    const uint16_t web_floor_id = id_reg->get_id("dungeon_floor_web");
+    const uint16_t thick_web_floor_id = id_reg->get_id("dungeon_floor_web_thick");
+    if (p_tile_id != web_floor_id && p_tile_id != thick_web_floor_id) return false;
+    if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr) return false;
+    if (p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_pos3.z))) return false;
+
+    const float chance = p_tile_id == thick_web_floor_id ? 0.17f : 0.10f;
+    const uint64_t salt = WEB_SPIDER_ROLL_SALT
+        ^ (static_cast<uint64_t>(p_tile_id) << 32)
+        ^ static_cast<uint32_t>(p_pos3.z);
+    Rng::Seeded spawn_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN, salt);
+    if (!spawn_rng.chance(chance)) return false;
+
+    const String pale_spider = "pale_spider";
+    if (!tile_allows_entity_spawn(pale_spider, p_tile_id)) return false;
+    return spawn_npc_at(
+        pale_spider,
+        "monster",
+        "",
+        "",
+        "",
+        p_world_seed,
+        p_spawn_turn_time,
+        p_pos,
+        p_ledger,
+        p_tracker,
+        p_bubble,
+        p_scheduler
+    );
+}
+
 static bool apply_structure_spawn_rule(
     uint32_t p_world_seed,
     float p_spawn_turn_time,
@@ -455,7 +503,10 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                         apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
                     }
                     if (!spawned_from_rule) {
-                        apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                        const bool spawned_web_spider = apply_webbed_floor_spider_spawn(p_world_seed, p_spawn_turn_time, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                        if (!spawned_web_spider) {
+                            apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                        }
                     }
                 }
 
@@ -533,7 +584,10 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
         apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
-        apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+        const bool spawned_web_spider = apply_webbed_floor_spider_spawn(p_world_seed, p_spawn_turn_time, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+        if (!spawned_web_spider) {
+            apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+        }
     }
 }
 

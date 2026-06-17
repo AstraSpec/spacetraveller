@@ -53,11 +53,9 @@ func _initialize_new_game():
 	_GameWorld.add_entity_inventory_item(0, "flint", 1)
 	_GameWorld.add_entity_inventory_item(0, "spider_silk", 4)
 	_GameWorld.add_entity_inventory_item(0, "bone", 1)
-	_GameWorld.add_entity_inventory_item(0, "iron_shard", 1)
+	_GameWorld.add_entity_inventory_item(0, "iron_ore", 1)
 	_GameWorld.add_entity_inventory_item(0, "longsword", 1)
 	_GameWorld.add_entity_inventory_item(0, "torch", 2)
-	_GameWorld.add_entity_inventory_item(0, "fire_starter", 1)
-	_GameWorld.add_entity_inventory_item(0, "bone_needle", 1)
 
 	_GameWorld.add_entity_inventory_item(0, "bra_wool", 1)
 	_GameWorld.add_entity_inventory_item(0, "panties_wool", 1)

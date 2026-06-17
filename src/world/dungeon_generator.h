@@ -4,6 +4,7 @@
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <cstdint>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -36,6 +37,7 @@ struct DungeonLayout {
     std::unordered_set<uint64_t> corridor_cells;
     std::unordered_set<uint64_t> corridor_wall_cells;
     std::unordered_set<uint64_t> door_cells;
+    std::unordered_map<uint64_t, uint16_t> dynamic_tiles;
 
     bool might_contain(int p_x, int p_y) const;
     bool has_corridor(int p_x, int p_y) const;

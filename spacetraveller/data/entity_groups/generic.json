@@ -9,14 +9,14 @@
   {
     "id": "dungeon_entities",
     "entries": [
-      { "entity": "pale_spider", "weight": 4, "job": "monster" },
-      { "entity": "deepling", "weight": 1, "job": "monster" }
+      { "entity": "pale_spider", "weight": 1, "job": "monster" },
+      { "entity": "deepling", "weight": 4, "job": "monster" }
     ]
   },
   {
     "id": "crypt_prisoner_goblin",
     "entries": [
-      { "none": true, "weight": 1 },
+      { "none": true, "weight": 3 },
       { "entity": "goblin", "weight": 1, "job": "prisoner", "dialogue_profile": "prisoner" }
     ]
   }

@@ -2,7 +2,7 @@
   {
     "id": "dungeon_wall",
     "name": "Dungeon Wall",
-    "atlas": [ [9, 2], [9, 2], [9, 2], [10, 2], [12, 2] ],
+    "atlas": [ [9, 2], [9, 2], [9, 2], [10, 2], [11, 2] ],
     "solid": true,
     "tags": ["SMASHABLE"],
     "smash_loot_table": "brick_smashed"
@@ -57,5 +57,42 @@
     "atlas": [ 38, 25 ],
     "solid": false,
     "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "spider_eggs",
+    "name": "Spider Eggs",
+    "atlas": [ 18, 4 ],
+    "solid": false,
+    "tags": ["GROUND", "SMASHABLE"]
+  },
+  {
+    "id": "dungeon_wall_web",
+    "name": "Webbed Dungeon Wall",
+    "atlas": [ [14, 2], [ 15, 2] ],
+    "solid": true,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "brick_smashed"
+  },
+  {
+    "id": "dungeon_wall_web_thick",
+    "name": "Webbed Dungeon Wall",
+    "atlas": [ [12, 2], [ 13, 2] ],
+    "solid": true,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "brick_smashed"
+  },
+  {
+    "id": "dungeon_floor_web",
+    "name": "Webbed Dungeon Floor",
+    "atlas": [ [19, 4], [20, 4] ],
+    "solid": false,
+    "tags": ["GROUND"]
+  },
+  {
+    "id": "dungeon_floor_web_thick",
+    "name": "Webbed Dungeon Floor",
+    "atlas": [ 21, 4 ],
+    "solid": false,
+    "tags": ["GROUND", "SMASHABLE"]
   }
 ]

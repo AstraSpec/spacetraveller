@@ -70,6 +70,11 @@ private:
     uint16_t id_dungeon_floor = 0;
     uint16_t id_dungeon_wall = 0;
     uint16_t id_dungeon_door = 0;
+    uint16_t id_spider_eggs = 0;
+    uint16_t id_dungeon_wall_web = 0;
+    uint16_t id_dungeon_wall_web_thick = 0;
+    uint16_t id_dungeon_floor_web = 0;
+    uint16_t id_dungeon_floor_web_thick = 0;
 
     std::unordered_map<uint64_t, DungeonLayout> dungeon_layout_cache;
     int dungeon_layout_cache_seed = 0;
@@ -96,7 +101,10 @@ private:
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);
+    uint16_t get_dungeon_layout_tile(const DungeonLayout& p_layout, int x, int y, bool p_include_dynamic) const;
     DungeonLayout* get_or_create_dungeon_layout(const String& p_dungeon_type, const Vector2i& p_entrance_chunk, int p_world_seed);
+    void try_place_dynamic_dungeon_features(DungeonLayout& r_layout, int p_world_seed);
+    bool try_place_spider_nest(DungeonLayout& r_layout, int p_world_seed, int p_room_index, const PlacedDungeonRoom& p_room);
     void reset_dungeon_cache();
     void rebuild_dungeon_entrance_cache();
     bool base_allows_surface_feature(uint16_t p_base_tile_id) const;

@@ -59,7 +59,7 @@
   "monster": {
     "display_name": "Monster",
     "dialogue_profile": "",
-    "default_attitude": "hostile",
+    "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["monster", "hostile"],
     "spawn_weight": 0,
