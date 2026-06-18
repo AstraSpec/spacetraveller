@@ -8,6 +8,7 @@
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["blacksmith_gather"],
+    "inventory_loot_table": "blacksmith_inventory",
     "vendor_loot_table": "blacksmith_vendor_stock",
     "quest_loot_tables": {
       "targets": "blacksmith_quest_targets",
@@ -23,6 +24,7 @@
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["scavenger_gather"],
+    "inventory_loot_table": "scavenger_inventory",
     "vendor_loot_table": "scavenger_vendor_stock",
     "quest_loot_tables": {
       "targets": "scavenger_quest_targets",

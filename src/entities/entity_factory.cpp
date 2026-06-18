@@ -6,8 +6,8 @@
 #include "world/turn_scheduler.h"
 #include "world/entity_lifecycle.h"
 #include "data/race_db.h"
-#include "data/item_db.h"
 #include "data/job_db.h"
+#include "data/loot_db.h"
 #include "data/name_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
@@ -17,8 +17,32 @@
 #include "components/ai_controller.h"
 
 #include <cstdlib>
+#include <vector>
 
 using namespace godot;
+
+namespace {
+
+void add_job_inventory(uint32_t p_entity_id, uint16_t p_loot_table, int p_world_seed, const Vector2i& p_pos, EntityLedger& p_ledger) {
+    if (p_loot_table == 0) return;
+
+    LootDb* loot_db = LootDb::get_singleton();
+    IdRegistry* reg = IdRegistry::get_singleton();
+    if (!loot_db || !reg) return;
+
+    Rng::Seeded loot_rng = Rng::at(static_cast<uint32_t>(p_world_seed), p_pos, Rng::SPAWN_LOOT);
+    std::vector<LootStack> stacks;
+    if (!loot_db->roll_table(p_loot_table, loot_rng, stacks)) return;
+
+    for (const LootStack& stack : stacks) {
+        if (stack.item_id == 0 || stack.amount <= 0) continue;
+        String item_id = reg->get_string(stack.item_id);
+        if (item_id.is_empty()) continue;
+        p_ledger.add_inventory_item(p_entity_id, item_id, stack.amount);
+    }
+}
+
+}
 
 uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos,
                                       EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler) {
@@ -156,15 +180,8 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
 
     ledger.perception_memory[id] = PerceptionMemory{};
 
-    ItemDb* item_db = ItemDb::get_singleton();
-    if (item_db) {
-        Array item_ids = item_db->get_ids();
-        if (item_ids.size() > 0) {
-            Rng::Seeded loot_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::SPAWN_LOOT);
-            int rand_idx = loot_rng.range(0, item_ids.size() - 1);
-            String random_item = item_ids[rand_idx];
-            ledger.add_inventory_item(id, random_item, 1);
-        }
+    if (job_info && job_info->inventory_loot_table != 0) {
+        add_job_inventory(id, job_info->inventory_loot_table, world_seed, pos, ledger);
     }
 
     if (!EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, tracker, bubble, scheduler)) {

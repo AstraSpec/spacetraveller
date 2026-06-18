@@ -3,6 +3,7 @@ extends BaseWindow
 @export var menu_id: String
 @export var tabs: TabContainer
 @export var single_tab: BaseListTab
+@export var default_tab_on_open: String = ""
 
 var current_tab: BaseListTab
 
@@ -31,10 +32,14 @@ func _on_prev_tab() -> void:
 
 func _on_menu_toggled(id: String, is_open: bool, params: Dictionary) -> void:
 	if id == menu_id:
+		if visible and not is_open:
+			_notify_menu_closed()
 		visible = is_open
 		if visible:
 			if params.has("tab"):
 				_switch_to_tab_by_name(params["tab"])
+			elif not default_tab_on_open.is_empty():
+				_switch_to_tab_by_name(default_tab_on_open)
 			
 			_update_active_tab()
 			
@@ -65,6 +70,14 @@ func _update_active_tab():
 		
 	if current_tab:
 		current_tab.refresh_view()
+
+func _notify_menu_closed() -> void:
+	if tabs:
+		for child in tabs.get_children():
+			if child.has_method("on_menu_closed"):
+				child.on_menu_closed()
+	elif single_tab and single_tab.has_method("on_menu_closed"):
+		single_tab.on_menu_closed()
 
 func _on_directional_input(direction: Vector2) -> void:
 	if not visible or not current_tab: return

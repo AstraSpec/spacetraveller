@@ -13,6 +13,7 @@ void ItemDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &ItemDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("get_item_name", "id"), &ItemDb::get_item_name);
     ClassDB::bind_method(D_METHOD("get_item_description", "id"), &ItemDb::get_item_description);
+    ClassDB::bind_method(D_METHOD("get_item_price", "id"), &ItemDb::get_item_price);
     ClassDB::bind_method(D_METHOD("get_item_modifiers", "id"), &ItemDb::get_item_modifiers);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &ItemDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_clothing_data", "id"), &ItemDb::get_clothing_data);
@@ -34,6 +35,8 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.weight = p_data.get("weight", 0.0f);
     info.volume = p_data.get("volume", 0.0f);
+    info.price = int(p_data.get("price", 0));
+    if (info.price < 0) info.price = 0;
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.clothing_data = p_data.get("clothing", Dictionary());
     info.weapon_data = p_data.get("weapon", Dictionary());
@@ -78,12 +81,18 @@ String ItemDb::get_item_description(const String &p_id) const {
     return "";
 }
 
+int ItemDb::get_item_price(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    return info ? info->price : 0;
+}
+
 Dictionary ItemDb::get_item_modifiers(const String &p_id) const {
     const ItemInfo* info = get_item_info(p_id);
     Dictionary d;
     if (info) {
         if (info->weight > 0.0f) d["weight"] = info->weight;
         if (info->volume > 0.0f) d["volume"] = info->volume;
+        if (info->price > 0) d["price"] = info->price;
     }
     return d;
 }

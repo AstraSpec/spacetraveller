@@ -65,6 +65,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     romance.erase(id);
     social_data.erase(id);
     social_profiles.erase(id);
+    vendor_state.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -87,6 +88,10 @@ SocialMemoryData& EntityLedger::ensure_social_memory(uint32_t id) {
     SocialMemoryData& memory = social_data[id];
     SocialMemory::init(memory);
     return memory;
+}
+
+VendorState& EntityLedger::ensure_vendor_state(uint32_t id) {
+    return vendor_state[id];
 }
 
 bool EntityLedger::has_inventory(uint32_t id) const {
@@ -433,6 +438,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     romance.clear();
     social_data.clear();
     social_profiles.clear();
+    vendor_state.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -538,6 +544,14 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["social_profile"] = SocialProfile::serialize(profile_it->second);
     }
 
+    auto vendor_it = vendor_state.find(id);
+    if (vendor_it != vendor_state.end()) {
+        Dictionary vendor;
+        vendor["funds"] = vendor_it->second.funds;
+        vendor["credit"] = vendor_it->second.credit;
+        data["vendor"] = vendor;
+    }
+
     return data;
 }
 
@@ -635,6 +649,16 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         SocialProfileData sp;
         SocialProfile::deserialize(sp, data["social_profile"]);
         social_profiles[id] = sp;
+    }
+
+    if (data.has("vendor")) {
+        Dictionary vendor = data["vendor"];
+        VendorState state;
+        state.funds = static_cast<int>(vendor.get("funds", VendorState::DEFAULT_FUNDS));
+        if (state.funds < 0) state.funds = 0;
+        state.credit = static_cast<int>(vendor.get("credit", 0));
+        if (state.credit < 0) state.credit = 0;
+        vendor_state[id] = state;
     }
 
     return id;

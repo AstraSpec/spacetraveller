@@ -10,7 +10,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4tagx"]
 
 [node name="StripButton" type="MarginContainer"]
-offset_right = 206.0
+offset_right = 784.0
 offset_bottom = 23.0
 size_flags_horizontal = 3
 size_flags_vertical = 3

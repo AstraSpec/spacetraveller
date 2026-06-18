@@ -12,6 +12,7 @@ struct ItemInfo {
     Vector2i atlas;
     float weight = 0.0f;
     float volume = 0.0f;
+    int price = 0;
     std::vector<uint16_t> tags;
     Dictionary clothing_data;
     Dictionary weapon_data;
@@ -42,6 +43,7 @@ public:
     Vector2i get_atlas_coords(const String &p_id) const;
     String get_item_name(const String &p_id) const;
     String get_item_description(const String &p_id) const;
+    int get_item_price(const String &p_id) const;
     Dictionary get_item_modifiers(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
     Dictionary get_clothing_data(const String &p_id) const;

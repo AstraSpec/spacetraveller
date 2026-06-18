@@ -20,6 +20,7 @@
 #include "world_spawn_state.h"
 #include "entity_archive.h"
 #include "path/a_star_grid.h"
+#include "trade_system.h"
 #include "turn_scheduler.h"
 #include "entities/entity_ledger.h"
 #include "entities/entity_tracker.h"
@@ -60,6 +61,7 @@ private:
     EntityArchive entity_archive;
     EntityLedger entity_ledger;
     EntityTracker entity_tracker;
+    TradeSystem trade_system;
     SimulationDirector sim_director;
 
     Ref<FastNoiseLite> biome_noise;
@@ -146,6 +148,7 @@ public:
 
     uint32_t spawn_player(int x, int y, const String& race_id);
     uint32_t spawn_entity(int x, int y, const String& race_id);
+    uint32_t spawn_entity_with_job(int x, int y, const String& race_id, const String& job_id);
     void despawn_entity(uint32_t entity_id);
     Vector2i get_entity_position(uint32_t entity_id) const;
     int get_entity_z(uint32_t entity_id) const;
@@ -164,6 +167,17 @@ public:
     Dictionary get_entity_equipment(uint32_t entity_id) const;
     float get_entity_inventory_weight(uint32_t entity_id) const;
     float get_entity_inventory_volume(uint32_t entity_id) const;
+
+    bool begin_trade(uint32_t vendor_id);
+    void end_trade();
+    bool trade_add_player_item(const String& item_id, int amount);
+    bool trade_add_vendor_item(const String& item_id, int amount);
+    bool trade_remove_player_item(const String& item_id, int amount);
+    bool trade_remove_vendor_item(const String& item_id, int amount);
+    Dictionary trade_get_summary() const;
+    bool trade_can_accept() const;
+    bool trade_accept();
+    int trade_get_item_value(const String& item_id, int amount, bool selling_to_vendor) const;
 
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
     String get_entity_gender(uint32_t entity_id) const;

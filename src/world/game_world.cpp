@@ -91,6 +91,17 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_inventory_weight", "entity_id"), &GameWorld::get_entity_inventory_weight);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_volume", "entity_id"), &GameWorld::get_entity_inventory_volume);
 
+    ClassDB::bind_method(D_METHOD("begin_trade", "vendor_id"), &GameWorld::begin_trade);
+    ClassDB::bind_method(D_METHOD("end_trade"), &GameWorld::end_trade);
+    ClassDB::bind_method(D_METHOD("trade_add_player_item", "item_id", "amount"), &GameWorld::trade_add_player_item);
+    ClassDB::bind_method(D_METHOD("trade_add_vendor_item", "item_id", "amount"), &GameWorld::trade_add_vendor_item);
+    ClassDB::bind_method(D_METHOD("trade_remove_player_item", "item_id", "amount"), &GameWorld::trade_remove_player_item);
+    ClassDB::bind_method(D_METHOD("trade_remove_vendor_item", "item_id", "amount"), &GameWorld::trade_remove_vendor_item);
+    ClassDB::bind_method(D_METHOD("trade_get_summary"), &GameWorld::trade_get_summary);
+    ClassDB::bind_method(D_METHOD("trade_can_accept"), &GameWorld::trade_can_accept);
+    ClassDB::bind_method(D_METHOD("trade_accept"), &GameWorld::trade_accept);
+    ClassDB::bind_method(D_METHOD("trade_get_item_value", "item_id", "amount", "selling_to_vendor"), &GameWorld::trade_get_item_value);
+
     ClassDB::bind_method(D_METHOD("drop_item", "pos", "item_id", "amount"), &GameWorld::drop_item);
     ClassDB::bind_method(D_METHOD("remove_ground_item", "pos", "item_id", "amount"), &GameWorld::remove_ground_item);
     ClassDB::bind_method(D_METHOD("get_items_at", "pos"), &GameWorld::get_items_at);
@@ -106,6 +117,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("load_save_data", "data"), &GameWorld::load_save_data);
 
     ClassDB::bind_method(D_METHOD("spawn_entity", "x", "y", "race_id"), &GameWorld::spawn_entity);
+    ClassDB::bind_method(D_METHOD("spawn_entity_with_job", "x", "y", "race_id", "job_id"), &GameWorld::spawn_entity_with_job);
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
 
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
@@ -215,6 +227,7 @@ GameWorld::GameWorld() {
     pathfinder = std::make_unique<AStarGridPathfinder>();
     quest_tracker = std::make_unique<QuestTracker>();
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
+    trade_system.configure(&entity_ledger);
 
     quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed);
     quest_tracker->set_emit_callback(&GameWorld::_quest_updated_trampoline, this);
@@ -515,6 +528,15 @@ uint32_t GameWorld::spawn_entity(int x, int y, const String& race_id) {
     return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, entity_tracker, bubble, turn_scheduler, overrides, spawn_time);
 }
 
+uint32_t GameWorld::spawn_entity_with_job(int x, int y, const String& race_id, const String& job_id) {
+    float spawn_time = 0.0f;
+    const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (player_e) spawn_time = player_e->next_turn_time;
+    EntityFactory::SpawnOverrides overrides;
+    overrides.job = job_id;
+    return EntityFactory::create_npc(race_id, Vector2i(x, y), world_seed, entity_ledger, entity_tracker, bubble, turn_scheduler, overrides, spawn_time);
+}
+
 void GameWorld::despawn_entity(uint32_t entity_id) {
     if (entity_id == player_entity_id) return;
     EntityLifecycle::despawn_entity(
@@ -588,6 +610,46 @@ float GameWorld::get_entity_inventory_weight(uint32_t entity_id) const {
 
 float GameWorld::get_entity_inventory_volume(uint32_t entity_id) const {
     return entity_ledger.get_inventory_volume(entity_id);
+}
+
+bool GameWorld::begin_trade(uint32_t vendor_id) {
+    return trade_system.begin_trade(player_entity_id, vendor_id);
+}
+
+void GameWorld::end_trade() {
+    trade_system.end_trade();
+}
+
+bool GameWorld::trade_add_player_item(const String& item_id, int amount) {
+    return trade_system.add_player_item(item_id, amount);
+}
+
+bool GameWorld::trade_add_vendor_item(const String& item_id, int amount) {
+    return trade_system.add_vendor_item(item_id, amount);
+}
+
+bool GameWorld::trade_remove_player_item(const String& item_id, int amount) {
+    return trade_system.remove_player_item(item_id, amount);
+}
+
+bool GameWorld::trade_remove_vendor_item(const String& item_id, int amount) {
+    return trade_system.remove_vendor_item(item_id, amount);
+}
+
+Dictionary GameWorld::trade_get_summary() const {
+    return trade_system.get_summary();
+}
+
+bool GameWorld::trade_can_accept() const {
+    return trade_system.can_accept_trade();
+}
+
+bool GameWorld::trade_accept() {
+    return trade_system.accept_trade();
+}
+
+int GameWorld::trade_get_item_value(const String& item_id, int amount, bool selling_to_vendor) const {
+    return trade_system.get_item_value(item_id, amount, selling_to_vendor);
 }
 
 Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {

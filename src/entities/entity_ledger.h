@@ -23,6 +23,13 @@
 
 namespace godot {
 
+struct VendorState {
+    static constexpr int DEFAULT_FUNDS = 1000;
+
+    int funds = DEFAULT_FUNDS;
+    int credit = 0;
+};
+
 class EntityLedger {
 private:
     EntityPool entity_pool;
@@ -60,6 +67,7 @@ public:
     std::unordered_map<uint32_t, int> romance;
     std::unordered_map<uint32_t, SocialMemoryData> social_data;
     std::unordered_map<uint32_t, SocialProfileData> social_profiles;
+    std::unordered_map<uint32_t, VendorState> vendor_state;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -98,10 +106,13 @@ public:
     const SocialMemoryData* try_get_social_memory(uint32_t id) const { return try_get_ptr(social_data, id); }
     SocialProfileData* try_get_social_profile(uint32_t id) { return try_get_ptr(social_profiles, id); }
     const SocialProfileData* try_get_social_profile(uint32_t id) const { return try_get_ptr(social_profiles, id); }
+    VendorState* try_get_vendor_state(uint32_t id) { return try_get_ptr(vendor_state, id); }
+    const VendorState* try_get_vendor_state(uint32_t id) const { return try_get_ptr(vendor_state, id); }
 
     InventoryData& ensure_inventory(uint32_t id);
     EffectsData& ensure_effects(uint32_t id);
     SocialMemoryData& ensure_social_memory(uint32_t id);
+    VendorState& ensure_vendor_state(uint32_t id);
 
     bool has_inventory(uint32_t id) const;
     bool is_alive(uint32_t id) const;

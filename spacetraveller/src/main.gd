@@ -48,6 +48,11 @@ func _ready() -> void:
 	QuestService.bind_game_world(_GameWorld)
 
 func _initialize_new_game():
+	var player_pos := _GameWorld.get_player_position()
+	_GameWorld.spawn_entity_with_job(player_pos.x + 1, player_pos.y, "human", "blacksmith")
+	_GameWorld.spawn_entity_with_job(player_pos.x + 1, player_pos.y - 1, "human", "blacksmith")
+	_GameWorld.update_world_bubble(player_pos)
+
 	_GameWorld.add_entity_inventory_item(0, "stick", 5)
 	_GameWorld.add_entity_inventory_item(0, "rope", 2)
 	_GameWorld.add_entity_inventory_item(0, "flint", 1)

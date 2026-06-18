@@ -1,0 +1,61 @@
+[
+  {
+    "id": "blacksmith_inventory",
+    "rolls_min": 3,
+    "rolls_max": 5,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "iron_ingot", "weight": 35, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "iron_ore", "weight": 25, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "crude_hammer", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_dagger", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bronze_coin", "weight": 12, "amount_min": 3, "amount_max": 12 },
+      { "item_id": "silver_coin", "weight": 5, "amount_min": 1, "amount_max": 4 }
+    ]
+  },
+  {
+    "id": "scavenger_inventory",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 20, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "rope", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 15, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "torch", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "cloth_scrap", "weight": 14, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "leather_scrap", "weight": 8, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bronze_coin", "weight": 6, "amount_min": 1, "amount_max": 6 }
+    ]
+  },
+  {
+    "id": "blacksmith_vendor_stock",
+    "rolls_min": 6,
+    "rolls_max": 10,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "iron_ingot", "weight": 30, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "iron_ore", "weight": 20, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "crude_hammer", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_dagger", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "longsword", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stone_knife", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stone_axe", "weight": 6, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "scavenger_vendor_stock",
+    "rolls_min": 5,
+    "rolls_max": 8,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 25, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "rope", "weight": 18, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "flint", "weight": 18, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "torch", "weight": 14, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cloth_scrap", "weight": 14, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "leather_scrap", "weight": 10, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "stone_knife", "weight": 5, "amount_min": 1, "amount_max": 1 }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=33 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -30,40 +30,7 @@
 [ext_resource type="PackedScene" uid="uid://b2v3w5x7y81aa" path="res://src/ui/event_log.tscn" id="26_evlog"]
 [ext_resource type="Script" uid="uid://bxig5terglyd" path="res://src/ui/conversation/conversation_tab.gd" id="27_convt"]
 [ext_resource type="PackedScene" uid="uid://c0nv7btn0answ" path="res://src/ui/conversation/conversation_button.tscn" id="28_convbtn"]
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_o6ht7"]
-texture = ExtResource("2_hj8l7")
-margins = Vector2i(1, 1)
-separation = Vector2i(1, 1)
-texture_region_size = Vector2i(12, 12)
-69:5/0 = 0
-0:8/0 = 0
-52:0/0 = 0
-53:0/0 = 0
-54:0/0 = 0
-55:0/0 = 0
-56:0/0 = 0
-57:0/0 = 0
-52:1/0 = 0
-53:1/0 = 0
-54:1/0 = 0
-55:1/0 = 0
-56:1/0 = 0
-57:1/0 = 0
-3:40/0 = 0
-58:8/0 = 0
-3:9/0 = 0
-4:9/0 = 0
-5:9/0 = 0
-6:9/0 = 0
-7:9/0 = 0
-32:2/0 = 0
-16:0/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_3mine"]
-tile_size = Vector2i(12, 12)
-uv_clipping = true
-sources/2 = SubResource("TileSetAtlasSource_o6ht7")
+[ext_resource type="Script" uid="uid://bs2gm181d30e" path="res://src/ui/conversation/barter_tab.gd" id="29_bart"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
@@ -86,10 +53,10 @@ offset_bottom = 12.0
 texture = ExtResource("7_143wy")
 
 [node name="MapRenderer" type="FastMapRenderer" parent="MapView"]
+tilesheet = ExtResource("2_hj8l7")
 z_index = 100
 z_as_relative = false
 texture_filter = 1
-tilesheet = ExtResource("2_hj8l7")
 
 [node name="Camera" type="Camera2D" parent="MapView"]
 script = ExtResource("4_8p67s")
@@ -663,6 +630,7 @@ unfocusable = true
 script = ExtResource("16_menu")
 menu_id = "conversation"
 tabs = NodePath("TabContainer")
+default_tab_on_open = "Talk"
 
 [node name="TabContainer" type="TabContainer" parent="Canvas/Window/ConversationUI"]
 anchors_preset = 15
@@ -765,11 +733,82 @@ metadata/_tab_index = 1
 layout_mode = 2
 text = "Actions"
 
+[node name="Barter" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "debitLabel", "npcMoneyLabel", "playerItems", "npcItems")]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("29_bart")
+_GameWorld = NodePath("../../../../../GameWorld")
+debitLabel = NodePath("VBoxContainer/Summary/DebitLabel")
+npcMoneyLabel = NodePath("VBoxContainer/Summary/NpcMoneyLabel")
+playerItems = NodePath("VBoxContainer/Body/YourColumn/PlayerItems")
+npcItems = NodePath("VBoxContainer/Body/TheirColumn/NpcItems")
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Summary" type="HBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="DebitLabel" type="RichTextLabel" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Summary"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "Credit: 0"
+vertical_alignment = 1
+
+[node name="NpcMoneyLabel" type="RichTextLabel" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Summary"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "Funds: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="HBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="YourColumn" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body/YourColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Your Items"
+
+[node name="PlayerItems" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body/YourColumn" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="TheirColumn" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body/TheirColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Their Items"
+
+[node name="NpcItems" parent="Canvas/Window/ConversationUI/TabContainer/Barter/VBoxContainer/Body/TheirColumn" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
 [node name="QuestUI" type="Window" parent="Canvas/Window"]
 oversampling_override = 1.0
 title = "Quests"
 initial_position = 1
 size = Vector2i(930, 560)
+visible = false
 unfocusable = true
 script = ExtResource("16_menu")
 menu_id = "quests"

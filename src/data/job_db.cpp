@@ -39,6 +39,7 @@ void JobDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_traits", "id"), &JobDb::get_traits);
     ClassDB::bind_method(D_METHOD("get_context_tags", "id"), &JobDb::get_context_tags);
     ClassDB::bind_method(D_METHOD("get_quest_kinds", "id"), &JobDb::get_quest_kinds);
+    ClassDB::bind_method(D_METHOD("get_inventory_loot_table", "id"), &JobDb::get_inventory_loot_table);
     ClassDB::bind_method(D_METHOD("get_vendor_loot_table", "id"), &JobDb::get_vendor_loot_table);
     ClassDB::bind_method(D_METHOD("get_quest_loot_tables", "id"), &JobDb::get_quest_loot_tables);
 }
@@ -59,6 +60,10 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     info.traits = parse_string_list(p_data.get("traits", Array()));
     info.context_tags = parse_string_list(p_data.get("context_tags", Array()));
     info.quest_kinds = parse_string_list(p_data.get("quest_kinds", Array()));
+    String inventory_loot_table = String(p_data.get("inventory_loot_table", ""));
+    if (!inventory_loot_table.is_empty() && IdRegistry::get_singleton()) {
+        info.inventory_loot_table = IdRegistry::get_singleton()->register_string(inventory_loot_table);
+    }
     String vendor_loot_table = String(p_data.get("vendor_loot_table", ""));
     if (!vendor_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.vendor_loot_table = IdRegistry::get_singleton()->register_string(vendor_loot_table);
@@ -158,6 +163,12 @@ Array JobDb::get_context_tags(const String &p_id) const {
 Array JobDb::get_quest_kinds(const String &p_id) const {
     const JobInfo* info = get_job_info(p_id);
     return info ? to_array(info->quest_kinds) : Array();
+}
+
+String JobDb::get_inventory_loot_table(const String &p_id) const {
+    const JobInfo* info = get_job_info(p_id);
+    IdRegistry* reg = IdRegistry::get_singleton();
+    return (info && reg && info->inventory_loot_table != 0) ? reg->get_string(info->inventory_loot_table) : String();
 }
 
 String JobDb::get_vendor_loot_table(const String &p_id) const {
