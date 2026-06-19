@@ -58,6 +58,14 @@ struct ActionResult {
     }
 };
 
+struct MovePreview {
+    bool can_move = false;
+    bool will_fall = false;
+    int from_z = 0;
+    int to_z = 0;
+    ActionFailure failure = ActionFailure::NONE;
+};
+
 namespace ActionCost {
     constexpr float ATTACK = 1.5f;
     constexpr float SMASH  = 2.0f;
@@ -71,6 +79,7 @@ namespace ActionTuning {
 }
 
 namespace ActionResolver {
+    MovePreview preview_move(const Intent& intent, const Entity& entity, WorldBubble& bubble, const EntityLedger* ledger = nullptr, EntityTracker* tracker = nullptr);
     ActionResult resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger = nullptr, EntityTracker* tracker = nullptr);
     ActionResult resolve_smash(const Intent& intent, Entity& entity, WorldBubble& bubble, const String& tile_db_path = "");
     ActionResult resolve_open(const Intent& intent, const Entity& entity, WorldBubble& bubble);

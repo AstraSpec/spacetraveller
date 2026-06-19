@@ -276,3 +276,23 @@ class MenuContext extends InputContext:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
 		if step != Vector2.INF and step != Vector2.ZERO:
 			manager.ui_directional_input.emit(step)
+
+class ConfirmationContext extends InputContext:
+	var move_processor = DirectionalProcessor.new()
+
+	func handle_input(event: InputEvent) -> bool:
+		if event.is_action_pressed("ui_accept"):
+			manager.confirmation_accept.emit()
+			return true
+		elif event.is_action_pressed("ui_cancel"):
+			manager.confirmation_cancel.emit()
+			return true
+		elif event.is_action_pressed("ui_focus_next"):
+			manager.confirmation_directional_input.emit(Vector2.LEFT if manager.is_shift_pressed else Vector2.RIGHT)
+			return true
+		return false
+
+	func process(delta: float) -> void:
+		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
+		if step != Vector2.INF and step != Vector2.ZERO:
+			manager.confirmation_directional_input.emit(step)

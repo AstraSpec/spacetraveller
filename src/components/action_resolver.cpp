@@ -57,33 +57,61 @@ bool find_fall_landing(
 
 }
 
-ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger, EntityTracker* tracker) {
+MovePreview ActionResolver::preview_move(const Intent& intent, const Entity& entity, WorldBubble& bubble, const EntityLedger* ledger, EntityTracker* tracker) {
+    MovePreview preview;
+    preview.from_z = entity.z;
+    preview.to_z = entity.z;
+
     int dx = abs(intent.target.x - entity.x);
     int dy = abs(intent.target.y - entity.y);
-
     if (dx > 1 || dy > 1 || (dx == 0 && dy == 0)) {
-        return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
+        preview.failure = ActionFailure::INVALID_TARGET;
+        return preview;
     }
 
-    uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
+    uint16_t tile_id = bubble.query_tile_id_at_z(intent.target.x, intent.target.y, entity.z);
     int target_z = entity.z;
     if (tile_is_air(tile_id)) {
         if (!find_fall_landing(entity.id, intent.target.x, intent.target.y, entity.z, bubble, ledger, target_z)) {
-            return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+            preview.failure = ActionFailure::BLOCKED_TILE;
+            return preview;
         }
     } else if (!can_enter_tile(entity.id, tile_id, ledger)) {
-        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+        preview.failure = ActionFailure::BLOCKED_TILE;
+        return preview;
     }
 
-    const WorldBubble::CellEntity* occupant = bubble.get_entity_at(intent.target.x, intent.target.y);
-    if (occupant) return ActionResult::make_failure(ActionFailure::OCCUPIED);
-    if (target_z != entity.z && tracker) {
-        const uint32_t landing_occupant = tracker->get_at(Vector3i(intent.target.x, intent.target.y, target_z));
-        if (landing_occupant != INVALID_ENTITY_ID && landing_occupant != entity.id) {
-            return ActionResult::make_failure(ActionFailure::OCCUPIED);
+    if (target_z != entity.z && !tracker) {
+        preview.failure = ActionFailure::MISSING_COMPONENT;
+        return preview;
+    }
+
+    if (tracker) {
+        const uint32_t occupant = tracker->get_at(Vector3i(intent.target.x, intent.target.y, target_z));
+        if (occupant != INVALID_ENTITY_ID && occupant != entity.id) {
+            preview.failure = ActionFailure::OCCUPIED;
+            return preview;
+        }
+    } else if (const WorldBubble::CellEntity* occupant = bubble.get_entity_at(intent.target.x, intent.target.y)) {
+        if (occupant->entity_id != entity.id) {
+            preview.failure = ActionFailure::OCCUPIED;
+            return preview;
         }
     }
 
+    preview.can_move = true;
+    preview.will_fall = target_z < entity.z;
+    preview.to_z = target_z;
+    return preview;
+}
+
+ActionResult ActionResolver::resolve_move(const Intent& intent, Entity& entity, WorldBubble& bubble, LocomotionData& loco, const EntityLedger* ledger, EntityTracker* tracker) {
+    MovePreview preview = preview_move(intent, entity, bubble, ledger, tracker);
+    if (!preview.can_move) {
+        return ActionResult::make_failure(preview.failure == ActionFailure::NONE ? ActionFailure::BLOCKED_TILE : preview.failure);
+    }
+
+    int target_z = preview.to_z;
     int old_x = entity.x, old_y = entity.y, old_z = entity.z;
     if (target_z == old_z) {
         if (!bubble.update_entity_position(old_x, old_y, intent.target.x, intent.target.y, entity.id)) {

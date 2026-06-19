@@ -79,7 +79,8 @@ func _on_pathfinding_timer_timeout() -> void:
 
 	var next_pos: Vector2i = current_path[0]
 	var displacement := Vector2(next_pos - Vector2i(cellPos()))
-	_submit_move(Vector2i(displacement))
+	if not _submit_move(Vector2i(displacement)):
+		return
 	current_path.remove_at(0)
 
 	_refresh_path_indicators()
@@ -161,10 +162,31 @@ func _on_movement_triggered(dir: Vector2):
 			_submit_move(dir)
 			World.update_world_bubble(cellPos())
 
-func _submit_move(dir: Vector2):
+func _submit_move(dir: Vector2) -> bool:
 	var pos = Vector2i(cellPos())
 	var target = pos + Vector2i(dir)
+	if World.would_player_move_fall(target.x, target.y):
+		var popup := _get_confirmation_popup()
+		if popup:
+			PathfindingTimer.stop()
+			_clear_path()
+			popup.show_confirm(
+				"Jump off this ledge?",
+				[
+					{"label": "No"},
+					{"label": "Yes", "callback": Callable(self, "_confirm_ledge_jump").bind(target)},
+				]
+			)
+			return false
 	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")
+	return true
+
+func _get_confirmation_popup() -> ConfirmationPopup:
+	return get_tree().root.get_node_or_null("Main/Canvas/Window/ConfirmationPopup") as ConfirmationPopup
+
+func _confirm_ledge_jump(target: Vector2i) -> void:
+	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")
+	World.update_world_bubble(cellPos())
 
 func _load_vector2(v) -> Vector2:
 	if v is Vector2:

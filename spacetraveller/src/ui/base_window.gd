@@ -41,4 +41,7 @@ func _update_window_size() -> void:
 	position = pos
 
 func _on_close_requested() -> void:
-	InputManager.pop_mode()
+	if has_method("request_close"):
+		call("request_close")
+	else:
+		InputManager.pop_mode()

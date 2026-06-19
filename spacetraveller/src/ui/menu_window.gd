@@ -16,6 +16,7 @@ func _ready() -> void:
 	InputManager.ui_drop_requested.connect(_on_drop_input)
 	InputManager.ui_wear_requested.connect(_on_wear_input)
 	InputManager.ui_wield_requested.connect(_on_wield_input)
+	InputManager.menu_close_requested.connect(_on_menu_close_requested)
 	InputManager.ui_next_tab.connect(_on_next_tab)
 	InputManager.ui_prev_tab.connect(_on_prev_tab)
 	
@@ -49,6 +50,26 @@ func _on_menu_toggled(id: String, is_open: bool, params: Dictionary) -> void:
 		# If another menu is opened, close this one
 		if is_open:
 			visible = false
+
+func request_close() -> void:
+	if not visible:
+		return
+	if _tabs_request_menu_close():
+		return
+	InputManager.pop_mode()
+
+func _on_menu_close_requested(id: String) -> void:
+	if id == menu_id:
+		request_close()
+
+func _tabs_request_menu_close() -> bool:
+	if tabs:
+		for child in tabs.get_children():
+			if child.has_method("request_menu_close") and bool(child.request_menu_close()):
+				return true
+	elif single_tab and single_tab.has_method("request_menu_close"):
+		return bool(single_tab.request_menu_close())
+	return false
 
 func _switch_to_tab_by_name(tab_name: String) -> void:
 	if not tabs: return

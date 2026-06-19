@@ -7,9 +7,9 @@ extends BaseListTab
 @export var npcItems: ButtonListContainer
 
 var target_id: int = -1
-var _active_side: String = "player"
-var _trade_vendor_id: int = -1
-var _trade_summary: Dictionary = {}
+var active_side: String = "player"
+var trade_vendor_id: int = -1
+var trade_summary: Dictionary = {}
 
 func _ready() -> void:
 	super._ready()
@@ -21,7 +21,7 @@ func _ready() -> void:
 func set_params(params: Dictionary) -> void:
 	_reset_ui_state()
 	target_id = int(params["target"]) if params.has("target") else _target_from_talk_tab()
-	_trade_vendor_id = -1
+	trade_vendor_id = -1
 	refresh_view()
 
 func refresh_view() -> void:
@@ -29,11 +29,11 @@ func refresh_view() -> void:
 		target_id = _target_from_talk_tab()
 
 	_ensure_trade_session()
-	_trade_summary = _GameWorld.trade_get_summary() if _GameWorld else {}
+	trade_summary = _GameWorld.trade_get_summary() if _GameWorld else {}
 
-	debitLabel.text = "Credit: %d" % int(_trade_summary.get("credit", 0))
+	debitLabel.text = "Credit: %d" % int(trade_summary.get("credit", 0))
 
-	var funds: int = int(_trade_summary.get("funds", 0))
+	var funds: int = int(trade_summary.get("funds", 0))
 	if funds < 0:
 		npcMoneyLabel.text = "Funds: [color=red]%d[/color]" % funds
 	else:
@@ -41,15 +41,15 @@ func refresh_view() -> void:
 
 	playerItems.set_data(_inventory_strip_data(
 		0,
-		_trade_summary.get("vendor_offer", []),
-		_trade_summary.get("player_offer", []),
+		trade_summary.get("vendor_offer", []),
+		trade_summary.get("player_offer", []),
 		"pending_from_vendor",
 		"player"
 	))
 	npcItems.set_data(_inventory_strip_data(
 		target_id,
-		_trade_summary.get("player_offer", []),
-		_trade_summary.get("vendor_offer", []),
+		trade_summary.get("player_offer", []),
+		trade_summary.get("vendor_offer", []),
 		"pending_from_player",
 		"npc"
 	))
@@ -81,7 +81,7 @@ func _on_item_activated() -> void:
 	if not active:
 		return
 	var data = active._get_data_for_button_index(active.selected_index)
-	_activate_trade_item(data, _active_side)
+	_activate_trade_item(data, active_side)
 
 func _on_player_item_activated(_index: int, data: Variant) -> void:
 	_activate_trade_item(data, "player")
@@ -111,26 +111,26 @@ func _activate_trade_item(data: Variant, side: String) -> void:
 		refresh_view()
 
 func _ensure_trade_session() -> void:
-	if not _GameWorld or target_id <= 0:
+	if target_id <= 0:
 		return
-	if _trade_vendor_id == target_id:
+	if trade_vendor_id == target_id:
 		return
 	if _GameWorld.begin_trade(target_id):
-		_trade_vendor_id = target_id
+		trade_vendor_id = target_id
 
 func _set_active_side(side: String) -> void:
-	if _active_side == side:
+	if active_side == side:
 		return
-	_active_side = side
+	active_side = side
 	_update_active_selection()
 
 func _active_list() -> ButtonListContainer:
-	if _active_side == "npc":
+	if active_side == "npc":
 		return npcItems
 	return playerItems
 
 func _inactive_list() -> ButtonListContainer:
-	if _active_side == "npc":
+	if active_side == "npc":
 		return playerItems
 	return npcItems
 
@@ -158,19 +158,53 @@ func _target_from_talk_tab() -> int:
 		return int(talk.get("target_id"))
 	return -1
 
+func request_menu_close() -> bool:
+	if not _has_pending_trade():
+		return false
+	var popup := _get_confirmation_popup()
+	if not popup:
+		return false
+	popup.show_confirm("Accept this trade?", [
+		{"label": "No", "callback": Callable(self, "_discard_trade_and_close")},
+		{"label": "Yes", "callback": Callable(self, "_accept_trade_and_close")},
+		{"label": "Cancel"},
+	])
+	return true
+
 func on_menu_closed() -> void:
-	if not _GameWorld or _trade_vendor_id <= 0:
-		_reset_ui_state()
-		return
-	if not _GameWorld.trade_accept():
+	if trade_vendor_id > 0:
 		_GameWorld.end_trade()
-	_trade_vendor_id = -1
+	trade_vendor_id = -1
 	_reset_ui_state()
 
+func _has_pending_trade() -> bool:
+	if trade_vendor_id <= 0:
+		return false
+	var summary: Dictionary = _GameWorld.trade_get_summary()
+	return not summary.get("player_offer", []).is_empty() or not summary.get("vendor_offer", []).is_empty()
+
+func _get_confirmation_popup() -> ConfirmationPopup:
+	return get_tree().root.get_node_or_null("Main/Canvas/Window/ConfirmationPopup") as ConfirmationPopup
+
+func _accept_trade_and_close() -> void:
+	if _GameWorld:
+		_GameWorld.trade_accept()
+	_finish_trade_close()
+
+func _discard_trade_and_close() -> void:
+	if _GameWorld:
+		_GameWorld.end_trade()
+	_finish_trade_close()
+
+func _finish_trade_close() -> void:
+	trade_vendor_id = -1
+	_reset_ui_state()
+	InputManager.pop_mode()
+
 func _reset_ui_state() -> void:
-	_active_side = "player"
+	active_side = "player"
 	target_id = -1
-	_trade_summary = {}
+	trade_summary = {}
 	if playerItems:
 		playerItems.selected_index = 0
 	if npcItems:
@@ -178,7 +212,7 @@ func _reset_ui_state() -> void:
 		npcItems.deselect()
 
 func _inventory_strip_data(entity_id: int, incoming: Array = [], outgoing: Array = [], pending_key: String = "", side: String = "player") -> Array:
-	if not _GameWorld or entity_id < 0:
+	if entity_id < 0:
 		return []
 
 	var inv: Dictionary = _GameWorld.get_entity_inventory(entity_id)
@@ -239,11 +273,7 @@ func _item_label(item_id: String) -> String:
 	return item_name if not item_name.is_empty() else item_id
 
 func _item_right_label(item_id: String, amount: int, side: String) -> String:
-	var price := 0
-	if _GameWorld:
-		price = int(_GameWorld.trade_get_item_value(item_id, 1, side == "player"))
-	else:
-		price = int(ItemDb.get_item_price(item_id))
+	var price :int = int(_GameWorld.trade_get_item_value(item_id, 1, side == "player"))
 	return _item_right_label_with_price(item_id, amount, price)
 
 func _item_right_label_with_price(item_id: String, amount: int, price: int) -> String:

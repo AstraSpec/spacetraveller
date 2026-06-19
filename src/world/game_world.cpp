@@ -182,6 +182,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_player_position"), &GameWorld::get_player_position);
     ClassDB::bind_method(D_METHOD("get_player_z"), &GameWorld::get_player_z);
     ClassDB::bind_method(D_METHOD("get_player_chunk"), &GameWorld::get_player_chunk);
+    ClassDB::bind_method(D_METHOD("would_player_move_fall", "target_x", "target_y"), &GameWorld::would_player_move_fall);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
     ClassDB::bind_method(D_METHOD("can_change_z", "entity_id", "delta"), &GameWorld::can_change_z);
     ClassDB::bind_method(D_METHOD("submit_player_change_z", "delta"), &GameWorld::submit_player_change_z);
@@ -580,6 +581,18 @@ int GameWorld::get_player_z() const {
 
 Vector2i GameWorld::get_player_chunk() const {
     return get_entity_chunk(player_entity_id);
+}
+
+bool GameWorld::would_player_move_fall(int target_x, int target_y) {
+    const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (!player) return false;
+
+    Intent intent;
+    intent.type = IntentType::MOVE;
+    intent.target = Vector2i(target_x, target_y);
+
+    MovePreview preview = ActionResolver::preview_move(intent, *player, bubble, &entity_ledger, &entity_tracker);
+    return preview.can_move && preview.will_fall;
 }
 
 // --- Entity inventory wrappers ---
