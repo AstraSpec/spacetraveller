@@ -8,7 +8,6 @@
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["blacksmith_gather"],
-    "inventory_loot_table": "blacksmith_inventory",
     "vendor_loot_table": "blacksmith_vendor_stock",
     "quest_loot_tables": {
       "targets": "blacksmith_quest_targets",
@@ -24,7 +23,6 @@
     "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["scavenger_gather"],
-    "inventory_loot_table": "scavenger_inventory",
     "vendor_loot_table": "scavenger_vendor_stock",
     "quest_loot_tables": {
       "targets": "scavenger_quest_targets",
@@ -57,6 +55,46 @@
     "tags": ["civilian"],
     "spawn_weight": 0,
     "traits": []
+  },
+  "fruit_veg_merchant": {
+    "display_name": "Fruit and Veg Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "fruit_veg_vendor_stock"
+  },
+  "fish_merchant": {
+    "display_name": "Fish Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "fish_vendor_stock"
+  },
+  "food_merchant": {
+    "display_name": "Food Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "food_vendor_stock"
+  },
+  "forager_merchant": {
+    "display_name": "Forager Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "forager_vendor_stock"
   },
   "monster": {
     "display_name": "Monster",

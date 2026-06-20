@@ -237,5 +237,47 @@
     "solid": true,
     "tags": ["SMASHABLE"],
     "smash_loot_table": "rock_smashed"
+  },
+  {
+    "id": "carpet_green",
+    "name": "Green Carpet",
+    "atlas": [ 3, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "carpet_red",
+    "name": "Red Carpet",
+    "atlas": [ 4, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "carpet_blue",
+    "name": "Blue Carpet",
+    "atlas": [ 5, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "carpet_yellow",
+    "name": "Yellow Carpet",
+    "atlas": [ 6, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "carpet_purple",
+    "name": "Purple Carpet",
+    "atlas": [ 7, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "carpet_grey",
+    "name": "Grey Carpet",
+    "atlas": [ 8, 7 ],
+    "solid": false,
+    "tags": ["FLOOR"]
   }
 ]

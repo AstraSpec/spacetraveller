@@ -266,5 +266,113 @@
         ],
         "type": "adventurer_guild"
     },
+    {
+        "id": "food_market",
+        "levels": {
+            "0": {
+                "blueprint": "(58x0, 2x1, 1x2, 21x0, 3x1, 22x0, 1x2, 15x0, 1x3, 1x0, 1x4, 1x2, 1x1, 1x3, 6x0, 1x3, 1x2, 1x0, 1x4, 1x0, 1x3, 1x1, 4x0, 1x1, 1x3, 4x4, 1x3, 6x0, 1x3, 1x2, 2x4, 1x2, 1x3, 6x0, 4x3, 1x2, 1x3, 1x5, 5x0, 1x3, 4x6, 1x3, 1x5, 5x0, 2x2, 129x0, 1x2, 22x0, 2x1, 22x0, 2x1, 16x0, 2x2, 18x0, 1x3, 1x0, 1x4, 1x0, 1x4, 1x3, 6x0, 1x3, 1x1, 1x0, 2x4, 1x3, 6x0, 1x3, 1x2, 3x4, 1x3, 6x0, 1x3, 1x7, 1x4, 1x2, 1x4, 1x3, 6x0, 3x3, 2x6, 1x3, 1x5, 5x0, 6x3, 1x5, 98x0)",
+                "palette": [
+                    "void",
+                    "w_crate",
+                    "barrel",
+                    "bar",
+                    "dirt",
+                    "hanging_sign",
+                    "table",
+                    "chest"
+                ],
+                "rules": [
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "food_merchant",
+                        "pos": [
+                            17,
+                            18
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "forager_merchant",
+                        "pos": [
+                            18,
+                            6
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "fish_merchant",
+                        "pos": [
+                            5,
+                            6
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "fruit_veg_merchant",
+                        "pos": [
+                            6,
+                            18
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "data": {
+                            "text": "Fishmonger Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            9.0,
+                            7.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "data": {
+                            "text": "Foraging Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            21.0,
+                            7.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "data": {
+                            "text": "Fruit and Vegetables Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            9.0,
+                            19.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "data": {
+                            "text": "Prepared Food Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            21.0,
+                            19.0
+                        ],
+                        "type": "set_metadata"
+                    }
+                ]
+            }
+        },
+        "size": [
+            24,
+            24
+        ],
+        "type": "market"
     }
 ]

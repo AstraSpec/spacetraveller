@@ -42,6 +42,13 @@
     "structure_type": "building"
   },
   {
+    "id": "market",
+    "atlas": [ 61, 8 ],
+    "tile_group": "grass_dirt",
+    "city_spawn_weight": 5,
+    "structure_type": "market"
+  },
+  {
     "id": "tavern",
     "atlas": [ 60, 8 ],
     "tile_group": "grass_dirt",

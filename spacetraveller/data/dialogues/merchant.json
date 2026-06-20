@@ -1,0 +1,21 @@
+{
+  "id": "merchant",
+  "priority": 135,
+  "start": "start",
+  "selector": { "dialogue_profile": "merchant" },
+  "nodes": {
+    "start": {
+      "npc": "{npc_name} gives their stock a practiced glance, then looks back to you.",
+      "options": [
+        {
+          "text": "What are you selling today?",
+          "next": "trade"
+        }
+      ]
+    },
+    "trade": {
+      "npc": "\"Good stock moves quickly. Take a proper look before someone else does.\"",
+      "options": []
+    }
+  }
+}

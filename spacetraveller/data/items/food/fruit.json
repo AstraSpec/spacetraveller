@@ -1,0 +1,90 @@
+[
+  {
+    "id": "apple",
+    "name": "Apple",
+    "description": "A juicy apple.",
+    "type": "food",
+    "price": 100,
+    "atlas": [ 3, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "berry",
+    "name": "Berry",
+    "description": "A small handful of berries.",
+    "type": "food",
+    "price": 80,
+    "atlas": [ 18, 17 ],
+    "weight": 0.05,
+    "volume": 0.02,
+    "tags": []
+  },
+  {
+    "id": "tomato",
+    "name": "Tomato",
+    "description": "A ripe red tomato.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 5, 18 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "banana",
+    "name": "Banana",
+    "description": "",
+    "type": "food",
+    "price": 100,
+    "atlas": [ 1, 18 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "blueberries",
+    "name": "Blueberries",
+    "description": "A handful of blueberries.",
+    "type": "food",
+    "price": 100,
+    "atlas": [ 2, 18 ],
+    "weight": 0.15,
+    "volume": 0.075,
+    "tags": []
+  },
+  {
+    "id": "grape",
+    "name": "Grape",
+    "description": "A handful of grapes, useful for wine.",
+    "type": "food",
+    "price": 150,
+    "atlas": [ 12, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "pear",
+    "name": "Pear",
+    "description": "A soft yellow pear.",
+    "type": "food",
+    "price": 100,
+    "atlas": [ 17, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "pumpkin",
+    "name": "Pumpkin",
+    "description": "A large orange pumpkin.",
+    "type": "food",
+    "price": 400,
+    "atlas": [ 10, 17 ],
+    "weight": 2.0,
+    "volume": 1.0,
+    "tags": []
+  }
+]

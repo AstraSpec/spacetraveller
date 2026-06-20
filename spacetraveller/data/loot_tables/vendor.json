@@ -1,0 +1,89 @@
+[
+  {
+    "id": "blacksmith_vendor_stock",
+    "rolls_min": 6,
+    "rolls_max": 10,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "iron_ingot", "weight": 30, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "iron_ore", "weight": 20, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "crude_hammer", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_dagger", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "longsword", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stone_knife", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stone_axe", "weight": 6, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "scavenger_vendor_stock",
+    "rolls_min": 5,
+    "rolls_max": 8,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 25, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "rope", "weight": 18, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "flint", "weight": 18, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "torch", "weight": 14, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cloth_scrap", "weight": 14, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "leather_scrap", "weight": 10, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "stone_knife", "weight": 5, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "fruit_veg_vendor_stock",
+    "rolls_min": 8,
+    "rolls_max": 14,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "apple", "weight": 16, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "berry", "weight": 12, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "tomato", "weight": 14, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "banana", "weight": 10, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "blueberries", "weight": 10, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "grape", "weight": 10, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "pear", "weight": 10, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "pumpkin", "weight": 4, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "corn", "weight": 14, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "carrot", "weight": 16, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "potato", "weight": 16, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "cucumber", "weight": 12, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "pepper", "weight": 10, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "onion", "weight": 12, "amount_min": 1, "amount_max": 6 }
+    ]
+  },
+  {
+    "id": "fish_vendor_stock",
+    "rolls_min": 5,
+    "rolls_max": 10,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "raw_fish", "weight": 1, "amount_min": 1, "amount_max": 6 }
+    ]
+  },
+  {
+    "id": "food_vendor_stock",
+    "rolls_min": 6,
+    "rolls_max": 12,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "sausage", "weight": 20, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "dried_meat", "weight": 18, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "cheese", "weight": 18, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "bread", "weight": 24, "amount_min": 1, "amount_max": 6 }
+    ]
+  },
+  {
+    "id": "forager_vendor_stock",
+    "rolls_min": 6,
+    "rolls_max": 12,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "honey", "weight": 12, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "egg", "weight": 18, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "milk", "weight": 16, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "berry", "weight": 14, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "blueberries", "weight": 12, "amount_min": 1, "amount_max": 6 },
+      { "item_id": "mushroom", "weight": 16, "amount_min": 1, "amount_max": 6 }
+    ]
+  }
+]

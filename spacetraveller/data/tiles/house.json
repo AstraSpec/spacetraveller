@@ -40,6 +40,14 @@
     "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
+    "id": "w_crate",
+    "name": "Wooden Crate",
+    "atlas": [ [22, 35], [23, 35] ],
+    "solid": true,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_large_smashed"
+  },
+  {
     "id": "dresser",
     "name": "Dresser",
     "atlas": [ 4, 36 ],

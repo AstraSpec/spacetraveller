@@ -1,0 +1,68 @@
+[
+  {
+    "id": "corn",
+    "name": "Corn",
+    "description": "An ear of sweet corn.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 20, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "carrot",
+    "name": "Carrot",
+    "description": "An orange root vegetable.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 3, 16 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "potato",
+    "name": "Potato",
+    "description": "Potato.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 16, 17 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "cucumber",
+    "name": "Cucumber",
+    "description": "A long and juicy cucumber.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 4, 18 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "pepper",
+    "name": "Pepper",
+    "description": "A deep red bell pepper.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 22, 18 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  },
+  {
+    "id": "onion",
+    "name": "Onion",
+    "description": "Has layers.",
+    "type": "food",
+    "price": 200,
+    "atlas": [ 21, 18 ],
+    "weight": 0.2,
+    "volume": 0.1,
+    "tags": []
+  }
+]
