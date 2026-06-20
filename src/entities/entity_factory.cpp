@@ -54,7 +54,25 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     const RaceInfo* race = race_db->get_race_info(race_id);
     if (!race) return EntityPool::INVALID_ID;
 
-    uint32_t id = ledger.spawn_entity(pos, bubble.get_active_z(), race->atlas.x, race->atlas.y, race_id);
+    bool sapient = race_db->has_tag(race_id, "SAPIENT");
+    Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
+    JobDb* job_db = JobDb::get_singleton();
+    const JobInfo* job_info = nullptr;
+    String default_job = sapient ? String("scavenger") : String("monster");
+    if (job_db) {
+        job_info = overrides.job.is_empty()
+            ? (sapient ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(default_job))
+            : job_db->get_job_info(overrides.job);
+    }
+    String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : default_job);
+    if (!job_info && job_db) {
+        job_info = job_db->get_job_info(job);
+    }
+
+    int atlas_x = race->atlas.x + (job_info ? job_info->atlas_offset : 0);
+    if (atlas_x < 0) atlas_x = 0;
+
+    uint32_t id = ledger.spawn_entity(pos, bubble.get_active_z(), static_cast<uint16_t>(atlas_x), race->atlas.y, race_id);
     if (id == EntityPool::INVALID_ID) return id;
 
     LocomotionData& loco = ledger.locomotion_data[id];
@@ -73,21 +91,6 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
             String full_name = name_db->generate(race_id, g, name_rng);
             if (!full_name.is_empty()) ledger.entity_name[id] = full_name;
         }
-    }
-
-    bool sapient = race_db->has_tag(race_id, "SAPIENT");
-    Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
-    JobDb* job_db = JobDb::get_singleton();
-    const JobInfo* job_info = nullptr;
-    String default_job = sapient ? String("scavenger") : String("monster");
-    if (job_db) {
-        job_info = overrides.job.is_empty()
-            ? (sapient ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(default_job))
-            : job_db->get_job_info(overrides.job);
-    }
-    String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : default_job);
-    if (!job_info && job_db) {
-        job_info = job_db->get_job_info(job);
     }
 
     if (sapient) {

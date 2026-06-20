@@ -18,6 +18,7 @@ struct JobInfo {
     String default_attitude;
     String default_ai_state;
     int spawn_weight = 1;
+    int atlas_offset = 0;
     std::vector<uint16_t> tags;
     std::vector<String> traits;
     std::vector<String> context_tags;
@@ -48,6 +49,7 @@ public:
     String get_default_attitude(const String &p_id) const;
     String get_default_ai_state(const String &p_id) const;
     int get_spawn_weight(const String &p_id) const;
+    int get_atlas_offset(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
     Array get_traits(const String &p_id) const;
     Array get_context_tags(const String &p_id) const;
