@@ -28,6 +28,7 @@ struct VendorState {
 
     int funds = DEFAULT_FUNDS;
     int credit = 0;
+    std::unordered_map<uint16_t, int> stock;
 };
 
 class EntityLedger {

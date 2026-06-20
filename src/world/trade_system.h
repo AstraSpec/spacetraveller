@@ -16,6 +16,7 @@ struct TradeSession {
     uint32_t vendor_id = INVALID_ENTITY_ID;
     int vendor_funds = VendorState::DEFAULT_FUNDS;
     int credit = 0;
+    std::unordered_map<uint16_t, int> vendor_stock;
     std::unordered_map<uint16_t, int> player_offer;
     std::unordered_map<uint16_t, int> vendor_offer;
 };
@@ -25,7 +26,7 @@ public:
     static constexpr int SELL_PERCENT = 80;
     static constexpr int BUY_PERCENT = 120;
 
-    void configure(EntityLedger* p_ledger);
+    void configure(EntityLedger* p_ledger, const int* p_world_seed = nullptr);
 
     bool begin_trade(uint32_t p_player_id, uint32_t p_vendor_id);
     void end_trade();
@@ -43,10 +44,14 @@ public:
 
 private:
     EntityLedger* ledger = nullptr;
+    const int* world_seed = nullptr;
     TradeSession session;
 
+    bool build_default_vendor_state(uint32_t p_vendor_id, VendorState& r_state) const;
     int get_inventory_amount(uint32_t p_entity_id, uint16_t p_item_id) const;
-    bool add_offer_item(std::unordered_map<uint16_t, int>& p_offer, uint32_t p_owner_id, const String& p_item_id, int p_amount);
+    int get_vendor_stock_amount(uint16_t p_item_id) const;
+    bool add_player_offer_item(const String& p_item_id, int p_amount);
+    bool add_vendor_offer_item(const String& p_item_id, int p_amount);
     bool remove_offer_item(std::unordered_map<uint16_t, int>& p_offer, const String& p_item_id, int p_amount);
     bool validate_session(String* r_reason = nullptr) const;
     bool validate_offer_amounts(String* r_reason = nullptr) const;
@@ -63,6 +68,7 @@ private:
     int get_current_credit() const;
     int get_current_funds() const;
     Array offer_to_array(const std::unordered_map<uint16_t, int>& p_offer, bool p_selling_to_vendor) const;
+    Dictionary vendor_stock_to_dictionary() const;
 };
 
 }

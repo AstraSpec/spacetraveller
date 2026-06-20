@@ -549,6 +549,16 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         Dictionary vendor;
         vendor["funds"] = vendor_it->second.funds;
         vendor["credit"] = vendor_it->second.credit;
+        Dictionary stock;
+        IdRegistry* reg = IdRegistry::get_singleton();
+        if (reg) {
+            for (const auto& pair : vendor_it->second.stock) {
+                if (pair.second > 0) {
+                    stock[reg->get_string(pair.first)] = pair.second;
+                }
+            }
+        }
+        vendor["stock"] = stock;
         data["vendor"] = vendor;
     }
 
@@ -655,9 +665,22 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         Dictionary vendor = data["vendor"];
         VendorState state;
         state.funds = static_cast<int>(vendor.get("funds", VendorState::DEFAULT_FUNDS));
-        if (state.funds < 0) state.funds = 0;
         state.credit = static_cast<int>(vendor.get("credit", 0));
         if (state.credit < 0) state.credit = 0;
+        Variant stock_var = vendor.get("stock", Dictionary());
+        IdRegistry* reg = IdRegistry::get_singleton();
+        if (reg && stock_var.get_type() == Variant::DICTIONARY) {
+            Dictionary stock = stock_var;
+            Array keys = stock.keys();
+            for (int i = 0; i < keys.size(); i++) {
+                String item_id = String(keys[i]);
+                int amount = static_cast<int>(stock[keys[i]]);
+                uint16_t id = reg->get_id(item_id);
+                if (id != 0 && amount > 0) {
+                    state.stock[id] += amount;
+                }
+            }
+        }
         vendor_state[id] = state;
     }
 

@@ -22,7 +22,6 @@ struct JobInfo {
     std::vector<String> traits;
     std::vector<String> context_tags;
     std::vector<String> quest_kinds;
-    uint16_t inventory_loot_table = 0;
     uint16_t vendor_loot_table = 0;
     Dictionary quest_loot_tables;
 };
@@ -53,7 +52,6 @@ public:
     Array get_traits(const String &p_id) const;
     Array get_context_tags(const String &p_id) const;
     Array get_quest_kinds(const String &p_id) const;
-    String get_inventory_loot_table(const String &p_id) const;
     String get_vendor_loot_table(const String &p_id) const;
     Dictionary get_quest_loot_tables(const String &p_id) const;
 };

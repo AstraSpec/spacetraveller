@@ -228,7 +228,7 @@ GameWorld::GameWorld() {
     pathfinder = std::make_unique<AStarGridPathfinder>();
     quest_tracker = std::make_unique<QuestTracker>();
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
-    trade_system.configure(&entity_ledger);
+    trade_system.configure(&entity_ledger, &world_seed);
 
     quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed);
     quest_tracker->set_emit_callback(&GameWorld::_quest_updated_trampoline, this);

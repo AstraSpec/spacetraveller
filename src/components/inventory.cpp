@@ -141,16 +141,16 @@ void Inventory::deserialize(InventoryData& data, const Dictionary& dict) {
     data.max_weight = dict.get("max_weight", 50.0f);
     data.max_volume = dict.get("max_volume", 20.0f);
 
-    Array list = dict.get("items", Array());
+    Dictionary items = dict.get("items", Dictionary());
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return;
 
-    for (int i = 0; i < list.size(); i++) {
-        Dictionary d = list[i];
-        String id_str = d.get("id", "");
-        int amount = d.get("amount", 0);
+    Array keys = items.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        String id_str = String(keys[i]);
+        int amount = int(items[keys[i]]);
         uint16_t id = id_reg->get_id(id_str);
-        if (id != 0) {
+        if (id != 0 && amount > 0) {
             data.items.push_back({id, amount});
         }
     }

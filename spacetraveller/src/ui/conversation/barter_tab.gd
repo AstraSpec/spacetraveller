@@ -46,8 +46,8 @@ func refresh_view() -> void:
 		"pending_from_vendor",
 		"player"
 	))
-	npcItems.set_data(_inventory_strip_data(
-		target_id,
+	npcItems.set_data(_item_strip_data(
+		trade_summary.get("vendor_stock", {}),
 		trade_summary.get("player_offer", []),
 		trade_summary.get("vendor_offer", []),
 		"pending_from_player",
@@ -217,6 +217,9 @@ func _inventory_strip_data(entity_id: int, incoming: Array = [], outgoing: Array
 
 	var inv: Dictionary = _GameWorld.get_entity_inventory(entity_id)
 	var items: Dictionary = inv.get("items", {})
+	return _item_strip_data(items, incoming, outgoing, pending_key, side)
+
+func _item_strip_data(items: Dictionary, incoming: Array = [], outgoing: Array = [], pending_key: String = "", side: String = "player") -> Array:
 	var effective: Dictionary = {}
 	for base_item_id in items.keys():
 		effective[base_item_id] = int(items[base_item_id])
