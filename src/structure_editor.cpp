@@ -201,6 +201,8 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         atlas_coords = info->atlas;
     } else if (entry_type == "loot_table") {
         atlas_coords = Vector2i(71, 18);
+    } else if (entry_type == "entity_group") {
+        atlas_coords = Vector2i(72, 18);
     } else {
         TileDb* tile_db = TileDb::get_singleton();
         if (!tile_db) return;

@@ -31,7 +31,7 @@ void ChunkDb::initialize_data() {
     for (uint16_t id = 0; id < fast_cache.size(); id++) {
         const ChunkInfo& info = fast_cache[id];
         if (info.city_spawn_weight > 0) {
-            city_spawn_chunks.push_back({ id, info.city_spawn_weight });
+            city_spawn_chunks.push_back({ id, info.city_spawn_weight, info.city_zone_min, info.city_zone_max });
             city_spawn_total_weight += info.city_spawn_weight;
         }
 
@@ -53,20 +53,31 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.city_spawn_weight = static_cast<int>(p_data.get("city_spawn_weight", Variant(0)));
+    info.city_zone_min = CLAMP(static_cast<float>(p_data.get("city_zone_min", 0.0)), 0.0f, 1.0f);
+    info.city_zone_max = CLAMP(static_cast<float>(p_data.get("city_zone_max", 1.0)), 0.0f, 1.0f);
+    if (info.city_zone_min > info.city_zone_max) {
+        info.city_zone_min = 0.0f;
+        info.city_zone_max = 1.0f;
+    }
+    
     info.wilderness_spawn_chance = static_cast<float>(static_cast<double>(p_data.get("wilderness_spawn_chance", 0.0)));
     if (info.wilderness_spawn_chance < 0.0f) info.wilderness_spawn_chance = 0.0f;
     if (info.wilderness_spawn_chance > 1.0f) info.wilderness_spawn_chance = 1.0f;
+    
     info.structure_type = String(p_data.get("structure_type", ""));
     info.dungeon_type = String(p_data.get("dungeon_type", ""));
     info.tile_group = String(p_data.get("tile_group", ""));
+    
     info.ambient_entity_group = String(p_data.get("ambient_entity_group", ""));
     info.ambient_entity_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_entity_chance", 0.0)));
     if (info.ambient_entity_chance < 0.0f) info.ambient_entity_chance = 0.0f;
     if (info.ambient_entity_chance > 1.0f) info.ambient_entity_chance = 1.0f;
     String ambient_loot_table = String(p_data.get("ambient_loot_table", ""));
+    
     if (!ambient_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.ambient_loot_table = IdRegistry::get_singleton()->register_string(ambient_loot_table);
     }
+    
     info.ambient_loot_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_loot_chance", 0.0)));
     if (info.ambient_loot_chance < 0.0f) info.ambient_loot_chance = 0.0f;
     if (info.ambient_loot_chance > 1.0f) info.ambient_loot_chance = 1.0f;

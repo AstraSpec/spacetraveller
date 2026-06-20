@@ -45,15 +45,19 @@
     "id": "tavern",
     "atlas": [ 60, 8 ],
     "tile_group": "grass_dirt",
-    "city_spawn_weight": 2,
-    "structure_type": "tavern"
+    "structure_type": "tavern",
+    "city_spawn_weight": 5,
+    "city_zone_min": 0.0,
+    "city_zone_max": 0.3
   },
   {
     "id": "adventurer_guild",
     "atlas": [ 59, 8 ],
     "tile_group": "grass_dirt",
-    "city_spawn_weight": 1,
-    "structure_type": "adventurer_guild"
+    "structure_type": "adventurer_guild",
+    "city_spawn_weight": 3,
+    "city_zone_min": 0.0,
+    "city_zone_max": 0.3
   },
   {
     "id": "palace",

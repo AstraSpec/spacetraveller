@@ -10,6 +10,7 @@
 #include "dungeon_generator.h"
 #include "gen_grid.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <algorithm>
 #include <cmath>
 
 using namespace godot;
@@ -55,6 +56,45 @@ const BiomeLayer* WorldGenerator::get_biome_layer(int p_z) const {
 
 std::unordered_map<uint64_t, uint32_t>& WorldGenerator::get_surface_biome_overrides() {
     return get_or_create_biome_layer(0).overrides;
+}
+
+uint16_t WorldGenerator::pick_city_spawn_chunk(const ChunkDb& p_chunk_db, int p_city_distance_sq, int p_max_city_distance_sq, const Vector2i& p_chunk_pos, int p_world_seed) const {
+    const float city_distance_sq = static_cast<float>(p_city_distance_sq);
+    const float max_city_distance_sq = static_cast<float>(p_max_city_distance_sq);
+    const bool has_city_radius = p_max_city_distance_sq > 0;
+    std::vector<const CityChunkSpawnInfo*> eligible_spawns;
+    int eligible_total_weight = 0;
+
+    for (const CityChunkSpawnInfo& spawn_info : p_chunk_db.get_city_spawn_chunks()) {
+        if (spawn_info.weight <= 0) continue;
+
+        if (has_city_radius) {
+            const float min_distance_sq = spawn_info.city_zone_min * spawn_info.city_zone_min * max_city_distance_sq;
+            const float max_distance_sq = spawn_info.city_zone_max * spawn_info.city_zone_max * max_city_distance_sq;
+            if (city_distance_sq < min_distance_sq || city_distance_sq > max_distance_sq) continue;
+        } else if (spawn_info.city_zone_min > 0.0f) {
+            continue;
+        }
+
+        eligible_spawns.push_back(&spawn_info);
+        eligible_total_weight += spawn_info.weight;
+    }
+
+    if (eligible_total_weight <= 0) {
+        return id_building;
+    }
+
+    const uint64_t h = Rng::hash_pos(static_cast<uint32_t>(p_world_seed), p_chunk_pos, Rng::BIOME);
+    const int roll = static_cast<int>(h % static_cast<uint64_t>(eligible_total_weight));
+    int cumulative = 0;
+    for (const CityChunkSpawnInfo* spawn_info : eligible_spawns) {
+        cumulative += spawn_info->weight;
+        if (roll < cumulative) {
+            return spawn_info->id;
+        }
+    }
+
+    return id_building;
 }
 
 void WorldGenerator::set_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, uint32_t p_data) {
@@ -210,8 +250,26 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
     last_chunk_valid = false;
     reset_dungeon_cache();
 
+    const Vector2i city_center(127, 128);
     GenGrid cityGenGrid(WorldCoords::REGION_SIZE);
-    CityGeneration::spawn_city(cityGenGrid, 127, 128, world_seed);
+    CityGeneration::spawn_city(cityGenGrid, city_center.x, city_center.y, world_seed);
+
+    std::vector<int> city_distance_sq_by_cell(WorldCoords::REGION_SIZE * WorldCoords::REGION_SIZE, 0);
+    int max_city_distance_sq = 0;
+
+    for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
+        for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
+            if (cityGenGrid.getPixel(x, y).id != id_building) continue;
+
+            const int dx = x - city_center.x;
+            const int dy = y - city_center.y;
+            const int distance_sq = dx * dx + dy * dy;
+            city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x] = distance_sq;
+            if (distance_sq > max_city_distance_sq) {
+                max_city_distance_sq = distance_sq;
+            }
+        }
+    }
 
     Dictionary result;
     for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
@@ -248,19 +306,11 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 }
             } else if (chunk_id == id_building) {
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
-                if (chunk_db && chunk_db->get_city_spawn_total_weight() > 0) {
-                    int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
-                    int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
-                    uint64_t h = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(gx, gy), Rng::BIOME);
-                    int roll = static_cast<int>(h % static_cast<uint64_t>(chunk_db->get_city_spawn_total_weight()));
-                    int cumulative = 0;
-                    for (const CityChunkSpawnInfo& spawn_info : chunk_db->get_city_spawn_chunks()) {
-                        cumulative += spawn_info.weight;
-                        if (roll < cumulative) {
-                            chunk_id = spawn_info.id;
-                            break;
-                        }
-                    }
+                if (chunk_db) {
+                    const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+                    const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+                    const int city_distance_sq = city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x];
+                    chunk_id = pick_city_spawn_chunk(*chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
                 }
             }
 

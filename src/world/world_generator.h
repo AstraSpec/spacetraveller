@@ -95,6 +95,7 @@ private:
     BiomeLayer& get_or_create_biome_layer(int p_z);
     const BiomeLayer* get_biome_layer(int p_z) const;
     std::unordered_map<uint64_t, uint32_t>& get_surface_biome_overrides();
+    uint16_t pick_city_spawn_chunk(const class ChunkDb& p_chunk_db, int p_city_distance_sq, int p_max_city_distance_sq, const Vector2i& p_chunk_pos, int p_world_seed) const;
     void set_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, uint32_t p_data);
     void stamp_dungeon_layout_biomes(const DungeonLayout& p_layout);
     uint16_t get_base_surface_tile(int x, int y, int world_seed);

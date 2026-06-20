@@ -17,6 +17,8 @@ struct ChunkInfo {
     Vector2i atlas;
     std::vector<uint16_t> tags;
     int city_spawn_weight = 0;
+    float city_zone_min = 0.0f;
+    float city_zone_max = 1.0f;
     float wilderness_spawn_chance = 0.0f;
     String structure_type;
     String dungeon_type;
@@ -31,6 +33,8 @@ struct ChunkInfo {
 struct CityChunkSpawnInfo {
     uint16_t id = 0;
     int weight = 0;
+    float city_zone_min = 0.0f;
+    float city_zone_max = 1.0f;
 };
 
 class ChunkDb : public Object, public DataBase<ChunkInfo, ChunkDb> {

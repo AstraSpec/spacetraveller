@@ -314,14 +314,14 @@ void CityGeneration::generateCity(
             double dist = radius * 0.55;
             double mx = centerX + std::cos(angle) * dist;
             double my = centerY + std::sin(angle) * dist;
-            drawEmptyMarketSquare(mx, my, angle, 9, 9);
+            drawEmptyMarketSquare(mx, my, angle, 5, 5);
         }
         if (spawnRands[2] > 0.3) {
             double pAngle = (spawnRands[3] + 0.1) * Math_PI * 2.0;
             double pDist = radius * 0.75;
             double px = centerX + std::cos(pAngle) * pDist;
             double py = centerY + std::sin(pAngle) * pDist;
-            drawEmptyGrandPlaza(px, py, 5);
+            drawEmptyGrandPlaza(px, py, 3);
         }
     }
 
@@ -355,9 +355,9 @@ void CityGeneration::generateCity(
 }
 
 namespace {
-    constexpr int MIN_CITY_SIZE = 24;
-    constexpr int MAX_CITY_SIZE = 48;
-    constexpr int PHASE_TRANSITION_SIZE = 32;
+    constexpr int MIN_CITY_SIZE = 20;
+    constexpr int MAX_CITY_SIZE = 30;
+    constexpr int PHASE_TRANSITION_SIZE = 27;
 
     constexpr int MIN_SPOKES = 5; // Road boulevards connecting from palace to outer city
     constexpr int MAX_SPOKES = 8;
@@ -366,10 +366,11 @@ namespace {
 
     constexpr int RADIUS_JITTER = 2;
     constexpr int SPOKE_JITTER = 1;
+    constexpr double INNER_CITY_RADIUS_SCALE = 0.75;
 
     constexpr int DEFAULT_DENSITY = 6; // Alley density
 
-    constexpr bool SHOW_TWIN = false; // TODO: Twin city generation
+    constexpr bool SHOW_TWIN = false;
     constexpr bool USE_RIVER = false;
     constexpr bool USE_JITTER = true;
     constexpr bool USE_SPECIAL = true;
@@ -401,16 +402,19 @@ void CityGeneration::spawn_city(GenGrid& p_canvas, int x, int y, int world_seed)
         const int size_overflow = city_size - PHASE_TRANSITION_SIZE;
         const float growth_progress = static_cast<float>(size_overflow) / (MAX_CITY_SIZE - PHASE_TRANSITION_SIZE);
         
-        reach = MIN_CITY_SIZE + size_overflow; // Scales 24 -> 40
-        radius = MIN_CITY_SIZE + static_cast<int>(std::round(growth_progress * (MAX_CITY_SIZE - MIN_CITY_SIZE)));
+        reach = 10 + static_cast<int>(std::round(growth_progress * 12.0f));
+        const double base_radius = MIN_CITY_SIZE + growth_progress * (MAX_CITY_SIZE - MIN_CITY_SIZE);
+        radius = static_cast<int>(std::round(base_radius * INNER_CITY_RADIUS_SCALE));
         spokes = MIN_SPOKES + static_cast<int>(std::round(growth_progress * (MAX_SPOKES - MIN_SPOKES)));
-        rings = MIN_RINGS + static_cast<int>(std::round(growth_progress * (MAX_RINGS - MIN_RINGS)));
+        rings = MIN_RINGS + static_cast<int>(std::round(growth_progress * (MAX_RINGS - MIN_RINGS))) - 1;
     }
     
     std::uniform_int_distribution<int> radius_jitter_dist(-RADIUS_JITTER, RADIUS_JITTER);
     std::uniform_int_distribution<int> spokes_jitter_dist(-SPOKE_JITTER, SPOKE_JITTER);
     
-    radius = CLAMP(radius + radius_jitter_dist(city_rng), MIN_CITY_SIZE, MAX_CITY_SIZE);
+    const int min_radius = show_inner ? static_cast<int>(std::round(MIN_CITY_SIZE * INNER_CITY_RADIUS_SCALE)) : MIN_CITY_SIZE;
+    const int max_radius = show_inner ? static_cast<int>(std::round(MAX_CITY_SIZE * INNER_CITY_RADIUS_SCALE)) : MAX_CITY_SIZE;
+    radius = CLAMP(radius + radius_jitter_dist(city_rng), min_radius, max_radius);
     spokes = CLAMP(spokes + spokes_jitter_dist(city_rng), MIN_SPOKES, MAX_SPOKES);
     rings = CLAMP(rings, MIN_RINGS, MAX_RINGS);
 
