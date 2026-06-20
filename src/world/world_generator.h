@@ -44,6 +44,7 @@ class WorldGenerator {
 private:
     std::unordered_map<int, BiomeLayer> biome_layers;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
+    BiomeInfo alley_gap_tiles;
 
     // Performance Cache: Last Chunk
     uint64_t last_chunk_key = 0;
@@ -57,6 +58,7 @@ private:
     uint16_t id_void = 0;
     uint16_t id_air = 0;
     uint16_t id_building = 0;
+    uint16_t id_alley = 0;
     uint16_t id_forest = 0;
     uint16_t id_plains = 0;
     uint16_t id_underground_earth = 0;
@@ -99,6 +101,7 @@ private:
     void set_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, uint32_t p_data);
     void stamp_dungeon_layout_biomes(const DungeonLayout& p_layout);
     uint16_t get_base_surface_tile(int x, int y, int world_seed);
+    uint16_t get_alley_surface_tile(int p_local_x, int p_local_y, int p_world_x, int p_world_y, int p_world_seed);
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);

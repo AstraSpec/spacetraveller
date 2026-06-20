@@ -179,6 +179,7 @@ void WorldGenerator::setup_biome_rules() {
     id_void = id_reg->register_string("void");
     id_air = id_reg->register_string("air");
     id_building = id_reg->register_string("building");
+    id_alley = id_reg->register_string("alley");
     id_forest = id_reg->register_string("forest");
     id_plains = id_reg->register_string("plains");
     id_underground_earth = id_reg->register_string("underground_earth");
@@ -214,6 +215,9 @@ void WorldGenerator::setup_biome_rules() {
             info.total_weight += entry.weight;
         }
         if (info.ground_tiles.empty() || info.total_weight <= 0) return;
+        if (name == String("alley")) {
+            alley_gap_tiles = info;
+        }
         biome_rules[b_id] = info;
     };
 
@@ -416,6 +420,88 @@ uint16_t WorldGenerator::pick_weighted_tile(const BiomeInfo& info, uint32_t hash
     return info.ground_tiles[0].id;
 }
 
+uint16_t WorldGenerator::get_alley_surface_tile(int p_local_x, int p_local_y, int p_world_x, int p_world_y, int p_world_seed) {
+    static constexpr int EDGE_PAVEMENT_WIDTH = 2;
+    static constexpr int EDGE_GARDEN_WIDTH = 3;
+    static constexpr int INNER_PAVEMENT_WIDTH = 2;
+    static constexpr int EDGE_BAND_WIDTH = EDGE_PAVEMENT_WIDTH + EDGE_GARDEN_WIDTH + INNER_PAVEMENT_WIDTH;
+
+    auto garden_tile = [&]() -> uint16_t {
+        if (alley_gap_tiles.ground_tiles.empty() || alley_gap_tiles.total_weight <= 0) {
+            return id_alley_bricks;
+        }
+        uint32_t h = get_hash(p_world_x, p_world_y, static_cast<uint32_t>(p_world_seed));
+        return pick_weighted_tile(alley_gap_tiles, h);
+    };
+
+    const bool north_connected = (last_chunk_neighbors & WorldCoords::NEIGH_NORTH) != 0;
+    const bool east_connected = (last_chunk_neighbors & WorldCoords::NEIGH_EAST) != 0;
+    const bool south_connected = (last_chunk_neighbors & WorldCoords::NEIGH_SOUTH) != 0;
+    const bool west_connected = (last_chunk_neighbors & WorldCoords::NEIGH_WEST) != 0;
+    const bool straight_vertical = north_connected && south_connected && !east_connected && !west_connected;
+    const bool straight_horizontal = east_connected && west_connected && !north_connected && !south_connected;
+    const bool simple_straight = straight_vertical || straight_horizontal;
+
+    auto in_pavement_strip = [&](bool p_connected, int p_edge_dist) -> bool {
+        if (p_connected || p_edge_dist >= EDGE_BAND_WIDTH) return false;
+        return p_edge_dist < EDGE_PAVEMENT_WIDTH ||
+            p_edge_dist >= EDGE_PAVEMENT_WIDTH + EDGE_GARDEN_WIDTH;
+    };
+
+    auto in_garden_strip = [&](bool p_connected, int p_edge_dist) -> bool {
+        if (p_connected || p_edge_dist >= EDGE_BAND_WIDTH) return false;
+        return p_edge_dist >= EDGE_PAVEMENT_WIDTH &&
+            p_edge_dist < EDGE_PAVEMENT_WIDTH + EDGE_GARDEN_WIDTH;
+    };
+
+    const int west_dist = p_local_x;
+    const int east_dist = WorldCoords::CHUNK_SIZE - 1 - p_local_x;
+    const int north_dist = p_local_y;
+    const int south_dist = WorldCoords::CHUNK_SIZE - 1 - p_local_y;
+
+    auto corner_tile = [&](int p_x_edge_dist, int p_y_edge_dist) -> uint16_t {
+        if (p_x_edge_dist >= EDGE_BAND_WIDTH || p_y_edge_dist >= EDGE_BAND_WIDTH) {
+            return id_alley_bricks;
+        }
+
+        const int corner_dist = p_x_edge_dist > p_y_edge_dist ? p_x_edge_dist : p_y_edge_dist;
+        if (corner_dist < EDGE_PAVEMENT_WIDTH) return id_alley_flagstone;
+        if (corner_dist < EDGE_PAVEMENT_WIDTH + EDGE_GARDEN_WIDTH) return garden_tile();
+        return id_alley_flagstone;
+    };
+
+    if (!simple_straight) {
+        if (west_connected && north_connected && west_dist < EDGE_BAND_WIDTH && north_dist < EDGE_BAND_WIDTH) {
+            return corner_tile(west_dist, north_dist);
+        }
+        if (east_connected && north_connected && east_dist < EDGE_BAND_WIDTH && north_dist < EDGE_BAND_WIDTH) {
+            return corner_tile(east_dist, north_dist);
+        }
+        if (west_connected && south_connected && west_dist < EDGE_BAND_WIDTH && south_dist < EDGE_BAND_WIDTH) {
+            return corner_tile(west_dist, south_dist);
+        }
+        if (east_connected && south_connected && east_dist < EDGE_BAND_WIDTH && south_dist < EDGE_BAND_WIDTH) {
+            return corner_tile(east_dist, south_dist);
+        }
+    }
+
+    if (in_pavement_strip(west_connected, west_dist) ||
+        in_pavement_strip(east_connected, east_dist) ||
+        in_pavement_strip(north_connected, north_dist) ||
+        in_pavement_strip(south_connected, south_dist)) {
+        return id_alley_flagstone;
+    }
+
+    if (in_garden_strip(west_connected, west_dist) ||
+        in_garden_strip(east_connected, east_dist) ||
+        in_garden_strip(north_connected, north_dist) ||
+        in_garden_strip(south_connected, south_dist)) {
+        return garden_tile();
+    }
+
+    return id_alley_bricks;
+}
+
 uint32_t WorldGenerator::get_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, int) {
     setup_biome_rules();
     const BiomeLayer* layer = get_biome_layer(p_z);
@@ -525,13 +611,20 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
 
     const uint16_t chunk_id = last_chunk_id;
 
+    if (chunk_id == id_alley) {
+        int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
+        int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
+        return get_alley_surface_tile(lx, ly, x, y, world_seed);
+    }
+
     if (last_biome_ptr && last_biome_ptr->auto_tiled) {
         int lx = x % WorldCoords::CHUNK_SIZE; if (lx < 0) lx += WorldCoords::CHUNK_SIZE;
         int ly = y % WorldCoords::CHUNK_SIZE; if (ly < 0) ly += WorldCoords::CHUNK_SIZE;
-        bool west = lx < 3;
-        bool east = lx >= WorldCoords::CHUNK_SIZE - 3;
-        bool north = ly < 3;
-        bool south = ly >= WorldCoords::CHUNK_SIZE - 3;
+        static constexpr int BORDER_WIDTH = 2;
+        bool west = lx < BORDER_WIDTH;
+        bool east = lx >= WorldCoords::CHUNK_SIZE - BORDER_WIDTH;
+        bool north = ly < BORDER_WIDTH;
+        bool south = ly >= WorldCoords::CHUNK_SIZE - BORDER_WIDTH;
         if ((west || east) && (north || south)) return last_biome_ptr->border_tile_id;
         if ((west && !(last_chunk_neighbors & WorldCoords::NEIGH_WEST)) ||
             (east && !(last_chunk_neighbors & WorldCoords::NEIGH_EAST)) ||

@@ -22,6 +22,20 @@
     ]
   },
   {
+    "id": "garden",
+    "entries": [
+      { "tile": "grass", "weight": 250 },
+      { "tile": "flower", "weight": 500 },
+      { "tile": "dirt", "weight": 10 },
+      { "tile": "bush_stalk", "weight": 20 },
+      { "tile": "tree_oak", "weight": 1 },
+      { "tile": "tree_birch", "weight": 1 },
+      { "tile": "tree_poplar", "weight": 1 },
+      { "tile": "bush", "weight": 10 },
+      { "tile": "water", "weight": 1 }
+    ]
+  },
+  {
     "id": "dungeon_floor",
     "entries": [
       { "tile": "dungeon_floor", "weight": 1 }

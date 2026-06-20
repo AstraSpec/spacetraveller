@@ -74,15 +74,8 @@
   {
     "id": "alley",
     "atlas": [ 53, 1 ],
-    "tags": ["ROAD"],
-    "feature_spawns": [
-      {
-        "pool": "roadside_features",
-        "chance": 0.5,
-        "candidates": 2,
-        "placement": "roadside"
-      }
-    ]
+    "tile_group": "garden",
+    "tags": ["ROAD"]
   },
   {
     "id": "gate",
