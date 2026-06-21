@@ -12,6 +12,8 @@ extends Window
 @export var EastCheck :CheckBox
 @export var SouthCheck :CheckBox
 @export var WestCheck :CheckBox
+@export var EntranceContainer :Control
+@export var EntranceText :LineEdit
 
 @export var CreateButton :Button
 @export var ExistingButton :Button
@@ -27,6 +29,8 @@ func _ready() -> void:
 	hide()
 	if DirsContainer:
 		DirsContainer.hide()
+	if EntranceContainer:
+		EntranceContainer.hide()
 	structureEditor.open_save.connect(open)
 	CreateFP.text = DIR_FILEPATH
 	ExistingFP.text = currentPath
@@ -38,7 +42,7 @@ func open() -> void:
 	visible = true
 	_refresh_type_picker()
 	_apply_current_structure_details()
-	_update_dirs_visibility()
+	_update_structure_settings_visibility()
 
 func _on_save_pressed() -> void:
 	var newID = StructureID.text.strip_edges()
@@ -51,7 +55,10 @@ func _on_save_pressed() -> void:
 		structure_data["dungeon_room"] = {
 			"entrances": _read_entrance_dirs()
 		}
-	structureEditor.set_current_structure_details(newID, structure_type, _read_structure_size(), _read_entrance_dirs(), currentPath)
+	var city_entrances: Array = _read_city_entrances()
+	if _is_city_structure_type(structure_type) and !city_entrances.is_empty():
+		structure_data["entrance"] = city_entrances
+	structureEditor.set_current_structure_details(newID, structure_type, _read_structure_size(), _read_entrance_dirs(), city_entrances, currentPath)
 	DbAccess.save_structure(newID, structure_data, currentPath)
 	visible = false
 
@@ -97,6 +104,14 @@ func _read_entrance_dirs() -> Array:
 		dirs.append("west")
 	return dirs
 
+func _read_city_entrances() -> Array:
+	if !EntranceText:
+		return []
+	var parsed = JSON.parse_string(EntranceText.text.strip_edges())
+	if parsed is Array:
+		return parsed
+	return []
+
 func _apply_current_structure_details() -> void:
 	if !structureEditor:
 		return
@@ -107,6 +122,7 @@ func _apply_current_structure_details() -> void:
 	if TypeText:
 		TypeText.text = structureEditor.current_structure_type
 	_apply_entrance_dirs(structureEditor.current_dungeon_room_entrances)
+	_apply_city_entrances(structureEditor.current_structure_entrances)
 	if !structureEditor.current_structure_path.strip_edges().is_empty():
 		currentPath = structureEditor.current_structure_path
 	if ExistingFP:
@@ -136,6 +152,19 @@ func _apply_entrance_dirs(dirs: Array) -> void:
 	if WestCheck:
 		WestCheck.button_pressed = dirs.has("west")
 
+func _apply_city_entrances(entrances: Array) -> void:
+	if !EntranceText:
+		return
+	EntranceText.text = _format_city_entrances(entrances)
+
+func _format_city_entrances(entrances: Array) -> String:
+	if entrances.is_empty():
+		return ""
+	var parts: Array = []
+	for entrance in entrances:
+		parts.append(str(int(entrance)))
+	return "[" + ", ".join(parts) + "]"
+
 func _configure_type_picker() -> void:
 	if TypeText:
 		TypeText.text = DEFAULT_STRUCTURE_TYPE
@@ -147,7 +176,7 @@ func _configure_type_picker() -> void:
 		if !_popup.index_pressed.is_connected(_on_type_popup_index_pressed):
 			_popup.index_pressed.connect(_on_type_popup_index_pressed)
 	_refresh_type_picker()
-	_update_dirs_visibility()
+	_update_structure_settings_visibility()
 
 func _refresh_type_picker() -> void:
 	if !TypePopup:
@@ -178,15 +207,23 @@ func _on_type_popup_index_pressed(index: int) -> void:
 	if index < 0 or index >= _popup.get_item_count():
 		return
 	TypeText.text = _popup.get_item_text(index)
-	_update_dirs_visibility()
+	_update_structure_settings_visibility()
 
 func _on_type_text_changed(_new_text: String) -> void:
-	_update_dirs_visibility()
+	_update_structure_settings_visibility()
 
-func _update_dirs_visibility() -> void:
-	if !DirsContainer:
-		return
-	DirsContainer.visible = _read_structure_type() == "crypt_room"
+func _update_structure_settings_visibility() -> void:
+	var structure_type := _read_structure_type()
+	if DirsContainer:
+		DirsContainer.visible = structure_type == "crypt_room"
+	if EntranceContainer:
+		EntranceContainer.visible = _is_city_structure_type(structure_type)
+
+func _is_city_structure_type(structure_type: String) -> bool:
+	structure_type = structure_type.strip_edges()
+	if structure_type.is_empty():
+		return false
+	return ChunkDb.is_city_structure_type(structure_type)
 
 func _on_create_button_pressed() -> void:
 	CreateFP.visible = true

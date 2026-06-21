@@ -94,6 +94,25 @@ static uint8_t parse_dungeon_room_entrance_mask(const Dictionary& p_data, const 
     return mask;
 }
 
+static std::vector<int> parse_structure_entrances(const Dictionary& p_data, const String& p_structure_id) {
+    std::vector<int> entrances;
+    Variant entrance_var = p_data.get("entrance", Variant());
+    if (entrance_var.get_type() == Variant::NIL) {
+        return entrances;
+    }
+    if (entrance_var.get_type() != Variant::ARRAY) {
+        UtilityFunctions::push_error("[StructureDb] entrance must be an array in structure ", p_structure_id);
+        return entrances;
+    }
+
+    Array entrance_array = entrance_var;
+    entrances.reserve(entrance_array.size());
+    for (int i = 0; i < entrance_array.size(); i++) {
+        entrances.push_back(static_cast<int>(entrance_array[i]));
+    }
+    return entrances;
+}
+
 static void parse_rules(
     const Array& p_rules,
     const String& p_structure_id,
@@ -249,6 +268,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
     info.type = String(p_data.get("type", ""));
+    info.entrances = parse_structure_entrances(p_data, structure_id);
     info.dungeon_room_entrance_mask = parse_dungeon_room_entrance_mask(p_data, structure_id);
     info.size = variant_to_vector2i(p_data.get("size", Array()), Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE));
     if (info.size.x <= 0 || info.size.y <= 0) {

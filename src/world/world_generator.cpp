@@ -188,6 +188,7 @@ void WorldGenerator::setup_biome_rules() {
     id_road_flagstone = id_reg->register_string("road_flagstone");
     id_alley_bricks = id_reg->register_string("alley_bricks");
     id_alley_flagstone = id_reg->register_string("alley_flagstone");
+    id_dirt = id_reg->register_string("dirt");
     id_crypt_entrance = id_reg->register_string("crypt_entrance");
     id_dungeon = id_reg->register_string("dungeon");
     id_dungeon_floor = id_reg->register_string("dungeon_floor");
@@ -371,7 +372,7 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
         int rel_y = pos.y - p_region_pos.y * WorldCoords::REGION_SIZE;
 
         uint32_t mask = 0;
-        bool current_is_road = (chunk_db && road_tag_id != 0) ? chunk_db->has_tag(chunk_id, road_tag_id) : false;
+        bool current_is_alley = (chunk_id == id_alley);
 
         auto get_grid_id = [&](int nx, int ny) -> uint16_t {
             if (nx < 0 || nx >= WorldCoords::REGION_SIZE || ny < 0 || ny >= WorldCoords::REGION_SIZE) {
@@ -388,7 +389,7 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
             uint16_t n_id = get_grid_id(rel_x + dx, rel_y + dy);
             if (n_id != 0) {
                 bool neighbor_connects = false;
-                if (current_is_road && chunk_db && road_tag_id != 0) {
+                if (current_is_alley && chunk_db && road_tag_id != 0) {
                     if (chunk_db->has_tag(n_id, road_tag_id)) neighbor_connects = true;
                 }
                 if (!neighbor_connects && n_id == chunk_id) neighbor_connects = true;
@@ -492,14 +493,110 @@ uint16_t WorldGenerator::get_alley_surface_tile(int p_local_x, int p_local_y, in
         return id_alley_flagstone;
     }
 
-    if (in_garden_strip(west_connected, west_dist) ||
-        in_garden_strip(east_connected, east_dist) ||
-        in_garden_strip(north_connected, north_dist) ||
-        in_garden_strip(south_connected, south_dist)) {
+    const bool west_garden = in_garden_strip(west_connected, west_dist);
+    const bool east_garden = in_garden_strip(east_connected, east_dist);
+    const bool north_garden = in_garden_strip(north_connected, north_dist);
+    const bool south_garden = in_garden_strip(south_connected, south_dist);
+
+    const bool has_building_entrance =
+        (west_garden && alley_garden_strip_has_building_entrance(p_local_x, p_local_y, p_world_x, p_world_y, WorldCoords::NEIGH_WEST, p_world_seed)) ||
+        (east_garden && alley_garden_strip_has_building_entrance(p_local_x, p_local_y, p_world_x, p_world_y, WorldCoords::NEIGH_EAST, p_world_seed)) ||
+        (north_garden && alley_garden_strip_has_building_entrance(p_local_x, p_local_y, p_world_x, p_world_y, WorldCoords::NEIGH_NORTH, p_world_seed)) ||
+        (south_garden && alley_garden_strip_has_building_entrance(p_local_x, p_local_y, p_world_x, p_world_y, WorldCoords::NEIGH_SOUTH, p_world_seed));
+    if (has_building_entrance) {
+        uint32_t h = get_hash(p_world_x, p_world_y, static_cast<uint32_t>(p_world_seed) ^ 0xA11E7u);
+        if (h % 100 < 75) {
+            return id_dirt;
+        }
+    }
+
+    if (west_garden || east_garden || north_garden || south_garden) {
         return garden_tile();
     }
 
     return id_alley_bricks;
+}
+
+bool WorldGenerator::alley_garden_strip_has_building_entrance(
+    int p_local_x,
+    int p_local_y,
+    int p_world_x,
+    int p_world_y,
+    WorldCoords::NeighborBits p_side,
+    int p_world_seed
+) const {
+    int adjacent_chunk_x = floor_div_chunk(p_world_x);
+    int adjacent_chunk_y = floor_div_chunk(p_world_y);
+    uint8_t required_rotation = WorldCoords::ROT_SOUTH;
+    int edge_coord = 0;
+
+    switch (p_side) {
+        case WorldCoords::NEIGH_WEST:
+            adjacent_chunk_x -= 1;
+            required_rotation = WorldCoords::ROT_EAST;
+            edge_coord = p_local_y;
+            break;
+        case WorldCoords::NEIGH_EAST:
+            adjacent_chunk_x += 1;
+            required_rotation = WorldCoords::ROT_WEST;
+            edge_coord = p_local_y;
+            break;
+        case WorldCoords::NEIGH_NORTH:
+            adjacent_chunk_y -= 1;
+            required_rotation = WorldCoords::ROT_SOUTH;
+            edge_coord = p_local_x;
+            break;
+        case WorldCoords::NEIGH_SOUTH:
+            adjacent_chunk_y += 1;
+            required_rotation = WorldCoords::ROT_NORTH;
+            edge_coord = p_local_x;
+            break;
+        default:
+            return false;
+    }
+
+    const BiomeLayer* surface_layer = get_biome_layer(0);
+    if (!surface_layer) return false;
+
+    uint64_t adjacent_key = WorldCoords::pack_coords(adjacent_chunk_x, adjacent_chunk_y);
+    auto chunk_it = surface_layer->overrides.find(adjacent_key);
+    if (chunk_it == surface_layer->overrides.end()) return false;
+
+    const uint32_t packed = chunk_it->second;
+    const uint16_t adjacent_chunk_id = static_cast<uint16_t>(packed & WorldCoords::ID_MASK);
+    const uint8_t adjacent_rotation = static_cast<uint8_t>((packed >> WorldCoords::ORIENTATION_SHIFT) & WorldCoords::ROTATION_MASK);
+    if (adjacent_rotation != required_rotation) return false;
+
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    const ChunkInfo* chunk_info = chunk_db ? chunk_db->get_chunk_info(adjacent_chunk_id) : nullptr;
+    if (!chunk_info || chunk_info->structure_type.is_empty()) return false;
+
+    const int adjacent_world_x = adjacent_chunk_x * WorldCoords::CHUNK_SIZE;
+    const int adjacent_world_y = adjacent_chunk_y * WorldCoords::CHUNK_SIZE;
+    StructureDb* structure_db = StructureDb::get_singleton();
+    String structure_id = get_structure_id_for_cell(adjacent_world_x, adjacent_world_y, p_world_seed);
+    const StructureInfo* structure = structure_db ? structure_db->get_structure_info(structure_id) : nullptr;
+    if (!structure || structure->entrances.empty()) return false;
+
+    const int max_coord = WorldCoords::CHUNK_SIZE - 1;
+    for (int entrance : structure->entrances) {
+        if (entrance < 0 || entrance > max_coord) continue;
+
+        int rotated_edge_coord = entrance;
+        switch (adjacent_rotation) {
+            case WorldCoords::ROT_NORTH:
+            case WorldCoords::ROT_EAST:
+                rotated_edge_coord = max_coord - entrance;
+                break;
+            default:
+                rotated_edge_coord = entrance;
+                break;
+        }
+
+        if (edge_coord >= rotated_edge_coord - 1 && edge_coord <= rotated_edge_coord + 1) return true;
+    }
+
+    return false;
 }
 
 uint32_t WorldGenerator::get_biome_chunk_data(int p_chunk_x, int p_chunk_y, int p_z, int) {

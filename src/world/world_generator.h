@@ -67,6 +67,7 @@ private:
     uint16_t id_road_flagstone = 0;
     uint16_t id_alley_bricks = 0;
     uint16_t id_alley_flagstone = 0;
+    uint16_t id_dirt = 0;
     uint16_t id_crypt_entrance = 0;
     uint16_t id_dungeon = 0;
     uint16_t id_dungeon_floor = 0;
@@ -102,6 +103,14 @@ private:
     void stamp_dungeon_layout_biomes(const DungeonLayout& p_layout);
     uint16_t get_base_surface_tile(int x, int y, int world_seed);
     uint16_t get_alley_surface_tile(int p_local_x, int p_local_y, int p_world_x, int p_world_y, int p_world_seed);
+    bool alley_garden_strip_has_building_entrance(
+        int p_local_x,
+        int p_local_y,
+        int p_world_x,
+        int p_world_y,
+        WorldCoords::NeighborBits p_side,
+        int p_world_seed
+    ) const;
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);

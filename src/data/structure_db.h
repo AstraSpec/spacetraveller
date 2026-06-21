@@ -62,6 +62,7 @@ struct StructureInfo {
     std::unordered_map<int, StructureLevelInfo> levels;
     String type = "";
     Vector2i size = Vector2i(24, 24);
+    std::vector<int> entrances;
     uint8_t dungeon_room_entrance_mask = DUNGEON_ROOM_ENTRANCE_ALL;
 };
 

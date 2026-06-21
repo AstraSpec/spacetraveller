@@ -81,12 +81,14 @@ func _on_load_pressed() -> void:
 	var source_path := DbAccess.find_structure_file(selectedID)
 	if source_path.is_empty():
 		source_path = DbAccess.DIR_FILEPATH.path_join("structures.json")
+	var raw_structure_data := DbAccess.get_structure_data(selectedID, source_path)
 	var structure_data: Dictionary = {
 		"id": selectedID,
 		"type": StructureDb.get_structure_type(selectedID),
 		"size": StructureDb.get_structure_size(selectedID),
 		"levels": StructureDb.get_levels(selectedID),
 		"filepath": source_path,
+		"entrance": raw_structure_data.get("entrance", []),
 		"dungeon_room": {
 			"entrances": StructureDb.get_dungeon_room_entrances(selectedID)
 		}

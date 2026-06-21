@@ -259,11 +259,11 @@ layout_mode = 2
 layout_mode = 2
 text = "Z: 0"
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "TypeText", "TypePopup", "DirsContainer", "NorthCheck", "EastCheck", "SouthCheck", "WestCheck", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "TypeText", "TypePopup", "DirsContainer", "NorthCheck", "EastCheck", "SouthCheck", "WestCheck", "EntranceContainer", "EntranceText", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 oversampling_override = 1.0
 title = "Save Structure"
 initial_position = 1
-size = Vector2i(400, 450)
+size = Vector2i(400, 480)
 visible = false
 popup_window = true
 script = ExtResource("5_dh32f")
@@ -279,6 +279,8 @@ NorthCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/N")
 EastCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/E")
 SouthCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/S")
 WestCheck = NodePath("MarginContainer/VBoxContainer/DirsContainer/W")
+EntranceContainer = NodePath("MarginContainer/VBoxContainer/EntranceContainer")
+EntranceText = NodePath("MarginContainer/VBoxContainer/EntranceContainer/EntranceText")
 CreateButton = NodePath("MarginContainer/VBoxContainer/CreateButton")
 ExistingButton = NodePath("MarginContainer/VBoxContainer/ExistingButton")
 CreateFP = NodePath("MarginContainer/VBoxContainer/CreateFP")
@@ -384,6 +386,21 @@ text = "South"
 layout_mode = 2
 button_pressed = true
 text = "West"
+
+[node name="EntranceContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Entrance" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/EntranceContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Entrance: "
+
+[node name="EntranceText" type="LineEdit" parent="SaveWindow/MarginContainer/VBoxContainer/EntranceContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "[12]"
 
 [node name="2" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)

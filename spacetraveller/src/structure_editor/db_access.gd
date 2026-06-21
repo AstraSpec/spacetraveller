@@ -75,6 +75,18 @@ static func delete_structure(id: String, filepath: String = ""):
 	_write_all(newStructures, filepath)
 	StructureDb.initialize_data()
 
+static func get_structure_data(id: String, filepath: String = "") -> Dictionary:
+	if filepath == "":
+		filepath = find_structure_file(id)
+	if filepath == "":
+		return {}
+
+	var structures = _read_all(filepath)
+	for s in structures:
+		if s is Dictionary and s.get("id") == id:
+			return s.duplicate(true)
+	return {}
+
 static func _read_all(filepath: String) -> Array:
 	if not FileAccess.file_exists(filepath):
 		return []

@@ -57,6 +57,7 @@ var current_structure_id :String = ""
 var current_structure_type :String = "building"
 var current_structure_path :String = "res://data/structures/structures.json"
 var current_dungeon_room_entrances :Array = ["north", "east", "south", "west"]
+var current_structure_entrances :Array = []
 var editor_npc_entities :Dictionary = {}
 var editor_live_item_rules :Dictionary = {}
 var editor_npc_rules_by_level :Dictionary = {}
@@ -1149,7 +1150,7 @@ func new_structure() -> void:
 	_clear_editor_rule_state()
 	levels.clear()
 	structure_size = Vector2i(CHUNK_SIZE, CHUNK_SIZE)
-	set_current_structure_details("", "building", structure_size, ["north", "east", "south", "west"], "res://data/structures/structures.json")
+	set_current_structure_details("", "building", structure_size, ["north", "east", "south", "west"], [], "res://data/structures/structures.json")
 	active_z = 0
 	World.set_active_z(active_z)
 	_clear_current_chunk()
@@ -1173,11 +1174,16 @@ func import_structure(structure_data: Dictionary) -> void:
 	if dungeon_room_var is Dictionary:
 		var dungeon_room: Dictionary = dungeon_room_var
 		dungeon_entrances = dungeon_room.get("entrances", []).duplicate()
+	var structure_entrances: Array = []
+	var structure_entrance_var: Variant = structure_data.get("entrance", [])
+	if structure_entrance_var is Array:
+		structure_entrances = structure_entrance_var.duplicate()
 	set_current_structure_details(
 		str(structure_data.get("id", "")),
 		str(structure_data.get("type", "building")),
 		root_size,
 		dungeon_entrances,
+		structure_entrances,
 		str(structure_data.get("filepath", "res://data/structures/structures.json"))
 	)
 	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
@@ -1209,11 +1215,12 @@ func import_structure(structure_data: Dictionary) -> void:
 	levels = imported_levels
 	_apply_level(0)
 
-func set_current_structure_details(id: String, type: String, size: Vector2i, dungeon_entrances: Array = [], filepath: String = "") -> void:
+func set_current_structure_details(id: String, type: String, size: Vector2i, dungeon_entrances: Array = [], structure_entrances: Array = [], filepath: String = "") -> void:
 	current_structure_id = id.strip_edges()
 	current_structure_type = type.strip_edges() if !type.strip_edges().is_empty() else "building"
 	structure_size = _normalize_structure_size(size)
 	current_dungeon_room_entrances = dungeon_entrances.duplicate()
+	current_structure_entrances = structure_entrances.duplicate()
 	if !filepath.strip_edges().is_empty():
 		current_structure_path = filepath.strip_edges()
 

@@ -69,6 +69,7 @@ public:
     // GDScript/Standard access
     Vector2i get_atlas_coords(const String &p_id) const;
     bool has_tag_gd(const String &p_id, const String &p_tag) const { return has_tag(p_id, p_tag); }
+    bool is_city_structure_type(const String &p_structure_type) const;
 };
 
 }

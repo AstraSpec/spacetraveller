@@ -12,6 +12,7 @@ void ChunkDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &ChunkDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &ChunkDb::get_atlas_coords);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &ChunkDb::has_tag_gd);
+    ClassDB::bind_method(D_METHOD("is_city_structure_type", "structure_type"), &ChunkDb::is_city_structure_type);
     ClassDB::bind_method(D_METHOD("get_ids"), &ChunkDb::get_ids);
 }
 
@@ -146,6 +147,18 @@ Vector2i ChunkDb::get_atlas_coords(const String &p_id) const {
     const ChunkInfo* info = get_chunk_info(p_id);
     if (info) return info->atlas;
     return Vector2i(-1, -1);
+}
+
+bool ChunkDb::is_city_structure_type(const String &p_structure_type) const {
+    String structure_type = p_structure_type.strip_edges();
+    if (structure_type.is_empty()) return false;
+
+    for (const ChunkInfo& info : fast_cache) {
+        if (info.city_spawn_weight > 0 && info.structure_type == structure_type) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }
