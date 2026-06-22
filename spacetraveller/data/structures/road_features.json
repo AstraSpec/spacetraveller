@@ -3,22 +3,75 @@
         "id": "horse_carriage",
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 1x0, 1x2, 1x3, 1x2, 1x4, 1x5, 1x4, 1x6, 1x5, 1x7, 1x4, 1x3, 4x4)",
+                "blueprint": "(2x0, 1x1, 1x0, 1x2, 1x3, 1x0, 1x4, 2x5, 1x4, 1x6, 2x0, 1x7, 1x0, 1x2, 1x3)",
                 "palette": [
-                    "sign",
-                    "void",
-                    "barrel",
-                    "chair",
                     "w_wall",
-                    "w_floor",
                     "w_door_c",
+                    "barrel",
+                    "sign",
+                    "chair",
+                    "w_floor",
+                    "void",
                     "w_window_c"
                 ]
             }
         },
         "size": [
-            3,
-            6
-        ]
+            6.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "road_fountain",
+        "levels": {
+            "0": {
+                "blueprint": "(6x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 6x0)",
+                "palette": [
+                    "alley_flagstone",
+                    "water",
+                    "fountain"
+                ]
+            }
+        },
+        "size": [
+            5.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "horse_carriage_prison",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 2x2, 1x3, 1x2, 1x1, 1x4, 1x0, 2x5, 1x0, 1x6, 1x2, 3x5, 1x7, 1x6, 4x0, 1x1, 2x2, 1x8, 1x2, 1x1, 1x4)",
+                "palette": [
+                    "iron_bars",
+                    "barrel",
+                    "w_wall",
+                    "w_door_c",
+                    "sign",
+                    "w_floor",
+                    "void",
+                    "chair",
+                    "w_window_c"
+                ],
+                "rules": [
+                    {
+                        "entity_group": "carriage_prisoner_goblin",
+                        "pos": [
+                            1,
+                            1
+                        ],
+                        "type": "spawn_entity_group"
+                    }
+                ]
+            }
+        },
+        "size": [
+            11,
+            3
+        ],
+        "type": "feature"
     }
 ]

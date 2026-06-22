@@ -60,7 +60,7 @@
     "spawn_weight": 0,
     "traits": []
   },
-  "fruit_veg_merchant": {
+  "merchant_fruit_veg": {
     "display_name": "Fruit and Veg Merchant",
     "dialogue_profile": "merchant",
     "default_attitude": "neutral",
@@ -71,7 +71,7 @@
     "traits": [],
     "vendor_loot_table": "fruit_veg_vendor_stock"
   },
-  "fish_merchant": {
+  "merchant_fish": {
     "display_name": "Fish Merchant",
     "dialogue_profile": "merchant",
     "default_attitude": "neutral",
@@ -82,7 +82,7 @@
     "traits": [],
     "vendor_loot_table": "fish_vendor_stock"
   },
-  "food_merchant": {
+  "merchant_food": {
     "display_name": "Food Merchant",
     "dialogue_profile": "merchant",
     "default_attitude": "neutral",
@@ -93,8 +93,8 @@
     "traits": [],
     "vendor_loot_table": "food_vendor_stock"
   },
-  "forager_merchant": {
-    "display_name": "Forager Merchant",
+  "merchant_foraging": {
+    "display_name": "Foraging Merchant",
     "dialogue_profile": "merchant",
     "default_attitude": "neutral",
     "default_ai_state": "idle",
@@ -102,7 +102,7 @@
     "atlas_offset": 4,
     "spawn_weight": 0,
     "traits": [],
-    "vendor_loot_table": "forager_vendor_stock"
+    "vendor_loot_table": "foraging_vendor_stock"
   },
   "monster": {
     "display_name": "Monster",

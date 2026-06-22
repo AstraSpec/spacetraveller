@@ -138,8 +138,23 @@
     "id": "sign",
     "name": "Sign",
     "atlas": [ 28, 20 ],
-    "solid": false,
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "dog_house",
+    "name": "Dog House",
+    "atlas": [ 9, 24 ],
+    "solid": true,
     "tags": ["SMASHABLE"],
     "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "cooking_pot",
+    "name": "Cooking Pot",
+    "atlas": [ 17, 21 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
   }
 ]

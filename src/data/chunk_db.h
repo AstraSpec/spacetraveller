@@ -6,11 +6,18 @@
 
 namespace godot {
 
+struct ChunkFeatureAreaInfo {
+    Vector2i origin;
+    Vector2i size;
+};
+
 struct ChunkFeatureSpawnInfo {
     String pool;
     String placement;
+    String rotation_mode;
     float chance = 0.0f;
     int candidates = 0;
+    std::vector<ChunkFeatureAreaInfo> areas;
 };
 
 struct ChunkInfo {

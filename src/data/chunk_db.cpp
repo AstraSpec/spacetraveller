@@ -93,8 +93,25 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
             ChunkFeatureSpawnInfo spawn;
             spawn.pool = String(spawn_data.get("pool", ""));
             spawn.placement = String(spawn_data.get("placement", ""));
+            spawn.rotation_mode = String(spawn_data.get("rotation", "fixed"));
             spawn.chance = static_cast<float>(static_cast<double>(spawn_data.get("chance", 0.0)));
             spawn.candidates = static_cast<int>(spawn_data.get("candidates", Variant(1)));
+
+            Variant areas_var = spawn_data.get("areas", Array());
+            if (areas_var.get_type() == Variant::ARRAY) {
+                Array areas = areas_var;
+                for (int area_idx = 0; area_idx < areas.size(); area_idx++) {
+                    if (areas[area_idx].get_type() != Variant::DICTIONARY) continue;
+
+                    Dictionary area_data = areas[area_idx];
+                    ChunkFeatureAreaInfo area;
+                    area.origin = variant_to_vector2i(area_data.get("origin", Array()));
+                    area.size = variant_to_vector2i(area_data.get("size", Array()));
+                    if (area.origin.x < 0 || area.origin.y < 0) continue;
+                    if (area.size.x <= 0 || area.size.y <= 0) continue;
+                    spawn.areas.push_back(area);
+                }
+            }
 
             if (spawn.chance < 0.0f) spawn.chance = 0.0f;
             if (spawn.chance > 1.0f) spawn.chance = 1.0f;

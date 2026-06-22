@@ -400,7 +400,7 @@ text = "Entrance: "
 custom_minimum_size = Vector2(28, 40)
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "[12]"
+placeholder_text = "[]"
 
 [node name="2" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer"]
 modulate = Color(0.67069, 0.67069, 0.67069, 1)

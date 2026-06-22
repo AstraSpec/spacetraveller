@@ -57,5 +57,51 @@
       { "item_id": "flint", "weight": 1, "amount_min": 1, "amount_max": 1 },
       { "item_id": "stick", "weight": 5, "amount_min": 1, "amount_max": 1 }
     ]
+  },
+  {
+    "id": "foraging_drops",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "honey", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "egg", "weight": 18, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "milk", "weight": 16, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "berry", "weight": 14, "amount_min": 2, "amount_max": 3 },
+      { "item_id": "blueberries", "weight": 12, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "mushroom", "weight": 16, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "fruit_veg_drops",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "apple", "weight": 16, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "berry", "weight": 12, "amount_min": 2, "amount_max": 2 },
+      { "item_id": "tomato", "weight": 14, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "banana", "weight": 10, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "blueberries", "weight": 10, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "grape", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "pear", "weight": 10, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "pumpkin", "weight": 4, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "corn", "weight": 14, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "carrot", "weight": 16, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "potato", "weight": 16, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "cucumber", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "pepper", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "onion", "weight": 12, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "cooking_pot_drops",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "none": true, "weight": 2 },
+      { "item_id": "plate", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
   }
 ]

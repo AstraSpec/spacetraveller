@@ -19,5 +19,11 @@
       { "none": true, "weight": 3 },
       { "entity": "goblin", "weight": 1, "job": "prisoner", "dialogue_profile": "prisoner" }
     ]
+  },
+  {
+    "id": "carriage_prisoner_goblin",
+    "entries": [
+      { "entity": "goblin", "weight": 1, "job": "prisoner", "dialogue_profile": "prisoner" }
+    ]
   }
 ]

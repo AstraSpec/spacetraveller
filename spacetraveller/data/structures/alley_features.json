@@ -1,0 +1,275 @@
+[
+    {
+        "id": "alley_barrels",
+        "levels": {
+            "0": {
+                "blueprint": "(2x0, 1x1, 1x2, 1x0, 4x2)",
+                "palette": [
+                    "barrel",
+                    "w_crate",
+                    "void"
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_crates",
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 1x1, 1x2, 4x1)",
+                "palette": [
+                    "w_crate",
+                    "void",
+                    "barrel"
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_fountain",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 1x0)",
+                "palette": [
+                    "alley_flagstone",
+                    "water",
+                    "fountain"
+                ]
+            }
+        },
+        "size": [
+            5.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_dog_house",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    "void",
+                    "dog_house"
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_gallows",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    "w_floor",
+                    "gallows"
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_statue",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    "w_floor",
+                    "statue_body"
+                ]
+            }
+        },
+        "size": [
+            3,
+            3
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_bench",
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 3x1, 3x0)",
+                "palette": [
+                    "chair",
+                    "table"
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_cooking_area",
+        "levels": {
+            "0": {
+                "blueprint": "(5x0, 1x1, 6x0)",
+                "palette": [
+                    "void",
+                    "cooking_pot"
+                ],
+                "rules": [
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            0.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            0.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            0.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            1.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            1.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            2.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            2.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            2.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            3.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "cooking_pot_drops",
+                        "pos": [
+                            3.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            4.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_pond_1",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 3x1, 1x0, 9x1, 1x0)",
+                "palette": [
+                    "void",
+                    "water"
+                ]
+            }
+        },
+        "size": [
+            5.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_pond_2",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 2x1, 1x0, 4x1, 1x0, 3x1)",
+                "palette": [
+                    "void",
+                    "water"
+                ]
+            }
+        },
+        "size": [
+            4.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "alley_pond_3",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 2x1, 1x2, 5x1, 1x2, 2x1, 1x0, 2x1, 1x2, 1x1, 1x0)",
+                "palette": [
+                    "void",
+                    "water",
+                    "bridge"
+                ]
+            }
+        },
+        "size": [
+            6.0,
+            3.0
+        ],
+        "type": "feature"
+    }
+]

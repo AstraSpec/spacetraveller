@@ -1,9 +1,9 @@
 [
     {
-        "id": "house01",
         "entrance": [
-            12
+            12.0
         ],
+        "id": "house01",
         "levels": {
             "-1": {
                 "blueprint": "(50x0, 13x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x3, 3x2, 1x1, 11x0, 9x1, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x5, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 3x1, 1x3, 5x1, 3x2, 8x1, 4x0, 1x1, 15x2, 1x3, 2x2, 1x1, 4x0, 1x1, 15x2, 1x1, 2x2, 1x1, 4x0, 1x1, 1x6, 14x2, 1x1, 1x7, 1x8, 1x1, 4x0, 10x1, 1x3, 9x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x1, 6x2, 1x1, 4x0, 20x1, 50x0)",
@@ -47,8 +47,8 @@
                         "entity": "human",
                         "job": "scavenger",
                         "pos": [
-                            7.0,
-                            17.0
+                            7,
+                            17
                         ],
                         "type": "spawn_entity"
                     }
@@ -56,8 +56,8 @@
             }
         },
         "size": [
-            24.0,
-            24.0
+            24,
+            24
         ],
         "type": "building"
     },
@@ -98,10 +98,10 @@
         "type": "tavern"
     },
     {
-        "id": "house02",
         "entrance": [
-            10
+            10.0
         ],
+        "id": "house02",
         "levels": {
             "-1": {
                 "blueprint": "(50x0, 20x1, 4x0, 1x1, 7x2, 1x1, 1x3, 1x2, 1x4, 7x2, 1x1, 4x0, 1x1, 7x2, 4x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 9x1, 1x4, 2x1, 7x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x4, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 7x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 7x2, 1x1, 4x2, 1x1, 10x0, 1x1, 6x2, 1x5, 1x1, 4x2, 1x1, 10x0, 14x1, 50x0)",
@@ -147,10 +147,10 @@
         "type": "building"
     },
     {
-        "id": "house03",
         "entrance": [
-            18
+            18.0
         ],
+        "id": "house03",
         "levels": {
             "0": {
                 "blueprint": "(98x0, 5x1, 2x2, 4x1, 1x2, 3x1, 9x0, 1x1, 4x3, 2x4, 1x5, 1x1, 1x6, 2x7, 1x8, 1x7, 1x1, 1x0, 1x9, 7x0, 1x1, 4x3, 2x4, 1x3, 1x1, 2x3, 1x10, 2x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 1x1, 2x0, 1x12, 6x0, 1x1, 1x8, 1x3, 1x11, 4x3, 1x1, 5x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 6x1, 4x0, 2x1, 1x13, 1x1, 4x3, 1x13, 9x3, 1x6, 1x1, 4x0, 1x1, 1x14, 1x3, 1x1, 2x15, 2x3, 1x1, 4x3, 1x10, 5x3, 1x1, 4x0, 9x1, 3x3, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 2x3, 1x10, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 5x3, 1x10, 4x3, 1x2, 4x0, 1x2, 18x3, 1x1, 4x0, 1x2, 3x3, 1x10, 6x3, 2x11, 6x3, 1x1, 4x0, 1x2, 7x3, 7x1, 3x3, 2x1, 4x0, 1x1, 1x3, 1x10, 2x3, 1x10, 3x3, 1x11, 1x3, 2x11, 1x1, 5x3, 1x1, 4x0, 1x1, 11x3, 1x17, 1x1, 5x3, 1x2, 4x0, 1x1, 2x3, 2x7, 1x18, 4x3, 1x19, 1x11, 1x3, 1x1, 5x3, 1x1, 4x0, 2x1, 1x2, 4x1, 1x2, 8x1, 1x13, 3x1, 19x0, 3x20, 21x0, 3x20, 4x0)",
@@ -186,10 +186,10 @@
         "type": "building"
     },
     {
-        "id": "house04",
         "entrance": [
-            12
+            12.0
         ],
+        "id": "house04",
         "levels": {
             "0": {
                 "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 4x3, 1x4, 2x5, 1x1, 15x0, 1x2, 5x3, 2x5, 1x1, 15x0, 1x1, 7x3, 3x1, 1x2, 2x1, 4x0, 7x1, 1x6, 2x1, 4x3, 1x1, 1x7, 1x3, 1x8, 1x4, 1x1, 4x0, 1x1, 2x9, 3x3, 1x1, 2x3, 1x1, 4x3, 1x1, 2x3, 1x8, 1x3, 1x1, 4x0, 1x2, 1x3, 1x10, 3x3, 1x1, 1x11, 1x12, 1x1, 1x7, 3x3, 1x1, 4x3, 1x2, 4x0, 1x1, 5x3, 6x1, 1x6, 2x1, 4x3, 1x2, 4x0, 1x1, 5x3, 1x1, 7x3, 1x1, 4x3, 1x1, 4x0, 1x1, 1x13, 8x3, 1x10, 3x3, 1x1, 1x6, 1x1, 2x3, 1x1, 4x0, 1x1, 1x13, 7x3, 3x9, 4x3, 1x1, 1x3, 1x11, 1x1, 4x0, 1x2, 1x13, 1x10, 6x3, 1x10, 6x3, 1x1, 1x3, 1x14, 1x1, 4x0, 1x1, 1x13, 4x3, 1x1, 9x3, 1x1, 1x11, 1x14, 1x1, 4x0, 12x1, 3x3, 5x1, 8x0, 1x1, 1x15, 1x13, 1x3, 1x1, 6x3, 1x14, 1x1, 11x0, 1x1, 3x3, 1x6, 6x3, 1x14, 1x1, 11x0, 1x1, 1x16, 1x3, 1x17, 1x1, 6x3, 1x14, 1x1, 11x0, 2x1, 1x2, 3x1, 1x6, 1x1, 2x2, 3x1, 16x0, 3x18, 21x0, 3x18, 10x0)",
@@ -239,8 +239,8 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "building"
     },
@@ -302,114 +302,5 @@
             }
         ],
         "type": "adventurer_guild"
-    },
-    {
-        "id": "food_market",
-        "levels": {
-            "0": {
-                "blueprint": "(58x0, 2x1, 1x2, 21x0, 3x1, 22x0, 1x2, 15x0, 1x3, 1x0, 1x4, 1x2, 1x1, 1x3, 6x0, 1x3, 1x2, 1x0, 1x4, 1x0, 1x3, 1x1, 4x0, 1x1, 1x3, 4x4, 1x3, 6x0, 1x3, 1x2, 2x4, 1x2, 1x3, 6x0, 4x3, 1x2, 1x3, 1x5, 5x0, 1x3, 4x6, 1x3, 1x5, 5x0, 2x2, 129x0, 1x2, 22x0, 2x1, 22x0, 2x1, 16x0, 2x2, 18x0, 1x3, 1x0, 1x4, 1x0, 1x4, 1x3, 6x0, 1x3, 1x1, 1x0, 2x4, 1x3, 6x0, 1x3, 1x2, 3x4, 1x3, 6x0, 1x3, 1x7, 1x4, 1x2, 1x4, 1x3, 6x0, 3x3, 2x6, 1x3, 1x5, 5x0, 6x3, 1x5, 98x0)",
-                "palette": [
-                    "void",
-                    "w_crate",
-                    "barrel",
-                    "bar",
-                    "dirt",
-                    "hanging_sign",
-                    "table",
-                    "chest"
-                ],
-                "rules": [
-                    {
-                        "dialogue_profile": "merchant",
-                        "entity": "human",
-                        "job": "food_merchant",
-                        "pos": [
-                            17.0,
-                            18.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_profile": "merchant",
-                        "entity": "human",
-                        "job": "forager_merchant",
-                        "pos": [
-                            18.0,
-                            6.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_profile": "merchant",
-                        "entity": "human",
-                        "job": "fish_merchant",
-                        "pos": [
-                            5.0,
-                            6.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_profile": "merchant",
-                        "entity": "human",
-                        "job": "fruit_veg_merchant",
-                        "pos": [
-                            6.0,
-                            18.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "data": {
-                            "text": "Fishmonger Market"
-                        },
-                        "meta_type": "signage",
-                        "pos": [
-                            9.0,
-                            7.0
-                        ],
-                        "type": "set_metadata"
-                    },
-                    {
-                        "data": {
-                            "text": "Foraging Market"
-                        },
-                        "meta_type": "signage",
-                        "pos": [
-                            21.0,
-                            7.0
-                        ],
-                        "type": "set_metadata"
-                    },
-                    {
-                        "data": {
-                            "text": "Fruit and Vegetables Market"
-                        },
-                        "meta_type": "signage",
-                        "pos": [
-                            9.0,
-                            19.0
-                        ],
-                        "type": "set_metadata"
-                    },
-                    {
-                        "data": {
-                            "text": "Prepared Food Market"
-                        },
-                        "meta_type": "signage",
-                        "pos": [
-                            21.0,
-                            19.0
-                        ],
-                        "type": "set_metadata"
-                    }
-                ]
-            }
-        },
-        "size": [
-            24.0,
-            24.0
-        ],
-        "type": "market"
     }
 ]

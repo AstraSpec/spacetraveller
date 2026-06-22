@@ -46,7 +46,21 @@
     "atlas": [ 61, 8 ],
     "tile_group": "grass_dirt",
     "city_spawn_weight": 5,
-    "structure_type": "market"
+    "feature_spawns": [
+      {
+        "pool": "food_market_stalls",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "chunk",
+        "areas": [
+          { "origin": [ 2, 3 ], "size": [ 8, 7 ] },
+          { "origin": [ 14, 3 ], "size": [ 8, 7 ] },
+          { "origin": [ 2, 14 ], "size": [ 8, 7 ] },
+          { "origin": [ 14, 14 ], "size": [ 8, 7 ] }
+        ]
+      }
+    ]
   },
   {
     "id": "tavern",
@@ -75,7 +89,15 @@
     "id": "alley",
     "atlas": [ 53, 1 ],
     "tile_group": "garden",
-    "tags": ["ROAD"]
+    "tags": ["ROAD"],
+    "feature_spawns": [
+      {
+        "pool": "alley_features",
+        "chance": 0.39,
+        "candidates": 2,
+        "placement": "alley_inline"
+      }
+    ]
   },
   {
     "id": "gate",

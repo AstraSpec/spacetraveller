@@ -73,7 +73,7 @@
     ]
   },
   {
-    "id": "forager_vendor_stock",
+    "id": "foraging_vendor_stock",
     "rolls_min": 6,
     "rolls_max": 12,
     "allow_duplicates": true,

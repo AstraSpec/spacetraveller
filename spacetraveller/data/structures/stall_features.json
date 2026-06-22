@@ -1,0 +1,264 @@
+[
+    {
+        "id": "stall_fruit_veg",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x2, 1x0, 1x1, 1x0, 1x3, 3x2, 1x0, 1x1, 3x0, 2x4, 1x0, 1x5, 7x1)",
+                "palette": [
+                    "bar",
+                    "void",
+                    "dirt",
+                    "barrel",
+                    "table",
+                    "hanging_sign"
+                ],
+                "rules": [
+                    {
+                        "data": {
+                            "text": "Fruit and Vegetables Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            6.0,
+                            3.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "merchant_fruit_veg",
+                        "pos": [
+                            3.0,
+                            1.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "fruit_veg_vendor_stock",
+                        "pos": [
+                            0.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fruit_veg_vendor_stock",
+                        "pos": [
+                            1.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fruit_veg_vendor_stock",
+                        "pos": [
+                            5.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            7.0,
+            4.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "stall_fish",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x2, 1x3, 1x0, 1x4, 1x1, 1x2, 1x4, 1x1, 4x3, 1x1, 1x2, 1x0, 4x1, 1x0, 1x1, 1x5)",
+                "palette": [
+                    "barrel",
+                    "bar",
+                    "void",
+                    "dirt",
+                    "w_crate",
+                    "hanging_sign"
+                ],
+                "rules": [
+                    {
+                        "data": {
+                            "text": "Fishmonger Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            7.0,
+                            2.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "merchant_fish",
+                        "pos": [
+                            3,
+                            1
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "amount": 4,
+                        "item_id": "raw_fish",
+                        "pos": [
+                            2,
+                            2
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 3,
+                        "item_id": "raw_fish",
+                        "pos": [
+                            3,
+                            2
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1,
+                        "item_id": "raw_fish",
+                        "pos": [
+                            6,
+                            1
+                        ],
+                        "type": "spawn_item"
+                    }
+                ]
+            }
+        },
+        "size": [
+            8,
+            3
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "stall_food",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x2, 2x3, 1x0, 1x2, 1x0, 1x4, 1x3, 1x5, 1x3, 1x0, 1x2, 6x0, 1x6)",
+                "palette": [
+                    "bar",
+                    "w_crate",
+                    "void",
+                    "dirt",
+                    "chest",
+                    "barrel",
+                    "hanging_sign"
+                ],
+                "rules": [
+                    {
+                        "data": {
+                            "text": "Prepared Food Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            6.0,
+                            2.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "merchant_food",
+                        "pos": [
+                            2.0,
+                            1.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "amount": 3.0,
+                        "item_id": "bread",
+                        "pos": [
+                            4.0,
+                            2.0
+                        ],
+                        "type": "spawn_item"
+                    }
+                ]
+            }
+        },
+        "size": [
+            7.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "stall_foraging",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x2, 1x3, 1x2, 1x0, 1x4, 1x0, 1x1, 2x3, 1x1, 1x0, 1x2, 1x0, 4x5, 1x0, 1x6)",
+                "palette": [
+                    "bar",
+                    "barrel",
+                    "void",
+                    "dirt",
+                    "w_crate",
+                    "table",
+                    "hanging_sign"
+                ],
+                "rules": [
+                    {
+                        "data": {
+                            "text": "Foraging Market"
+                        },
+                        "meta_type": "signage",
+                        "pos": [
+                            6.0,
+                            2.0
+                        ],
+                        "type": "set_metadata"
+                    },
+                    {
+                        "dialogue_profile": "merchant",
+                        "entity": "human",
+                        "job": "merchant_foraging",
+                        "pos": [
+                            3.0,
+                            1.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "foraging_drops",
+                        "pos": [
+                            2.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "foraging_drops",
+                        "pos": [
+                            4.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "foraging_drops",
+                        "pos": [
+                            5.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            7.0,
+            3.0
+        ],
+        "type": "feature"
+    }
+]

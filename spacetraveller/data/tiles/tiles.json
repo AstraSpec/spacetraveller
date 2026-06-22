@@ -286,5 +286,26 @@
     "atlas": [ 8, 7 ],
     "solid": false,
     "tags": ["FLOOR"]
+  },
+  {
+    "id": "fountain",
+    "name": "Fountain",
+    "atlas": [ 20, 40 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
+    "id": "gallows",
+    "name": "Gallows",
+    "atlas": [ 32, 20 ],
+    "solid": false,
+    "tags": []
+  },
+  {
+    "id": "bridge",
+    "name": "Bridge",
+    "atlas": [ 10, 40 ],
+    "solid": false,
+    "tags": ["FLOOR"]
   }
 ]

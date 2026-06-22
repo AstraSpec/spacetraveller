@@ -3,7 +3,36 @@
     "id": "roadside_features",
     "type": "structure_stamp",
     "entries": [
+      { "structure": "horse_carriage", "weight": 10 },
+      { "structure": "horse_carriage_prison", "weight": 1 }
+    ]
+  },
+  {
+    "id": "alley_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "alley_barrels", "weight": 20 },
+      { "structure": "alley_crates", "weight": 20 },
+      { "structure": "alley_fountain", "weight": 2 },
+      { "structure": "alley_dog_house", "weight": 10 },
+      { "structure": "alley_gallows", "weight": 3 },
+      { "structure": "alley_statue", "weight": 3 },
+      { "structure": "alley_bench", "weight": 10 },
+      { "structure": "alley_cooking_area", "weight": 5 },
+      { "structure": "alley_pond_1", "weight": 1 },
+      { "structure": "alley_pond_2", "weight": 1 },
+      { "structure": "alley_pond_3", "weight": 1 },
       { "structure": "horse_carriage", "weight": 1 }
+    ]
+  },
+  {
+    "id": "food_market_stalls",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_fruit_veg", "weight": 1 },
+      { "structure": "stall_food", "weight": 1 },
+      { "structure": "stall_fish", "weight": 1 },
+      { "structure": "stall_foraging", "weight": 1 }
     ]
   }
 ]

@@ -40,6 +40,13 @@ struct DungeonStructureContext {
     int local_z = 0;
 };
 
+struct SurfaceFeatureContext {
+    bool valid = false;
+    String structure_id;
+    Vector2i local_pos;
+    int local_z = 0;
+};
+
 class WorldGenerator {
 private:
     std::unordered_map<int, BiomeLayer> biome_layers;
@@ -58,6 +65,7 @@ private:
     uint16_t id_void = 0;
     uint16_t id_air = 0;
     uint16_t id_building = 0;
+    uint16_t id_road = 0;
     uint16_t id_alley = 0;
     uint16_t id_forest = 0;
     uint16_t id_plains = 0;
@@ -78,6 +86,7 @@ private:
     uint16_t id_dungeon_wall_web_thick = 0;
     uint16_t id_dungeon_floor_web = 0;
     uint16_t id_dungeon_floor_web_thick = 0;
+    uint16_t tag_road = 0;
 
     std::unordered_map<uint64_t, DungeonLayout> dungeon_layout_cache;
     int dungeon_layout_cache_seed = 0;
@@ -86,6 +95,18 @@ private:
         String dungeon_type;
         Vector2i entrance_chunk;
         int start_z = -1;
+    };
+    struct SurfaceFeatureInstance {
+        bool valid = false;
+        bool require_source_chunk = false;
+        int chunk_x = 0;
+        int chunk_y = 0;
+        int index = 0;
+        String feature_id;
+        Vector2i origin;
+        Vector2i source_size;
+        Vector2i placed_size;
+        uint8_t rotation = WorldCoords::ROT_SOUTH;
     };
     std::vector<DungeonEntranceRef> dungeon_entrance_cache;
     bool dungeon_entrance_cache_valid = false;
@@ -112,7 +133,7 @@ private:
         int p_world_seed
     ) const;
     uint16_t get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
-    uint16_t get_road_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed);
+    bool find_surface_feature_at(int x, int y, int world_seed, SurfaceFeatureInstance& r_instance, bool p_include_void_tiles = false);
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);
     uint16_t get_dungeon_layout_tile(const DungeonLayout& p_layout, int x, int y, bool p_include_dynamic) const;
     DungeonLayout* get_or_create_dungeon_layout(const String& p_dungeon_type, const Vector2i& p_entrance_chunk, int p_world_seed);
@@ -127,7 +148,10 @@ private:
         const Vector2i& p_source_size,
         const Vector2i& p_placed_size,
         uint8_t p_rotation,
-        int p_world_seed
+        int p_world_seed,
+        bool p_require_source_chunk,
+        int p_source_chunk_x,
+        int p_source_chunk_y
     );
     uint16_t get_surface_feature_tile_at(
         const String& p_feature_id,
@@ -154,6 +178,7 @@ public:
     String get_structure_id_for_cell(int x, int y, int world_seed) const;
     String get_structure_id_for_cell(int x, int y, int z, int world_seed) const;
     DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
+    SurfaceFeatureContext get_surface_feature_context(int x, int y, int z, int world_seed);
     bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);

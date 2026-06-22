@@ -273,5 +273,16 @@
     "weight": 1.2,
     "volume": 0.6,
     "tags": []
+  },
+  {
+    "id": "plate",
+    "name": "Plate",
+    "description": "A ceramic plate.",
+    "type": "material",
+    "price": 100,
+    "atlas": [ 7, 21 ],
+    "weight": 1.2,
+    "volume": 0.6,
+    "tags": []
   }
 ]

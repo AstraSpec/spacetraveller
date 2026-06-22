@@ -55,9 +55,11 @@ func _on_save_pressed() -> void:
 		structure_data["dungeon_room"] = {
 			"entrances": _read_entrance_dirs()
 		}
-	var city_entrances: Array = _read_city_entrances()
-	if _is_city_structure_type(structure_type) and !city_entrances.is_empty():
-		structure_data["entrance"] = city_entrances
+	var city_entrances: Array = []
+	if _is_city_structure_type(structure_type):
+		city_entrances = _read_city_entrances()
+		if !city_entrances.is_empty():
+			structure_data["entrance"] = city_entrances
 	structureEditor.set_current_structure_details(newID, structure_type, _read_structure_size(), _read_entrance_dirs(), city_entrances, currentPath)
 	DbAccess.save_structure(newID, structure_data, currentPath)
 	visible = false
@@ -107,7 +109,10 @@ func _read_entrance_dirs() -> Array:
 func _read_city_entrances() -> Array:
 	if !EntranceText:
 		return []
-	var parsed = JSON.parse_string(EntranceText.text.strip_edges())
+	var text := EntranceText.text.strip_edges()
+	if text.is_empty():
+		return []
+	var parsed = JSON.parse_string(text)
 	if parsed is Array:
 		return parsed
 	return []
