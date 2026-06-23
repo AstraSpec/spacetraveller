@@ -9,7 +9,7 @@ const CURSORS = {
 
 class Tool:
 	static var clipboard = {
-		"tiles": {},
+		"contents": {},
 		"size": Vector2i.ZERO
 	}
 	var editor
@@ -72,14 +72,14 @@ class PencilTool extends Tool:
 	func on_drag(btn: String, pos: Vector2i): _paint(btn, pos)
 	func on_hover(pos: Vector2i):
 		if is_pos_valid(pos):
-			editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
+			var entry = editor.get_tool_entry_for_button("left")
+			editor.Editor.update_preview_tiles([pos], entry.id, entry.type)
 		else:
 			editor.Editor.clear_preview_tiles()
 	func _paint(btn: String, pos: Vector2i):
 		if !is_pos_valid(pos): return
-		var id = editor.tileID1 if btn == "left" else editor.tileID2
-		var type = editor.tileType1 if btn == "left" else editor.tileType2
-		editor.place_at(pos, id, type)
+		var entry = editor.get_tool_entry_for_button(btn)
+		editor.place_at(pos, entry.id, entry.type)
 
 class LineTool extends Tool:
 	func get_cursor_id(): return "pencil"
@@ -118,12 +118,12 @@ class LineTool extends Tool:
 
 			var points = editor.get_line_points(start_pos, target)
 			points = points.filter(func(p): return is_pos_valid(p))
-			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			var ttype = editor.tileType1 if button == "left" else editor.tileType2
-			editor.Editor.update_preview_tiles(points, tid, ttype)
+			var entry = editor.get_tool_entry_for_button(button)
+			editor.Editor.update_preview_tiles(points, entry.id, entry.type)
 		else:
 			if is_pos_valid(pos):
-				editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
+				var entry = editor.get_tool_entry_for_button("left")
+				editor.Editor.update_preview_tiles([pos], entry.id, entry.type)
 			else:
 				editor.Editor.clear_preview_tiles()
 
@@ -138,11 +138,10 @@ class LineTool extends Tool:
 				target = start_pos + Vector2i(round(snapped_delta.x), round(snapped_delta.y))
 
 		var points = editor.get_line_points(start_pos, target)
-		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		var ttype = editor.tileType1 if button == "left" else editor.tileType2
+		var entry = editor.get_tool_entry_for_button(button)
 		for p in points:
 			if editor.is_inside_bubble(p) and is_pos_valid(p):
-				editor.place_entry(Vector2i(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y), tid, ttype)
+				editor.place_entry(Vector2i(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y), entry.id, entry.type)
 		editor.update_editor_visuals()
 		is_drawing = false
 		on_hover(pos)
@@ -180,19 +179,18 @@ class ShapeTool extends Tool:
 
 	func on_hover(pos: Vector2i):
 		if is_drawing:
-			var tid = editor.tileID1 if button == "left" else editor.tileID2
-			var ttype = editor.tileType1 if button == "left" else editor.tileType2
-			editor.Editor.update_preview_shape(shape_type, start_pos, pos, get_effective_option(0), get_effective_option(1), tid, ttype)
+			var entry = editor.get_tool_entry_for_button(button)
+			editor.Editor.update_preview_shape(shape_type, start_pos, pos, get_effective_option(0), get_effective_option(1), entry.id, entry.type)
 		else:
 			if is_pos_valid(pos):
-				editor.Editor.update_preview_tiles([pos], editor.tileID1, editor.tileType1)
+				var entry = editor.get_tool_entry_for_button("left")
+				editor.Editor.update_preview_tiles([pos], entry.id, entry.type)
 			else:
 				editor.Editor.clear_preview_tiles()
 
 	func _commit(pos: Vector2i):
-		var tid = editor.tileID1 if button == "left" else editor.tileID2
-		var ttype = editor.tileType1 if button == "left" else editor.tileType2
-		editor.commit_shape(shape_type, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), tid, ttype)
+		var entry = editor.get_tool_entry_for_button(button)
+		editor.commit_shape(shape_type, start_pos + Vector2i(editor.playerOffset), pos + Vector2i(editor.playerOffset), get_effective_option(0), get_effective_option(1), entry.id, entry.type)
 		is_drawing = false
 		on_hover(pos)
 
@@ -201,14 +199,7 @@ class EyedropperTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		var world_pos = Vector2i(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y)
-		if editor.World.has_item(world_pos):
-			var items = editor.World.get_items_at(world_pos)
-			if items.size() > 0:
-				editor.select_entry(items[0].id, "item", btn == "left")
-				return
-		var id = editor.World.get_tile_at(world_pos.x, world_pos.y)
-		editor.select_entry(id, "tile", btn == "left")
+		editor.select_editor_content_at(pos, true, editor.active_content_type)
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -222,16 +213,15 @@ class FillTool extends Tool:
 		
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		var ttype = editor.tileType1 if btn == "left" else editor.tileType2
-		if ttype != "tile": return
+		var entry = editor.get_tool_entry_for_button(btn)
+		if entry.type != "tile" or str(entry.id).is_empty(): return
 		editor.save_undo_state()
-		var tid = editor.tileID1 if btn == "left" else editor.tileID2
 		
 		if editor.active_selection.size != Vector2i.ZERO:
 			var inside = editor.active_selection.has_point(pos)
-			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
 		else:
-			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, tid, editor.playerOffset, Rect2i(), false, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, Rect2i(), false, get_effective_option(0))
 			
 		editor.update_editor_visuals()
 	func on_hover(_pos: Vector2i):
@@ -246,7 +236,7 @@ class SelectionTool extends Tool:
 	var is_floating = false
 	var drag_start_pos = Vector2i.ZERO
 	var move_offset = Vector2i.ZERO
-	var captured_tiles = {}
+	var captured_contents = {}
 
 	func on_press(btn: String, pos: Vector2i):
 		if btn != "left": return
@@ -261,7 +251,7 @@ class SelectionTool extends Tool:
 			drag_start_pos = pos
 			move_offset = Vector2i.ZERO
 			if !is_floating:
-				_capture_and_cut_tiles()
+				_capture_and_cut_contents()
 		else:
 			# Start new selection
 			if is_floating:
@@ -292,7 +282,7 @@ class SelectionTool extends Tool:
 		
 		if is_selecting:
 			is_selecting = false
-			if selection_rect.size == Vector2i.ONE:
+			if selection_rect.size == Vector2i.ONE and editor.get_editor_contents_at(selection_rect.position).is_empty():
 				selection_rect = Rect2i()
 			_update_visuals()
 		elif is_moving:
@@ -321,7 +311,7 @@ class SelectionTool extends Tool:
 				_paste_from_clipboard()
 			"undo", "redo":
 				if is_floating:
-					captured_tiles.clear()
+					captured_contents.clear()
 					is_floating = false
 					_update_visuals()
 					editor.Editor.clear_preview_tiles()
@@ -333,24 +323,24 @@ class SelectionTool extends Tool:
 
 	func _copy_to_clipboard():
 		if selection_rect.size == Vector2i.ZERO: return
-		Tool.clipboard.tiles = _read_tiles_from_rect(selection_rect)
+		Tool.clipboard.contents = editor.capture_editor_contents(selection_rect)
 		Tool.clipboard.size = selection_rect.size
 
 	func _cut_to_clipboard():
 		if selection_rect.size == Vector2i.ZERO: return
 		editor.save_undo_state()
-		Tool.clipboard.tiles = _read_tiles_from_rect(selection_rect, true)
+		Tool.clipboard.contents = editor.capture_editor_contents(selection_rect, true)
 		Tool.clipboard.size = selection_rect.size
 		editor.update_editor_visuals()
 
 	func _paste_from_clipboard():
-		if Tool.clipboard.tiles.is_empty(): return
+		if Tool.clipboard.contents.is_empty(): return
 		
 		if is_floating:
 			_commit_move()
 			
 		editor.save_undo_state()
-		captured_tiles = Tool.clipboard.tiles.duplicate()
+		captured_contents = Tool.clipboard.contents.duplicate(true)
 		selection_rect = Rect2i(editor.mousePos, Tool.clipboard.size)
 		move_offset = Vector2i.ZERO
 		is_floating = true
@@ -361,42 +351,39 @@ class SelectionTool extends Tool:
 
 	func _delete_selection():
 		if is_floating:
-			captured_tiles.clear()
+			captured_contents.clear()
 			is_floating = false
 			_update_visuals()
 			editor.Editor.clear_preview_tiles()
 		elif selection_rect.size != Vector2i.ZERO:
 			editor.save_undo_state()
-			_read_tiles_from_rect(selection_rect, true)
+			editor.capture_editor_contents(selection_rect, true)
 			editor.update_editor_visuals()
 
-	func _capture_and_cut_tiles():
+	func _capture_and_cut_contents():
 		editor.save_undo_state()
-		captured_tiles = _read_tiles_from_rect(selection_rect, true)
+		captured_contents = editor.capture_editor_contents(selection_rect, true)
 		
-		if captured_tiles.is_empty():
+		if captured_contents.is_empty():
 			is_floating = false
 			return
 
 		editor.update_editor_visuals()
 		is_floating = true
 
-	func _read_tiles_from_rect(rect: Rect2i, clear_map: bool = false) -> Dictionary:
-		var tiles = {}
-		for x in range(rect.position.x, rect.end.x):
-			for y in range(rect.position.y, rect.end.y):
-				var tid = editor.World.get_tile_at(x + editor.playerOffset.x, y + editor.playerOffset.y)
-				if tid != "void":
-					tiles[Vector2i(x, y) - rect.position] = tid
-					if clear_map:
-						editor.World.place_tile(x + editor.playerOffset.x, y + editor.playerOffset.y, "void")
-		return tiles
-
 	func _preview_tiles():
 		var preview_data = {}
 		var current_pos = selection_rect.position + move_offset
-		for rel_p in captured_tiles.keys():
-			preview_data[current_pos + rel_p] = captured_tiles[rel_p]
+		for rel_p_variant in captured_contents.keys():
+			if !(rel_p_variant is Vector2i):
+				continue
+			var contents_variant: Variant = captured_contents[rel_p_variant]
+			if !(contents_variant is Dictionary):
+				continue
+			var rel_p: Vector2i = rel_p_variant
+			var contents: Dictionary = contents_variant
+			if contents.has("tile"):
+				preview_data[current_pos + rel_p] = contents["tile"]
 		editor.Editor.update_preview_tiles_with_data(preview_data)
 
 	func _update_visuals():
@@ -428,12 +415,9 @@ class SelectionTool extends Tool:
 	func _commit_move():
 		if !is_floating: return
 		
-		for rel_p in captured_tiles.keys():
-			var p = selection_rect.position + rel_p
-			if editor.is_inside_bubble(p):
-				editor.World.place_tile(p.x + editor.playerOffset.x, p.y + editor.playerOffset.y, captured_tiles[rel_p])
+		editor.place_editor_contents(selection_rect.position, captured_contents)
 		
 		editor.update_editor_visuals()
-		captured_tiles.clear()
+		captured_contents.clear()
 		is_floating = false
 		_update_visuals()

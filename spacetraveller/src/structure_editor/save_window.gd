@@ -48,7 +48,8 @@ func _on_save_pressed() -> void:
 	var newID = StructureID.text.strip_edges()
 	if newID.is_empty(): return
 	
-	var structure_data :Dictionary = structureEditor.export_structure(newID, _read_structure_size())
+	var structure_size := _read_structure_size()
+	var structure_data :Dictionary = structureEditor.export_structure(newID, structure_size)
 	var structure_type := _read_structure_type()
 	structure_data["type"] = structure_type
 	if structure_type == "crypt_room":
@@ -60,7 +61,7 @@ func _on_save_pressed() -> void:
 		city_entrances = _read_city_entrances()
 		if !city_entrances.is_empty():
 			structure_data["entrance"] = city_entrances
-	structureEditor.set_current_structure_details(newID, structure_type, _read_structure_size(), _read_entrance_dirs(), city_entrances, currentPath)
+	structureEditor.set_current_structure_details(newID, structure_type, structure_size, _read_entrance_dirs(), city_entrances, currentPath)
 	DbAccess.save_structure(newID, structure_data, currentPath)
 	visible = false
 
@@ -79,7 +80,14 @@ func _read_structure_size() -> Vector2i:
 
 func _read_dimension(input: Control) -> int:
 	if input is SpinBox:
-		var spin_value := int(round(input.value))
+		var spin_box := input as SpinBox
+		var line_edit := spin_box.get_line_edit()
+		if line_edit:
+			var text := line_edit.text.strip_edges()
+			if text.is_valid_int():
+				var text_value := int(text)
+				return text_value if text_value >= 1 and text_value <= DEFAULT_STRUCTURE_SIZE else DEFAULT_STRUCTURE_SIZE
+		var spin_value := int(round(spin_box.value))
 		return spin_value if spin_value >= 1 and spin_value <= DEFAULT_STRUCTURE_SIZE else DEFAULT_STRUCTURE_SIZE
 	if input != null:
 		var text := str(input.get("text")).strip_edges()

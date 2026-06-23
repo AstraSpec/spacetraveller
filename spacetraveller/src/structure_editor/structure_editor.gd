@@ -12,6 +12,7 @@ signal open_load
 @export var NpcGrid :FlowContainer
 @export var LootGrid :FlowContainer
 @export var EntityGroupGrid :FlowContainer
+@export var ContentTabs :TabContainer
 @export var ItemAmountInput :SpinBox
 @export var NpcJobContainer :HBoxContainer
 @export var NpcJobText :LineEdit
@@ -47,6 +48,8 @@ var tileID1 :String
 var tileID2 :String
 var tileType1 :String = "tile"
 var tileType2 :String = "tile"
+var active_content_type :String = "tile"
+var primary_ids_by_content_type :Dictionary = {}
 var lastMousePos :Vector2i
 var mousePos :Vector2i
 var playerOffset :Vector2
@@ -73,6 +76,46 @@ var redo_stack : Array = []
 const MAX_UNDOS = 100
 const LOOT_TABLE_ATLAS := Vector2i(71, 18)
 const ENTITY_GROUP_ATLAS := Vector2i(72, 18)
+const CONTENT_TYPES := {
+	"tile": {
+		"tab": "Tiles",
+		"key": "tile",
+		"erase_id": "void",
+		"erase_type": "tile",
+		"erase_label": "void"
+	},
+	"item": {
+		"tab": "Items",
+		"key": "items",
+		"erase_id": "",
+		"erase_type": "item_erase",
+		"erase_label": "erase items",
+		"erase_id_label_prefix": "erase item: "
+	},
+	"npc": {
+		"tab": "NPCs",
+		"key": "npc",
+		"erase_id": "",
+		"erase_type": "npc_erase",
+		"erase_label": "erase NPC"
+	},
+	"loot_table": {
+		"tab": "Loot",
+		"key": "loot_table",
+		"erase_id": "",
+		"erase_type": "loot_table_erase",
+		"erase_label": "erase loot table"
+	},
+	"entity_group": {
+		"tab": "Entity Groups",
+		"key": "entity_group",
+		"erase_id": "",
+		"erase_type": "entity_group_erase",
+		"erase_label": "erase entity group"
+	}
+}
+const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group"]
+const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "tile"]
 
 func update_editor_visuals():
 	if World:
@@ -98,9 +141,13 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()
 	
 	setup_tools()
+	if ContentTabs and !ContentTabs.tab_changed.is_connected(_on_content_tab_changed):
+		ContentTabs.tab_changed.connect(_on_content_tab_changed)
 	
 	select_entry("road_bricks", "tile")
-	select_entry("void", "tile", false)
+	set_secondary_to_group_remover(active_content_type)
+	if ContentTabs:
+		_on_content_tab_changed(ContentTabs.current_tab)
 	
 	_on_mode_changed("pencil")
 	
@@ -118,11 +165,11 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	_setup_npc_option_menus()
 	_update_npc_options_for_race("")
 	
-	TileGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "tile", is_primary))
-	ItemGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "item", is_primary))
-	NpcGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "npc", is_primary))
-	LootGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "loot_table", is_primary))
-	EntityGroupGrid.selection_changed.connect(func(id, is_primary): select_entry(id, "entity_group", is_primary))
+	TileGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "tile", is_primary))
+	ItemGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "item", is_primary))
+	NpcGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "npc", is_primary))
+	LootGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "loot_table", is_primary))
+	EntityGroupGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "entity_group", is_primary))
 	
 	update_editor_visuals()
 
@@ -215,9 +262,13 @@ func _on_mouse_input(button: String, action: InputManager.MouseAction):
 func _on_key_input(key: String):
 	match key:
 		"undo":
+			if active_tool and active_tool.has_method("on_key"):
+				active_tool.on_key(key)
 			undo()
 			return
 		"redo":
+			if active_tool and active_tool.has_method("on_key"):
+				active_tool.on_key(key)
 			redo()
 			return
 		"ascend_level":
@@ -230,8 +281,32 @@ func _on_key_input(key: String):
 	if active_tool and active_tool.has_method("on_key"):
 		active_tool.on_key(key)
 
+func _capture_editor_state() -> Dictionary:
+	return {
+		"tiles": World.get_tile_id_cache() if World else {},
+		"npc_rules_by_level": editor_npc_rules_by_level.duplicate(true),
+		"item_rules_by_level": editor_item_rules_by_level.duplicate(true),
+		"loot_table_rules_by_level": editor_loot_table_rules_by_level.duplicate(true),
+		"entity_group_rules_by_level": editor_entity_group_rules_by_level.duplicate(true),
+		"other_rules_by_level": editor_other_rules_by_level.duplicate(true)
+	}
+
+func _restore_editor_state(state: Dictionary) -> void:
+	if state.is_empty() or !World:
+		return
+	clear_editor_npcs()
+	clear_editor_live_items()
+	World.set_tile_id_cache(state.get("tiles", {}))
+	editor_npc_rules_by_level = state.get("npc_rules_by_level", {}).duplicate(true)
+	editor_item_rules_by_level = state.get("item_rules_by_level", {}).duplicate(true)
+	editor_loot_table_rules_by_level = state.get("loot_table_rules_by_level", {}).duplicate(true)
+	editor_entity_group_rules_by_level = state.get("entity_group_rules_by_level", {}).duplicate(true)
+	editor_other_rules_by_level = state.get("other_rules_by_level", {}).duplicate(true)
+	_apply_editor_rules_for_level(active_z)
+	update_editor_visuals()
+
 func save_undo_state():
-	undo_stack.push_back(World.get_tile_id_cache())
+	undo_stack.push_back(_capture_editor_state())
 	if undo_stack.size() > MAX_UNDOS:
 		undo_stack.pop_front()
 	redo_stack.clear()
@@ -239,43 +314,107 @@ func save_undo_state():
 func undo():
 	if undo_stack.is_empty(): return
 	
-	redo_stack.push_back(World.get_tile_id_cache())
+	redo_stack.push_back(_capture_editor_state())
 	var state = undo_stack.pop_back()
-	World.set_tile_id_cache(state)
-	update_editor_visuals()
+	_restore_editor_state(state)
 
 func redo():
 	if redo_stack.is_empty(): return
 	
-	undo_stack.push_back(World.get_tile_id_cache())
+	undo_stack.push_back(_capture_editor_state())
 	var state = redo_stack.pop_back()
-	World.set_tile_id_cache(state)
-	update_editor_visuals()
+	_restore_editor_state(state)
+
+func _is_content_type(type: String) -> bool:
+	return CONTENT_TYPES.has(type)
+
+func _is_erase_type(type: String) -> bool:
+	return !_content_type_for_erase_type(type).is_empty()
+
+func _content_type_config(type: String) -> Dictionary:
+	return CONTENT_TYPES.get(type, {})
+
+func _content_type_for_erase_type(type: String) -> String:
+	if type == "tile":
+		return ""
+	for content_type in CONTENT_TYPES.keys():
+		var config: Dictionary = CONTENT_TYPES[content_type]
+		if str(config.get("erase_type", "")) == type:
+			return str(content_type)
+	return ""
+
+func _content_type_for_tab(tab: int) -> String:
+	if !ContentTabs or tab < 0 or tab >= ContentTabs.get_child_count():
+		return active_content_type
+	var tab_name := str(ContentTabs.get_child(tab).name)
+	for content_type in CONTENT_TYPES.keys():
+		var config: Dictionary = CONTENT_TYPES[content_type]
+		if str(config.get("tab", "")) == tab_name:
+			return str(content_type)
+	return active_content_type
+
+func _on_content_tab_changed(tab: int) -> void:
+	set_active_content_type(_content_type_for_tab(tab))
+
+func _on_grid_selection_changed(id: String, type: String, is_primary: bool) -> void:
+	if is_primary:
+		select_entry(id, type, true)
+	else:
+		set_active_content_type(type)
+
+func set_active_content_type(type: String, restore_primary: bool = true) -> void:
+	if !_is_content_type(type):
+		return
+	active_content_type = type
+	tileType1 = type
+	if restore_primary:
+		tileID1 = str(primary_ids_by_content_type.get(type, ""))
+	if type == "npc":
+		_update_npc_options_for_race(tileID1)
+	set_secondary_to_group_remover(type)
+	_update_selection_labels()
+	if active_tool:
+		active_tool.on_hover(mousePos)
+
+func set_secondary_to_group_remover(type: String) -> void:
+	var config := _content_type_config(type)
+	if config.is_empty():
+		config = _content_type_config("tile")
+	tileID2 = str(config.get("erase_id", "void"))
+	tileType2 = str(config.get("erase_type", "tile"))
+
+func _label_for_entry(id: String, type: String) -> String:
+	var content_type := _content_type_for_erase_type(type)
+	if !content_type.is_empty():
+		var config := _content_type_config(content_type)
+		if id.is_empty():
+			return str(config.get("erase_label", "erase"))
+		return str(config.get("erase_id_label_prefix", str(config.get("erase_label", "erase")) + ": ")) + id
+	return id
+
+func _update_selection_labels() -> void:
+	TileIDLabel1.text = "ID1: " + _label_for_entry(tileID1, tileType1)
+	TileIDLabel2.text = "ID2: " + _label_for_entry(tileID2, tileType2)
+
+func get_tool_entry_for_button(button: String) -> Dictionary:
+	if button == "right":
+		return { "id": tileID2, "type": tileType2 }
+	return { "id": tileID1, "type": tileType1 }
 
 func select_entry(id: String, type: String = "tile", is_primary: bool = true):
-	if is_primary:
-		tileID1 = id
-		tileType1 = type
-		match type:
-			"item":
-				tileID2 = id
-				tileType2 = "item_erase"
-			"npc":
-				tileID2 = id
-				tileType2 = "npc_erase"
-				_update_npc_options_for_race(id)
-			"loot_table":
-				tileID2 = id
-				tileType2 = "loot_table_erase"
-			"entity_group":
-				tileID2 = id
-				tileType2 = "entity_group_erase"
-	else:
-		tileID2 = id
-		tileType2 = type
-	
-	TileIDLabel1.text = "ID1: " + tileID1
-	TileIDLabel2.text = "ID2: " + tileID2
+	if !is_primary:
+		set_active_content_type(type)
+		return
+	if !_is_content_type(type):
+		return
+	active_content_type = type
+	tileID1 = id
+	tileType1 = type
+	primary_ids_by_content_type[type] = id
+	if type == "npc":
+		_update_npc_options_for_race(id)
+	set_secondary_to_group_remover(type)
+	_update_selection_labels()
 
 func on_tile_changed(_pos: Vector2i):
 	if active_tool:
@@ -367,20 +506,25 @@ func _default_job_for_race(race_id: String) -> String:
 	return "scavenger" if _is_sapient_race(race_id) else "monster"
 
 func place_at(pos: Vector2i, id: String, type: String = "tile"):
-	if !id or !is_inside_bubble(pos): return
+	if !is_inside_bubble(pos): return
 	place_entry(Vector2i(int(pos.x + playerOffset.x), int(pos.y + playerOffset.y)), id, type)
 	update_editor_visuals()
 
 func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount: int = -1):
+	if id.is_empty() and !_is_erase_type(type):
+		return
 	match type:
 		"item":
 			var place_amount := amount if amount > 0 else item_amount
 			World.drop_item(world_pos, id, place_amount)
 			_add_item_rule(world_pos, id, place_amount)
 		"item_erase":
-			var erase_amount := amount if amount > 0 else item_amount
-			World.remove_ground_item(world_pos, id, erase_amount)
-			_remove_item_rule(world_pos, id, erase_amount)
+			if id.is_empty():
+				_remove_all_items_at(world_pos)
+			else:
+				var erase_amount := amount if amount > 0 else item_amount
+				World.remove_ground_item(world_pos, id, erase_amount)
+				_remove_item_rule(world_pos, id, erase_amount)
 		"npc":
 			if place_npc(world_pos, id):
 				_set_npc_rule(world_pos, id)
@@ -522,6 +666,28 @@ func _remove_item_rule(world_pos: Vector2i, item_id: String, amount: int) -> voi
 		rules.erase(key)
 		editor_live_item_rules.erase(key)
 
+func _remove_all_items_at(world_pos: Vector2i) -> void:
+	if !World:
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var level_key := _active_level_key()
+	var item_rule_keys := _item_rule_keys_at(local_pos)
+	if editor_item_rules_by_level.has(level_key):
+		var item_rules: Dictionary = editor_item_rules_by_level[level_key]
+		for item_key in item_rule_keys:
+			if !item_rules.has(item_key):
+				continue
+			var rule: Dictionary = item_rules[item_key]
+			World.remove_ground_item(world_pos, str(rule.get("item_id", "")), int(rule.get("amount", 0)))
+			item_rules.erase(item_key)
+			editor_live_item_rules.erase(item_key)
+	if World.has_item(world_pos):
+		for item_variant in World.get_items_at(world_pos):
+			if !(item_variant is Dictionary):
+				continue
+			var live_item: Dictionary = item_variant
+			World.remove_ground_item(world_pos, str(live_item.get("id", "")), int(live_item.get("amount", 0)))
+
 func _set_loot_table_rule(world_pos: Vector2i, loot_table_id: String) -> void:
 	if loot_table_id.is_empty():
 		return
@@ -563,6 +729,303 @@ func _remove_entity_group_rule(world_pos: Vector2i) -> void:
 	var rules: Dictionary = editor_entity_group_rules_by_level[key]
 	rules.erase(_pos_key(local_pos))
 	_refresh_entity_group_markers()
+
+func _world_pos_from_editor_pos(editor_pos: Vector2i) -> Vector2i:
+	return Vector2i(int(editor_pos.x + playerOffset.x), int(editor_pos.y + playerOffset.y))
+
+func _item_rule_keys_at(local_pos: Vector2i) -> Array:
+	var result: Array = []
+	var level_key := _active_level_key()
+	var rules: Dictionary = editor_item_rules_by_level.get(level_key, {})
+	var local_key := _pos_key(local_pos) + ":"
+	for rule_key in rules.keys():
+		if str(rule_key).begins_with(local_key):
+			result.append(rule_key)
+	result.sort()
+	return result
+
+func _content_key(type: String) -> String:
+	return str(_content_type_config(type).get("key", ""))
+
+func _single_rule_store_for_content_type(type: String) -> Dictionary:
+	match type:
+		"npc":
+			return editor_npc_rules_by_level
+		"loot_table":
+			return editor_loot_table_rules_by_level
+		"entity_group":
+			return editor_entity_group_rules_by_level
+	return {}
+
+func _content_id_from_rule(type: String, rule: Dictionary) -> String:
+	match type:
+		"npc":
+			return str(rule.get("entity", rule.get("race_id", ""))).strip_edges()
+		"item":
+			return str(rule.get("item_id", "")).strip_edges()
+		"loot_table":
+			return str(rule.get("loot_table", "")).strip_edges()
+		"entity_group":
+			return str(rule.get("entity_group", rule.get("entity_group_id", ""))).strip_edges()
+	return ""
+
+func _get_item_contents_at(world_pos: Vector2i, local_pos: Vector2i, level_key: String) -> Array:
+	var item_rules: Dictionary = editor_item_rules_by_level.get(level_key, {})
+	var items: Array = []
+	for item_key in _item_rule_keys_at(local_pos):
+		if item_rules.has(item_key):
+			items.append(item_rules[item_key].duplicate(true))
+	if items.is_empty() and World.has_item(world_pos):
+		for item_variant in World.get_items_at(world_pos):
+			if !(item_variant is Dictionary):
+				continue
+			var live_item: Dictionary = item_variant
+			var item_id := str(live_item.get("id", "")).strip_edges()
+			var amount := int(live_item.get("amount", 0))
+			if item_id.is_empty() or amount <= 0:
+				continue
+			items.append({
+				"type": "spawn_item",
+				"item_id": item_id,
+				"amount": amount,
+				"pos": _rule_pos_array(local_pos)
+			})
+	return items
+
+func _content_at_type(type: String, world_pos: Vector2i, local_pos: Vector2i, level_key: String, pos_key: String) -> Variant:
+	match type:
+		"tile":
+			var tile_id := str(World.get_tile_at(world_pos.x, world_pos.y))
+			if !tile_id.is_empty() and tile_id != "void":
+				return tile_id
+		"item":
+			var items := _get_item_contents_at(world_pos, local_pos, level_key)
+			if !items.is_empty():
+				return items
+		_:
+			var store := _single_rule_store_for_content_type(type)
+			var rules: Dictionary = store.get(level_key, {})
+			if rules.has(pos_key):
+				return rules[pos_key].duplicate(true)
+	return null
+
+func _content_value_from_contents(contents: Dictionary, type: String) -> Variant:
+	var key := _content_key(type)
+	if key.is_empty() or !contents.has(key):
+		return null
+	return contents[key]
+
+func _apply_selected_content_options(type: String, rule: Dictionary, is_primary: bool) -> void:
+	if !is_primary:
+		return
+	if type == "npc":
+		if NpcJobText:
+			var job := str(rule.get("job", "")).strip_edges()
+			if !job.is_empty():
+				NpcJobText.text = job
+		if NpcDialogueProfileText:
+			NpcDialogueProfileText.text = str(rule.get("dialogue_profile", "")).strip_edges()
+	elif type == "item" and ItemAmountInput:
+		ItemAmountInput.value = max(1, int(rule.get("amount", 1)))
+
+func _select_content_value(type: String, value: Variant, is_primary: bool) -> bool:
+	if type == "tile":
+		var tile_id := str(value).strip_edges()
+		if tile_id.is_empty():
+			return false
+		select_entry(tile_id, "tile", is_primary)
+		return true
+	if type == "item":
+		if !(value is Array):
+			return false
+		var item_values: Array = value
+		if item_values.is_empty() or !(item_values[0] is Dictionary):
+			return false
+		var item_rule: Dictionary = item_values[0]
+		var item_id := _content_id_from_rule(type, item_rule)
+		if item_id.is_empty():
+			return false
+		select_entry(item_id, type, is_primary)
+		_apply_selected_content_options(type, item_rule, is_primary)
+		return true
+	if !(value is Dictionary):
+		return false
+	var rule: Dictionary = value
+	var id := _content_id_from_rule(type, rule)
+	if id.is_empty():
+		return false
+	select_entry(id, type, is_primary)
+	_apply_selected_content_options(type, rule, is_primary)
+	return true
+
+func _erase_rule_at(store: Dictionary, world_pos: Vector2i) -> void:
+	var level_key := _active_level_key()
+	if !store.has(level_key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules: Dictionary = store[level_key]
+	rules.erase(_pos_key(local_pos))
+
+func _clear_content_type_at(type: String, world_pos: Vector2i) -> void:
+	match type:
+		"tile":
+			World.place_tile(world_pos.x, world_pos.y, "void")
+		"item":
+			_remove_all_items_at(world_pos)
+		"npc":
+			erase_npc(world_pos)
+			_erase_rule_at(editor_npc_rules_by_level, world_pos)
+		"loot_table":
+			_erase_rule_at(editor_loot_table_rules_by_level, world_pos)
+		"entity_group":
+			_erase_rule_at(editor_entity_group_rules_by_level, world_pos)
+
+func _place_content_value(type: String, world_pos: Vector2i, local_pos: Vector2i, value: Variant) -> void:
+	match type:
+		"tile":
+			World.place_tile(world_pos.x, world_pos.y, str(value))
+		"item":
+			if !(value is Array):
+				return
+			var item_values: Array = value
+			for item_rule_variant in item_values:
+				if !(item_rule_variant is Dictionary):
+					continue
+				var item_rule: Dictionary = item_rule_variant
+				var item_id := _content_id_from_rule(type, item_rule)
+				var amount := int(item_rule.get("amount", 0))
+				if !item_id.is_empty() and amount > 0:
+					place_entry(world_pos, item_id, "item", amount)
+		"npc":
+			if value is Dictionary:
+				var npc_rule: Dictionary = value
+				_store_npc_content(local_pos, npc_rule)
+		"loot_table":
+			if value is Dictionary:
+				var loot_table_rule: Dictionary = value
+				_store_loot_table_content(local_pos, loot_table_rule)
+		"entity_group":
+			if value is Dictionary:
+				var entity_group_rule: Dictionary = value
+				_store_entity_group_content(local_pos, entity_group_rule)
+
+func get_editor_contents_at(editor_pos: Vector2i) -> Dictionary:
+	if !World or !is_inside_bubble(editor_pos):
+		return {}
+	var world_pos := _world_pos_from_editor_pos(editor_pos)
+	var local_pos := _local_pos_from_world(world_pos)
+	var level_key := _active_level_key()
+	var contents := {}
+	var pos_key := _pos_key(local_pos)
+	for content_type in CONTENT_CAPTURE_ORDER:
+		var value: Variant = _content_at_type(str(content_type), world_pos, local_pos, level_key, pos_key)
+		if value == null:
+			continue
+		var key := _content_key(str(content_type))
+		if !key.is_empty():
+			contents[key] = value
+
+	return contents
+
+func _clear_editor_contents_at(editor_pos: Vector2i) -> void:
+	if !World or !is_inside_bubble(editor_pos):
+		return
+	var world_pos := _world_pos_from_editor_pos(editor_pos)
+	for content_type in CONTENT_CAPTURE_ORDER:
+		_clear_content_type_at(str(content_type), world_pos)
+
+func capture_editor_contents(rect: Rect2i, clear_map: bool = false) -> Dictionary:
+	var contents_by_pos := {}
+	for x in range(rect.position.x, rect.end.x):
+		for y in range(rect.position.y, rect.end.y):
+			var editor_pos := Vector2i(x, y)
+			var contents := get_editor_contents_at(editor_pos)
+			if contents.is_empty():
+				continue
+			contents_by_pos[editor_pos - rect.position] = contents
+			if clear_map:
+				_clear_editor_contents_at(editor_pos)
+	if clear_map:
+		_refresh_loot_table_markers()
+		_refresh_entity_group_markers()
+	return contents_by_pos
+
+func _store_npc_content(local_pos: Vector2i, rule: Dictionary) -> void:
+	var race_id := str(rule.get("entity", rule.get("race_id", ""))).strip_edges()
+	if race_id.is_empty():
+		return
+	var world_pos := _world_pos_from_local(local_pos)
+	if !place_npc(world_pos, race_id):
+		return
+	var stored_rule := rule.duplicate(true)
+	stored_rule["type"] = "spawn_entity"
+	stored_rule["entity"] = race_id
+	stored_rule["pos"] = _rule_pos_array(local_pos)
+	var rules := _get_level_rule_dict(editor_npc_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = stored_rule
+
+func _store_loot_table_content(local_pos: Vector2i, rule: Dictionary) -> void:
+	var loot_table_id := str(rule.get("loot_table", "")).strip_edges()
+	if loot_table_id.is_empty():
+		return
+	var stored_rule := rule.duplicate(true)
+	stored_rule["type"] = "spawn_loot_table"
+	stored_rule["loot_table"] = loot_table_id
+	stored_rule["pos"] = _rule_pos_array(local_pos)
+	var rules := _get_level_rule_dict(editor_loot_table_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = stored_rule
+
+func _store_entity_group_content(local_pos: Vector2i, rule: Dictionary) -> void:
+	var entity_group_id := str(rule.get("entity_group", rule.get("entity_group_id", ""))).strip_edges()
+	if entity_group_id.is_empty():
+		return
+	var stored_rule := rule.duplicate(true)
+	stored_rule["type"] = "spawn_entity_group"
+	stored_rule["entity_group"] = entity_group_id
+	stored_rule["pos"] = _rule_pos_array(local_pos)
+	var rules := _get_level_rule_dict(editor_entity_group_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = stored_rule
+
+func place_editor_contents(origin: Vector2i, contents_by_pos: Dictionary) -> void:
+	if !World:
+		return
+	for rel_pos_variant in contents_by_pos.keys():
+		if !(rel_pos_variant is Vector2i):
+			continue
+		var rel_pos: Vector2i = rel_pos_variant
+		var editor_pos := origin + rel_pos
+		if !is_inside_bubble(editor_pos):
+			continue
+		var contents_variant: Variant = contents_by_pos[rel_pos_variant]
+		if !(contents_variant is Dictionary):
+			continue
+		var contents: Dictionary = contents_variant
+		var world_pos := _world_pos_from_editor_pos(editor_pos)
+		var local_pos := _local_pos_from_world(world_pos)
+		for content_type in CONTENT_CAPTURE_ORDER:
+			var value: Variant = _content_value_from_contents(contents, str(content_type))
+			if value != null:
+				_place_content_value(str(content_type), world_pos, local_pos, value)
+	_refresh_loot_table_markers()
+	_refresh_entity_group_markers()
+
+func select_editor_content_at(editor_pos: Vector2i, is_primary: bool = true, type_filter: String = "") -> bool:
+	if type_filter == "tile":
+		if !World or !is_inside_bubble(editor_pos):
+			return false
+		var world_pos := _world_pos_from_editor_pos(editor_pos)
+		select_entry(str(World.get_tile_at(world_pos.x, world_pos.y)), "tile", is_primary)
+		return true
+
+	var contents := get_editor_contents_at(editor_pos)
+	if contents.is_empty():
+		return false
+	if !type_filter.is_empty():
+		return _select_content_value(type_filter, _content_value_from_contents(contents, type_filter), is_primary)
+	for content_type in CONTENT_PICK_ORDER:
+		if _select_content_value(str(content_type), _content_value_from_contents(contents, str(content_type)), is_primary):
+			return true
+	return false
 
 func clear_editor_loot_table_markers() -> void:
 	for marker in editor_loot_table_sprites.values():
@@ -704,9 +1167,9 @@ func get_line_points(start: Vector2i, end: Vector2i) -> Array[Vector2i]:
 
 func _on_file_index_pressed(index: int) -> void:
 	if index == 0:
-		new_structure()
-	elif index == 1: open_save.emit()
-	elif index == 2: open_load.emit()
+		open_save.emit()
+	elif index == 1:
+		open_load.emit()
 
 func _on_edit_index_pressed(index: int) -> void:
 	var names = tools.keys()
@@ -758,7 +1221,7 @@ func _reset_level_edit_state() -> void:
 		selection_tool.is_moving = false
 		selection_tool.is_floating = false
 		selection_tool.move_offset = Vector2i.ZERO
-		selection_tool.captured_tiles.clear()
+		selection_tool.captured_contents.clear()
 	Editor.clear_preview_tiles()
 
 func _clear_current_chunk(clear_rules: bool = false) -> void:

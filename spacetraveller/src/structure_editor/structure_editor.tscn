@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -21,6 +21,7 @@ ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/T
 NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcGrid")
 LootGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot/LootScroll/LootGrid")
 EntityGroupGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups/EntityGroupScroll/EntityGroupGrid")
+ContentTabs = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer")
 ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
 NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
 NpcJobText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobText")
@@ -91,6 +92,8 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/side_margin = 0
 current_tab = 0
+clip_tabs = false
+all_tabs_in_front = true
 
 [node name="Tiles" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
 layout_mode = 2
@@ -233,13 +236,11 @@ size_flags_horizontal = 0
 
 [node name="File" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 unresizable = false
-item_count = 3
-item_0/text = "New"
+item_count = 2
+item_0/text = "Save"
 item_0/id = 0
-item_1/text = "Save"
+item_1/text = "Load"
 item_1/id = 1
-item_2/text = "Load"
-item_2/id = 2
 
 [node name="Edit" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 auto_translate_mode = 1
