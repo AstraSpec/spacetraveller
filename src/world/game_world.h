@@ -167,7 +167,6 @@ public:
     Dictionary get_entity_inventory(uint32_t entity_id) const;
     Dictionary get_entity_equipment(uint32_t entity_id) const;
     float get_entity_inventory_weight(uint32_t entity_id) const;
-    float get_entity_inventory_volume(uint32_t entity_id) const;
 
     bool begin_trade(uint32_t vendor_id);
     void end_trade();

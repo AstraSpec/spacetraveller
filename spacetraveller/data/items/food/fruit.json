@@ -7,7 +7,6 @@
     "price": 100,
     "atlas": [ 3, 17 ],
     "weight": 0.2,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -18,7 +17,6 @@
     "price": 80,
     "atlas": [ 18, 17 ],
     "weight": 0.05,
-    "volume": 0.02,
     "tags": []
   },
   {
@@ -29,7 +27,6 @@
     "price": 200,
     "atlas": [ 5, 18 ],
     "weight": 0.2,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -40,7 +37,6 @@
     "price": 100,
     "atlas": [ 1, 18 ],
     "weight": 0.2,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -51,7 +47,6 @@
     "price": 100,
     "atlas": [ 2, 18 ],
     "weight": 0.15,
-    "volume": 0.075,
     "tags": []
   },
   {
@@ -62,7 +57,6 @@
     "price": 150,
     "atlas": [ 12, 17 ],
     "weight": 0.2,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -73,7 +67,6 @@
     "price": 100,
     "atlas": [ 17, 17 ],
     "weight": 0.2,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -84,7 +77,6 @@
     "price": 400,
     "atlas": [ 10, 17 ],
     "weight": 2.0,
-    "volume": 1.0,
     "tags": []
   }
 ]

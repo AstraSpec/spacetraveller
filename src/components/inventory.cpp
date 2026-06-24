@@ -4,17 +4,14 @@
 
 namespace godot {
 
-void Inventory::init(InventoryData& data, float max_weight, float max_volume) {
+void Inventory::init(InventoryData& data, float max_weight) {
     data.items.clear();
     data.max_weight = max_weight;
-    data.max_volume = max_volume;
     data.current_weight = 0.0f;
-    data.current_volume = 0.0f;
 }
 
 void Inventory::update_totals(InventoryData& data) {
     data.current_weight = 0.0f;
-    data.current_volume = 0.0f;
     ItemDb* db = ItemDb::get_singleton();
     if (!db) return;
 
@@ -22,7 +19,6 @@ void Inventory::update_totals(InventoryData& data) {
         const ItemInfo* info = db->get_item_info(item.id);
         if (info) {
             data.current_weight += info->weight * item.amount;
-            data.current_volume += info->volume * item.amount;
         }
     }
 }
@@ -35,10 +31,7 @@ bool Inventory::add_item(InventoryData& data, uint16_t item_id, int amount) {
     if (!info) return false;
 
     float added_weight = info->weight * amount;
-    float added_volume = info->volume * amount;
-
-    if (data.current_weight + added_weight > data.max_weight ||
-        data.current_volume + added_volume > data.max_volume) {
+    if (data.current_weight + added_weight > data.max_weight) {
         return false;
     }
 
@@ -123,7 +116,6 @@ Array Inventory::get_items_list(const InventoryData& data) {
 Dictionary Inventory::serialize(const InventoryData& data) {
     Dictionary d;
     d["max_weight"] = data.max_weight;
-    d["max_volume"] = data.max_volume;
     
     Dictionary items;
     IdRegistry* id_reg = IdRegistry::get_singleton();
@@ -139,7 +131,6 @@ Dictionary Inventory::serialize(const InventoryData& data) {
 void Inventory::deserialize(InventoryData& data, const Dictionary& dict) {
     data.items.clear();
     data.max_weight = dict.get("max_weight", 50.0f);
-    data.max_volume = dict.get("max_volume", 20.0f);
 
     Dictionary items = dict.get("items", Dictionary());
     IdRegistry* id_reg = IdRegistry::get_singleton();

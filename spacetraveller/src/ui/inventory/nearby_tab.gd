@@ -89,7 +89,7 @@ func _pickup_selected_item(all: bool):
 			if picked_up_so_far >= total_to_pickup:
 				break
 		elif to_get > 0:
-			EventBus.post("inventory_warning", "You cannot pick up %s. Carry weight or volume is over limit." % _format_item_amount(item_id, to_get), {"item_id": item_id, "amount": to_get})
+			EventBus.post("inventory_warning", "You cannot pick up %s. Carry weight is over limit." % _format_item_amount(item_id, to_get), {"item_id": item_id, "amount": to_get})
 			break
 			
 	if picked_up_so_far > 0:

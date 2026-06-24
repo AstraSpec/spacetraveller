@@ -118,7 +118,7 @@ current_tab = 0
 clip_tabs = false
 tab_focus_mode = 0
 
-[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "weightVolumeLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Inventory" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "weightLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
@@ -126,7 +126,7 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("12_invt")
 _GameWorld = NodePath("../../../../../GameWorld")
-weightVolumeLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightVolumeLabel")
+weightLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/WeightLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
 descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
@@ -206,11 +206,10 @@ layout_mode = 2
 layout_mode = 2
 text = "Modifiers:"
 
-[node name="WeightVolumeLabel" type="RichTextLabel" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
+[node name="WeightLabel" type="RichTextLabel" parent="Canvas/Window/InventoryUI/TabContainer/Inventory/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
 layout_mode = 2
 bbcode_enabled = true
-text = "Weight:
-Volume:"
+text = "Weight:"
 fit_content = true
 
 [node name="Crafting" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "CraftButton", "InsufficientLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]

@@ -89,7 +89,6 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_inventory", "entity_id"), &GameWorld::get_entity_inventory);
     ClassDB::bind_method(D_METHOD("get_entity_equipment", "entity_id"), &GameWorld::get_entity_equipment);
     ClassDB::bind_method(D_METHOD("get_entity_inventory_weight", "entity_id"), &GameWorld::get_entity_inventory_weight);
-    ClassDB::bind_method(D_METHOD("get_entity_inventory_volume", "entity_id"), &GameWorld::get_entity_inventory_volume);
 
     ClassDB::bind_method(D_METHOD("begin_trade", "vendor_id"), &GameWorld::begin_trade);
     ClassDB::bind_method(D_METHOD("end_trade"), &GameWorld::end_trade);
@@ -619,10 +618,6 @@ Dictionary GameWorld::get_entity_equipment(uint32_t entity_id) const {
 
 float GameWorld::get_entity_inventory_weight(uint32_t entity_id) const {
     return entity_ledger.get_inventory_weight(entity_id);
-}
-
-float GameWorld::get_entity_inventory_volume(uint32_t entity_id) const {
-    return entity_ledger.get_inventory_volume(entity_id);
 }
 
 bool GameWorld::begin_trade(uint32_t vendor_id) {

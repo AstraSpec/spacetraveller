@@ -17,14 +17,12 @@ struct InventoryItem {
 struct InventoryData {
     std::vector<InventoryItem> items;
     float max_weight = 50.0f;
-    float max_volume = 20.0f;
 
     float current_weight = 0.0f;
-    float current_volume = 0.0f;
 };
 
 namespace Inventory {
-    void init(InventoryData& data, float max_weight = 50.0f, float max_volume = 20.0f);
+    void init(InventoryData& data, float max_weight = 50.0f);
     
     void update_totals(InventoryData& data);
     bool add_item(InventoryData& data, uint16_t item_id, int amount);
@@ -37,12 +35,9 @@ namespace Inventory {
     int get_item_amount(const InventoryData& data, uint16_t item_id);
     
     inline float get_total_weight(const InventoryData& data) { return data.current_weight; }
-    inline float get_total_volume(const InventoryData& data) { return data.current_volume; }
     inline float get_max_weight(const InventoryData& data) { return data.max_weight; }
-    inline float get_max_volume(const InventoryData& data) { return data.max_volume; }
     
     inline void set_max_weight(InventoryData& data, float weight) { data.max_weight = weight; }
-    inline void set_max_volume(InventoryData& data, float volume) { data.max_volume = volume; }
     
     Array get_items_list(const InventoryData& data); // For UI
     

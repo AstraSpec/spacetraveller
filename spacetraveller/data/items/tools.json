@@ -7,7 +7,6 @@
     "price": 90,
     "atlas": [ 7, 21 ],
     "weight": 0.4,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -18,7 +17,6 @@
     "price": 140,
     "atlas": [ 7, 21 ],
     "weight": 0.4,
-    "volume": 0.1,
     "tags": []
   },
   {
@@ -29,7 +27,6 @@
     "price": 260,
     "atlas": [ 7, 21 ],
     "weight": 0.4,
-    "volume": 0.1,
     "tags": []
   }
 ]
