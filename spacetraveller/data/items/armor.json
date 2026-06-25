@@ -1,0 +1,148 @@
+[
+  {
+    "id": "steel_armor",
+    "name": "Steel Armor",
+    "description": "Heavy steel armor.",
+    "type": "clothing",
+    "price": 4200,
+    "atlas": [ 26, 11 ],
+    "weight": 10.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "torso",
+        "layer": "armor",
+        "armor": 10.0
+      },
+      {
+        "part": "leg",
+        "layer": "armor",
+        "armor": 8.0
+      }
+    ]
+  },
+  {
+    "id": "steel_helmet",
+    "name": "Steel Helmet",
+    "description": "A sturdy steel helmet.",
+    "type": "clothing",
+    "price": 1800,
+    "atlas": [ 38, 12 ],
+    "weight": 2.5,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "head",
+        "layer": "armor",
+        "armor": 8.0
+      }
+    ]
+  },
+  {
+    "id": "steel_boots",
+    "name": "Steel Boots",
+    "description": "Heavy steel boots.",
+    "type": "clothing",
+    "price": 1400,
+    "atlas": [ 14, 29 ],
+    "weight": 3.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "foot",
+        "layer": "armor",
+        "armor": 6.0
+      }
+    ]
+  },
+  {
+    "id": "steel_arm_guards",
+    "name": "Steel Arm Guards",
+    "description": "Heavy steel arm guards.",
+    "type": "clothing",
+    "price": 1600,
+    "atlas": [ 15, 29 ],
+    "weight": 3.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "arm",
+        "layer": "armor",
+        "armor": 7.0
+      }
+    ]
+  },
+  {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "description": "Flexible leather armor.",
+    "type": "clothing",
+    "price": 2100,
+    "atlas": [ 29, 11 ],
+    "weight": 3.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "torso",
+        "layer": "armor",
+        "armor": 4.0
+      },
+      {
+        "part": "leg",
+        "layer": "armor",
+        "armor": 3.0
+      }
+    ]
+  },
+  {
+    "id": "leather_helmet",
+    "name": "Leather Helmet",
+    "description": "Sturdy leather helmet.",
+    "type": "clothing",
+    "price": 900,
+    "atlas": [ 1, 30 ],
+    "weight": 0.8,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "head",
+        "layer": "armor",
+        "armor": 3.0
+      }
+    ]
+  },
+  {
+    "id": "leather_boots",
+    "name": "Leather Boots",
+    "description": "Sturdy leather boots.",
+    "type": "clothing",
+    "price": 700,
+    "atlas": [ 13, 29 ],
+    "weight": 1.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "foot",
+        "layer": "armor",
+        "armor": 2.0
+      }
+    ]
+  },
+  {
+    "id": "leather_arm_guards",
+    "name": "Leather Arm Guards",
+    "description": "Reinforced leather guards for the arms.",
+    "type": "clothing",
+    "price": 800,
+    "atlas": [ 8, 29 ],
+    "weight": 1.0,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "arm",
+        "layer": "armor",
+        "armor": 2.5
+      }
+    ]
+  }
+]

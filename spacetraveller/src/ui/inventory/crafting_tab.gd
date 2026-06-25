@@ -110,7 +110,7 @@ func _craft_recipe(recipe_id: String):
 				_GameWorld.remove_entity_inventory_item(0, added["id"], added["amount"])
 			for req in reqs:
 				_GameWorld.add_entity_inventory_item(0, req["id"], req["amount"])
-			EventBus.post("inventory_warning", "You cannot craft %s. Carry weight or volume is over limit." % RecipeDb.get_recipe_name(recipe_id), {"recipe_id": recipe_id})
+			EventBus.post("inventory_warning", "You cannot craft %s. Carry weight is over limit." % RecipeDb.get_recipe_name(recipe_id), {"recipe_id": recipe_id})
 			refresh_view()
 			return
 		

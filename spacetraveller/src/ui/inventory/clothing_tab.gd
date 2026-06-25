@@ -18,18 +18,17 @@ func _get_display_data() -> Array:
 		
 		for layer in layer_keys:
 			var item_id = layers[layer]
-			var data = ItemDb.get_clothing_data(item_id)
-			var part_key = data.get("part", "other")
+			var part_name = _GameWorld.get_entity_anatomy_part_name(0, int(part_idx))
 			
 			formatted.append({
 				"id": item_id,
 				"display_name": ItemDb.get_item_name(item_id),
 				"description": ItemDb.get_item_description(item_id),
-				"part_name": _GameWorld.get_entity_anatomy_part_name(0, int(part_idx)),
+				"part_name": part_name,
 				"layer": layer,
 				"quantity_text": "",
 				"type": ItemDb.get_item_type(item_id),
-				"separator_key": part_key
+				"separator_key": part_name
 			})
 	return formatted
 
@@ -42,19 +41,43 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	var item_id = item_data.get("id", "")
 	if item_id == "": return
 	
-	var data = ItemDb.get_clothing_data(item_id)
+	var slots: Array = ItemDb.get_clothing_slots(item_id)
 	
-	if not data.is_empty():
-		_add_detail("Armor", str(data.get("armor", 0.0)))
-		_add_detail("Part Type", data.get("part", "any").capitalize())
-		_add_detail("Layer", data.get("layer", "middle").capitalize())
-		_add_detail("Coverage", str(data.get("coverage", 1.0) * 100) + "%")
+	if not slots.is_empty():
+		_add_detail("Parts", _format_clothing_slot_parts(slots))
+		_add_detail("Layers", _format_clothing_slot_layers(slots))
+		_add_detail("Armor", _format_clothing_slot_armor(slots))
 
 func _add_detail(label: String, value: String):
 	var inst = SpacerLabelScene.instantiate()
 	detailsContainer.add_child(inst)
 	inst.Label1.text = label
 	inst.Label2.text = value
+
+func _format_clothing_slot_parts(slots: Array) -> String:
+	var parts: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			var part := str(slot.get("part", "any")).capitalize()
+			if not parts.has(part):
+				parts.append(part)
+	return ", ".join(parts)
+
+func _format_clothing_slot_layers(slots: Array) -> String:
+	var layers: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			var layer := str(slot.get("layer", "middle")).capitalize()
+			if not layers.has(layer):
+				layers.append(layer)
+	return ", ".join(layers)
+
+func _format_clothing_slot_armor(slots: Array) -> String:
+	var values: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			values.append("%s %.1f" % [str(slot.get("part", "any")).capitalize(), float(slot.get("armor", 0.0))])
+	return ", ".join(values)
 
 func refresh_view() -> void:
 	super.refresh_view()
@@ -81,7 +104,7 @@ func _unequip_selected_item():
 	
 	var item_id = _items_cache[selected_index]["id"]
 	if not _GameWorld.add_entity_inventory_item(0, item_id, 1):
-		EventBus.post("inventory_warning", "You cannot take off %s. Carry weight or volume is over limit." % _item_label(item_id), {"item_id": item_id})
+		EventBus.post("inventory_warning", "You cannot take off %s. Carry weight is over limit." % _item_label(item_id), {"item_id": item_id})
 		return
 	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
 		EventBus.post("inventory", "You take off %s." % _item_label(item_id), {"item_id": item_id})

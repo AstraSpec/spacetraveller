@@ -139,6 +139,7 @@ CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, ui
     AnatomyData* defender_anatomy = d.ledger->try_get_anatomy(defender_id);
     HealthData* defender_health = d.ledger->try_get_health(defender_id);
     EquipmentData* attacker_equipment = d.ledger->try_get_equipment(attacker_id);
+    ClothingData* defender_clothing = d.ledger->try_get_clothing(defender_id);
     StaminaData* attacker_stamina = d.ledger->try_get_stamina(attacker_id);
     if (!attacker_anatomy || !defender_anatomy || !defender_health ||
         !attacker_equipment || !attacker_stamina || !defender_health->alive) {
@@ -158,6 +159,7 @@ CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, ui
         *defender_anatomy,
         *defender_health,
         *attacker_equipment,
+        defender_clothing,
         rng,
         entity_base_damage(attacker_id),
         style,

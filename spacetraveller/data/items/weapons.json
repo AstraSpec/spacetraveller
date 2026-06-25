@@ -78,5 +78,53 @@
       "grasp_required": 2,
       "reach": 2
     }
+  },
+  {
+    "id": "pitchfork",
+    "name": "Pitchfork",
+    "description": "A long agricultural tool with three metal prongs. Can be used as a weapon.",
+    "type": "weapon",
+    "price": 400,
+    "atlas": [9, 31],
+    "weight": 1,
+    "tags": [],
+    "weapon": {
+      "style": "pierce",
+      "damage": 3.0,
+      "grasp_required": 2,
+      "reach": 2
+    }
+  },
+  {
+    "id": "steel_flail",
+    "name": "Steel Flail",
+    "description": "",
+    "type": "weapon",
+    "price": 1000,
+    "atlas": [35, 9],
+    "weight": 0.8,
+    "tags": [],
+    "weapon": {
+      "style": "bash",
+      "damage": 4.0,
+      "grasp_required": 1,
+      "reach": 1
+    }
+  },
+  {
+    "id": "steel_battleaxe",
+    "name": "Steel Battleaxe",
+    "description": "",
+    "type": "weapon",
+    "price": 4000,
+    "atlas": [26, 9],
+    "weight": 0.8,
+    "tags": [],
+    "weapon": {
+      "style": "cut",
+      "damage": 10.0,
+      "grasp_required": 1,
+      "reach": 1
+    }
   }
 ]

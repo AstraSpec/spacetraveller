@@ -156,5 +156,12 @@
     "atlas": [ 17, 21 ],
     "solid": false,
     "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "mannequin",
+    "name": "Mannequin",
+    "atlas": [ 31, 20 ],
+    "solid": true,
+    "tags": ["TRANSPARENT"]
   }
 ]

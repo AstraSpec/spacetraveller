@@ -104,6 +104,39 @@
     "traits": [],
     "vendor_loot_table": "foraging_vendor_stock"
   },
+  "merchant_weapons": {
+    "display_name": "Weapons Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "atlas_offset": 4,
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "weapon_vendor_stock"
+  },
+  "merchant_armor": {
+    "display_name": "Armor Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "atlas_offset": 4,
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "armor_vendor_stock"
+  },
+  "merchant_clothing": {
+    "display_name": "Clothing Merchant",
+    "dialogue_profile": "merchant",
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "atlas_offset": 4,
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "clothing_vendor_stock"
+  },
   "monster": {
     "display_name": "Monster",
     "dialogue_profile": "",

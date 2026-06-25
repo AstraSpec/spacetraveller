@@ -47,8 +47,8 @@
                         "entity": "human",
                         "job": "scavenger",
                         "pos": [
-                            7,
-                            17
+                            7.0,
+                            17.0
                         ],
                         "type": "spawn_entity"
                     }
@@ -56,8 +56,8 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "building"
     },
@@ -302,5 +302,49 @@
             }
         ],
         "type": "adventurer_guild"
+    },
+    {
+        "entrance": [
+            11.0,
+            12.0
+        ],
+        "id": "equipment_market",
+        "levels": {
+            "0": {
+                "blueprint": "(26x0, 20x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x3, 18x2, 1x3, 4x0, 1x3, 18x2, 1x3, 4x0, 1x3, 18x2, 1x3, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x3, 18x2, 1x3, 4x0, 1x3, 18x2, 1x3, 4x0, 1x3, 18x2, 1x3, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 8x1, 4x2, 8x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_floor",
+                    "w_window_c"
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            24.0
+        ],
+        "type": "equipment_market"
+    },
+    {
+        "entrance": [
+            11.0
+        ],
+        "id": "food_market",
+        "levels": {
+            "0": {
+                "blueprint": "(35x0, 1x1, 22x0, 4x1, 20x0, 3x1, 42x0, 2x1, 21x0, 2x1, 6x0, 2x1, 13x0, 2x1, 8x0, 1x1, 35x0, 1x2, 1x0, 3x2, 2x0, 2x2, 2x0, 3x2, 1x0, 1x2, 5x0, 24x2, 1x0, 1x2, 1x0, 11x2, 1x0, 9x2, 6x0, 6x2, 1x0, 4x2, 4x0, 1x2, 7x0, 1x1, 2x0, 6x2, 1x0, 1x1, 13x0, 4x1, 1x0, 3x2, 1x0, 2x1, 16x0, 1x1, 1x0, 2x2, 1x0, 1x1, 20x0, 2x2, 22x0, 2x2, 22x0, 2x2, 23x0, 1x2, 22x0, 3x2, 21x0, 3x2, 20x0, 4x2, 20x0, 5x2, 10x0)",
+                "palette": [
+                    "void",
+                    "flower",
+                    "dirt"
+                ]
+            }
+        },
+        "size": [
+            24,
+            24
+        ],
+        "type": "food_market"
     }
 ]

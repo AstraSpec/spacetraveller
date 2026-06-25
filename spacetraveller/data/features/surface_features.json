@@ -26,13 +26,52 @@
     ]
   },
   {
-    "id": "food_market_stalls",
+    "id": "food_market_fruit_stall",
     "type": "structure_stamp",
     "entries": [
-      { "structure": "stall_fruit_veg", "weight": 1 },
-      { "structure": "stall_food", "weight": 1 },
-      { "structure": "stall_fish", "weight": 1 },
+      { "structure": "stall_fruit_veg", "weight": 1 }
+    ]
+  },
+  {
+    "id": "food_market_food_stall",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_food", "weight": 1 }
+    ]
+  },
+  {
+    "id": "food_market_fish_stall",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_fish", "weight": 1 }
+    ]
+  },
+  {
+    "id": "food_market_foraging_stall",
+    "type": "structure_stamp",
+    "entries": [
       { "structure": "stall_foraging", "weight": 1 }
+    ]
+  },
+  {
+    "id": "equipment_market_weapon_stall",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_weapon", "weight": 1 }
+    ]
+  },
+  {
+    "id": "equipment_market_clothing_stall",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_clothing", "weight": 1 }
+    ]
+  },
+  {
+    "id": "equipment_market_armor_stall",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_armor", "weight": 1 }
     ]
   }
 ]

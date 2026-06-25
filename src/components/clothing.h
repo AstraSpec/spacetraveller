@@ -17,9 +17,11 @@ struct ClothingData {
 namespace Clothing {
     void init(ClothingData& data);
     bool equip(ClothingData& data, const class AnatomyData& anatomy, int part_index, const String& item_id, const String& layer);
+    bool equip_item(ClothingData& data, const class AnatomyData& anatomy, const String& item_id);
     bool unequip(ClothingData& data, const String& item_id);
     bool is_equipped(const ClothingData& data, const String& item_id);
     float get_armor(const ClothingData& data, const class AnatomyData& anatomy);
+    float get_armor_for_part(const ClothingData& data, const class AnatomyData& anatomy, int part_index);
     Dictionary get_list(const ClothingData& data, const class AnatomyData& anatomy);
     Dictionary get_at(const ClothingData& data, int part_index, const String& layer);
     Dictionary serialize(const ClothingData& data);

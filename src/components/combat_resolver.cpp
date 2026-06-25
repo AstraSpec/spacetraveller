@@ -1,6 +1,7 @@
 #include "combat_resolver.h"
 
 #include "anatomy.h"
+#include "clothing.h"
 #include "equipment.h"
 #include "health.h"
 #include "stamina.h"
@@ -160,15 +161,6 @@ void apply_damage_packet(const CombatContext& ctx, const DamagePacket& packet, C
         outcome.crit = true;
         damage *= CombatTuning::CRIT_MULT;
     }
-    outcome.damage = damage;
-
-    Health::damage(ctx.defender_health, damage);
-    outcome.killed = !ctx.defender_health.alive;
-
-    outcome.effect_type = packet.ability->effect_type;
-    outcome.effect_mode = packet.ability->effect_mode;
-    outcome.effect_magnitude = packet.ability->effect_magnitude;
-    outcome.effect_duration = packet.ability->effect_duration;
 
     std::vector<String> target_heights;
     if (packet.style) target_heights = packet.style->target_heights;
@@ -178,12 +170,28 @@ void apply_damage_packet(const CombatContext& ctx, const DamagePacket& packet, C
         outcome.hit_part_index = loc_idx;
         outcome.hit_part_type = Anatomy::get_type_id(ctx.defender_anatomy, loc_idx);
         outcome.part_name = body_db->get_body_part_name(outcome.hit_part_type);
+        if (ctx.defender_clothing) {
+            float armor = Clothing::get_armor_for_part(*ctx.defender_clothing, ctx.defender_anatomy, loc_idx);
+            if (armor > 0.0f) {
+                damage *= 10.0f / (10.0f + armor);
+            }
+        }
         float part_size = body_db->get_body_part_size(outcome.hit_part_type);
         float durability = part_size * 10.0f;
         float integrity_loss = (durability > 0.0f) ? (damage / durability) : 1.0f;
         float current = Anatomy::get_integrity(ctx.defender_anatomy, loc_idx);
         Anatomy::set_integrity(ctx.defender_anatomy, loc_idx, MAX(0.0f, current - integrity_loss));
     }
+
+    outcome.damage = damage;
+
+    Health::damage(ctx.defender_health, damage);
+    outcome.killed = !ctx.defender_health.alive;
+
+    outcome.effect_type = packet.ability->effect_type;
+    outcome.effect_mode = packet.ability->effect_mode;
+    outcome.effect_magnitude = packet.ability->effect_magnitude;
+    outcome.effect_duration = packet.ability->effect_duration;
 }
 
 }

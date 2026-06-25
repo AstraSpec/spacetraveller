@@ -7,6 +7,7 @@
 namespace godot {
 
 struct AnatomyData;
+struct ClothingData;
 struct EquipmentData;
 struct HealthData;
 struct StaminaData;
@@ -24,6 +25,7 @@ struct CombatContext {
     AnatomyData& defender_anatomy;
     HealthData& defender_health;
     EquipmentData& attacker_equipment;
+    const ClothingData* defender_clothing = nullptr;
     Rng::Seeded& rng;
     float base_damage = 10.0f;
     const StyleInfo* style = nullptr;

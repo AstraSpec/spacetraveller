@@ -7,6 +7,51 @@ namespace godot {
 
 template<> ItemDb* DataBase<ItemInfo, ItemDb>::singleton = nullptr;
 
+namespace {
+
+Dictionary clothing_slot_to_dictionary(const ClothingSlotInfo& slot) {
+    Dictionary d;
+    d["part"] = slot.part;
+    d["layer"] = slot.layer;
+    d["armor"] = slot.armor;
+    return d;
+}
+
+bool parse_clothing_slot(const Dictionary& p_data, ClothingSlotInfo& r_slot) {
+    String part = String(p_data.get("part", "")).strip_edges();
+    if (part.is_empty()) return false;
+
+    r_slot.part = part;
+    r_slot.layer = String(p_data.get("layer", "middle")).strip_edges();
+    if (r_slot.layer.is_empty()) r_slot.layer = "middle";
+    r_slot.armor = static_cast<float>(static_cast<double>(p_data.get("armor", 0.0)));
+    return true;
+}
+
+std::vector<ClothingSlotInfo> parse_clothing_slots(const Variant& p_clothing) {
+    std::vector<ClothingSlotInfo> slots;
+    if (p_clothing.get_type() == Variant::DICTIONARY) {
+        ClothingSlotInfo slot;
+        if (parse_clothing_slot(p_clothing, slot)) {
+            slots.push_back(slot);
+        }
+    } else if (p_clothing.get_type() == Variant::ARRAY) {
+        Array entries = p_clothing;
+        for (int i = 0; i < entries.size(); i++) {
+            Variant entry = entries[i];
+            if (entry.get_type() != Variant::DICTIONARY) continue;
+
+            ClothingSlotInfo slot;
+            if (parse_clothing_slot(entry, slot)) {
+                slots.push_back(slot);
+            }
+        }
+    }
+    return slots;
+}
+
+}
+
 void ItemDb::_bind_methods() {
     ClassDB::bind_static_method("ItemDb", D_METHOD("get_singleton"), &ItemDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &ItemDb::initialize_data);
@@ -17,6 +62,7 @@ void ItemDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_item_modifiers", "id"), &ItemDb::get_item_modifiers);
     ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &ItemDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_clothing_data", "id"), &ItemDb::get_clothing_data);
+    ClassDB::bind_method(D_METHOD("get_clothing_slots", "id"), &ItemDb::get_clothing_slots);
     ClassDB::bind_method(D_METHOD("get_weapon_data", "id"), &ItemDb::get_weapon_data);
     ClassDB::bind_method(D_METHOD("get_item_type", "id"), &ItemDb::get_item_type);
     ClassDB::bind_method(D_METHOD("get_ids"), &ItemDb::get_ids);
@@ -34,11 +80,10 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     info.description = p_data.get("description", "");
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
     info.weight = p_data.get("weight", 0.0f);
-    info.volume = p_data.get("volume", 0.0f);
     info.price = int(p_data.get("price", 0));
     if (info.price < 0) info.price = 0;
     info.tags = _parse_tags(p_data.get("tags", Array()));
-    info.clothing_data = p_data.get("clothing", Dictionary());
+    info.clothing_slots = parse_clothing_slots(p_data.get("clothing", Variant()));
     info.weapon_data = p_data.get("weapon", Dictionary());
     info.type = p_data.get("type", "misc");
     
@@ -91,7 +136,6 @@ Dictionary ItemDb::get_item_modifiers(const String &p_id) const {
     Dictionary d;
     if (info) {
         if (info->weight > 0.0f) d["weight"] = info->weight;
-        if (info->volume > 0.0f) d["volume"] = info->volume;
         if (info->price > 0) d["price"] = info->price;
     }
     return d;
@@ -110,8 +154,25 @@ bool ItemDb::has_tag(const String &p_id, const String &p_tag) const {
 
 Dictionary ItemDb::get_clothing_data(const String &p_id) const {
     const ItemInfo* info = get_item_info(p_id);
-    if (info) return info->clothing_data;
+    if (info && !info->clothing_slots.empty()) return clothing_slot_to_dictionary(info->clothing_slots.front());
     return Dictionary();
+}
+
+Array ItemDb::get_clothing_slots(const String &p_id) const {
+    Array slots;
+    const ItemInfo* info = get_item_info(p_id);
+    if (!info) return slots;
+
+    for (const ClothingSlotInfo& slot : info->clothing_slots) {
+        slots.push_back(clothing_slot_to_dictionary(slot));
+    }
+    return slots;
+}
+
+const std::vector<ClothingSlotInfo>* ItemDb::get_clothing_slots_info(const String &p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    if (!info) return nullptr;
+    return &info->clothing_slots;
 }
 
 Dictionary ItemDb::get_weapon_data(const String &p_id) const {

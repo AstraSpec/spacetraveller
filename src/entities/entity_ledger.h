@@ -153,7 +153,6 @@ public:
     Dictionary get_effects(uint32_t id) const;
     Dictionary get_social_profile(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
-    float get_inventory_volume(uint32_t id) const;
     float get_armor_rating(uint32_t id) const;
     String get_anatomy_part_name(uint32_t id, int part_index) const;
 

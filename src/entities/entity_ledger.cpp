@@ -274,12 +274,6 @@ float EntityLedger::get_inventory_weight(uint32_t id) const {
     return Inventory::get_total_weight(it->second);
 }
 
-float EntityLedger::get_inventory_volume(uint32_t id) const {
-    auto it = inventory_data.find(id);
-    if (it == inventory_data.end()) return 0.0f;
-    return Inventory::get_total_volume(it->second);
-}
-
 float EntityLedger::get_armor_rating(uint32_t id) const {
     auto anat_it = anatomy_data.find(id);
     auto cloth_it = clothing_data.find(id);
@@ -331,22 +325,14 @@ bool EntityLedger::equip_clothing_by_string(uint32_t id, const String& item_id) 
     ItemDb* db = ItemDb::get_singleton();
     if (!db) return false;
     
-    Dictionary clothing_info = db->get_clothing_data(item_id);
-    if (clothing_info.is_empty()) return false;
-    
-    String part_type = clothing_info.get("part", "");
-    String layer = clothing_info.get("layer", "middle");
+    const std::vector<ClothingSlotInfo>* slots = db->get_clothing_slots_info(item_id);
+    if (!slots || slots->empty()) return false;
     
     auto anat_it = anatomy_data.find(id);
     auto cloth_it = clothing_data.find(id);
     if (anat_it == anatomy_data.end() || cloth_it == clothing_data.end()) return false;
     
-    for (int i = 0; i < anat_it->second.parts.size(); i++) {
-        if (anat_it->second.parts[i].type_id == part_type && Anatomy::is_functional(anat_it->second, i)) {
-            return Clothing::equip(cloth_it->second, anat_it->second, i, item_id, layer);
-        }
-    }
-    return false;
+    return Clothing::equip_item(cloth_it->second, anat_it->second, item_id);
 }
 
 bool EntityLedger::unequip_clothing_by_string(uint32_t id, const String& item_id) {

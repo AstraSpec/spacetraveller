@@ -6,15 +6,20 @@
 
 namespace godot {
 
+struct ClothingSlotInfo {
+    String part;
+    String layer = "middle";
+    float armor = 0.0f;
+};
+
 struct ItemInfo {
     String name;
     String description;
     Vector2i atlas;
     float weight = 0.0f;
-    float volume = 0.0f;
     int price = 0;
     std::vector<uint16_t> tags;
-    Dictionary clothing_data;
+    std::vector<ClothingSlotInfo> clothing_slots;
     Dictionary weapon_data;
     String type = "misc";
 };
@@ -47,6 +52,8 @@ public:
     Dictionary get_item_modifiers(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
     Dictionary get_clothing_data(const String &p_id) const;
+    Array get_clothing_slots(const String &p_id) const;
+    const std::vector<ClothingSlotInfo>* get_clothing_slots_info(const String &p_id) const;
     Dictionary get_weapon_data(const String &p_id) const;
     String get_item_type(const String &p_id) const;
 };

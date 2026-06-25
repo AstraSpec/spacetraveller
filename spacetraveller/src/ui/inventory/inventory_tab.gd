@@ -3,11 +3,10 @@ extends BaseListTab
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
 @export var _GameWorld :GameWorld
-@export var weightVolumeLabel: RichTextLabel
+@export var weightLabel: RichTextLabel
 
 const MODIFIER_NAMES = {
-	"weight": "Weight",
-	"volume": "Volume"
+	"weight": "Weight"
 }
 
 const EQUIPMENT_SLOT_ORDER = ["main_hand", "off_hand"]
@@ -91,11 +90,11 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		inst.Label1.text = display_name
 		inst.Label2.text = "%.1f" % value
 
-	var clothing_data = ItemDb.get_clothing_data(item_id)
-	if not clothing_data.is_empty():
-		_add_spacer_label("Part", clothing_data.get("part", "any").capitalize())
-		_add_spacer_label("Layer", clothing_data.get("layer", "middle").capitalize())
-		_add_spacer_label("Armor", str(clothing_data.get("armor", 0.0)))
+	var clothing_slots: Array = ItemDb.get_clothing_slots(item_id)
+	if not clothing_slots.is_empty():
+		_add_spacer_label("Parts", _format_clothing_slot_parts(clothing_slots))
+		_add_spacer_label("Layers", _format_clothing_slot_layers(clothing_slots))
+		_add_spacer_label("Armor", _format_clothing_slot_armor(clothing_slots))
 
 	var weapon_data = ItemDb.get_weapon_data(item_id)
 	if not weapon_data.is_empty():
@@ -112,6 +111,29 @@ func _add_spacer_label(label: String, value: String):
 	inst.Label1.text = label
 	inst.Label2.text = value
 
+func _format_clothing_slot_parts(slots: Array) -> String:
+	var parts: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			parts.append(str(slot.get("part", "any")).capitalize())
+	return ", ".join(parts)
+
+func _format_clothing_slot_layers(slots: Array) -> String:
+	var layers: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			var layer := str(slot.get("layer", "middle")).capitalize()
+			if not layers.has(layer):
+				layers.append(layer)
+	return ", ".join(layers)
+
+func _format_clothing_slot_armor(slots: Array) -> String:
+	var values: PackedStringArray = []
+	for slot in slots:
+		if slot is Dictionary:
+			values.append("%s %.1f" % [str(slot.get("part", "any")).capitalize(), float(slot.get("armor", 0.0))])
+	return ", ".join(values)
+
 func refresh_view() -> void:
 	super.refresh_view()
 
@@ -119,10 +141,9 @@ func _on_refresh() -> void:
 	_update_totals()
 
 func _update_totals() -> void:
-	if weightVolumeLabel:
+	if weightLabel:
 		var total_weight = _GameWorld.get_entity_inventory_weight(0)
-		var total_volume = _GameWorld.get_entity_inventory_volume(0)
-		weightVolumeLabel.text = "Weight: [color=#66ff66]%.1f[/color]\nVolume: [color=#66ff66]%.1f[/color]" % [total_weight, total_volume]
+		weightLabel.text = "Weight: [color=#66ff66]%.1f[/color]" % total_weight
 
 func handle_action(action_name: String, params: Dictionary = {}):
 	if action_name == "drop":
@@ -161,7 +182,7 @@ func _toggle_wield_selected_item():
 		if slot_name == "":
 			return
 		if not _GameWorld.add_entity_inventory_item(0, item_id, 1):
-			_post_inventory_warning("You cannot stop wielding %s. Carry weight or volume is over limit." % _item_label(item_id), {"item_id": item_id})
+			_post_inventory_warning("You cannot stop wielding %s. Carry weight is over limit." % _item_label(item_id), {"item_id": item_id})
 			return
 		if _GameWorld.unwield_entity_weapon(0, slot_name):
 			_post_inventory("You stop wielding %s." % _item_label(item_id), {"item_id": item_id, "slot": slot_name})

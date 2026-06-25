@@ -51,6 +51,14 @@ static bool surface_feature_rotation_swaps_size(uint8_t p_rotation) {
     return p_rotation == WorldCoords::ROT_EAST || p_rotation == WorldCoords::ROT_WEST;
 }
 
+static uint8_t compose_surface_feature_rotation(uint8_t p_local_rotation, uint8_t p_chunk_rotation) {
+    return static_cast<uint8_t>((p_local_rotation + p_chunk_rotation) & WorldCoords::ROTATION_MASK);
+}
+
+static Vector2i get_rotated_surface_feature_size(const Vector2i& p_size, uint8_t p_rotation) {
+    return surface_feature_rotation_swaps_size(p_rotation) ? Vector2i(p_size.y, p_size.x) : p_size;
+}
+
 static Vector2i rotate_chunk_local_pos(const Vector2i& p_pos, const Vector2i& p_size, uint8_t p_rotation) {
     const int max_coord = WorldCoords::CHUNK_SIZE - 1;
     switch (p_rotation) {
@@ -67,7 +75,7 @@ static Vector2i rotate_chunk_local_pos(const Vector2i& p_pos, const Vector2i& p_
 }
 
 static Vector2i rotate_chunk_local_size(const Vector2i& p_size, uint8_t p_rotation) {
-    return surface_feature_rotation_swaps_size(p_rotation) ? Vector2i(p_size.y, p_size.x) : p_size;
+    return get_rotated_surface_feature_size(p_size, p_rotation);
 }
 
 static uint8_t get_center_facing_rotation(const Vector2i& p_area_origin, const Vector2i& p_area_size) {
@@ -1044,22 +1052,20 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
             if (area_index < 0 || area_index >= static_cast<int>(spawn_info->areas.size())) return candidate;
             const ChunkFeatureAreaInfo& area = spawn_info->areas[area_index];
 
-            const bool follow_chunk_rotation = spawn_info->rotation_mode == "chunk";
-            const bool face_center = spawn_info->rotation_mode == "center";
-            const uint8_t placement_rotation = follow_chunk_rotation
-                ? chunk_rotation
-                : (face_center ? get_center_facing_rotation(area.origin, area.size) : WorldCoords::ROT_SOUTH);
-            const Vector2i rotated_area_origin = follow_chunk_rotation
-                ? rotate_chunk_local_pos(area.origin, area.size, placement_rotation)
-                : area.origin;
-            const Vector2i rotated_area_size = follow_chunk_rotation
-                ? rotate_chunk_local_size(area.size, placement_rotation)
-                : area.size;
+            const bool follows_chunk_area = spawn_info->rotation_mode == "chunk" || spawn_info->rotation_mode == "center";
+            const uint8_t area_rotation = follows_chunk_area ? chunk_rotation : WorldCoords::ROT_SOUTH;
+            const uint8_t local_feature_rotation = spawn_info->rotation_mode == "center"
+                ? get_center_facing_rotation(area.origin, area.size)
+                : WorldCoords::ROT_SOUTH;
 
-            candidate.rotation = placement_rotation;
-            candidate.placed_size = surface_feature_rotation_swaps_size(candidate.rotation)
-                ? Vector2i(candidate.source_size.y, candidate.source_size.x)
-                : candidate.source_size;
+            candidate.rotation = compose_surface_feature_rotation(local_feature_rotation, area_rotation);
+            const Vector2i rotated_area_origin = follows_chunk_area
+                ? rotate_chunk_local_pos(area.origin, area.size, area_rotation)
+                : area.origin;
+            const Vector2i rotated_area_size = follows_chunk_area
+                ? rotate_chunk_local_size(area.size, area_rotation)
+                : area.size;
+            candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
             if (candidate.placed_size.x > rotated_area_size.x || candidate.placed_size.y > rotated_area_size.y) return candidate;
 
             anchor_x += rotated_area_origin.x;
@@ -1083,18 +1089,14 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
             candidate.rotation = place_horizontal
                 ? (flipped ? WorldCoords::ROT_NORTH : WorldCoords::ROT_SOUTH)
                 : (flipped ? WorldCoords::ROT_WEST : WorldCoords::ROT_EAST);
-            candidate.placed_size = surface_feature_rotation_swaps_size(candidate.rotation)
-                ? Vector2i(candidate.source_size.y, candidate.source_size.x)
-                : candidate.source_size;
+            candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
             if (candidate.placed_size.x > WorldCoords::CHUNK_SIZE || candidate.placed_size.y > WorldCoords::CHUNK_SIZE) return candidate;
 
             if (spawn_info->placement == ALLEY_INLINE_PLACEMENT) {
                 if (!place_horizontal) {
                     const bool use_far_side = west_open && east_open ? rng.range(0, 1) == 1 : east_open;
                     candidate.rotation = use_far_side ? WorldCoords::ROT_WEST : WorldCoords::ROT_EAST;
-                    candidate.placed_size = surface_feature_rotation_swaps_size(candidate.rotation)
-                        ? Vector2i(candidate.source_size.y, candidate.source_size.x)
-                        : candidate.source_size;
+                    candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
                     if (candidate.placed_size.x > ALLEY_GARDEN_WIDTH) return candidate;
                     const int centered_offset = (ALLEY_GARDEN_WIDTH - candidate.placed_size.x) / 2;
                     anchor_x += use_far_side
@@ -1104,9 +1106,7 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
                 } else {
                     const bool use_far_side = north_open && south_open ? rng.range(0, 1) == 1 : south_open;
                     candidate.rotation = use_far_side ? WorldCoords::ROT_NORTH : WorldCoords::ROT_SOUTH;
-                    candidate.placed_size = surface_feature_rotation_swaps_size(candidate.rotation)
-                        ? Vector2i(candidate.source_size.y, candidate.source_size.x)
-                        : candidate.source_size;
+                    candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
                     if (candidate.placed_size.y > ALLEY_GARDEN_WIDTH) return candidate;
                     const int centered_offset = (ALLEY_GARDEN_WIDTH - candidate.placed_size.y) / 2;
                     anchor_x += rng.range(0, WorldCoords::CHUNK_SIZE - candidate.placed_size.x);

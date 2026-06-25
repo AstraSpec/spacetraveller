@@ -42,22 +42,89 @@
     "structure_type": "building"
   },
   {
-    "id": "market",
-    "atlas": [ 61, 8 ],
+    "id": "food_market",
+    "atlas": [ 32, 3 ],
     "tile_group": "grass_dirt",
     "city_spawn_weight": 5,
+    "structure_type": "food_market",
     "feature_spawns": [
       {
-        "pool": "food_market_stalls",
+        "pool": "food_market_fruit_stall",
         "chance": 1.0,
         "candidates": 1,
         "placement": "fixed_areas",
         "rotation": "chunk",
         "areas": [
-          { "origin": [ 2, 3 ], "size": [ 8, 7 ] },
-          { "origin": [ 14, 3 ], "size": [ 8, 7 ] },
-          { "origin": [ 2, 14 ], "size": [ 8, 7 ] },
-          { "origin": [ 14, 14 ], "size": [ 8, 7 ] }
+          { "origin": [ 1, 16 ], "size": [ 8, 3 ] }
+        ]
+      },
+      {
+        "pool": "food_market_food_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "chunk",
+        "areas": [
+          { "origin": [ 15, 16 ], "size": [ 8, 3 ] }
+        ]
+      },
+      {
+        "pool": "food_market_fish_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "chunk",
+        "areas": [
+          { "origin": [ 1, 4 ], "size": [ 8, 3 ] }
+        ]
+      },
+      {
+        "pool": "food_market_foraging_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "chunk",
+        "areas": [
+          { "origin": [ 15, 4 ], "size": [ 8, 3 ] }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "equipment_market",
+    "atlas": [ 33, 2 ],
+    "tile_group": "grass_dirt",
+    "city_spawn_weight": 3,
+    "structure_type": "equipment_market",
+    "feature_spawns": [
+      {
+        "pool": "equipment_market_weapon_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "center",
+        "areas": [
+          { "origin": [ 5, 12 ], "size": [ 3, 8 ] }
+        ]
+      },
+      {
+        "pool": "equipment_market_clothing_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "center",
+        "areas": [
+          { "origin": [ 16, 12 ], "size": [ 3, 8 ] }
+        ]
+      },
+      {
+        "pool": "equipment_market_armor_stall",
+        "chance": 1.0,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "center",
+        "areas": [
+          { "origin": [ 5, 3 ], "size": [ 3, 8 ] }
         ]
       }
     ]
