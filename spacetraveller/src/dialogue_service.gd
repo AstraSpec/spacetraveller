@@ -72,9 +72,11 @@ func apply_option(option: Dictionary, state: Dictionary, world, target_id: int) 
 		"end_conversation": false,
 		"start_fight": false,
 		"message": "",
+		"open_tab": "",
 	}
 	var effects: Dictionary = option.get("effects", {})
 	_apply_effects(effects, next_state, result, world, target_id)
+	result["open_tab"] = str(effects.get("open_tab", ""))
 
 	var next_id := str(option.get("next", ""))
 	if not next_id.is_empty():
@@ -132,16 +134,18 @@ func _is_saved_state_valid(saved: Dictionary) -> bool:
 	return nodes.has(nid)
 
 func _pick_dialogue(world: Node, target_id: int) -> Dictionary:
-	for dialogue in _dialogues:
-		if _selector_pass(dialogue.get("selector", {}), world, target_id):
-			return dialogue
-	return _dialogues_by_id.get(FALLBACK_DIALOGUE_ID, {})
-
-func _selector_pass(selector: Dictionary, world, target_id: int) -> bool:
-	if selector.is_empty():
-		return true
 	var ctx := _build_context(world, target_id)
-	return _dict_constraints_pass(selector, ctx)
+	var dialogue_id := str(ctx.get("dialogue_id", "")).strip_edges()
+	if not dialogue_id.is_empty() and _dialogues_by_id.has(dialogue_id):
+		return _dialogues_by_id[dialogue_id]
+
+	var job := str(ctx.get("job", "")).strip_edges()
+	if not job.is_empty():
+		for job_dialogue_id in JobDb.get_dialogues(job):
+			dialogue_id = str(job_dialogue_id).strip_edges()
+			if not dialogue_id.is_empty() and _dialogues_by_id.has(dialogue_id):
+				return _dialogues_by_id[dialogue_id]
+	return _dialogues_by_id.get(FALLBACK_DIALOGUE_ID, {})
 
 func _constraints_pass(constraints: Dictionary, state: Dictionary, world, target_id: int) -> bool:
 	if constraints.is_empty():
@@ -154,8 +158,6 @@ func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
 	if c.has("race") and str(c["race"]) != str(ctx.get("race", "")):
 		return false
 	if c.has("job") and str(c["job"]) != str(ctx.get("job", "")):
-		return false
-	if c.has("dialogue_profile") and str(c["dialogue_profile"]) != str(ctx.get("dialogue_profile", "")):
 		return false
 	if c.has("trait") and not Array(ctx.get("traits", [])).has(str(c["trait"])):
 		return false
@@ -189,7 +191,7 @@ func _build_context(world, target_id: int) -> Dictionary:
 	return {
 		"race": str(anatomy.get("race_id", "")),
 		"job": str(profile.get("job", "drifter")),
-		"dialogue_profile": str(profile.get("dialogue_profile", "default")),
+		"dialogue_id": str(profile.get("dialogue_id", "")),
 		"traits": profile.get("traits", []),
 		"context_tags": profile.get("context_tags", []),
 		"friendship": int(world.get_entity_friendship(target_id)) if world else 0,

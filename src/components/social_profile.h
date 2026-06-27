@@ -9,7 +9,7 @@ namespace godot {
 
 struct SocialProfileData {
     String job = "drifter";
-    String dialogue_profile = "default";
+    String dialogue_id = "";
     String faction = "";
     Array traits;
     Array context_tags;

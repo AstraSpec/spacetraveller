@@ -96,8 +96,7 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     if (sapient) {
         ledger.init_relationship(id);
 
-        String dialogue_profile = !overrides.dialogue_profile.is_empty() ? overrides.dialogue_profile : (job_info ? job_info->dialogue_profile : String("scavenger"));
-        ledger.init_social_profile(id, job, dialogue_profile);
+        ledger.init_social_profile(id, job, overrides.dialogue_id);
 
         SocialProfileData& profile = ledger.social_profiles[id];
         if (!overrides.traits.is_empty()) {

@@ -24,7 +24,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_fruit_veg",
                         "pos": [
@@ -84,7 +83,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_fish",
                         "pos": [
@@ -155,7 +153,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_food",
                         "pos": [
@@ -207,7 +204,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_foraging",
                         "pos": [
@@ -266,7 +262,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_weapons",
                         "pos": [
@@ -318,7 +313,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_clothing",
                         "pos": [
@@ -370,7 +364,6 @@
                         "type": "set_metadata"
                     },
                     {
-                        "dialogue_profile": "merchant",
                         "entity": "human",
                         "job": "merchant_armor",
                         "pos": [

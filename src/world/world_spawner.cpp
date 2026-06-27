@@ -66,7 +66,7 @@ static Vector2i resolve_structure_rule_local(const Vector2i& p_structure_pos, ui
 static bool spawn_npc_at(
     const String& p_race_id,
     const String& p_job,
-    const String& p_dialogue_profile,
+    const String& p_dialogue_id,
     const String& p_attitude,
     const String& p_ai_state,
     uint32_t p_world_seed,
@@ -81,7 +81,7 @@ static bool spawn_npc_at(
 
     EntityFactory::SpawnOverrides overrides;
     overrides.job = p_job;
-    overrides.dialogue_profile = p_dialogue_profile;
+    overrides.dialogue_id = p_dialogue_id;
     overrides.attitude = p_attitude;
     overrides.ai_state = p_ai_state;
 
@@ -115,7 +115,7 @@ static bool spawn_with_structure_rule(
     return spawn_npc_at(
         p_rule.entity,
         p_rule.job,
-        p_rule.dialogue_profile,
+        p_rule.dialogue_id,
         p_rule.attitude,
         p_rule.ai_state,
         p_world_seed,
@@ -292,7 +292,7 @@ static bool apply_ambient_chunk_entity(
     return spawn_npc_at(
         entry->entity,
         entry->job,
-        entry->dialogue_profile,
+        entry->dialogue_id,
         entry->attitude,
         entry->ai_state,
         p_world_seed,
@@ -411,7 +411,7 @@ static bool apply_structure_spawn_group_rule(
     if (!spawn_npc_at(
         entry->entity,
         entry->job,
-        entry->dialogue_profile,
+        entry->dialogue_id,
         entry->attitude,
         entry->ai_state,
         p_world_seed,

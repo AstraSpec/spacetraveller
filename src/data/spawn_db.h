@@ -19,7 +19,7 @@ struct SpawnRuleInfo {
     String spawn_mode = "free_cell";
     std::vector<uint16_t> tile_tags;
     String job;
-    String dialogue_profile;
+    String dialogue_id;
     String attitude;
     String ai_state;
 };

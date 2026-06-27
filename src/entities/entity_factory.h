@@ -16,7 +16,7 @@ class TurnScheduler;
 namespace EntityFactory {
     struct SpawnOverrides {
         String job;
-        String dialogue_profile;
+        String dialogue_id;
         String attitude;
         String ai_state;
         Array traits;

@@ -73,5 +73,20 @@
     "entries": [
       { "structure": "stall_armor", "weight": 1 }
     ]
+  },
+  {
+    "id": "dungeon_scavenger_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "dungeon_scavenger_1", "weight": 3 },
+      { "structure": "dungeon_scavenger_2", "weight": 3 },
+      { "structure": "dungeon_scavenger_3", "weight": 3 },
+      { "structure": "dungeon_scavenger_4", "weight": 3 },
+      { "structure": "dungeon_scavenger_6", "weight": 3 },
+      { "structure": "dungeon_scavenger_7", "weight": 5 },
+      { "structure": "dungeon_scavenger_8", "weight": 5 },
+      { "structure": "dungeon_scavenger_9", "weight": 5 },
+      { "structure": "dungeon_scavenger_10", "weight": 5 }
+    ]
   }
 ]

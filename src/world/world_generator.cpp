@@ -4,6 +4,7 @@
 #include "data/chunk_db.h"
 #include "data/dungeon_db.h"
 #include "data/feature_db.h"
+#include "data/tile_db.h"
 #include "data/tile_group_db.h"
 #include "core/tag_registry.h"
 #include "city_generation.h"
@@ -398,7 +399,12 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
 
             uint64_t key = WorldCoords::pack_coords(gx, gy);
 
-            surface_chunks[key] = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
+            const uint32_t packed_chunk = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
+            surface_chunks[key] = packed_chunk;
+            if (chunk_id == id_crypt_entrance) {
+                set_biome_chunk_data(gx, gy, -1, packed_chunk);
+                set_biome_chunk_data(gx, gy, -2, packed_chunk);
+            }
             result[key] = id_reg->get_string(chunk_id);
         }
     }
@@ -870,11 +876,25 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
     return id_void;
 }
 
-bool WorldGenerator::base_allows_surface_feature(uint16_t p_base_tile_id) const {
-    return p_base_tile_id == id_road_bricks ||
-        p_base_tile_id == id_road_flagstone ||
-        p_base_tile_id == id_alley_bricks ||
-        p_base_tile_id == id_alley_flagstone;
+bool WorldGenerator::base_allows_feature(uint16_t p_base_tile_id, int p_z) const {
+    if (p_z == 0) {
+        return p_base_tile_id == id_road_bricks ||
+            p_base_tile_id == id_road_flagstone ||
+            p_base_tile_id == id_alley_bricks ||
+            p_base_tile_id == id_alley_flagstone;
+    }
+
+    TileDb* tile_db = TileDb::get_singleton();
+    TagRegistry* tag_reg = TagRegistry::get_singleton();
+    if (!tile_db || !tag_reg) return false;
+
+    const TileInfo* tile = tile_db->get_tile_info(p_base_tile_id);
+    if (!tile || tile->solid) return false;
+
+    const uint16_t ground_tag_id = tag_reg->get_tag_id("GROUND");
+    const uint16_t floor_tag_id = tag_reg->get_tag_id("FLOOR");
+    return (ground_tag_id != 0 && TagRegistry::has_tag(ground_tag_id, tile->tags)) ||
+        (floor_tag_id != 0 && TagRegistry::has_tag(floor_tag_id, tile->tags));
 }
 
 uint16_t WorldGenerator::get_surface_feature_tile_at(
@@ -894,8 +914,10 @@ bool WorldGenerator::validate_surface_feature_anchor(
     const Vector2i& p_source_size,
     const Vector2i& p_placed_size,
     uint8_t p_rotation,
+    int p_z,
     int p_world_seed,
     bool p_require_source_chunk,
+    bool p_skip_base_validation,
     int p_source_chunk_x,
     int p_source_chunk_y
 ) {
@@ -910,11 +932,13 @@ bool WorldGenerator::validate_surface_feature_anchor(
                 if (floor_div_chunk(world_x) != p_source_chunk_x || floor_div_chunk(world_y) != p_source_chunk_y) {
                     return false;
                 }
-                continue;
+                if (p_skip_base_validation) {
+                    continue;
+                }
             }
 
-            const uint16_t base_tile = get_base_surface_tile(world_x, world_y, p_world_seed);
-            if (!base_allows_surface_feature(base_tile)) {
+            const uint16_t base_tile = get_base_tile_without_features(world_x, world_y, p_z, p_world_seed);
+            if (!base_allows_feature(base_tile, p_z)) {
                 return false;
             }
         }
@@ -922,7 +946,7 @@ bool WorldGenerator::validate_surface_feature_anchor(
     return true;
 }
 
-bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, SurfaceFeatureInstance& r_instance, bool p_include_void_tiles) {
+bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, SurfaceFeatureInstance& r_instance, bool p_include_void_tiles) {
     static constexpr int ROAD_SHOULDER_OFFSET = 3;
     static constexpr int ALLEY_GARDEN_START = 2;
     static constexpr int ALLEY_GARDEN_WIDTH = 3;
@@ -944,17 +968,22 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
     const uint16_t road_tag_id = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
     if (!chunk_db) return false;
 
-    const BiomeLayer* surface_layer = get_biome_layer(0);
-    if (!surface_layer) return false;
+    const BiomeLayer* feature_layer = get_biome_layer(z);
+    if (!feature_layer) return false;
 
     const int current_cx = floor_div_chunk(x);
     const int current_cy = floor_div_chunk(y);
 
     auto get_chunk_data = [&](int p_chunk_x, int p_chunk_y, uint32_t& r_packed, uint16_t& r_chunk_id, uint8_t& r_neighbor_mask) -> bool {
         const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
-        auto chunk_it = surface_layer->overrides.find(chunk_key);
-        if (chunk_it == surface_layer->overrides.end()) return false;
-        r_packed = chunk_it->second;
+        auto chunk_it = feature_layer->overrides.find(chunk_key);
+        if (chunk_it != feature_layer->overrides.end()) {
+            r_packed = chunk_it->second;
+        } else if (feature_layer->default_chunk_data != 0) {
+            r_packed = feature_layer->default_chunk_data;
+        } else {
+            return false;
+        }
         r_chunk_id = static_cast<uint16_t>(r_packed & WorldCoords::ID_MASK);
         r_neighbor_mask = static_cast<uint8_t>((r_packed >> WorldCoords::NEIGHBOR_SHIFT) & WorldCoords::NEIGHBOR_MASK);
         return true;
@@ -1039,6 +1068,7 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
         if (!entry || entry->structure_id.is_empty()) return candidate;
 
         candidate.feature_id = entry->structure_id;
+        candidate.unique = spawn_info->unique;
         candidate.source_size = s_db->get_structure_size(candidate.feature_id);
         if (candidate.source_size.x <= 0 || candidate.source_size.y <= 0) return candidate;
 
@@ -1071,6 +1101,7 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
             anchor_x += rotated_area_origin.x;
             anchor_y += rotated_area_origin.y;
             candidate.require_source_chunk = true;
+            candidate.skip_base_validation = z == 0 && chunk_info->dungeon_type.is_empty();
         } else {
             const bool north_south = (neighbor_mask & WorldCoords::NEIGH_NORTH) || (neighbor_mask & WorldCoords::NEIGH_SOUTH);
             const bool east_west = (neighbor_mask & WorldCoords::NEIGH_EAST) || (neighbor_mask & WorldCoords::NEIGH_WEST);
@@ -1115,6 +1146,7 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
                         : ALLEY_GARDEN_START + centered_offset;
                 }
                 candidate.require_source_chunk = true;
+                candidate.skip_base_validation = true;
             } else {
                 const int shoulder_nudge = rng.range(-1, 1);
                 if (!place_horizontal) {
@@ -1183,14 +1215,20 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
         return false;
     };
 
-    auto overlaps_prior_candidate = [&](const SurfaceFeatureInstance& p_candidate) -> bool {
+    auto is_blocked_by_prior_candidate = [&](const SurfaceFeatureInstance& p_candidate) -> bool {
         for (int cy = p_candidate.chunk_y - 1; cy <= p_candidate.chunk_y + 1; cy++) {
             for (int cx = p_candidate.chunk_x - 1; cx <= p_candidate.chunk_x + 1; cx++) {
                 const int candidate_count = feature_candidate_count_for_chunk(cx, cy);
                 for (int index = 0; index < candidate_count; index++) {
                     SurfaceFeatureInstance prior = build_candidate(cx, cy, index);
                     if (!prior.valid || !candidate_has_priority(prior, p_candidate)) continue;
-                    if (!validate_surface_feature_anchor(prior.feature_id, prior.origin, prior.source_size, prior.placed_size, prior.rotation, world_seed, prior.require_source_chunk, prior.chunk_x, prior.chunk_y)) continue;
+                    if (!validate_surface_feature_anchor(prior.feature_id, prior.origin, prior.source_size, prior.placed_size, prior.rotation, z, world_seed, prior.require_source_chunk, prior.skip_base_validation, prior.chunk_x, prior.chunk_y)) continue;
+                    if (p_candidate.unique &&
+                        prior.chunk_x == p_candidate.chunk_x &&
+                        prior.chunk_y == p_candidate.chunk_y &&
+                        prior.feature_id == p_candidate.feature_id) {
+                        return true;
+                    }
                     if (candidates_overlap(p_candidate, prior)) {
                         return true;
                     }
@@ -1213,10 +1251,10 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
 
                 if (x >= placed.origin.x && x < placed.origin.x + placed.placed_size.x &&
                     y >= placed.origin.y && y < placed.origin.y + placed.placed_size.y) {
-                    if (!validate_surface_feature_anchor(placed.feature_id, placed.origin, placed.source_size, placed.placed_size, placed.rotation, world_seed, placed.require_source_chunk, placed.chunk_x, placed.chunk_y)) {
+                    if (!validate_surface_feature_anchor(placed.feature_id, placed.origin, placed.source_size, placed.placed_size, placed.rotation, z, world_seed, placed.require_source_chunk, placed.skip_base_validation, placed.chunk_x, placed.chunk_y)) {
                         continue;
                     }
-                    if (overlaps_prior_candidate(placed)) {
+                    if (is_blocked_by_prior_candidate(placed)) {
                         continue;
                     }
 
@@ -1235,11 +1273,11 @@ bool WorldGenerator::find_surface_feature_at(int x, int y, int world_seed, Surfa
     return false;
 }
 
-uint16_t WorldGenerator::get_surface_feature_tile(int x, int y, uint16_t base_tile_id, int world_seed) {
+uint16_t WorldGenerator::get_feature_tile(int x, int y, int z, uint16_t base_tile_id, int world_seed) {
     if (base_tile_id == id_void || base_tile_id == 0) return id_void;
 
     SurfaceFeatureInstance instance;
-    if (!find_surface_feature_at(x, y, world_seed, instance)) {
+    if (!find_feature_at(x, y, z, world_seed, instance)) {
         return id_void;
     }
 
@@ -1561,12 +1599,9 @@ DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int
 
 SurfaceFeatureContext WorldGenerator::get_surface_feature_context(int x, int y, int z, int world_seed) {
     setup_biome_rules();
-    if (z != 0) {
-        return SurfaceFeatureContext{};
-    }
 
     SurfaceFeatureInstance instance;
-    if (!find_surface_feature_at(x, y, world_seed, instance, true)) {
+    if (!find_feature_at(x, y, z, world_seed, instance, true)) {
         return SurfaceFeatureContext{};
     }
 
@@ -1589,12 +1624,20 @@ bool WorldGenerator::is_dungeon_floor_loot_candidate(int x, int y, int z, int wo
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     uint16_t base_tile_id = get_base_surface_tile(x, y, world_seed);
-    uint16_t feature_tile_id = get_surface_feature_tile(x, y, base_tile_id, world_seed);
+    uint16_t feature_tile_id = get_feature_tile(x, y, 0, base_tile_id, world_seed);
     return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
 }
 
 uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
     if (z == 0) return get_tile(x, y, world_seed);
+
+    uint16_t base_tile_id = get_base_tile_without_features(x, y, z, world_seed);
+    uint16_t feature_tile_id = get_feature_tile(x, y, z, base_tile_id, world_seed);
+    return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
+}
+
+uint16_t WorldGenerator::get_base_tile_without_features(int x, int y, int z, int world_seed) {
+    if (z == 0) return get_base_surface_tile(x, y, world_seed);
 
     uint16_t chunk_id = get_chunk_id_for_cell(x, y);
     ChunkDb* chunk_db = ChunkDb::get_singleton();

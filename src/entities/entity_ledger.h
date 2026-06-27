@@ -131,7 +131,7 @@ public:
     int get_inventory_item_amount(uint32_t id, const String& item_id) const;
 
     void init_relationship(uint32_t id);
-    void init_social_profile(uint32_t id, const String& job = "drifter", const String& dialogue_profile = "default");
+    void init_social_profile(uint32_t id, const String& job = "drifter", const String& dialogue_id = "");
     bool has_relationship(uint32_t id) const;
     int get_friendship(uint32_t id) const;
     int get_romance(uint32_t id) const;

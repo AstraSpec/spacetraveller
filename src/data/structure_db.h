@@ -37,7 +37,7 @@ struct StructureRuleInfo {
     String entity;
     String entity_group;
     String job;
-    String dialogue_profile;
+    String dialogue_id;
     String attitude;
     String ai_state;
     uint16_t loot_table = 0;

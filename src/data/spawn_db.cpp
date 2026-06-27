@@ -42,7 +42,7 @@ SpawnRuleInfo SpawnDb::_parse_row(const Dictionary &p_data) {
     info.spawn_mode = String(p_data.get("spawn_mode", "free_cell"));
     info.tile_tags = _parse_tags(p_data.get("tile_tags", Array()));
     info.job = String(p_data.get("job", ""));
-    info.dialogue_profile = String(p_data.get("dialogue_profile", ""));
+    info.dialogue_id = String(p_data.get("dialogue_id", ""));
     info.attitude = String(p_data.get("attitude", ""));
     info.ai_state = String(p_data.get("ai_state", ""));
     return info;

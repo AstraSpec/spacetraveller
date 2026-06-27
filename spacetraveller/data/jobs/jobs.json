@@ -1,7 +1,7 @@
 {
   "blacksmith": {
     "display_name": "Blacksmith",
-    "dialogue_profile": "blacksmith",
+    "dialogues": ["blacksmith"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "shopkeeper"],
@@ -17,7 +17,7 @@
   },
   "scavenger": {
     "display_name": "Scavenger",
-    "dialogue_profile": "scavenger",
+    "dialogues": ["scavenger"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["civilian", "wanderer"],
@@ -33,7 +33,7 @@
   },
   "adventurer": {
     "display_name": "Adventurer",
-    "dialogue_profile": "adventurer",
+    "dialogues": ["adventurer"],
     "default_attitude": "friendly",
     "default_ai_state": "idle",
     "tags": ["civilian", "adventurer"],
@@ -43,7 +43,7 @@
   },
   "guard": {
     "display_name": "Guard",
-    "dialogue_profile": "guard",
+    "dialogues": ["default_stranger"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["civilian"],
@@ -53,7 +53,7 @@
   },
   "prisoner": {
     "display_name": "Prisoner",
-    "dialogue_profile": "prisoner",
+    "dialogues": ["prisoner"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["civilian"],
@@ -62,7 +62,7 @@
   },
   "merchant_fruit_veg": {
     "display_name": "Fruit and Veg Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -73,7 +73,7 @@
   },
   "merchant_fish": {
     "display_name": "Fish Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -84,7 +84,7 @@
   },
   "merchant_food": {
     "display_name": "Food Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -95,7 +95,7 @@
   },
   "merchant_foraging": {
     "display_name": "Foraging Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -106,7 +106,7 @@
   },
   "merchant_weapons": {
     "display_name": "Weapons Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -117,7 +117,7 @@
   },
   "merchant_armor": {
     "display_name": "Armor Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -128,7 +128,7 @@
   },
   "merchant_clothing": {
     "display_name": "Clothing Merchant",
-    "dialogue_profile": "merchant",
+    "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "tags": ["civilian", "merchant"],
@@ -137,9 +137,20 @@
     "traits": [],
     "vendor_loot_table": "clothing_vendor_stock"
   },
+  "merchant_scavenger": {
+    "display_name": "Scavenger",
+    "dialogues": ["scavenger_merchant"],
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "tags": ["civilian", "merchant"],
+    "atlas_offset": 42,
+    "spawn_weight": 0,
+    "traits": [],
+    "vendor_loot_table": "scavenger_vendor_stock"
+  },
   "monster": {
     "display_name": "Monster",
-    "dialogue_profile": "",
+    "dialogues": [],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["monster", "hostile"],
@@ -148,7 +159,7 @@
   },
   "animal": {
     "display_name": "Animal",
-    "dialogue_profile": "",
+    "dialogues": [],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "tags": ["animal"],

@@ -96,6 +96,7 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
             spawn.rotation_mode = String(spawn_data.get("rotation", "fixed"));
             spawn.chance = static_cast<float>(static_cast<double>(spawn_data.get("chance", 0.0)));
             spawn.candidates = static_cast<int>(spawn_data.get("candidates", Variant(1)));
+            spawn.unique = static_cast<bool>(spawn_data.get("unique", false));
 
             Variant areas_var = spawn_data.get("areas", Array());
             if (areas_var.get_type() == Variant::ARRAY) {

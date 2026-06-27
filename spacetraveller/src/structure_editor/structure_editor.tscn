@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueProfileContainer", "NpcDialogueProfileText", "NpcDialogueProfilePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -26,9 +26,9 @@ ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxCont
 NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
 NpcJobText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobText")
 NpcJobPopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer/NpcJobPopup")
-NpcDialogueProfileContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer")
-NpcDialogueProfileText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer/NpcDialogueProfileText")
-NpcDialogueProfilePopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer/NpcDialogueProfilePopup")
+NpcDialogueContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer")
+NpcDialogueText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer/NpcDialogueText")
+NpcDialoguePopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer/NpcDialoguePopup")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
@@ -160,19 +160,19 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "Pick"
 
-[node name="NpcDialogueProfileContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
+[node name="NpcDialogueContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
 visible = false
 layout_mode = 2
 
-[node name="DialogueProfileLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+[node name="DialogueLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer"]
 layout_mode = 2
 text = "Dialogue:"
 
-[node name="NpcDialogueProfileText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+[node name="NpcDialogueText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NpcDialogueProfilePopup" type="MenuButton" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueProfileContainer"]
+[node name="NpcDialoguePopup" type="MenuButton" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer"]
 layout_mode = 2
 text = "Pick"
 

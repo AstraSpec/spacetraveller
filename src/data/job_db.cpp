@@ -31,7 +31,7 @@ void JobDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &JobDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_ids"), &JobDb::get_ids);
     ClassDB::bind_method(D_METHOD("get_display_name", "id"), &JobDb::get_display_name);
-    ClassDB::bind_method(D_METHOD("get_dialogue_profile", "id"), &JobDb::get_dialogue_profile);
+    ClassDB::bind_method(D_METHOD("get_dialogues", "id"), &JobDb::get_dialogues);
     ClassDB::bind_method(D_METHOD("get_default_attitude", "id"), &JobDb::get_default_attitude);
     ClassDB::bind_method(D_METHOD("get_default_ai_state", "id"), &JobDb::get_default_ai_state);
     ClassDB::bind_method(D_METHOD("get_spawn_weight", "id"), &JobDb::get_spawn_weight);
@@ -51,7 +51,7 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     JobInfo info;
     info.id = String(p_data.get("id", ""));
     info.display_name = String(p_data.get("display_name", info.id.capitalize()));
-    info.dialogue_profile = String(p_data.get("dialogue_profile", info.id));
+    info.dialogues = parse_string_list(p_data.get("dialogues", Array()));
     info.default_attitude = String(p_data.get("default_attitude", "")).to_lower();
     info.default_ai_state = String(p_data.get("default_ai_state", "")).to_lower();
     info.spawn_weight = int(p_data.get("spawn_weight", 1));
@@ -116,9 +116,9 @@ String JobDb::get_display_name(const String &p_id) const {
     return info ? info->display_name : "";
 }
 
-String JobDb::get_dialogue_profile(const String &p_id) const {
+Array JobDb::get_dialogues(const String &p_id) const {
     const JobInfo* info = get_job_info(p_id);
-    return info ? info->dialogue_profile : "";
+    return info ? to_array(info->dialogues) : Array();
 }
 
 String JobDb::get_default_attitude(const String &p_id) const {

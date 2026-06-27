@@ -180,11 +180,11 @@ void EntityLedger::init_relationship(uint32_t id) {
     romance[id] = RelationshipTuning::ROMANCE_INITIAL;
 }
 
-void EntityLedger::init_social_profile(uint32_t id, const String& job, const String& dialogue_profile) {
+void EntityLedger::init_social_profile(uint32_t id, const String& job, const String& dialogue_id) {
     SocialProfileData& profile = social_profiles[id];
     SocialProfile::init(profile);
     profile.job = job.is_empty() ? String("drifter") : job;
-    profile.dialogue_profile = dialogue_profile.is_empty() ? String("default") : dialogue_profile;
+    profile.dialogue_id = dialogue_id;
 
     auto anat_it = anatomy_data.find(id);
     if (anat_it != anatomy_data.end()) {

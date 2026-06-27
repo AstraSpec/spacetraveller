@@ -2,7 +2,6 @@
   "id": "default_stranger",
   "priority": 0,
   "start": "start",
-  "selector": {},
   "nodes": {
     "start": {
       "npc": "{npc_name} studies you for a moment, then gives a guarded nod. \"Road's been rough on everyone. Say what you came to say.\"",

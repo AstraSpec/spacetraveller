@@ -2,7 +2,6 @@
   "id": "blacksmith",
   "priority": 140,
   "start": "start",
-  "selector": { "job": "blacksmith" },
   "nodes": {
     "start": {
       "npc": "{npc_name} wipes soot from their knuckles. \"If you need a blade sung back into shape, you came to the right fire. If you need charity, keep walking.\"",

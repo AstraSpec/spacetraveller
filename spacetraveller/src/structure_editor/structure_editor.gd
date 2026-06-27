@@ -17,9 +17,9 @@ signal open_load
 @export var NpcJobContainer :HBoxContainer
 @export var NpcJobText :LineEdit
 @export var NpcJobPopup :MenuButton
-@export var NpcDialogueProfileContainer :HBoxContainer
-@export var NpcDialogueProfileText :LineEdit
-@export var NpcDialogueProfilePopup :MenuButton
+@export var NpcDialogueContainer :HBoxContainer
+@export var NpcDialogueText :LineEdit
+@export var NpcDialoguePopup :MenuButton
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -425,7 +425,9 @@ var item_amount: int:
 
 func _setup_npc_option_menus() -> void:
 	_populate_menu(NpcJobPopup, JobDb.get_ids(), _on_npc_job_index_pressed)
-	_populate_menu(NpcDialogueProfilePopup, _get_dialogue_profile_suggestions(), _on_npc_dialogue_profile_index_pressed)
+	if NpcJobText and !NpcJobText.text_changed.is_connected(_on_npc_job_text_changed):
+		NpcJobText.text_changed.connect(_on_npc_job_text_changed)
+	_refresh_npc_dialogue_menu()
 
 func _populate_menu(button: MenuButton, values: Array, callback: Callable) -> void:
 	if !button:
@@ -439,31 +441,57 @@ func _populate_menu(button: MenuButton, values: Array, callback: Callable) -> vo
 	if !popup.index_pressed.is_connected(callback):
 		popup.index_pressed.connect(callback)
 
-func _get_dialogue_profile_suggestions() -> Array:
+func _current_npc_job() -> String:
+	return NpcJobText.text.strip_edges().to_lower() if NpcJobText else ""
+
+func _get_dialogue_suggestions_for_job(job: String) -> Array:
 	var seen := {}
-	for job_id in JobDb.get_ids():
-		var profile := str(JobDb.get_dialogue_profile(str(job_id))).strip_edges()
-		if !profile.is_empty():
-			seen[profile] = true
-	var profiles: Array = seen.keys()
-	profiles.sort()
-	return profiles
+	var result: Array = []
+	if job.is_empty():
+		return result
+	for dialogue_variant in JobDb.get_dialogues(job):
+		var dialogue_id := str(dialogue_variant).strip_edges()
+		if dialogue_id.is_empty() or seen.has(dialogue_id):
+			continue
+		seen[dialogue_id] = true
+		result.append(dialogue_id)
+	return result
+
+func _job_allows_dialogue(job: String, dialogue_id: String) -> bool:
+	if dialogue_id.is_empty():
+		return true
+	return _get_dialogue_suggestions_for_job(job).has(dialogue_id)
+
+func _selected_dialogue_id_for_job(job: String) -> String:
+	var dialogue_id := NpcDialogueText.text.strip_edges() if NpcDialogueText else ""
+	if dialogue_id.is_empty() or !_job_allows_dialogue(job, dialogue_id):
+		return ""
+	return dialogue_id
+
+func _refresh_npc_dialogue_menu() -> void:
+	var job := _current_npc_job()
+	var dialogue_ids := _get_dialogue_suggestions_for_job(job)
+	_populate_menu(NpcDialoguePopup, dialogue_ids, _on_npc_dialogue_index_pressed)
+	if NpcDialogueText:
+		var current := NpcDialogueText.text.strip_edges()
+		if !current.is_empty() and !dialogue_ids.has(current):
+			NpcDialogueText.text = ""
 
 func _on_npc_job_index_pressed(index: int) -> void:
 	var job := _menu_item_text(NpcJobPopup, index)
 	if job.is_empty():
 		return
 	NpcJobText.text = job
-	if NpcDialogueProfileText and NpcDialogueProfileText.text.strip_edges().is_empty():
-		var profile := str(JobDb.get_dialogue_profile(job)).strip_edges()
-		if !profile.is_empty():
-			NpcDialogueProfileText.text = profile
+	_refresh_npc_dialogue_menu()
 
-func _on_npc_dialogue_profile_index_pressed(index: int) -> void:
-	var profile := _menu_item_text(NpcDialogueProfilePopup, index)
-	if profile.is_empty():
+func _on_npc_job_text_changed(_new_text: String) -> void:
+	_refresh_npc_dialogue_menu()
+
+func _on_npc_dialogue_index_pressed(index: int) -> void:
+	var dialogue_id := _menu_item_text(NpcDialoguePopup, index)
+	if dialogue_id.is_empty():
 		return
-	NpcDialogueProfileText.text = profile
+	NpcDialogueText.text = dialogue_id
 
 func _menu_item_text(button: MenuButton, index: int) -> String:
 	if !button:
@@ -483,8 +511,8 @@ func _update_npc_options_for_race(race_id: String) -> void:
 	var sapient := _is_sapient_race(race_id)
 	if NpcJobContainer:
 		NpcJobContainer.visible = true
-	if NpcDialogueProfileContainer:
-		NpcDialogueProfileContainer.visible = sapient
+	if NpcDialogueContainer:
+		NpcDialogueContainer.visible = sapient
 	if NpcJobText:
 		var job := NpcJobText.text.strip_edges().to_lower()
 		if sapient:
@@ -493,8 +521,9 @@ func _update_npc_options_for_race(race_id: String) -> void:
 		elif job.is_empty() or (job != "monster" and job != "animal"):
 			NpcJobText.text = "monster"
 	if !sapient:
-		if NpcDialogueProfileText:
-			NpcDialogueProfileText.text = ""
+		if NpcDialogueText:
+			NpcDialogueText.text = ""
+	_refresh_npc_dialogue_menu()
 
 func _npc_job_for_race(race_id: String) -> String:
 	var job := NpcJobText.text.strip_edges().to_lower() if NpcJobText else ""
@@ -608,16 +637,17 @@ func _get_level_rule_dict(store: Dictionary, key: String) -> Dictionary:
 func _set_npc_rule(world_pos: Vector2i, race_id: String) -> void:
 	var local_pos := _local_pos_from_world(world_pos)
 	var rules := _get_level_rule_dict(editor_npc_rules_by_level, _active_level_key())
+	var job := _npc_job_for_race(race_id)
 	var rule := {
 		"type": "spawn_entity",
 		"entity": race_id,
 		"pos": _rule_pos_array(local_pos),
-		"job": _npc_job_for_race(race_id)
+		"job": job
 	}
 	if _is_sapient_race(race_id):
-		var dialogue_profile := NpcDialogueProfileText.text.strip_edges() if NpcDialogueProfileText else ""
-		if !dialogue_profile.is_empty():
-			rule["dialogue_profile"] = dialogue_profile
+		var dialogue_id := _selected_dialogue_id_for_job(job)
+		if !dialogue_id.is_empty():
+			rule["dialogue_id"] = dialogue_id
 	rules[_pos_key(local_pos)] = rule
 
 func _remove_npc_rule(world_pos: Vector2i) -> void:
@@ -823,8 +853,10 @@ func _apply_selected_content_options(type: String, rule: Dictionary, is_primary:
 			var job := str(rule.get("job", "")).strip_edges()
 			if !job.is_empty():
 				NpcJobText.text = job
-		if NpcDialogueProfileText:
-			NpcDialogueProfileText.text = str(rule.get("dialogue_profile", "")).strip_edges()
+		_refresh_npc_dialogue_menu()
+		if NpcDialogueText:
+			NpcDialogueText.text = str(rule.get("dialogue_id", "")).strip_edges()
+			_refresh_npc_dialogue_menu()
 	elif type == "item" and ItemAmountInput:
 		ItemAmountInput.value = max(1, int(rule.get("amount", 1)))
 
@@ -1410,9 +1442,9 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 					if str(stored_rule["job"]).is_empty():
 						stored_rule["job"] = _default_job_for_race(race_id)
 					if _is_sapient_race(race_id):
-						var dialogue_profile := str(rule.get("dialogue_profile", "")).strip_edges()
-						if !dialogue_profile.is_empty():
-							stored_rule["dialogue_profile"] = dialogue_profile
+						var dialogue_id := str(rule.get("dialogue_id", "")).strip_edges()
+						if !dialogue_id.is_empty() and _job_allows_dialogue(str(stored_rule["job"]), dialogue_id):
+							stored_rule["dialogue_id"] = dialogue_id
 					rules[_pos_key(pos)] = stored_rule
 					continue
 			elif _is_spawn_item_rule(rule):

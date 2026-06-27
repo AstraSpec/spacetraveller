@@ -17,6 +17,7 @@ struct ChunkFeatureSpawnInfo {
     String rotation_mode;
     float chance = 0.0f;
     int candidates = 0;
+    bool unique = false;
     std::vector<ChunkFeatureAreaInfo> areas;
 };
 

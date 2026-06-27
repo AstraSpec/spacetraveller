@@ -17,7 +17,7 @@ struct EntityGroupEntry {
     int weight = 1;
     int cumulative_weight = 0;
     String job;
-    String dialogue_profile;
+    String dialogue_id;
     String attitude;
     String ai_state;
 };

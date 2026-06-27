@@ -19,7 +19,27 @@
     "tile_group": "grass_dirt",
     "wilderness_spawn_chance": 0.001,
     "structure_type": "crypt_entrance",
-    "dungeon_type": "crypt"
+    "dungeon_type": "crypt",
+    "feature_spawns": [
+      {
+        "pool": "dungeon_scavenger_features",
+        "chance": 0.5,
+        "candidates": 1,
+        "placement": "fixed_areas",
+        "rotation": "center",
+        "unique": true,
+        "areas": [
+          { "origin": [ 1, 2 ], "size": [ 6, 3 ] },
+          { "origin": [ 9, 2 ], "size": [ 6, 3 ] },
+          { "origin": [ 17, 2 ], "size": [ 6, 3 ] },
+          { "origin": [ 2, 9 ], "size": [ 3, 6 ] },
+          { "origin": [ 19, 9 ], "size": [ 3, 6 ] },
+          { "origin": [ 1, 19 ], "size": [ 6, 3 ] },
+          { "origin": [ 9, 19 ], "size": [ 6, 3 ] },
+          { "origin": [ 17, 19 ], "size": [ 6, 3 ] }
+        ]
+      }
+    ]
   },
   {
     "id": "road",

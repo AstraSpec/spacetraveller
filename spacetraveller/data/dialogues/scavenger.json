@@ -2,7 +2,6 @@
   "id": "scavenger",
   "priority": 140,
   "start": "start",
-  "selector": { "job": "scavenger" },
   "nodes": {
     "start": {
       "npc": "I've been searching this rubble for hours, haven't found much of value yet, just a few scraps of metal and some broken glass. What brings you to this place, you're not from around here, that's for sure. I'm keeping an eye on you, so don't even think about trying to take what's mine.",

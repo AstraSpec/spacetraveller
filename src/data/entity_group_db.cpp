@@ -41,7 +41,7 @@ EntityGroupInfo EntityGroupDb::_parse_row(const Dictionary &p_data) {
         if (entry.weight <= 0) continue;
 
         entry.job = String(entry_data.get("job", ""));
-        entry.dialogue_profile = String(entry_data.get("dialogue_profile", ""));
+        entry.dialogue_id = String(entry_data.get("dialogue_id", ""));
         entry.attitude = String(entry_data.get("attitude", ""));
         entry.ai_state = String(entry_data.get("ai_state", ""));
 

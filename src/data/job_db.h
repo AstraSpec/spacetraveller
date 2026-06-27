@@ -14,7 +14,7 @@ namespace godot {
 struct JobInfo {
     String id;
     String display_name;
-    String dialogue_profile = "default";
+    std::vector<String> dialogues;
     String default_attitude;
     String default_ai_state;
     int spawn_weight = 1;
@@ -45,7 +45,7 @@ public:
     const JobInfo* pick_weighted_job(Rng::Seeded &p_rng) const;
 
     String get_display_name(const String &p_id) const;
-    String get_dialogue_profile(const String &p_id) const;
+    Array get_dialogues(const String &p_id) const;
     String get_default_attitude(const String &p_id) const;
     String get_default_ai_state(const String &p_id) const;
     int get_spawn_weight(const String &p_id) const;

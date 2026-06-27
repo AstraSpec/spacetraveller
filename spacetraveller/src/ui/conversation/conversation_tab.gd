@@ -97,6 +97,14 @@ func _on_item_activated() -> void:
 	if bool(result.get("end_conversation", false)):
 		_end_conversation(true)
 		return
+
+	var open_tab := str(result.get("open_tab", ""))
+	if not open_tab.is_empty():
+		_present_current_node(str(result.get("message", "")))
+		_save_conversation_state()
+		_switch_parent_tab(open_tab)
+		return
+
 	_present_current_node(str(result.get("message", "")))
 
 func _start_fight() -> void:
@@ -116,13 +124,32 @@ func _load_relationship_into_bars() -> void:
 func _end_conversation(save_state: bool = true) -> void:
 	if _GameWorld and target_id > 0:
 		_GameWorld.set_entity_social_cooldown(target_id, 0)
-		if save_state and DialogueService.should_save_state(_state):
-			_GameWorld.set_entity_social_state(target_id, _state)
+		if save_state:
+			_save_conversation_state()
 		else:
 			_GameWorld.clear_entity_social_state(target_id)
 	_conversation_active = false
 	_display_options = []
 	InputManager.pop_mode()
+
+func _save_conversation_state() -> void:
+	if not _GameWorld or target_id <= 0:
+		return
+	if DialogueService.should_save_state(_state):
+		_GameWorld.set_entity_social_state(target_id, _state)
+	else:
+		_GameWorld.clear_entity_social_state(target_id)
+
+func _switch_parent_tab(tab_name: String) -> void:
+	var tabs := get_parent() as TabContainer
+	if not tabs:
+		return
+	var target := tab_name.to_lower()
+	for i in range(tabs.get_tab_count()):
+		var child := tabs.get_child(i)
+		if tabs.get_tab_title(i).to_lower() == target or str(child.name).to_lower() == target:
+			tabs.current_tab = i
+			return
 
 func _show_empty(text: String) -> void:
 	_conversation_active = false
