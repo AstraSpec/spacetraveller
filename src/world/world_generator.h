@@ -140,8 +140,18 @@ private:
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);
     uint16_t get_dungeon_layout_tile(const DungeonLayout& p_layout, int x, int y, bool p_include_dynamic) const;
     DungeonLayout* get_or_create_dungeon_layout(const String& p_dungeon_type, const Vector2i& p_entrance_chunk, int p_world_seed);
-    void try_place_dynamic_dungeon_features(DungeonLayout& r_layout, int p_world_seed);
-    bool try_place_spider_nest(DungeonLayout& r_layout, int p_world_seed, int p_room_index, const PlacedDungeonRoom& p_room);
+    void try_place_dynamic_dungeon_features(DungeonLayout& r_layout, const DungeonInfo& p_info, int p_world_seed);
+    bool try_place_spider_nest(
+        DungeonLayout& r_layout,
+        int p_world_seed,
+        const Vector2i& p_center,
+        int p_radius_min,
+        int p_radius_max,
+        int p_egg_count_min,
+        int p_egg_count_max,
+        uint64_t p_salt,
+        int& r_placed_radius
+    );
     void reset_dungeon_cache();
     void rebuild_dungeon_entrance_cache();
     bool base_allows_feature(uint16_t p_base_tile_id, int p_z) const;
@@ -184,6 +194,7 @@ public:
     String get_structure_id_for_cell(int x, int y, int z, int world_seed) const;
     DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
     SurfaceFeatureContext get_surface_feature_context(int x, int y, int z, int world_seed);
+    String get_dungeon_type_for_cell(int x, int y, int z, int world_seed);
     bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);

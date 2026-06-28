@@ -42,6 +42,30 @@
     ]
   },
   {
+    "id": "spider_cave_entrance",
+    "atlas": [ 34, 3 ],
+    "tile_group": "grass_dirt",
+    "wilderness_spawn_chance": 0.0006,
+    "structure_type": "cave_entrance",
+    "dungeon_type": "spider_cave"
+  },
+  {
+    "id": "goblin_cave_entrance",
+    "atlas": [ 33, 3 ],
+    "tile_group": "grass_dirt",
+    "wilderness_spawn_chance": 0.0005,
+    "structure_type": "cave_entrance",
+    "dungeon_type": "goblin_cave"
+  },
+  {
+    "id": "bear_cave_entrance",
+    "atlas": [ 30, 3 ],
+    "tile_group": "grass_dirt",
+    "wilderness_spawn_chance": 0.00035,
+    "structure_type": "cave_entrance",
+    "dungeon_type": "bear_cave"
+  },
+  {
     "id": "road",
     "atlas": [ 53, 0 ],
     "tags": ["ROAD"],
@@ -204,10 +228,6 @@
   {
     "id": "dungeon",
     "atlas": [ 72, 18 ],
-    "tile_group": "dungeon_floor",
-    "ambient_entity_group": "dungeon_entities",
-    "ambient_entity_chance": 0.008,
-    "ambient_loot_table": "dungeon_floor_items",
-    "ambient_loot_chance": 0.04
+    "tile_group": "dungeon_floor"
   }
 ]

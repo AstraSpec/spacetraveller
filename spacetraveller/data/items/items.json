@@ -258,5 +258,15 @@
     "atlas": [ 7, 21 ],
     "weight": 1.2,
     "tags": []
+  },
+  {
+    "id": "bone_animal",
+    "name": "Animal Bone",
+    "description": "Bones of an animal.",
+    "type": "material",
+    "price": 10,
+    "atlas": [ 3, 38 ],
+    "weight": 1.2,
+    "tags": []
   }
 ]

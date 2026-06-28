@@ -28,5 +28,15 @@
     "atlas": [ 7, 21 ],
     "weight": 0.4,
     "tags": []
+  },
+  {
+    "id": "pickaxe",
+    "name": "Pickaxe",
+    "description": "",
+    "type": "tool",
+    "price": 850,
+    "atlas": [ 1, 31 ],
+    "weight": 1.6,
+    "tags": []
   }
 ]

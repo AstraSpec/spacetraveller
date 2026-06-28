@@ -14,6 +14,24 @@
     ]
   },
   {
+    "id": "spider_cave_entities",
+    "entries": [
+      { "entity": "pale_spider", "weight": 1, "job": "monster" }
+    ]
+  },
+  {
+    "id": "goblin_cave_entities",
+    "entries": [
+      { "entity": "goblin", "weight": 1, "job": "monster" }
+    ]
+  },
+  {
+    "id": "bear_cave_entities",
+    "entries": [
+      { "entity": "bear", "weight": 1, "job": "animal" }
+    ]
+  },
+  {
     "id": "crypt_prisoner_goblin",
     "entries": [
       { "none": true, "weight": 3 },

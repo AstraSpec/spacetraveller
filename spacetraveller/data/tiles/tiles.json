@@ -246,6 +246,13 @@
     "smash_loot_table": "rock_smashed"
   },
   {
+    "id": "solid_rock_floor",
+    "name": "Solid Rock Floor",
+    "atlas": [ 16, 2 ],
+    "solid": false,
+    "tags": ["GROUND", "FLOOR"]
+  },
+  {
     "id": "carpet_green",
     "name": "Green Carpet",
     "atlas": [ 3, 7 ],
@@ -307,5 +314,12 @@
     "atlas": [ 10, 40 ],
     "solid": false,
     "tags": ["FLOOR"]
+  },
+  {
+    "id": "campfire",
+    "name": "Campfire",
+    "atlas": [ 0, 42 ],
+    "solid": false,
+    "tags": []
   }
 ]

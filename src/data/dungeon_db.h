@@ -3,13 +3,33 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/string.hpp>
+#include <vector>
 #include "database.h"
 
 namespace godot {
 
+struct DungeonDynamicFeatureInfo {
+    String type;
+    String placement = "room_random";
+    float chance = 1.0f;
+    int count_min = 1;
+    int count_max = 1;
+    int radius_min = 8;
+    int radius_max = 10;
+    int egg_count_min = 4;
+    int egg_count_max = 6;
+};
+
 struct DungeonInfo {
     String id;
     String generator = "room_graph";
+    String end_structure_type;
+    String ambient_entity_group;
+    float ambient_entity_chance = 0.0f;
+    uint16_t ambient_loot_table = 0;
+    float ambient_loot_chance = 0.0f;
+    uint16_t floor_tile = 0;
+    uint16_t wall_tile = 0;
     int start_z = -1;
     int depth_min = 1;
     int depth_max = 1;
@@ -17,6 +37,7 @@ struct DungeonInfo {
     int room_count_min = 12;
     int room_count_max = 20;
     int corridor_width = 1;
+    std::vector<DungeonDynamicFeatureInfo> dynamic_features;
 };
 
 class DungeonDb : public Object, public DataBase<DungeonInfo, DungeonDb> {

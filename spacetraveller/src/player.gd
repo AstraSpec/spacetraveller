@@ -71,6 +71,13 @@ func _on_right_click(_global_pos: Vector2):
 	if not current_path.is_empty():
 		PathfindingTimer.start()
 
+func cancel_navigation() -> void:
+	if PathfindingTimer:
+		PathfindingTimer.stop()
+	_clear_path()
+	_clear_interaction_cells()
+	currentAction = null
+
 func _on_pathfinding_timer_timeout() -> void:
 	if current_path.is_empty():
 		PathfindingTimer.stop()

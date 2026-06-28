@@ -156,6 +156,8 @@ public:
     Vector2i get_player_position() const;
     int get_player_z() const;
     Vector2i get_player_chunk() const;
+    bool teleport_player_to_cell(const Vector2i& cell_pos);
+    bool teleport_player_to_chunk(const Vector2i& chunk_pos);
     bool would_player_move_fall(int target_x, int target_y);
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
     bool can_change_z(uint32_t entity_id, int delta);

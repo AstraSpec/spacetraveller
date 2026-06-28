@@ -60,9 +60,7 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     const JobInfo* job_info = nullptr;
     String default_job = sapient ? String("scavenger") : String("monster");
     if (job_db) {
-        job_info = overrides.job.is_empty()
-            ? (sapient ? job_db->pick_weighted_job(profile_rng) : job_db->get_job_info(default_job))
-            : job_db->get_job_info(overrides.job);
+        job_info = job_db->get_job_info(overrides.job.is_empty() ? default_job : overrides.job);
     }
     String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : default_job);
     if (!job_info && job_db) {

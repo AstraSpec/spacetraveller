@@ -4,9 +4,7 @@
     "dialogues": ["blacksmith"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "shopkeeper"],
     "atlas_offset": 1,
-    "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["blacksmith_gather"],
     "vendor_loot_table": "blacksmith_vendor_stock",
@@ -20,9 +18,7 @@
     "dialogues": ["scavenger"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
-    "tags": ["civilian", "wanderer"],
     "atlas_offset": 42,
-    "spawn_weight": 1,
     "traits": [],
     "quest_kinds": ["scavenger_gather"],
     "vendor_loot_table": "scavenger_vendor_stock",
@@ -36,9 +32,7 @@
     "dialogues": ["adventurer"],
     "default_attitude": "friendly",
     "default_ai_state": "idle",
-    "tags": ["civilian", "adventurer"],
     "atlas_offset": 46,
-    "spawn_weight": 0,
     "traits": []
   },
   "guard": {
@@ -46,9 +40,7 @@
     "dialogues": ["default_stranger"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
-    "tags": ["civilian"],
     "atlas_offset": 17,
-    "spawn_weight": 0,
     "traits": []
   },
   "prisoner": {
@@ -56,8 +48,6 @@
     "dialogues": ["prisoner"],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
-    "tags": ["civilian"],
-    "spawn_weight": 0,
     "traits": []
   },
   "merchant_fruit_veg": {
@@ -65,9 +55,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "fruit_veg_vendor_stock"
   },
@@ -76,9 +64,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "fish_vendor_stock"
   },
@@ -87,9 +73,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "food_vendor_stock"
   },
@@ -98,9 +82,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "foraging_vendor_stock"
   },
@@ -109,9 +91,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "weapon_vendor_stock"
   },
@@ -120,9 +100,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "armor_vendor_stock"
   },
@@ -131,9 +109,7 @@
     "dialogues": ["merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 4,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "clothing_vendor_stock"
   },
@@ -142,9 +118,7 @@
     "dialogues": ["scavenger_merchant"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
-    "tags": ["civilian", "merchant"],
     "atlas_offset": 42,
-    "spawn_weight": 0,
     "traits": [],
     "vendor_loot_table": "scavenger_vendor_stock"
   },
@@ -153,8 +127,6 @@
     "dialogues": [],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
-    "tags": ["monster", "hostile"],
-    "spawn_weight": 0,
     "traits": []
   },
   "animal": {
@@ -162,8 +134,6 @@
     "dialogues": [],
     "default_attitude": "neutral",
     "default_ai_state": "wander",
-    "tags": ["animal"],
-    "spawn_weight": 0,
     "traits": []
   }
 }

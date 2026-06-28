@@ -5,6 +5,7 @@
 #include "world_generator.h"
 #include "turn_scheduler.h"
 #include "data/chunk_db.h"
+#include "data/dungeon_db.h"
 #include "data/loot_db.h"
 #include "data/entity_group_db.h"
 #include "data/structure_db.h"
@@ -236,6 +237,31 @@ static uint64_t get_ambient_entity_salt(uint16_t p_biome_id, const String& p_ent
         ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_z)) << 32);
 }
 
+static uint64_t get_dungeon_ambient_loot_salt(const String& p_dungeon_type, uint16_t p_loot_table, int p_z) {
+    return AMBIENT_LOOT_ROLL_SALT
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_dungeon_type.hash())) << 32)
+        ^ static_cast<uint32_t>(p_loot_table)
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_z)) << 48);
+}
+
+static uint64_t get_dungeon_ambient_entity_salt(const String& p_dungeon_type, const String& p_entity_group, int p_z) {
+    return AMBIENT_ENTITY_ROLL_SALT
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_dungeon_type.hash())) << 32)
+        ^ static_cast<uint32_t>(p_entity_group.hash())
+        ^ (static_cast<uint64_t>(static_cast<uint32_t>(p_z)) << 48);
+}
+
+static const DungeonInfo* get_dungeon_info_for_cell(
+    WorldGenerator& p_generator,
+    const Vector3i& p_pos3,
+    uint32_t p_world_seed
+) {
+    String dungeon_type = p_generator.get_dungeon_type_for_cell(p_pos3.x, p_pos3.y, p_pos3.z, static_cast<int>(p_world_seed));
+    if (dungeon_type.is_empty()) return nullptr;
+    DungeonDb* dungeon_db = DungeonDb::get_singleton();
+    return dungeon_db ? dungeon_db->get_dungeon_info(dungeon_type) : nullptr;
+}
+
 static void apply_ambient_chunk_loot(
     uint32_t p_world_seed,
     const Vector3i& p_pos3,
@@ -254,6 +280,24 @@ static void apply_ambient_chunk_loot(
     if (!chance_rng.chance(chunk_info->ambient_loot_chance)) return;
 
     roll_loot_table_at(p_world_seed, chunk_info->ambient_loot_table, salt, p_pos, p_bubble);
+}
+
+static void apply_dungeon_ambient_loot(
+    uint32_t p_world_seed,
+    const DungeonInfo& p_dungeon_info,
+    const Vector3i& p_pos3,
+    uint16_t p_tile_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble
+) {
+    if (p_dungeon_info.ambient_loot_table == 0 || p_dungeon_info.ambient_loot_chance <= 0.0f) return;
+    if (!tile_has_ground_tag(p_tile_id)) return;
+
+    uint64_t salt = get_dungeon_ambient_loot_salt(p_dungeon_info.id, p_dungeon_info.ambient_loot_table, p_pos3.z);
+    Rng::Seeded chance_rng = Rng::at(p_world_seed, p_pos, Rng::LOOT, salt);
+    if (!chance_rng.chance(p_dungeon_info.ambient_loot_chance)) return;
+
+    roll_loot_table_at(p_world_seed, p_dungeon_info.ambient_loot_table, salt, p_pos, p_bubble);
 }
 
 static bool apply_ambient_chunk_entity(
@@ -285,6 +329,53 @@ static bool apply_ambient_chunk_entity(
 
     Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN_RULE, salt);
     const EntityGroupEntry* entry = group_db->pick_weighted_entry(chunk_info->ambient_entity_group, group_rng);
+    if (entry && entry->none) return false;
+    if (!entry || entry->entity.is_empty()) return false;
+    if (!tile_allows_entity_spawn(entry->entity, p_tile_id)) return false;
+
+    return spawn_npc_at(
+        entry->entity,
+        entry->job,
+        entry->dialogue_id,
+        entry->attitude,
+        entry->ai_state,
+        p_world_seed,
+        p_spawn_turn_time,
+        p_pos,
+        p_ledger,
+        p_tracker,
+        p_bubble,
+        p_scheduler
+    );
+}
+
+static bool apply_dungeon_ambient_entity(
+    uint32_t p_world_seed,
+    float p_spawn_turn_time,
+    const DungeonInfo& p_dungeon_info,
+    const Vector3i& p_pos3,
+    uint16_t p_tile_id,
+    const Vector2i& p_pos,
+    WorldBubble& p_bubble,
+    const EntityArchive& p_entity_archive,
+    EntityLedger& p_ledger,
+    EntityTracker& p_tracker,
+    TurnScheduler& p_scheduler
+) {
+    if (p_dungeon_info.ambient_entity_group.is_empty() || p_dungeon_info.ambient_entity_chance <= 0.0f) return false;
+    if (!tile_has_ground_tag(p_tile_id)) return false;
+    if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr) return false;
+    if (p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_pos3.z))) return false;
+
+    uint64_t salt = get_dungeon_ambient_entity_salt(p_dungeon_info.id, p_dungeon_info.ambient_entity_group, p_pos3.z);
+    Rng::Seeded chance_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN, salt);
+    if (!chance_rng.chance(p_dungeon_info.ambient_entity_chance)) return false;
+
+    EntityGroupDb* group_db = EntityGroupDb::get_singleton();
+    if (!group_db) return false;
+
+    Rng::Seeded group_rng = Rng::at(p_world_seed, p_pos, Rng::SPAWN_RULE, salt);
+    const EntityGroupEntry* entry = group_db->pick_weighted_entry(p_dungeon_info.ambient_entity_group, group_rng);
     if (entry && entry->none) return false;
     if (!entry || entry->entity.is_empty()) return false;
     if (!tile_allows_entity_spawn(entry->entity, p_tile_id)) return false;
@@ -496,16 +587,26 @@ void WorldSpawner::spawn_for_newly_seen_cells(
                     }
 
                     const uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
-                    const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+                    const DungeonInfo* dungeon_info = get_dungeon_info_for_cell(p_generator, pos3, p_world_seed);
                     if (!custom_loot_rule_matched) {
                         apply_tile_spawn_loot(p_world_seed, dungeon_structure.structure_id, tile_id, pos, p_bubble);
 
-                        apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+                        if (dungeon_info) {
+                            apply_dungeon_ambient_loot(p_world_seed, *dungeon_info, pos3, tile_id, pos, p_bubble);
+                        } else {
+                            const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+                            apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+                        }
                     }
                     if (!spawned_from_rule) {
                         const bool spawned_web_spider = apply_webbed_floor_spider_spawn(p_world_seed, p_spawn_turn_time, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
                         if (!spawned_web_spider) {
-                            apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                            if (dungeon_info) {
+                                apply_dungeon_ambient_entity(p_world_seed, p_spawn_turn_time, *dungeon_info, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                            } else {
+                                const uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+                                apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                            }
                         }
                     }
                 }
@@ -633,12 +734,22 @@ void WorldSpawner::spawn_for_newly_seen_cells(
         if (p_spawn_state.has_attempted(packed)) continue;
         p_spawn_state.mark_attempted(packed);
 
-        uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
-        apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+        const DungeonInfo* dungeon_info = get_dungeon_info_for_cell(p_generator, pos3, p_world_seed);
+        if (dungeon_info) {
+            apply_dungeon_ambient_loot(p_world_seed, *dungeon_info, pos3, tile_id, pos, p_bubble);
+        } else {
+            uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+            apply_ambient_chunk_loot(p_world_seed, pos3, biome_id, tile_id, pos, p_bubble);
+        }
         const bool spawned_web_spider = apply_webbed_floor_spider_spawn(p_world_seed, p_spawn_turn_time, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
         if (!spawned_web_spider) {
-            apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+            if (dungeon_info) {
+                apply_dungeon_ambient_entity(p_world_seed, p_spawn_turn_time, *dungeon_info, pos3, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+            } else {
+                uint16_t biome_id = p_generator.get_biome_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+                apply_ambient_chunk_entity(p_world_seed, p_spawn_turn_time, pos3, biome_id, tile_id, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+            }
         }
     }
 }

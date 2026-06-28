@@ -155,6 +155,8 @@ public:
         rng(Rng::at(static_cast<uint32_t>(p_world_seed), p_entrance_chunk, Rng::BIOME, DUNGEON_LAYOUT_SALT)) {
         layout.dungeon_type = info.id;
         layout.z = info.start_z;
+        layout.floor_tile_id = info.floor_tile;
+        layout.wall_tile_id = info.wall_tile;
         layout.entrance_chunk = entrance_chunk;
     }
 

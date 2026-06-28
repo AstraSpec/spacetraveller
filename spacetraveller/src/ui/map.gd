@@ -12,6 +12,7 @@ var REGION_SIZE = GameWorld.get_region_size()
 var TILE_SIZE = FastMapRenderer.get_tile_size()
 
 func _ready():
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	get_window().size_changed.connect(resize_viewport)
 	resized.connect(resize_viewport)
 	call_deferred("resize_viewport")
@@ -26,6 +27,27 @@ func _ready():
 	Camera.limits = Rect2(0, 0, REGION_SIZE * TILE_SIZE, REGION_SIZE * TILE_SIZE)
 	_sync_player_chunk_position()
 	Camera._view_centered()
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			var chunk_pos := _screen_pos_to_chunk(event.position)
+			if Player.has_method("cancel_navigation"):
+				Player.cancel_navigation()
+			if World.teleport_player_to_chunk(chunk_pos):
+				accept_event()
+
+func _screen_pos_to_chunk(screen_pos: Vector2) -> Vector2i:
+	var viewport_size := Vector2(MapView.size)
+	var offset := screen_pos - viewport_size * 0.5
+	var map_pos := Camera.get_screen_center_position() + Vector2(
+		offset.x / Camera.zoom.x,
+		offset.y / Camera.zoom.y
+	)
+	return Vector2i(
+		floori(map_pos.x / TILE_SIZE),
+		floori(map_pos.y / TILE_SIZE)
+	)
 
 func _on_world_generated(regionChunks: Dictionary) -> void:
 	if regionChunks.is_empty():

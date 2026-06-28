@@ -29,11 +29,14 @@ struct DungeonCorridor {
 struct DungeonLayout {
     String dungeon_type;
     int z = -1;
+    uint16_t floor_tile_id = 0;
+    uint16_t wall_tile_id = 0;
     Vector2i entrance_chunk;
     DungeonRect bounds;
     std::vector<PlacedDungeonRoom> rooms;
     std::vector<DungeonCorridor> corridors;
     std::vector<Vector2i> doors;
+    std::vector<Vector2i> cave_chamber_centers;
     std::unordered_set<uint64_t> corridor_cells;
     std::unordered_set<uint64_t> corridor_wall_cells;
     std::unordered_set<uint64_t> door_cells;

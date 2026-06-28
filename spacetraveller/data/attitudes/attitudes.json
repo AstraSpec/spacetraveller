@@ -12,7 +12,7 @@
   {
     "id": "hostile",
     "display_name": "Hostile",
-    "hostility_mode": "always"
+    "hostility_mode": "faction"
   },
   {
     "id": "fearful",

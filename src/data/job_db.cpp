@@ -1,8 +1,6 @@
 #include "job_db.h"
 #include "core/id_registry.h"
-#include "core/tag_registry.h"
 #include <godot_cpp/core/class_db.hpp>
-#include <algorithm>
 
 namespace godot {
 
@@ -34,9 +32,7 @@ void JobDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_dialogues", "id"), &JobDb::get_dialogues);
     ClassDB::bind_method(D_METHOD("get_default_attitude", "id"), &JobDb::get_default_attitude);
     ClassDB::bind_method(D_METHOD("get_default_ai_state", "id"), &JobDb::get_default_ai_state);
-    ClassDB::bind_method(D_METHOD("get_spawn_weight", "id"), &JobDb::get_spawn_weight);
     ClassDB::bind_method(D_METHOD("get_atlas_offset", "id"), &JobDb::get_atlas_offset);
-    ClassDB::bind_method(D_METHOD("has_tag", "id", "tag"), &JobDb::has_tag);
     ClassDB::bind_method(D_METHOD("get_traits", "id"), &JobDb::get_traits);
     ClassDB::bind_method(D_METHOD("get_context_tags", "id"), &JobDb::get_context_tags);
     ClassDB::bind_method(D_METHOD("get_quest_kinds", "id"), &JobDb::get_quest_kinds);
@@ -54,10 +50,7 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     info.dialogues = parse_string_list(p_data.get("dialogues", Array()));
     info.default_attitude = String(p_data.get("default_attitude", "")).to_lower();
     info.default_ai_state = String(p_data.get("default_ai_state", "")).to_lower();
-    info.spawn_weight = int(p_data.get("spawn_weight", 1));
     info.atlas_offset = int(p_data.get("atlas_offset", 0));
-    if (info.spawn_weight < 0) info.spawn_weight = 0;
-    info.tags = _parse_tags(p_data.get("tags", Array()));
     info.traits = parse_string_list(p_data.get("traits", Array()));
     info.context_tags = parse_string_list(p_data.get("context_tags", Array()));
     info.quest_kinds = parse_string_list(p_data.get("quest_kinds", Array()));
@@ -71,44 +64,6 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
 
 const JobInfo* JobDb::get_job_info(const String &p_id) const {
     return get_info(p_id);
-}
-
-const JobInfo* JobDb::pick_weighted_job(Rng::Seeded &p_rng) const {
-    if (cache.empty()) return nullptr;
-
-    std::vector<String> ids;
-    ids.reserve(cache.size());
-    for (const auto &pair : cache) {
-        ids.push_back(pair.first);
-    }
-    std::sort(ids.begin(), ids.end(), [](const String &a, const String &b) {
-        return a < b;
-    });
-
-    int total_weight = 0;
-    for (const String &id : ids) {
-        const JobInfo &info = cache.at(id);
-        if (info.spawn_weight > 0) {
-            total_weight += info.spawn_weight;
-        }
-    }
-
-    if (total_weight <= 0) {
-        return &cache.at(ids.front());
-    }
-
-    int roll = p_rng.range(1, total_weight);
-    for (const String &id : ids) {
-        const JobInfo &info = cache.at(id);
-        int weight = info.spawn_weight;
-        if (weight <= 0) continue;
-        roll -= weight;
-        if (roll <= 0) {
-            return &info;
-        }
-    }
-
-    return &cache.at(ids.front());
 }
 
 String JobDb::get_display_name(const String &p_id) const {
@@ -131,25 +86,9 @@ String JobDb::get_default_ai_state(const String &p_id) const {
     return info ? info->default_ai_state : "";
 }
 
-int JobDb::get_spawn_weight(const String &p_id) const {
-    const JobInfo* info = get_job_info(p_id);
-    return info ? info->spawn_weight : 0;
-}
-
 int JobDb::get_atlas_offset(const String &p_id) const {
     const JobInfo* info = get_job_info(p_id);
     return info ? info->atlas_offset : 0;
-}
-
-bool JobDb::has_tag(const String &p_id, const String &p_tag) const {
-    const JobInfo* info = get_job_info(p_id);
-    if (!info) return false;
-
-    TagRegistry *reg = TagRegistry::get_singleton();
-    if (!reg) return false;
-
-    uint16_t tag_id = reg->get_tag_id(p_tag);
-    return TagRegistry::has_tag(tag_id, info->tags);
 }
 
 Array JobDb::get_traits(const String &p_id) const {

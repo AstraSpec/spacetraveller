@@ -181,6 +181,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_player_position"), &GameWorld::get_player_position);
     ClassDB::bind_method(D_METHOD("get_player_z"), &GameWorld::get_player_z);
     ClassDB::bind_method(D_METHOD("get_player_chunk"), &GameWorld::get_player_chunk);
+    ClassDB::bind_method(D_METHOD("teleport_player_to_cell", "cell_pos"), &GameWorld::teleport_player_to_cell);
+    ClassDB::bind_method(D_METHOD("teleport_player_to_chunk", "chunk_pos"), &GameWorld::teleport_player_to_chunk);
     ClassDB::bind_method(D_METHOD("would_player_move_fall", "target_x", "target_y"), &GameWorld::would_player_move_fall);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
     ClassDB::bind_method(D_METHOD("can_change_z", "entity_id", "delta"), &GameWorld::can_change_z);
@@ -580,6 +582,60 @@ int GameWorld::get_player_z() const {
 
 Vector2i GameWorld::get_player_chunk() const {
     return get_entity_chunk(player_entity_id);
+}
+
+bool GameWorld::teleport_player_to_cell(const Vector2i& cell_pos) {
+    Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (!player) return false;
+
+    const Vector3i old_pos(player->x, player->y, player->z);
+    const Vector3i new_pos(cell_pos.x, cell_pos.y, player->z);
+    if (old_pos == new_pos) return true;
+
+    const uint32_t occupant = entity_tracker.get_at(new_pos);
+    if (occupant != INVALID_ENTITY_ID && occupant != player_entity_id) {
+        return false;
+    }
+
+    const uint64_t packed_new_pos = WorldCoords::pack_coords_3d(new_pos.x, new_pos.y, new_pos.z);
+    if (entity_archive.has_frozen_entity(packed_new_pos)) {
+        return false;
+    }
+
+    const int previous_active_z = bubble.get_active_z();
+    bubble.set_active_z(old_pos.z);
+    bubble.remove_entity(old_pos.x, old_pos.y);
+
+    if (!entity_tracker.move(player_entity_id, old_pos, new_pos)) {
+        bubble.set_entity(old_pos.x, old_pos.y, player_entity_id);
+        bubble.set_active_z(previous_active_z);
+        return false;
+    }
+
+    player->x = new_pos.x;
+    player->y = new_pos.y;
+
+    if (!bubble.set_entity(new_pos.x, new_pos.y, player_entity_id)) {
+        player->x = old_pos.x;
+        player->y = old_pos.y;
+        entity_tracker.move(player_entity_id, new_pos, old_pos);
+        bubble.set_entity(old_pos.x, old_pos.y, player_entity_id);
+        bubble.set_active_z(previous_active_z);
+        return false;
+    }
+
+    bubble.set_active_z(previous_active_z);
+    on_entity_moved(player_entity_id, cell_pos, get_player_chunk());
+    return true;
+}
+
+bool GameWorld::teleport_player_to_chunk(const Vector2i& chunk_pos) {
+    const int cs = WorldCoords::CHUNK_SIZE;
+    Vector2i target(
+        chunk_pos.x * cs + cs / 2,
+        chunk_pos.y * cs + cs / 2
+    );
+    return teleport_player_to_cell(target);
 }
 
 bool GameWorld::would_player_move_fall(int target_x, int target_y) {

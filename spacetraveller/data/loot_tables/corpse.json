@@ -20,10 +20,15 @@
   {
     "id": "human_death",
     "rolls_min": 1,
-    "rolls_max": 2,
+    "rolls_max": 1,
+    "allow_duplicates": true,
     "entries": [
-      { "table_id": "generic_quest_rewards", "weight": 55 },
-      { "item_id": "bone", "weight": 25, "amount_min": 1, "amount_max": 2 }
+      { "table_id": "adventurer_inventory", "weight": 28 },
+      { "table_id": "miner_inventory", "weight": 24 },
+      { "table_id": "merchant_inventory", "weight": 16 },
+      { "table_id": "hunter_inventory", "weight": 14 },
+      { "table_id": "scholar_inventory", "weight": 10 },
+      { "table_id": "villager_inventory", "weight": 8 }
     ]
   },
   {

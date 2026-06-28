@@ -20,7 +20,7 @@ AttitudeInfo AttitudeDb::_parse_row(const Dictionary &p_data) {
     info.id = String(p_data.get("id", "")).to_lower();
     info.display_name = String(p_data.get("display_name", info.id.capitalize()));
     info.hostility_mode = String(p_data.get("hostility_mode", "faction")).to_lower();
-    if (info.hostility_mode != "always" && info.hostility_mode != "never") {
+    if (info.hostility_mode != "never") {
         info.hostility_mode = "faction";
     }
     return info;

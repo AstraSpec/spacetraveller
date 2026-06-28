@@ -1,0 +1,380 @@
+[
+    {
+        "id": "cave_entrance",
+        "levels": {
+            "-1": {
+                "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 9x1, 14x0, 10x1, 13x0, 12x1, 12x0, 6x1, 1x2, 5x1, 12x0, 12x1, 13x0, 11x1, 13x0, 11x1, 14x0, 9x1, 15x0, 8x1, 19x0, 2x1, 131x0)",
+                "palette": [
+                    "void",
+                    "solid_rock_floor",
+                    "stairs_up"
+                ]
+            },
+            "0": {
+                "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 2x1, 3x2, 4x1, 14x0, 2x1, 7x2, 1x1, 13x0, 3x1, 7x2, 2x1, 12x0, 2x1, 4x2, 1x3, 3x2, 2x1, 12x0, 2x1, 8x2, 2x1, 13x0, 2x1, 7x2, 2x1, 13x0, 2x1, 6x2, 3x1, 14x0, 2x1, 4x2, 3x1, 15x0, 2x1, 4x2, 2x1, 19x0, 2x2, 131x0)",
+                "palette": [
+                    "void",
+                    "solid_rock",
+                    "solid_rock_floor",
+                    "stairs_down"
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            24.0
+        ],
+        "type": "cave_entrance"
+    },
+    {
+        "id": "cave_spider",
+        "levels": {
+            "0": {
+                "blueprint": "(169x0)",
+                "palette": [
+                    "solid_rock_floor"
+                ],
+                "rules": [
+                    {
+                        "entity": "pale_spider",
+                        "job": "monster",
+                        "pos": [
+                            5.0,
+                            5.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "pale_spider",
+                        "job": "monster",
+                        "pos": [
+                            7.0,
+                            7.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "dungeon_floor_items",
+                        "pos": [
+                            6.0,
+                            6.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "spider_cave_end"
+    },
+    {
+        "id": "cave_goblin",
+        "levels": {
+            "0": {
+                "blueprint": "(16x0, 2x1, 10x0, 3x1, 4x0, 2x2, 4x0, 3x1, 4x0, 2x2, 21x0, 1x3, 11x0, 1x3, 1x4, 1x3, 11x0, 1x3, 3x0, 2x1, 3x0, 1x5, 7x0, 3x1, 9x0, 1x5, 3x1, 11x0, 2x1, 26x0)",
+                "palette": [
+                    "solid_rock_floor",
+                    "solid_rock",
+                    "w_crate",
+                    "chair",
+                    "campfire",
+                    "barrel"
+                ],
+                "rules": [
+                    {
+                        "entity": "goblin",
+                        "job": "monster",
+                        "pos": [
+                            5.0,
+                            5.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "goblin",
+                        "job": "monster",
+                        "pos": [
+                            8.0,
+                            7.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            1.0,
+                            5.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "loot_table": "human_death",
+                        "pos": [
+                            1.0,
+                            5.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "amount": 2.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            7.0,
+                            10.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "loot_table": "human_death",
+                        "pos": [
+                            7.0,
+                            10.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "goblin_cave_end"
+    },
+    {
+        "id": "cave_bear_1",
+        "levels": {
+            "0": {
+                "blueprint": "(169x0)",
+                "palette": [
+                    "solid_rock_floor"
+                ],
+                "rules": [
+                    {
+                        "entity": "bear",
+                        "job": "animal",
+                        "pos": [
+                            6.0,
+                            6.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "bone",
+                        "pos": [
+                            10.0,
+                            3.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 6.0,
+                        "item_id": "bone",
+                        "pos": [
+                            2.0,
+                            4.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            3.0,
+                            4.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "bone",
+                        "pos": [
+                            4.0,
+                            3.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "stick",
+                        "pos": [
+                            4.0,
+                            7.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "stick",
+                        "pos": [
+                            5.0,
+                            6.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 6.0,
+                        "item_id": "stick",
+                        "pos": [
+                            6.0,
+                            5.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "stick",
+                        "pos": [
+                            6.0,
+                            6.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 4.0,
+                        "item_id": "stick",
+                        "pos": [
+                            6.0,
+                            7.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "stick",
+                        "pos": [
+                            7.0,
+                            6.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            8.0,
+                            2.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "stick",
+                        "pos": [
+                            8.0,
+                            6.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "loot_table": "human_death",
+                        "pos": [
+                            3.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "human_death",
+                        "pos": [
+                            8.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "bear_cave_end"
+    },
+    {
+        "id": "cave_bear_2",
+        "levels": {
+            "0": {
+                "blueprint": "(169x0)",
+                "palette": [
+                    "solid_rock_floor"
+                ],
+                "rules": [
+                    {
+                        "entity": "bear",
+                        "job": "animal",
+                        "pos": [
+                            6,
+                            6
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "amount": 1,
+                        "item_id": "bone",
+                        "pos": [
+                            10,
+                            7
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1,
+                        "item_id": "bone",
+                        "pos": [
+                            5,
+                            5
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1,
+                        "item_id": "bone_animal",
+                        "pos": [
+                            6,
+                            3
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 4,
+                        "item_id": "bone",
+                        "pos": [
+                            7,
+                            8
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1,
+                        "item_id": "human_skull",
+                        "pos": [
+                            8,
+                            9
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 5,
+                        "item_id": "bone_animal",
+                        "pos": [
+                            9,
+                            4
+                        ],
+                        "type": "spawn_item"
+                    }
+                ]
+            }
+        },
+        "size": [
+            13,
+            13
+        ],
+        "type": "bear_cave_end"
+    }
+]

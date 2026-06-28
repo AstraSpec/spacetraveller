@@ -45,6 +45,15 @@ const RaceInfo* SimulationDirector::get_race_info(uint32_t entity_id) const {
 }
 
 String SimulationDirector::entity_faction(uint32_t entity_id) const {
+    if (const SocialProfileData* profile = d.ledger->try_get_social_profile(entity_id)) {
+        if (!profile->faction.is_empty()) {
+            return profile->faction;
+        }
+        if (profile->job == "monster") {
+            return "enemy";
+        }
+    }
+
     const RaceInfo* race = get_race_info(entity_id);
     return race ? race->faction : String();
 }
@@ -63,7 +72,6 @@ bool SimulationDirector::entity_is_hostile_to(uint32_t entity_id, uint32_t targe
         hostility_mode = attitude_db->get_hostility_mode(entity_attitude(entity_id));
     }
 
-    if (hostility_mode == "always") return true;
     if (hostility_mode == "never") return false;
 
     return Faction::are_hostile(entity_faction(entity_id), entity_faction(target_id));
