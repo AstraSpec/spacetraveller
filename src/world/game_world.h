@@ -97,9 +97,11 @@ public:
     void set_world_seed(int seed);
     int get_world_seed() const;
 
-    void init_world_bubble(const Vector2i& player_pos, bool is_square = false);
+    void init_world_bubble(const Vector2i& player_pos, bool is_square = true);
     void update_world_bubble(const Vector2i& playerPos);
     void update_world_bubble_at_z(const Vector2i& playerPos, int z, bool process_streaming = true);
+    void update_world_view(const Vector2i& render_focus, const Vector2i& vision_origin, bool process_streaming = false);
+    void update_world_view_at_z(const Vector2i& render_focus, const Vector2i& vision_origin, int z, bool process_streaming = false);
     Dictionary init_region(const Vector2i& regionPos);
 
     void place_tile(int x, int y, const String& tile_id, BubbleLayer p_layer = LAYER_TILE);

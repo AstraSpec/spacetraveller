@@ -1,4 +1,5 @@
 #include "entity_archive.h"
+#include "cell_area.h"
 #include "core/world_coords.h"
 
 #include <cstdlib>
@@ -32,6 +33,18 @@ std::vector<uint64_t> EntityArchive::get_frozen_keys_in_range(const Vector2i& ce
         (void)data;
         Vector3i pos = WorldCoords::unpack_coords_3d(key);
         if (pos.z == z && std::abs(pos.x - center.x) <= radius && std::abs(pos.y - center.y) <= radius) {
+            result.push_back(key);
+        }
+    }
+    return result;
+}
+
+std::vector<uint64_t> EntityArchive::get_frozen_keys_in_area(const CellArea& area) const {
+    std::vector<uint64_t> result;
+    for (const auto& [key, data] : frozen_entities) {
+        (void)data;
+        Vector3i pos = WorldCoords::unpack_coords_3d(key);
+        if (area.contains_world(pos.x, pos.y, pos.z)) {
             result.push_back(key);
         }
     }

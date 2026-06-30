@@ -55,9 +55,11 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("setup_renderer"), &GameWorld::setup_renderer);
     ClassDB::bind_method(D_METHOD("get_renderer"), &GameWorld::get_renderer);
 
-    ClassDB::bind_method(D_METHOD("init_world_bubble", "player_pos", "is_square"), &GameWorld::init_world_bubble, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("init_world_bubble", "player_pos", "is_square"), &GameWorld::init_world_bubble, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("update_world_bubble", "playerPos"), &GameWorld::update_world_bubble);
     ClassDB::bind_method(D_METHOD("update_world_bubble_at_z", "playerPos", "z", "process_streaming"), &GameWorld::update_world_bubble_at_z, DEFVAL(true));
+    ClassDB::bind_method(D_METHOD("update_world_view", "render_focus", "vision_origin", "process_streaming"), &GameWorld::update_world_view, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("update_world_view_at_z", "render_focus", "vision_origin", "z", "process_streaming"), &GameWorld::update_world_view_at_z, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &GameWorld::init_region);
 
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id", "layer"), &GameWorld::place_tile, DEFVAL(LAYER_TILE));
@@ -300,10 +302,12 @@ int GameWorld::get_world_seed() const {
 
 void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
     bubble.clear_all_caches();
+    bubble.clear_active_area();
     const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     bubble.set_active_z(player ? player->z : 0);
     if (renderer) {
-        bubble.set_world_bubble_radius(renderer->get_world_bubble_radius());
+        bubble.set_active_radius(renderer->get_world_bubble_radius());
+        bubble.set_player_vision_radius(renderer->get_world_bubble_radius());
         renderer->init_world_bubble(player_pos, is_square);
     }
 }
@@ -311,24 +315,39 @@ void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
 void GameWorld::update_world_bubble(const Vector2i& playerPos) {
     const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     bubble.set_active_z(player ? player->z : 0);
-    update_world_bubble_at_z(playerPos, bubble.get_active_z());
+    update_world_view_at_z(playerPos, playerPos, bubble.get_active_z(), true);
 }
 
 void GameWorld::update_world_bubble_at_z(const Vector2i& playerPos, int z, bool process_streaming) {
+    update_world_view_at_z(playerPos, playerPos, z, process_streaming);
+}
+
+void GameWorld::update_world_view(const Vector2i& render_focus, const Vector2i& vision_origin, bool process_streaming) {
+    const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    bubble.set_active_z(player ? player->z : 0);
+    update_world_view_at_z(render_focus, vision_origin, bubble.get_active_z(), process_streaming);
+}
+
+void GameWorld::update_world_view_at_z(const Vector2i& render_focus, const Vector2i& vision_origin, int z, bool process_streaming) {
     bubble.set_active_z(z);
     if (renderer) {
-        std::vector<uint64_t> offset_keys = renderer->get_render_offset_keys();
-        bubble.update_visibility(playerPos, offset_keys, renderer->is_occlusion_enabled());
+        const bool occlusion_enabled = renderer->is_occlusion_enabled();
+        std::vector<uint64_t> render_offset_keys = renderer->get_render_offset_keys();
+        std::vector<uint64_t> visibility_offset_keys = occlusion_enabled
+            ? bubble.get_player_vision_area(vision_origin).offset_keys()
+            : render_offset_keys;
+        const Vector2i visibility_origin = occlusion_enabled ? vision_origin : render_focus;
+        bubble.update_visibility(visibility_origin, visibility_offset_keys, occlusion_enabled);
         if (process_streaming) {
-            sync_entity_streaming(playerPos);
+            sync_entity_streaming(vision_origin);
         } else {
             bubble.consume_newly_seen_cells();
         }
-        renderer->update_visuals(playerPos);
+        renderer->update_visuals(render_focus);
         return;
     }
     if (process_streaming) {
-        sync_entity_streaming(playerPos);
+        sync_entity_streaming(vision_origin);
     } else {
         bubble.consume_newly_seen_cells();
     }
@@ -930,8 +949,8 @@ void GameWorld::clear_overlays() {
 }
 
 void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
-    int radius = bubble.get_world_bubble_radius();
-    int active_z = bubble.get_active_z();
+    CellArea active_area = bubble.get_active_area(player_pos);
+    bubble.update_active_area(active_area);
 
     std::vector<uint32_t> active_ids;
     entity_tracker.collect_ids(active_ids);
@@ -941,7 +960,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         const Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
         if (!entity) continue;
         if (id == player_entity_id) continue;
-        if (abs(entity->x - player_pos.x) > radius || abs(entity->y - player_pos.y) > radius) {
+        if (!active_area.contains_offset(entity->x - player_pos.x, entity->y - player_pos.y)) {
             to_freeze.push_back(id);
         }
     }
@@ -950,7 +969,7 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         EntityLifecycle::freeze_entity(id, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler);
     }
 
-    std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_range(player_pos, radius, active_z);
+    std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_area(active_area);
     float player_time = 0.0f;
     const Entity* player_e = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     if (player_e) player_time = player_e->next_turn_time;
@@ -959,11 +978,12 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         EntityLifecycle::thaw_entity(key, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler, player_time);
     }
 
-    std::vector<uint64_t> newly_seen = bubble.consume_newly_seen_cells();
-    WorldSpawner::spawn_for_newly_seen_cells(
+    bubble.consume_newly_seen_cells();
+    std::vector<uint64_t> newly_active_cells = bubble.consume_newly_active_cells();
+    WorldSpawner::spawn_for_active_cells(
         static_cast<uint32_t>(world_seed),
         player_time,
-        newly_seen,
+        newly_active_cells,
         *generator,
         bubble,
         entity_archive,
@@ -1000,6 +1020,7 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
         quest_tracker.get()
     );
 
+    bubble.clear_active_area();
     const Entity* loaded_player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     bubble.set_active_z(loaded_player ? loaded_player->z : 0);
     bubble.rebuild_from_pool();

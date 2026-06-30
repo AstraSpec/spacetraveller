@@ -108,7 +108,7 @@ void NpcTurnProcessor::run_turn(
 
     std::vector<Vector2i> blocking_positions;
     std::vector<uint32_t> blocking_ids;
-    const int block_radius = director.d.bubble->get_world_bubble_radius();
+    const int block_radius = director.d.bubble->get_active_radius();
     if (director.d.tracker) {
         director.d.tracker->query_rect(
             Vector2i(entity->x - block_radius, entity->y - block_radius),
@@ -128,7 +128,7 @@ void NpcTurnProcessor::run_turn(
         blocking_positions.push_back(Vector2i(blocker->x, blocker->y));
     }
 
-    int acquire_radius = director.d.bubble->get_world_bubble_radius();
+    int acquire_radius = director.d.bubble->get_active_radius();
     uint32_t target_id = director.find_nearest_hostile(entity_id, acquire_radius);
     Entity* target_entity = (target_id != EntityPool::INVALID_ID) ? pool.get_entity(target_id) : nullptr;
     Vector2i target_pos = target_entity ? Vector2i(target_entity->x, target_entity->y)
@@ -136,7 +136,7 @@ void NpcTurnProcessor::run_turn(
 
     switch (ai->perception_tier) {
         case PerceptionTier::FULL_OCCLUSION:
-            Perception::tick_full(*mem, *entity, *director.d.bubble, target_pos);
+            Perception::tick_full(*mem, *entity, *director.d.bubble, target_pos, acquire_radius);
             break;
         case PerceptionTier::RAYCAST:
             Perception::tick_raycast(*mem, *entity, target_pos, *director.d.bubble, tile_db);

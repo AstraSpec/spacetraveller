@@ -1,11 +1,11 @@
 extends RefCounted
 class_name PlayerAction
 
-var player: Sprite2D
+var player: PlayerController
 var world: GameWorld
 var auto: bool = false
 
-func _init(p_player: Sprite2D, p_world: GameWorld):
+func _init(p_player: PlayerController, p_world: GameWorld):
 	player = p_player
 	world = p_world
 

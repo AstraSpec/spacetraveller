@@ -6,6 +6,7 @@
 #include "occlusion.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <queue>
+#include <utility>
 
 using namespace godot;
 
@@ -96,7 +97,7 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
 
     if (new_id == target_id) return;
 
-    int radius = world_bubble_radius;
+    int radius = active_radius;
     bool has_mask = mask.size.x > 0 && mask.size.y > 0;
 
     if (p_contiguous) {
@@ -441,6 +442,34 @@ std::vector<uint64_t> WorldBubble::consume_newly_seen_cells() {
     return out;
 }
 
+void WorldBubble::update_active_area(const CellArea& area) {
+    std::vector<uint64_t> area_keys = area.world_keys();
+    std::unordered_set<uint64_t> next_active;
+    next_active.reserve(area_keys.size());
+
+    newly_active_cells.clear();
+    newly_active_cells.reserve(area_keys.size());
+    for (uint64_t key : area_keys) {
+        next_active.insert(key);
+        if (active_cells.find(key) == active_cells.end()) {
+            newly_active_cells.push_back(key);
+        }
+    }
+
+    active_cells = std::move(next_active);
+}
+
+std::vector<uint64_t> WorldBubble::consume_newly_active_cells() {
+    std::vector<uint64_t> out = newly_active_cells;
+    newly_active_cells.clear();
+    return out;
+}
+
+void WorldBubble::clear_active_area() {
+    active_cells.clear();
+    newly_active_cells.clear();
+}
+
 uint16_t WorldBubble::query_tile_id(int x, int y) {
     return query_tile_id_at_z(x, y, active_z);
 }
@@ -544,7 +573,7 @@ void WorldBubble::update_visibility(
     }
 
     std::unordered_set<uint64_t> visible_2d;
-    Occlusion::compute_visible(player_pos, world_bubble_radius, visibility_tiles, visible_2d);
+    Occlusion::compute_visible(player_pos, vision_radius, visibility_tiles, visible_2d);
     for (uint64_t visible_key : visible_2d) {
         Vector2i pos = WorldCoords::unpack_coords(visible_key);
         remember_visible_cell(pos.x, pos.y, active_z);
@@ -575,6 +604,10 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             if (occlusion_enabled) {
                 visual.occluded = visible_cells.find(cell_key) == visible_cells.end();
                 visual.seen = seen_cells.count(cell_key) > 0;
+                if (visual.occluded && !visual.seen) {
+                    snapshot.cells[l][offset_key] = visual;
+                    continue;
+                }
             }
 
             visual.tile_id = resolve_tile_id(l, cell_key, cx, cy, active_z);

@@ -17,10 +17,10 @@ class WorldSpawnState;
 
 class WorldSpawner {
 public:
-    static void spawn_for_newly_seen_cells(
+    static void spawn_for_active_cells(
         uint32_t p_world_seed,
         float p_spawn_turn_time,
-        const std::vector<uint64_t>& p_newly_seen_cells,
+        const std::vector<uint64_t>& p_active_cells,
         WorldGenerator& p_generator,
         WorldBubble& p_bubble,
         const EntityArchive& p_entity_archive,

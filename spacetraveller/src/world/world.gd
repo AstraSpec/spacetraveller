@@ -1,7 +1,7 @@
 extends GameWorld
 
 @export var Tilesheet :Texture2D
-@export var Player :Sprite2D
+@export var Player :PlayerController
 @onready var BiomeNoise :FastNoiseLite = preload("res://noise/biome_noise.tres")
 
 signal generated(regionChunks)
@@ -27,6 +27,6 @@ func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: f
 func generate_world(playerPos :Vector2i) -> void:
 	var regionChunks = init_region(Vector2i.ZERO)
 	spawn_player(playerPos.x, playerPos.y, "human")
-	init_world_bubble(playerPos)
+	init_world_bubble(playerPos, true)
 	update_world_bubble(playerPos)
 	generated.emit(regionChunks)

@@ -4,7 +4,7 @@ extends Control
 @onready var Camera :ViewCamera = get_node("/root/Main/MapView/Camera")
 @onready var MapRenderer :FastMapRenderer = get_node("/root/Main/MapView/MapRenderer")
 @onready var playerChunk :TextureRect = get_node("/root/Main/MapView/PlayerChunk")
-@onready var Player :Sprite2D = get_node("/root/Main/Player")
+@onready var Player :PlayerController = get_node("/root/Main/Player")
 @onready var World :GameWorld = get_node("/root/Main/GameWorld")
 @onready var ZLevelLabel :Label = get_node("ZLevelLabel")
 

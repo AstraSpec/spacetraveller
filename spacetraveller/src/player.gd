@@ -1,4 +1,5 @@
-extends Sprite2D
+extends Node2D
+class_name PlayerController
 
 signal moved_cell(cellPos :Vector2)
 signal moved_chunk(chunkPos :Vector2)

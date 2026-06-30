@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include "cell_data.h"
+#include "cell_area.h"
 #include "traversal_snapshot.h"
 #include "entities/entity.h"
 
@@ -72,13 +73,16 @@ private:
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
     std::vector<uint64_t> newly_seen_cells;
+    std::unordered_set<uint64_t> active_cells;
+    std::vector<uint64_t> newly_active_cells;
     std::unordered_map<uint64_t, CellEntity> entity_positions;
     std::unordered_map<uint64_t, Overlay> overlays;
     std::unordered_map<uint64_t, Dictionary> tile_metadata;
 
     EntityPool* entity_pool_source = nullptr;
 
-    int world_bubble_radius = 32;
+    int active_radius = 32;
+    int vision_radius = 32;
     int active_z = 0;
     TileSource tile_source = nullptr;
 
@@ -90,10 +94,19 @@ public:
     WorldBubble() = default;
 
     void set_tile_source(TileSource p_source) { tile_source = p_source; }
-    void set_world_bubble_radius(int p_radius) { world_bubble_radius = p_radius; }
-    int get_world_bubble_radius() const { return world_bubble_radius; }
+    void set_active_radius(int p_radius) { active_radius = p_radius; }
+    int get_active_radius() const { return active_radius; }
+    void set_player_vision_radius(int p_radius) { vision_radius = p_radius; }
+    int get_player_vision_radius() const { return vision_radius; }
+    void set_world_bubble_radius(int p_radius) {
+        set_active_radius(p_radius);
+        set_player_vision_radius(p_radius);
+    }
+    int get_world_bubble_radius() const { return get_active_radius(); }
     void set_active_z(int p_z) { active_z = p_z; }
     int get_active_z() const { return active_z; }
+    CellArea get_active_area(const Vector2i& center) const { return CellArea::square(center, active_z, active_radius); }
+    CellArea get_player_vision_area(const Vector2i& center) const { return CellArea::circle(center, active_z, vision_radius); }
 
     void place_tile(int x, int y, const String& tile_id, Layer p_layer = LAYER_TILE);
     void place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer = LAYER_TILE);
@@ -135,6 +148,9 @@ public:
     void set_seen_cells(const Array& p_seen);
     bool is_cell_seen(int x, int y) const;
     std::vector<uint64_t> consume_newly_seen_cells();
+    void update_active_area(const CellArea& area);
+    std::vector<uint64_t> consume_newly_active_cells();
+    void clear_active_area();
 
     void set_entity_pool(EntityPool* pool) { entity_pool_source = pool; }
     bool set_entity(int x, int y, uint32_t entity_id);

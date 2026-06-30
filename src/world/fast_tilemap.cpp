@@ -1,4 +1,5 @@
 #include "fast_tilemap.h"
+#include "cell_area.h"
 #include "data/item_db.h"
 #include "data/tile_db.h"
 #include "core/world_coords.h"
@@ -18,7 +19,7 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_tilesheet"), &FastTileMap::get_tilesheet);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilesheet", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_tilesheet", "get_tilesheet");
 
-    ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("update_visuals", "playerPos"), &FastTileMap::update_visuals);
 
     ClassDB::bind_method(D_METHOD("set_spacing", "spacing"), &FastTileMap::set_spacing);
@@ -64,7 +65,8 @@ void FastTileMap::set_world_bubble_size(int p_size) {
     world_bubble_size = p_size;
     world_bubble_radius = p_size / 2;
     if (bubble_source) {
-        bubble_source->set_world_bubble_radius(world_bubble_radius);
+        bubble_source->set_active_radius(world_bubble_radius);
+        bubble_source->set_player_vision_radius(world_bubble_radius);
     }
 }
 
@@ -79,20 +81,16 @@ void FastTileMap::init_world_bubble(const Vector2i& playerPos, bool is_square) {
         tile_rids[l].clear();
     }
 
-    for (int i = 0; i < world_bubble_size * world_bubble_size; i++) {
-        int ox = (i / world_bubble_size) - world_bubble_radius;
-        int oy = (i % world_bubble_size) - world_bubble_radius;
+    CellArea render_area = is_square
+        ? CellArea::square(Vector2i(), 0, world_bubble_radius)
+        : CellArea::circle(Vector2i(), 0, world_bubble_radius);
 
-        float dist = sqrtf(static_cast<float>(ox * ox + oy * oy));
-        if (is_square || dist < static_cast<float>(world_bubble_radius)) {
-            uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
-
-            for (int l = 0; l < LAYER_MAX; l++) {
-                RID tile_rid = rs->canvas_item_create();
-                rs->canvas_item_set_parent(tile_rid, parent_rid);
-                rs->canvas_item_set_z_index(tile_rid, LAYER_PROPS[l].z_index);
-                tile_rids[l][offset_key] = tile_rid;
-            }
+    for (uint64_t offset_key : render_area.offset_keys()) {
+        for (int l = 0; l < LAYER_MAX; l++) {
+            RID tile_rid = rs->canvas_item_create();
+            rs->canvas_item_set_parent(tile_rid, parent_rid);
+            rs->canvas_item_set_z_index(tile_rid, LAYER_PROPS[l].z_index);
+            tile_rids[l][offset_key] = tile_rid;
         }
     }
 }

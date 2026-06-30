@@ -18,13 +18,17 @@
 
 using namespace godot;
 
+namespace {
+constexpr uint16_t PLAYER_ATLAS_X = 104;
+constexpr uint16_t PLAYER_ATLAS_Y = 29;
+}
+
 uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos,
                                       EntityLedger& ledger, EntityTracker& tracker, WorldBubble& bubble, TurnScheduler& scheduler) {
     RaceDb* race_db = RaceDb::get_singleton();
     if (!race_db) return EntityPool::PLAYER_ID;
 
-    Vector2i atlas = race_db->get_atlas_coords(race_id);
-    uint32_t id = ledger.spawn_player(pos, atlas.x, atlas.y);
+    uint32_t id = ledger.spawn_player(pos, PLAYER_ATLAS_X, PLAYER_ATLAS_Y);
 
     LocomotionData& loco = ledger.locomotion_data[id];
     Locomotion::init(loco, 1.0f);

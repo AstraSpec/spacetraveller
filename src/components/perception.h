@@ -27,7 +27,8 @@ struct PerceptionMemory {
 
 namespace Perception {
     void tick_full(PerceptionMemory& mem, const Entity& self,
-                   const WorldBubble& bubble, const Vector2i& player_pos);
+                   const WorldBubble& bubble, const Vector2i& player_pos,
+                   int sight_radius);
 
     void tick_raycast(PerceptionMemory& mem, const Entity& self,
                       const Vector2i& target_pos,

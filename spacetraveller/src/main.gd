@@ -1,13 +1,15 @@
 extends Node2D
 
 @export var _GameWorld :GameWorld
-@export var Player :Sprite2D
+@export var Player :PlayerController
 @export var Canvas :CanvasLayer
 
 var structure_editor_scene = preload("res://src/structure_editor/structure_editor.tscn")
 var structure_editor_instance = null
 
 var DEFAULT_ZOOM_LVL :int = 3
+var look_focus: Vector2i = Vector2i.ZERO
+var _look_mode_active: bool = false
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
@@ -44,6 +46,8 @@ func _ready() -> void:
 
 	InputManager.reset_stack(InputManager.InputMode.EXPLORATION)
 	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
+	InputManager.look_mode_changed.connect(_on_look_mode_changed)
+	InputManager.look_directional_input.connect(_on_look_directional_input)
 	_initialize_windows()
 	QuestService.bind_game_world(_GameWorld)
 
@@ -143,3 +147,26 @@ func _on_structure_editor_toggled(active: bool):
 
 		_GameWorld.get_renderer().set_occlusion_enabled(true)
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+
+func _on_look_mode_changed(active: bool) -> void:
+	_look_mode_active = active
+	if active:
+		if Player and Player.has_method("cancel_navigation"):
+			Player.cancel_navigation()
+		look_focus = _GameWorld.get_player_position()
+		_update_look_view()
+	else:
+		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+
+func _on_look_directional_input(direction: Vector2) -> void:
+	if not _look_mode_active:
+		return
+	look_focus += Vector2i(direction)
+	_update_look_view()
+
+func _update_look_view() -> void:
+	_GameWorld.update_world_view(
+		look_focus,
+		_GameWorld.get_player_position(),
+		false
+	)

@@ -7,6 +7,7 @@ signal view_centered
 
 signal debug_toggled
 signal directional_input(direction: Vector2)
+signal look_directional_input(direction: Vector2)
 signal ui_directional_input(direction: Vector2)
 signal ui_accept
 signal ui_cancel
@@ -24,6 +25,7 @@ signal menu_close_requested(id: String)
 
 signal menu_toggled(id: String, is_open: bool, params: Dictionary)
 signal structure_editor_toggled(active: bool)
+signal look_mode_changed(active: bool)
 
 signal input_captured(event: InputEvent)
 
@@ -40,7 +42,7 @@ signal structure_key_input(key :String)
 signal structure_mouse_input(button: String, action: MouseAction)
 enum MouseAction { PRESS, RELEASE, DRAG }
 
-enum InputMode { EXPLORATION, MAP, STRUCTURE, MENU, CONFIRMATION }
+enum InputMode { EXPLORATION, LOOK, MAP, STRUCTURE, MENU, CONFIRMATION }
 var current_mode: InputMode = InputMode.EXPLORATION
 var _mode_stack: Array[InputMode] = []
 var active_menu_id: String = ""
@@ -63,6 +65,7 @@ func _ready() -> void:
 
 	contexts = {
 		InputMode.EXPLORATION: InputContext.ExplorationContext.new(self),
+		InputMode.LOOK: InputContext.LookContext.new(self),
 		InputMode.MAP: InputContext.MapContext.new(self),
 		InputMode.STRUCTURE: InputContext.StructureContext.new(self),
 		InputMode.MENU: InputContext.MenuContext.new(self),
@@ -160,6 +163,12 @@ func _unhandled_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 		return
 
+	if event.is_action_pressed("look_mode"):
+		if current_mode == InputMode.EXPLORATION:
+			push_mode(InputMode.LOOK)
+			get_viewport().set_input_as_handled()
+			return
+
 	if event.is_action_pressed("open_structure_mode"):
 		if current_mode == InputMode.STRUCTURE:
 			pop_mode()
@@ -197,6 +206,9 @@ func set_mode(mode: InputMode, _params: Dictionary = {}):
 	
 	if old_mode == InputMode.MAP or current_mode == InputMode.MAP:
 		map_toggled.emit()
+
+	if old_mode == InputMode.LOOK or current_mode == InputMode.LOOK:
+		look_mode_changed.emit(current_mode == InputMode.LOOK)
 	
 	var new_structure_active = _is_structure_mode_active(current_mode)
 	if old_structure_active != new_structure_active:

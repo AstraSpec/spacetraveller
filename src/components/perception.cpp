@@ -17,16 +17,16 @@ static bool is_tile_solid(int x, int y, const WorldBubble& bubble, const TileDb&
 }
 
 void Perception::tick_full(PerceptionMemory& mem, const Entity& self,
-                            const WorldBubble& bubble, const Vector2i& player_pos) {
+                            const WorldBubble& bubble, const Vector2i& player_pos,
+                            int sight_radius) {
     mem.known_tiles.insert(WorldCoords::pack_coords(self.x, self.y));
 
     mem.player_seen = false;
 
-    int radius = bubble.get_world_bubble_radius();
     std::unordered_set<uint64_t> visible_set;
     Occlusion::compute_visible(
         Vector2i(self.x, self.y),
-        radius,
+        sight_radius,
         bubble.get_tile_cache(WorldBubble::LAYER_TILE),
         visible_set
     );

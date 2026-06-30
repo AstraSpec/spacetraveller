@@ -529,10 +529,10 @@ static bool apply_structure_spawn_group_rule(
     return true;
 }
 
-void WorldSpawner::spawn_for_newly_seen_cells(
+void WorldSpawner::spawn_for_active_cells(
     uint32_t p_world_seed,
     float p_spawn_turn_time,
-    const std::vector<uint64_t>& p_newly_seen_cells,
+    const std::vector<uint64_t>& p_active_cells,
     WorldGenerator& p_generator,
     WorldBubble& p_bubble,
     const EntityArchive& p_entity_archive,
@@ -541,14 +541,14 @@ void WorldSpawner::spawn_for_newly_seen_cells(
     TurnScheduler& p_scheduler,
     WorldSpawnState& p_spawn_state
 ) {
-    for (uint64_t packed : p_newly_seen_cells) {
+    for (uint64_t packed : p_active_cells) {
+        if (p_spawn_state.has_attempted(packed)) continue;
+
         Vector3i pos3 = WorldCoords::unpack_coords_3d(packed);
         Vector2i pos(pos3.x, pos3.y);
 
         DungeonStructureContext dungeon_structure = p_generator.get_dungeon_structure_context(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         if (dungeon_structure.valid) {
-            if (p_spawn_state.has_attempted(packed)) continue;
-
             StructureDb* structure_db = StructureDb::get_singleton();
             const StructureInfo* structure = structure_db ? structure_db->get_structure_info(dungeon_structure.structure_id) : nullptr;
             if (structure) {
@@ -618,8 +618,6 @@ void WorldSpawner::spawn_for_newly_seen_cells(
 
         SurfaceFeatureContext surface_feature = p_generator.get_surface_feature_context(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         if (surface_feature.valid) {
-            if (p_spawn_state.has_attempted(packed)) continue;
-
             StructureDb* structure_db = StructureDb::get_singleton();
             const StructureInfo* structure = structure_db ? structure_db->get_structure_info(surface_feature.structure_id) : nullptr;
             if (structure) {
@@ -670,8 +668,6 @@ void WorldSpawner::spawn_for_newly_seen_cells(
 
         String structure_id = p_generator.get_structure_id_for_cell(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
         if (!structure_id.is_empty()) {
-            if (p_spawn_state.has_attempted(packed)) continue;
-
             StructureDb* structure_db = StructureDb::get_singleton();
             const StructureInfo* structure = structure_db ? structure_db->get_structure_info(structure_id) : nullptr;
             if (structure) {
@@ -731,7 +727,6 @@ void WorldSpawner::spawn_for_newly_seen_cells(
             continue;
         }
 
-        if (p_spawn_state.has_attempted(packed)) continue;
         p_spawn_state.mark_attempted(packed);
 
         uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);

@@ -67,11 +67,7 @@ script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 Player = NodePath("../Player")
 
-[node name="Player" type="Sprite2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer")]
-texture = ExtResource("2_hj8l7")
-centered = false
-region_enabled = true
-region_rect = Rect2(1353, 378, 12, 12)
+[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer")]
 script = ExtResource("4_yn2v7")
 Camera = NodePath("Camera")
 World = NodePath("../GameWorld")

@@ -130,6 +130,20 @@ class ExplorationContext extends InputContext:
 		if step != Vector2.INF:
 			manager.directional_input.emit(step)
 
+class LookContext extends InputContext:
+	var move_processor = DirectionalProcessor.new()
+
+	func handle_input(event: InputEvent) -> bool:
+		if event.is_action_pressed("ui_cancel"):
+			manager.pop_mode()
+			return true
+		return false
+
+	func process(delta: float) -> void:
+		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
+		if step != Vector2.INF and step != Vector2.ZERO:
+			manager.look_directional_input.emit(step)
+
 class MapContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 	var view_processor : ViewProcessor

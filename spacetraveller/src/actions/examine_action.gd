@@ -1,7 +1,7 @@
 extends PlayerAction
 class_name ExamineAction
 
-func _init(p_player: Sprite2D, p_world: GameWorld):
+func _init(p_player: PlayerController, p_world: GameWorld):
 	super(p_player, p_world)
 	auto = true
 

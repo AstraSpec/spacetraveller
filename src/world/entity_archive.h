@@ -9,6 +9,8 @@
 
 namespace godot {
 
+struct CellArea;
+
 class EntityArchive {
 private:
     std::unordered_map<uint64_t, Dictionary> frozen_entities;
@@ -19,6 +21,7 @@ public:
     bool has_frozen_entity(uint64_t packed_pos) const;
     void remove_frozen_entity(uint64_t packed_pos);
     std::vector<uint64_t> get_frozen_keys_in_range(const Vector2i& center, int radius, int z = 0) const;
+    std::vector<uint64_t> get_frozen_keys_in_area(const CellArea& area) const;
     Dictionary serialize() const;
     void deserialize(const Dictionary& data);
     void clear();
