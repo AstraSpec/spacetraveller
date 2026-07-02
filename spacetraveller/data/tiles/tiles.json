@@ -188,6 +188,13 @@
     "tags": ["FLOOR"]
   },
   {
+    "id": "w_roof",
+    "name": "Wooden Roof",
+    "atlas": [ 31, 0 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
     "id": "palace_floor",
     "name": "Palace Floor",
     "atlas": [ 0, 0 ],
@@ -250,7 +257,7 @@
     "name": "Solid Rock Floor",
     "atlas": [ 16, 2 ],
     "solid": false,
-    "tags": ["GROUND", "FLOOR"]
+    "tags": ["GROUND", "FLOOR", "NATURAL_DARK"]
   },
   {
     "id": "carpet_green",

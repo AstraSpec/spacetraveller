@@ -75,6 +75,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_seen_cells", "seen"), &GameWorld::set_seen_cells);
     ClassDB::bind_method(D_METHOD("set_active_z", "z"), &GameWorld::set_active_z);
     ClassDB::bind_method(D_METHOD("get_active_z"), &GameWorld::get_active_z);
+    ClassDB::bind_method(D_METHOD("set_player_minimum_light_radius", "radius"), &GameWorld::set_player_minimum_light_radius);
+    ClassDB::bind_method(D_METHOD("get_player_minimum_light_radius"), &GameWorld::get_player_minimum_light_radius);
     ClassDB::bind_method(D_METHOD("invalidate_tile_cache", "world_x", "world_y", "layer"), &GameWorld::invalidate_tile_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("invalidate_region_cache", "rect", "layer"), &GameWorld::invalidate_region_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("get_tile_metadata", "pos"), &GameWorld::get_tile_metadata);
@@ -337,13 +339,14 @@ void GameWorld::update_world_view_at_z(const Vector2i& render_focus, const Vecto
             ? bubble.get_player_vision_area(vision_origin).offset_keys()
             : render_offset_keys;
         const Vector2i visibility_origin = occlusion_enabled ? vision_origin : render_focus;
+        bubble.update_lighting(visibility_origin, visibility_offset_keys, occlusion_enabled);
         bubble.update_visibility(visibility_origin, visibility_offset_keys, occlusion_enabled);
         if (process_streaming) {
             sync_entity_streaming(vision_origin);
         } else {
             bubble.consume_newly_seen_cells();
         }
-        renderer->update_visuals(render_focus);
+        renderer->update_visuals(render_focus, visibility_origin);
         return;
     }
     if (process_streaming) {
@@ -403,6 +406,14 @@ void GameWorld::set_active_z(int z) {
 
 int GameWorld::get_active_z() const {
     return bubble.get_active_z();
+}
+
+void GameWorld::set_player_minimum_light_radius(int radius) {
+    bubble.set_player_minimum_light_radius(radius);
+}
+
+int GameWorld::get_player_minimum_light_radius() const {
+    return bubble.get_player_minimum_light_radius();
 }
 
 void GameWorld::invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_layer) {

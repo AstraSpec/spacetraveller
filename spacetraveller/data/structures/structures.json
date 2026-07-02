@@ -53,6 +53,13 @@
                         "type": "spawn_entity"
                     }
                 ]
+            },
+            "1": {
+                "blueprint": "(50x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
+                ]
             }
         },
         "size": [
@@ -138,6 +145,13 @@
                     "barrel",
                     "alley_flagstone"
                 ]
+            },
+            "1": {
+                "blueprint": "(50x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
+                ]
             }
         },
         "size": [
@@ -176,6 +190,13 @@
                     "fireplace",
                     "barrel_wine",
                     "alley_flagstone"
+                ]
+            },
+            "1": {
+                "blueprint": "(98x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
                 ]
             }
         },
@@ -236,6 +257,13 @@
                     "pot",
                     "stairs_down"
                 ]
+            },
+            "2": {
+                "blueprint": "(104x0, 9x1, 15x0, 9x1, 15x0, 9x1, 15x0, 14x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 8x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 53x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
+                ]
             }
         },
         "size": [
@@ -245,61 +273,76 @@
         "type": "building"
     },
     {
-        "blueprint": "(62x0, 2x1, 2x2, 2x1, 18x0, 1x1, 4x3, 1x1, 6x0, 7x1, 5x0, 1x1, 1x4, 1x5, 2x4, 3x1, 4x0, 1x1, 1x6, 1x7, 1x8, 1x1, 1x9, 1x1, 5x0, 1x1, 6x4, 1x1, 4x0, 1x1, 1x4, 1x5, 1x4, 1x1, 1x10, 7x1, 3x4, 1x3, 1x5, 1x4, 1x1, 4x0, 1x2, 14x4, 1x5, 2x3, 1x5, 1x2, 4x0, 1x2, 16x4, 1x3, 1x4, 1x2, 4x0, 1x1, 18x4, 1x1, 4x0, 2x1, 3x4, 1x1, 1x11, 1x4, 2x5, 2x4, 3x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 1x11, 1x4, 2x3, 1x5, 1x3, 1x1, 1x12, 1x1, 4x4, 1x2, 5x0, 1x2, 1x3, 2x4, 8x1, 1x10, 1x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 7x11, 1x4, 1x1, 4x4, 1x1, 4x0, 2x1, 3x4, 1x7, 8x4, 1x7, 2x4, 1x5, 1x4, 1x1, 4x0, 1x2, 4x4, 10x7, 1x4, 1x5, 2x3, 1x2, 4x0, 1x2, 1x5, 14x4, 1x5, 2x3, 1x2, 4x0, 1x2, 2x3, 1x5, 5x4, 2x13, 7x4, 1x5, 1x2, 4x0, 6x1, 3x4, 2x13, 3x4, 6x1, 8x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 5x1, 2x10, 5x1, 54x0)",
         "id": "adventurer_guild",
-        "palette": [
-            "void",
-            "w_wall",
-            "w_window_curtain",
-            "table",
-            "w_floor",
-            "chair",
-            "fireplace",
-            "bar",
-            "barrel",
-            "toilet",
-            "w_door_c",
-            "bookcase",
-            "stairs_down",
-            "sign"
-        ],
-        "rules": [
-            {
-                "entity": "human",
-                "job": "adventurer",
-                "pos": [
-                    8.0,
-                    16.0
+        "levels": {
+            "0": {
+                "blueprint": "(62x0, 2x1, 2x2, 2x1, 18x0, 1x1, 4x3, 1x1, 6x0, 7x1, 5x0, 1x1, 1x4, 1x5, 2x4, 3x1, 4x0, 1x1, 1x6, 1x7, 1x8, 1x1, 1x9, 1x1, 5x0, 1x1, 6x4, 1x1, 4x0, 1x1, 1x4, 1x5, 1x4, 1x1, 1x10, 7x1, 3x4, 1x3, 1x5, 1x4, 1x1, 4x0, 1x2, 14x4, 1x5, 2x3, 1x5, 1x2, 4x0, 1x2, 16x4, 1x3, 1x4, 1x2, 4x0, 1x1, 18x4, 1x1, 4x0, 2x1, 3x4, 1x1, 1x11, 1x4, 2x5, 2x4, 3x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 1x11, 1x4, 2x3, 1x5, 1x3, 1x1, 1x12, 1x1, 4x4, 1x2, 5x0, 1x2, 1x3, 2x4, 8x1, 1x10, 1x1, 4x4, 1x1, 5x0, 1x1, 3x4, 1x1, 7x11, 1x4, 1x1, 4x4, 1x1, 4x0, 2x1, 3x4, 1x7, 8x4, 1x7, 2x4, 1x5, 1x4, 1x1, 4x0, 1x2, 4x4, 10x7, 1x4, 1x5, 2x3, 1x2, 4x0, 1x2, 1x5, 14x4, 1x5, 2x3, 1x2, 4x0, 1x2, 2x3, 1x5, 5x4, 2x13, 7x4, 1x5, 1x2, 4x0, 6x1, 3x4, 2x13, 3x4, 6x1, 8x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 1x1, 1x13, 8x4, 1x13, 1x1, 12x0, 5x1, 2x10, 5x1, 54x0)",
+                "palette": [
+                    "void",
+                    "w_wall",
+                    "w_window_curtain",
+                    "table",
+                    "w_floor",
+                    "chair",
+                    "fireplace",
+                    "bar",
+                    "barrel",
+                    "toilet",
+                    "w_door_c",
+                    "bookcase",
+                    "stairs_down",
+                    "sign"
                 ],
-                "type": "spawn_entity"
+                "rules": [
+                    {
+                        "entity": "goblin",
+                        "job": "adventurer",
+                        "pos": [
+                            14.0,
+                            19.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "imp",
+                        "job": "adventurer",
+                        "pos": [
+                            18.0,
+                            11.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "djinn",
+                        "job": "adventurer",
+                        "pos": [
+                            5.0,
+                            8.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "adventurer",
+                        "pos": [
+                            8.0,
+                            16.0
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
             },
-            {
-                "entity": "imp",
-                "job": "adventurer",
-                "pos": [
-                    18.0,
-                    11.0
-                ],
-                "type": "spawn_entity"
-            },
-            {
-                "entity": "djinn",
-                "job": "adventurer",
-                "pos": [
-                    5.0,
-                    8.0
-                ],
-                "type": "spawn_entity"
-            },
-            {
-                "entity": "goblin",
-                "job": "adventurer",
-                "pos": [
-                    14.0,
-                    19.0
-                ],
-                "type": "spawn_entity"
+            "1": {
+                "blueprint": "(62x0, 6x1, 18x0, 6x1, 6x0, 7x1, 5x0, 8x1, 4x0, 7x1, 5x0, 8x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 5x0, 19x1, 5x0, 19x1, 5x0, 19x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 8x0, 12x1, 12x0, 12x1, 12x0, 12x1, 54x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
+                ]
             }
+        },
+        "size": [
+            24.0,
+            24.0
         ],
         "type": "adventurer_guild"
     },
@@ -318,11 +361,18 @@
                     "w_floor",
                     "w_window_c"
                 ]
+            },
+            "1": {
+                "blueprint": "(26x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    "void",
+                    "w_roof"
+                ]
             }
         },
         "size": [
-            24.0,
-            24.0
+            24,
+            24
         ],
         "type": "equipment_market"
     },
@@ -342,8 +392,8 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "food_market"
     }

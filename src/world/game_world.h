@@ -117,6 +117,8 @@ public:
     void set_seen_cells(const Array& p_seen);
     void set_active_z(int z);
     int get_active_z() const;
+    void set_player_minimum_light_radius(int radius);
+    int get_player_minimum_light_radius() const;
     void invalidate_tile_cache(int world_x, int world_y, BubbleLayer p_layer = LAYER_TILE);
     void invalidate_region_cache(const Rect2i& p_rect, BubbleLayer p_layer = LAYER_TILE);
     Dictionary get_tile_metadata(const Vector2i& pos) const;

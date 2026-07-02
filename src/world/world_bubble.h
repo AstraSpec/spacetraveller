@@ -14,6 +14,7 @@
 #include <vector>
 #include "cell_data.h"
 #include "cell_area.h"
+#include "light_level.h"
 #include "traversal_snapshot.h"
 #include "entities/entity.h"
 
@@ -43,6 +44,7 @@ public:
         bool draw_below_tile = false;
         uint16_t below_tile_id = 0;
         int below_depth = 0;
+        LightLevel light_level = LightLevel::Bright;
         bool occluded = false;
         bool seen = true;
         uint16_t entity_sprite_id = 0;
@@ -73,6 +75,7 @@ private:
     std::unordered_set<uint64_t> seen_cells;
     std::unordered_set<uint64_t> visible_cells;
     std::vector<uint64_t> newly_seen_cells;
+    std::unordered_map<uint64_t, LightSample> current_light_samples;
     std::unordered_set<uint64_t> active_cells;
     std::vector<uint64_t> newly_active_cells;
     std::unordered_map<uint64_t, CellEntity> entity_positions;
@@ -83,12 +86,14 @@ private:
 
     int active_radius = 32;
     int vision_radius = 32;
+    int player_minimum_light_radius = 2;
     int active_z = 0;
     TileSource tile_source = nullptr;
 
     uint64_t make_cell_key(int world_x, int world_y) const;
     uint64_t make_cell_key_at_z(int world_x, int world_y, int world_z) const;
     uint16_t resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y, int world_z);
+    LightLevel get_apparent_light_level(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z);
 
 public:
     WorldBubble() = default;
@@ -98,6 +103,8 @@ public:
     int get_active_radius() const { return active_radius; }
     void set_player_vision_radius(int p_radius) { vision_radius = p_radius; }
     int get_player_vision_radius() const { return vision_radius; }
+    void set_player_minimum_light_radius(int p_radius) { player_minimum_light_radius = p_radius < 0 ? 0 : p_radius; }
+    int get_player_minimum_light_radius() const { return player_minimum_light_radius; }
     void set_world_bubble_radius(int p_radius) {
         set_active_radius(p_radius);
         set_player_vision_radius(p_radius);
@@ -183,6 +190,13 @@ public:
         return generated_tile_cache[p_layer];
     }
 
+    void update_lighting(
+        const Vector2i& p_origin,
+        const std::vector<uint64_t>& p_offset_keys,
+        bool p_lighting_enabled
+    );
+    LightLevel get_current_light_level(uint64_t p_cell_key) const;
+
     void update_visibility(
         const Vector2i& player_pos,
         const std::vector<uint64_t>& offset_keys,
@@ -190,7 +204,8 @@ public:
     );
 
     BubbleSnapshot build_snapshot(
-        const Vector2i& player_pos,
+        const Vector2i& render_focus,
+        const Vector2i& view_origin,
         const std::vector<uint64_t>& offset_keys,
         bool occlusion_enabled
     );

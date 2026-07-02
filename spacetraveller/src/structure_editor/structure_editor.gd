@@ -121,7 +121,7 @@ func update_editor_visuals():
 	if World:
 		World.update_world_bubble_at_z(playerOffset, active_z, false)
 	elif FastTilemap:
-		FastTilemap.update_visuals(playerOffset)
+		FastTilemap.update_visuals(playerOffset, playerOffset)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
 

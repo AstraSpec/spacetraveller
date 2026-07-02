@@ -3,6 +3,7 @@
 #include "core/id_registry.h"
 #include "data/tile_db.h"
 #include "core/world_coords.h"
+#include "light_map.h"
 #include "occlusion.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <queue>
@@ -47,6 +48,92 @@ static bool is_adjacent_to_player(int ox, int oy) {
 static bool tile_is_air(uint16_t tile_id) {
     IdRegistry* id_reg = IdRegistry::get_singleton();
     return id_reg && tile_id == id_reg->get_id("air");
+}
+
+static bool tile_allows_sky(uint16_t tile_id, const TileInfo* p_info) {
+    if (tile_id == 0) {
+        return true;
+    }
+
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    if (id_reg && (tile_id == id_reg->get_id("void") || tile_id == id_reg->get_id("air"))) {
+        return true;
+    }
+
+    return p_info && p_info->transparent;
+}
+
+static bool tile_is_opaque(const TileInfo* p_info) {
+    return p_info && p_info->solid && !p_info->transparent;
+}
+
+static bool player_minimum_light_contains_offset(int p_ox, int p_oy, int p_radius) {
+    if (p_radius <= 0) {
+        return p_ox == 0 && p_oy == 0;
+    }
+
+    const int distance_sq = p_ox * p_ox + p_oy * p_oy;
+    return distance_sq <= p_radius * p_radius + p_radius;
+}
+
+static void raise_view_facing_faces(
+    LightSample& p_sample,
+    const Vector2i& p_view_origin,
+    const Vector2i& p_cell_pos,
+    LightLevel p_level
+) {
+    const int dx = p_view_origin.x - p_cell_pos.x;
+    const int dy = p_view_origin.y - p_cell_pos.y;
+    bool raised = false;
+
+    if (dx > 0) {
+        p_sample.raise_face(LightFace::East, p_level);
+        raised = true;
+    } else if (dx < 0) {
+        p_sample.raise_face(LightFace::West, p_level);
+        raised = true;
+    }
+
+    if (dy > 0) {
+        p_sample.raise_face(LightFace::South, p_level);
+        raised = true;
+    } else if (dy < 0) {
+        p_sample.raise_face(LightFace::North, p_level);
+        raised = true;
+    }
+
+    if (!raised) {
+        p_sample.raise_all_faces(p_level);
+    }
+}
+
+static LightLevel view_facing_light(
+    const LightSample& p_sample,
+    const Vector2i& p_view_origin,
+    const Vector2i& p_cell_pos
+) {
+    const int dx = p_view_origin.x - p_cell_pos.x;
+    const int dy = p_view_origin.y - p_cell_pos.y;
+    LightLevel level = LightLevel::Blank;
+    bool sampled = false;
+
+    if (dx > 0) {
+        level = light_stronger(level, p_sample.get_face(LightFace::East));
+        sampled = true;
+    } else if (dx < 0) {
+        level = light_stronger(level, p_sample.get_face(LightFace::West));
+        sampled = true;
+    }
+
+    if (dy > 0) {
+        level = light_stronger(level, p_sample.get_face(LightFace::South));
+        sampled = true;
+    } else if (dy < 0) {
+        level = light_stronger(level, p_sample.get_face(LightFace::North));
+        sampled = true;
+    }
+
+    return sampled ? level : p_sample.strongest_face();
 }
 
 void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer) {
@@ -285,6 +372,7 @@ void WorldBubble::clear_all_caches() {
         tile_overrides[l].clear();
         generated_tile_cache[l].clear();
     }
+    current_light_samples.clear();
 }
 
 bool WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
@@ -534,17 +622,104 @@ TraversalSnapshot WorldBubble::build_traversal_snapshot(
     return TraversalSnapshot(this, start, goal, blocking_positions, ledger, entity_id, traversal_profile, allow_openable_tiles);
 }
 
+void WorldBubble::update_lighting(
+    const Vector2i& p_origin,
+    const std::vector<uint64_t>& p_offset_keys,
+    bool p_lighting_enabled
+) {
+    current_light_samples.clear();
+    current_light_samples.reserve(p_offset_keys.size());
+
+    if (!p_lighting_enabled) {
+        for (uint64_t offset_key : p_offset_keys) {
+            Vector2i offset = WorldCoords::unpack_coords(offset_key);
+            const int cx = p_origin.x + offset.x;
+            const int cy = p_origin.y + offset.y;
+            LightSample& sample = current_light_samples[make_cell_key_at_z(cx, cy, active_z)];
+            sample.cell = LightLevel::Bright;
+            sample.raise_all_faces(LightLevel::Bright);
+        }
+        return;
+    }
+
+    TileDb* tile_db = TileDb::get_singleton();
+    LightMap::compute_natural_light(
+        p_origin,
+        active_z,
+        p_offset_keys,
+        [this](int world_x, int world_y, int world_z) {
+            const uint64_t cell_key = make_cell_key_at_z(world_x, world_y, world_z);
+            return resolve_tile_id(LAYER_TILE, cell_key, world_x, world_y, world_z);
+        },
+        [this, tile_db](int world_x, int world_y, int world_z) {
+            const int above_z = world_z + 1;
+            const uint64_t above_key = make_cell_key_at_z(world_x, world_y, above_z);
+            const uint16_t above_tile_id = resolve_tile_id(LAYER_TILE, above_key, world_x, world_y, above_z);
+            const TileInfo* above_info = tile_db ? tile_db->get_tile_info(above_tile_id) : nullptr;
+            return tile_allows_sky(above_tile_id, above_info);
+        },
+        current_light_samples
+    );
+
+    static constexpr LightLevel PLAYER_MINIMUM_VISIBILITY = LightLevel::Lit;
+    for (int oy = -player_minimum_light_radius; oy <= player_minimum_light_radius; oy++) {
+        for (int ox = -player_minimum_light_radius; ox <= player_minimum_light_radius; ox++) {
+            if (!player_minimum_light_contains_offset(ox, oy, player_minimum_light_radius)) {
+                continue;
+            }
+
+            const int world_x = p_origin.x + ox;
+            const int world_y = p_origin.y + oy;
+            const uint64_t cell_key = make_cell_key_at_z(world_x, world_y, active_z);
+            LightSample& sample = current_light_samples[cell_key];
+            const uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, world_x, world_y, active_z);
+            const TileInfo* info = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+            if (tile_is_opaque(info)) {
+                raise_view_facing_faces(sample, p_origin, Vector2i(world_x, world_y), PLAYER_MINIMUM_VISIBILITY);
+            } else {
+                sample.raise_cell(PLAYER_MINIMUM_VISIBILITY);
+            }
+        }
+    }
+}
+
+LightLevel WorldBubble::get_current_light_level(uint64_t p_cell_key) const {
+    return LightMap::get_level(current_light_samples, p_cell_key);
+}
+
+LightLevel WorldBubble::get_apparent_light_level(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z) {
+    const uint64_t cell_key = make_cell_key_at_z(p_world_x, p_world_y, p_world_z);
+    const LightSample sample = LightMap::get_sample(current_light_samples, cell_key);
+
+    TileDb* tile_db = TileDb::get_singleton();
+    const uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, p_world_x, p_world_y, p_world_z);
+    const TileInfo* info = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+    if (!tile_is_opaque(info)) {
+        return sample.cell;
+    }
+
+    return view_facing_light(sample, p_view_origin, Vector2i(p_world_x, p_world_y));
+}
+
 void WorldBubble::update_visibility(
     const Vector2i& player_pos,
     const std::vector<uint64_t>& offset_keys,
     bool occlusion_enabled
 ) {
     visible_cells.clear();
+    if (current_light_samples.empty()) {
+        update_lighting(player_pos, offset_keys, occlusion_enabled);
+    }
 
     auto remember_visible_cell = [&](int x, int y, int z) {
         const uint64_t cell_key = make_cell_key_at_z(x, y, z);
+        const LightLevel light_level = get_apparent_light_level(player_pos, x, y, z);
+        if (!light_is_perceptible(light_level)) {
+            return;
+        }
+
         visible_cells.insert(cell_key);
-        if (seen_cells.insert(cell_key).second) {
+        if (light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
             newly_seen_cells.push_back(cell_key);
         }
     };
@@ -581,7 +756,8 @@ void WorldBubble::update_visibility(
 }
 
 WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
-    const Vector2i& player_pos,
+    const Vector2i& render_focus,
+    const Vector2i& view_origin,
     const std::vector<uint64_t>& offset_keys,
     bool occlusion_enabled
 ) {
@@ -595,8 +771,8 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
             int ox = offset.x;
             int oy = offset.y;
-            int cx = ox + player_pos.x;
-            int cy = oy + player_pos.y;
+            int cx = ox + render_focus.x;
+            int cy = oy + render_focus.y;
             uint64_t cell_key = make_cell_key(cx, cy);
 
             CellVisual visual;
@@ -608,13 +784,18 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                     snapshot.cells[l][offset_key] = visual;
                     continue;
                 }
+                if (!visual.occluded) {
+                    visual.light_level = get_apparent_light_level(view_origin, cx, cy, active_z);
+                }
+            } else {
+                visual.light_level = LightLevel::Bright;
             }
 
             visual.tile_id = resolve_tile_id(l, cell_key, cx, cy, active_z);
-            bool draw_dynamic = !occlusion_enabled || !visual.occluded;
+            bool draw_dynamic = !occlusion_enabled || (!visual.occluded && light_reveals_dynamics(visual.light_level));
             bool can_draw_below_air = l == LAYER_TILE
                 && tile_is_air(visual.tile_id)
-                && (!occlusion_enabled || !visual.occluded || visual.seen);
+                && (!occlusion_enabled || ((!visual.occluded && light_reveals_detail(visual.light_level)) || visual.seen));
 
             if (can_draw_below_air) {
                 for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {

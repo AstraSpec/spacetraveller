@@ -14,13 +14,31 @@ const FastTileMap::LayerProperties FastTileMap::LAYER_PROPS[LAYER_MAX] = {
     { 1, Color(1.0f, 1.0f, 1.0f, 1.0f), Color(0.0f, 0.0f, 0.0f, 0.0f), false }
 };
 
+namespace {
+
+Color modulation_for_light_level(LightLevel p_level, const FastTileMap::LayerProperties& p_props) {
+    switch (p_level) {
+        case LightLevel::Bright:
+            return Color(1.0f, 1.0f, 1.0f, 1.0f);
+        case LightLevel::Lit:
+            return Color(0.72f, 0.74f, 0.78f, 1.0f);
+        case LightLevel::Low:
+            return p_props.seen_modulation;
+        case LightLevel::Blank:
+        default:
+            return Color(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+}
+
+}
+
 void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_tilesheet", "texture"), &FastTileMap::set_tilesheet);
     ClassDB::bind_method(D_METHOD("get_tilesheet"), &FastTileMap::get_tilesheet);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tilesheet", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_tilesheet", "get_tilesheet");
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "playerPos", "is_square"), &FastTileMap::init_world_bubble, DEFVAL(true));
-    ClassDB::bind_method(D_METHOD("update_visuals", "playerPos"), &FastTileMap::update_visuals);
+    ClassDB::bind_method(D_METHOD("update_visuals", "render_focus", "view_origin"), &FastTileMap::update_visuals);
 
     ClassDB::bind_method(D_METHOD("set_spacing", "spacing"), &FastTileMap::set_spacing);
     ClassDB::bind_method(D_METHOD("get_spacing"), &FastTileMap::get_spacing);
@@ -104,10 +122,11 @@ std::vector<uint64_t> FastTileMap::get_render_offset_keys() const {
     return offset_keys;
 }
 
-void FastTileMap::update_visuals(const Vector2i& playerPos) {
+void FastTileMap::update_visuals(const Vector2i& render_focus, const Vector2i& view_origin) {
     if (!tilesheet.is_valid() || !bubble_source) return;
 
-    last_player_pos = playerPos;
+    last_render_focus = render_focus;
+    last_view_origin = view_origin;
     has_rendered = true;
 
     RenderingServer* rs = RenderingServer::get_singleton();
@@ -118,7 +137,7 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
 
     std::vector<uint64_t> offset_keys = get_render_offset_keys();
 
-    WorldBubble::BubbleSnapshot snapshot = bubble_source->build_snapshot(playerPos, offset_keys, occlusion_enabled);
+    WorldBubble::BubbleSnapshot snapshot = bubble_source->build_snapshot(render_focus, view_origin, offset_keys, occlusion_enabled);
 
     for (int l = 0; l < LAYER_MAX; l++) {
         const LayerProperties& props = LAYER_PROPS[l];
@@ -153,10 +172,10 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
                     )
                 );
             } else if (l == LAYER_TILE && visual.draw_below_tile) {
-                draw_below_tile_at(ox, oy, playerPos, visual.below_tile_id, visual.below_depth, rs, texture_rid, tile_db);
+                draw_below_tile_at(ox, oy, render_focus, visual.below_tile_id, visual.below_depth, rs, texture_rid, tile_db);
                 used_below_tile = true;
             } else if (visual.tile_id != 0) {
-                update_tile_at(ox, oy, playerPos, visual.tile_id, rs, texture_rid, tile_db, (Layer)l);
+                update_tile_at(ox, oy, render_focus, visual.tile_id, rs, texture_rid, tile_db, (Layer)l);
             } else {
                 rs->canvas_item_clear(pair.second);
             }
@@ -181,11 +200,11 @@ void FastTileMap::update_visuals(const Vector2i& playerPos) {
                 if (occlusion_enabled && visual.occluded) {
                     rs->canvas_item_set_modulate(pair.second, props.seen_modulation);
                 } else {
-                    rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
+                    rs->canvas_item_set_modulate(pair.second, modulation_for_light_level(visual.light_level, props));
                 }
             } else if (occlusion_enabled) {
                 if (!visual.occluded) {
-                    rs->canvas_item_set_modulate(pair.second, Color(1, 1, 1, 1));
+                    rs->canvas_item_set_modulate(pair.second, modulation_for_light_level(visual.light_level, props));
                 } else {
                     rs->canvas_item_set_modulate(pair.second, visual.seen ? props.seen_modulation : props.hidden_modulation);
                 }
@@ -218,7 +237,7 @@ void FastTileMap::draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer
     );
 }
 
-void FastTileMap::draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db) {
+void FastTileMap::draw_below_tile_at(int ox, int oy, const Vector2i& render_focus, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db) {
     uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
     auto it_rid = tile_rids[LAYER_TILE].find(offset_key);
     if (it_rid == tile_rids[LAYER_TILE].end()) return;
@@ -227,7 +246,7 @@ void FastTileMap::draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, 
     Vector2i atlas_pos(1, 1);
     const TileInfo* info = tile_db->get_tile_info(tile_id);
     if (info && !info->atlas_variants.empty()) {
-        uint32_t variant_idx = _get_variant_index(ox + playerPos.x, oy + playerPos.y - depth, info->atlas_variants.size());
+        uint32_t variant_idx = _get_variant_index(ox + render_focus.x, oy + render_focus.y - depth, info->atlas_variants.size());
         Vector2i variant_coords = info->atlas_variants[variant_idx];
         atlas_pos.x = 1 + variant_coords.x * (TILE_SIZE + 1);
         atlas_pos.y = 1 + variant_coords.y * (TILE_SIZE + 1);
@@ -250,7 +269,7 @@ void FastTileMap::draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, 
     );
 }
 
-void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer) {
+void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& render_focus, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer) {
     uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
     auto it_rid = tile_rids[p_layer].find(offset_key);
     if (it_rid == tile_rids[p_layer].end()) return;
@@ -260,7 +279,7 @@ void FastTileMap::update_tile_at(int ox, int oy, const Vector2i& playerPos, uint
     Vector2i atlas_pos(1, 1);
     const TileInfo* info = tile_db->get_tile_info(tile_id);
     if (info && !info->atlas_variants.empty()) {
-        uint32_t variant_idx = _get_variant_index(ox + playerPos.x, oy + playerPos.y, info->atlas_variants.size());
+        uint32_t variant_idx = _get_variant_index(ox + render_focus.x, oy + render_focus.y, info->atlas_variants.size());
         Vector2i variant_coords = info->atlas_variants[variant_idx];
         atlas_pos.x = 1 + variant_coords.x * (TILE_SIZE + 1);
         atlas_pos.y = 1 + variant_coords.y * (TILE_SIZE + 1);
@@ -280,5 +299,5 @@ void FastTileMap::_process(double delta) {
     if (!bubble_source->has_timed_overlays()) return;
 
     bubble_source->tick_overlays(static_cast<float>(delta));
-    update_visuals(last_player_pos);
+    update_visuals(last_render_focus, last_view_origin);
 }

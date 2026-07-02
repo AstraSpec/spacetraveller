@@ -52,12 +52,13 @@ protected:
 
     bool occlusion_enabled = false;
 
-    Vector2i last_player_pos;
+    Vector2i last_render_focus;
+    Vector2i last_view_origin;
     bool has_rendered = false;
 
     void draw_item_at(int ox, int oy, uint16_t item_id, RenderingServer* rs, RID texture_rid, class ItemDb* item_db, Layer p_layer = LAYER_TILE);
-    void update_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
-    void draw_below_tile_at(int ox, int oy, const Vector2i& playerPos, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
+    void update_tile_at(int ox, int oy, const Vector2i& render_focus, uint16_t tile_id, RenderingServer* rs, RID texture_rid, TileDb* tile_db, Layer p_layer = LAYER_TILE);
+    void draw_below_tile_at(int ox, int oy, const Vector2i& render_focus, uint16_t tile_id, int depth, RenderingServer* rs, RID texture_rid, TileDb* tile_db);
 
     uint32_t _get_variant_index(int x, int y, int variant_count) const {
         return Rng::variant_index(static_cast<uint32_t>(world_seed), x, y, static_cast<uint32_t>(variant_count));
@@ -89,7 +90,7 @@ public:
 
     void init_world_bubble(const Vector2i& playerPos, bool is_square = true);
     std::vector<uint64_t> get_render_offset_keys() const;
-    void update_visuals(const Vector2i& playerPos);
+    void update_visuals(const Vector2i& render_focus, const Vector2i& view_origin);
     void _process(double delta) override;
 };
 

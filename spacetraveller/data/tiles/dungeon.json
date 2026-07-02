@@ -12,7 +12,7 @@
     "name": "Dungeon Floor",
     "atlas": [ [20, 3], [21, 3] ],
     "solid": false,
-    "tags": ["GROUND"]
+    "tags": ["GROUND", "NATURAL_DARK"]
   },
   {
     "id": "iron_bars",
@@ -86,13 +86,13 @@
     "name": "Webbed Dungeon Floor",
     "atlas": [ [19, 4], [20, 4] ],
     "solid": false,
-    "tags": ["GROUND"]
+    "tags": ["GROUND", "NATURAL_DARK"]
   },
   {
     "id": "dungeon_floor_web_thick",
     "name": "Webbed Dungeon Floor",
     "atlas": [ 21, 4 ],
     "solid": false,
-    "tags": ["GROUND", "SMASHABLE"]
+    "tags": ["GROUND", "SMASHABLE", "NATURAL_DARK"]
   }
 ]
