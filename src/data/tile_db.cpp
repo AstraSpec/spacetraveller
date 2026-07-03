@@ -53,6 +53,7 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
         info.hides_items = TagRegistry::has_tag(hidden_items_tag, info.tags);
         info.transparent = TagRegistry::has_tag(transparent_tag, info.tags);
     }
+    info.light = parse_light_emission(p_data.get("light", Variant()));
     String smash_loot_table = String(p_data.get("smash_loot_table", ""));
     if (!smash_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.smash_loot_table = IdRegistry::get_singleton()->register_string(smash_loot_table);

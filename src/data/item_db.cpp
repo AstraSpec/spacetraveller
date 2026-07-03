@@ -86,6 +86,7 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     info.clothing_slots = parse_clothing_slots(p_data.get("clothing", Variant()));
     info.weapon_data = p_data.get("weapon", Dictionary());
     info.type = p_data.get("type", "misc");
+    info.light = parse_light_emission(p_data.get("light", Variant()));
     
     if (IdRegistry::get_singleton()) {
         uint16_t id = IdRegistry::get_singleton()->register_string(p_data["id"]);

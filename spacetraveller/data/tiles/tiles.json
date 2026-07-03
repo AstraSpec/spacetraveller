@@ -327,6 +327,7 @@
     "name": "Campfire",
     "atlas": [ 0, 42 ],
     "solid": false,
+    "light": { "strength": 13 },
     "tags": []
   }
 ]

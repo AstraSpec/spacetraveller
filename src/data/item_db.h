@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
+#include "light_emission.h"
 
 namespace godot {
 
@@ -22,6 +23,7 @@ struct ItemInfo {
     std::vector<ClothingSlotInfo> clothing_slots;
     Dictionary weapon_data;
     String type = "misc";
+    LightEmissionInfo light;
 };
 
 class ItemDb : public Object, public DataBase<ItemInfo, ItemDb> {

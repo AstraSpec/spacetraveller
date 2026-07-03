@@ -21,6 +21,11 @@ func _post_inventory(message: String, metadata: Dictionary = {}) -> void:
 func _post_inventory_warning(message: String, metadata: Dictionary = {}) -> void:
 	EventBus.post("inventory_warning", message, metadata)
 
+func _finish_equipment_change() -> void:
+	TimeManager.advance_turn()
+	_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+	refresh_view()
+
 func _get_display_data() -> Array:
 	var formatted = []
 	var equipment = _GameWorld.get_entity_equipment(0)
@@ -164,7 +169,7 @@ func _wear_selected_item():
 	if _GameWorld.equip_entity_clothing_by_string(0, item_id):
 		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 		_post_inventory("You wear %s." % _item_label(item_id), {"item_id": item_id})
-		refresh_view()
+		_finish_equipment_change()
 	else:
 		_post_inventory_warning("You cannot wear %s." % _item_label(item_id), {"item_id": item_id})
 
@@ -186,7 +191,7 @@ func _toggle_wield_selected_item():
 			return
 		if _GameWorld.unwield_entity_weapon(0, slot_name):
 			_post_inventory("You stop wielding %s." % _item_label(item_id), {"item_id": item_id, "slot": slot_name})
-			refresh_view()
+			_finish_equipment_change()
 		else:
 			_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 			_post_inventory_warning("You cannot stop wielding %s." % _item_label(item_id), {"item_id": item_id, "slot": slot_name})
@@ -194,7 +199,7 @@ func _toggle_wield_selected_item():
 		if _GameWorld.wield_entity_weapon_by_string(0, item_id):
 			_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 			_post_inventory("You wield %s." % _item_label(item_id), {"item_id": item_id})
-			refresh_view()
+			_finish_equipment_change()
 		else:
 			_post_inventory_warning("You cannot wield %s." % _item_label(item_id), {"item_id": item_id})
 

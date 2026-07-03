@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
+#include "light_emission.h"
 
 namespace godot {
 
@@ -17,6 +18,7 @@ struct TileInfo {
     uint16_t closes_to = 0;
     bool hides_items = false;
     bool transparent = false;
+    LightEmissionInfo light;
 };
 
 class TileDb : public Object, public DataBase<TileInfo, TileDb> {

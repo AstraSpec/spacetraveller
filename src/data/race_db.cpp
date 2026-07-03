@@ -36,6 +36,7 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.faction = p_data.get("faction", "");
     info.traversal_profile = String(p_data.get("traversal_profile", "walker")).to_lower();
     info.tags = _parse_tags(p_data.get("tags", Array()));
+    info.light = parse_light_emission(p_data.get("light", Variant()));
 
     Array parts = p_data.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {

@@ -14,7 +14,7 @@
 #include <vector>
 #include "cell_data.h"
 #include "cell_area.h"
-#include "light_level.h"
+#include "light_map.h"
 #include "traversal_snapshot.h"
 #include "entities/entity.h"
 
@@ -22,6 +22,9 @@ namespace godot {
 
 class EntityPool;
 class EntityLedger;
+class ItemDb;
+class RaceDb;
+class TileDb;
 
 class WorldBubble {
 public:
@@ -93,6 +96,32 @@ private:
     uint64_t make_cell_key(int world_x, int world_y) const;
     uint64_t make_cell_key_at_z(int world_x, int world_y, int world_z) const;
     uint16_t resolve_tile_id(int layer, uint64_t cell_key, int world_x, int world_y, int world_z);
+    std::vector<LightEmitter> collect_light_emitters(
+        const Vector2i& p_origin,
+        const std::vector<uint64_t>& p_offset_keys,
+        const EntityLedger* p_ledger
+    );
+    void collect_tile_light_emitters(
+        const Vector2i& p_origin,
+        const std::vector<uint64_t>& p_offset_keys,
+        TileDb* p_tile_db,
+        std::vector<LightEmitter>& r_emitters
+    );
+    void collect_dropped_item_light_emitters(
+        const Vector2i& p_origin,
+        const std::vector<uint64_t>& p_offset_keys,
+        ItemDb* p_item_db,
+        std::vector<LightEmitter>& r_emitters
+    );
+    void collect_entity_light_emitters(
+        const Vector2i& p_origin,
+        const std::unordered_set<uint64_t>& p_offset_lookup,
+        const EntityLedger* p_ledger,
+        ItemDb* p_item_db,
+        RaceDb* p_race_db,
+        std::vector<LightEmitter>& r_emitters
+    );
+    LightStrength get_apparent_light_strength(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z);
     LightLevel get_apparent_light_level(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z);
 
 public:
@@ -193,7 +222,8 @@ public:
     void update_lighting(
         const Vector2i& p_origin,
         const std::vector<uint64_t>& p_offset_keys,
-        bool p_lighting_enabled
+        bool p_lighting_enabled,
+        const EntityLedger* p_ledger = nullptr
     );
     LightLevel get_current_light_level(uint64_t p_cell_key) const;
 

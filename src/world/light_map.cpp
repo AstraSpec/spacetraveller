@@ -4,6 +4,7 @@
 #include "data/tile_db.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <queue>
 
@@ -29,17 +30,17 @@ bool tile_is_light_aperture(const TileInfo* p_info) {
     return p_info && p_info->closes_to != 0 && (!p_info->solid || p_info->transparent);
 }
 
-void raise_faces_for_step(LightSample& p_sample, const Vector2i& p_step, LightLevel p_level) {
+void raise_faces_for_step(LightSample& p_sample, const Vector2i& p_step, LightStrength p_strength) {
     if (p_step.x > 0) {
-        p_sample.raise_face(LightFace::West, p_level);
+        p_sample.raise_face(LightFace::West, p_strength);
     } else if (p_step.x < 0) {
-        p_sample.raise_face(LightFace::East, p_level);
+        p_sample.raise_face(LightFace::East, p_strength);
     }
 
     if (p_step.y > 0) {
-        p_sample.raise_face(LightFace::North, p_level);
+        p_sample.raise_face(LightFace::North, p_strength);
     } else if (p_step.y < 0) {
-        p_sample.raise_face(LightFace::South, p_level);
+        p_sample.raise_face(LightFace::South, p_strength);
     }
 }
 
@@ -97,24 +98,84 @@ bool line_has_direct_light(
     return true;
 }
 
-LightLevel spill_level_for_distance(int p_distance) {
-    static constexpr int BRIGHT_DISTANCE = 5;
-    static constexpr int LIT_DISTANCE = 9;
-    static constexpr int LOW_DISTANCE = 12;
+LightStrength strength_for_distance(int p_distance, LightStrength p_source_strength) {
+    if (p_source_strength <= LIGHT_STRENGTH_BLANK) {
+        return LIGHT_STRENGTH_BLANK;
+    }
 
-    if (p_distance <= 0) {
-        return LightLevel::Bright;
+    const int strength = static_cast<int>(p_source_strength) - (p_distance * LIGHT_STRENGTH_FALLOFF_PER_TILE);
+    return strength > 0 ? static_cast<LightStrength>(strength) : LIGHT_STRENGTH_BLANK;
+}
+
+int circular_tile_distance(int p_dx, int p_dy) {
+    const int64_t dx = p_dx;
+    const int64_t dy = p_dy;
+    const int64_t distance_sq = dx * dx + dy * dy;
+    if (distance_sq <= 0) {
+        return 0;
     }
-    if (p_distance <= BRIGHT_DISTANCE) {
-        return LightLevel::Bright;
+
+    return static_cast<int>(std::sqrt(static_cast<double>(distance_sq)));
+}
+
+void spill_from_source(
+    const LightCell& p_source,
+    LightStrength p_source_strength,
+    int p_max_radius,
+    const std::vector<LightCell>& p_cells,
+    const std::unordered_map<uint64_t, size_t>& p_index_by_offset,
+    std::vector<LightSample>& r_samples
+) {
+    if (p_source_strength <= LIGHT_STRENGTH_BLANK) {
+        return;
     }
-    if (p_distance <= LIT_DISTANCE) {
-        return LightLevel::Lit;
+
+    const int source_radius = static_cast<int>(p_source_strength - LIGHT_STRENGTH_LOW);
+    const int radius = std::min(source_radius, std::max(0, p_max_radius));
+    const double ellipse_radius = static_cast<double>(radius) + 0.5;
+    const double ellipse_radius_sq = ellipse_radius * ellipse_radius;
+    for (int dy = -radius; dy <= radius; dy++) {
+        const double row_center_y = static_cast<double>(dy);
+        const double row_s = 1.0 - (row_center_y * row_center_y) / ellipse_radius_sq;
+        if (row_s < 0.0) {
+            continue;
+        }
+
+        const double row_extent = ellipse_radius * std::sqrt(row_s);
+        const int min_dx = static_cast<int>(std::ceil(-row_extent));
+        const int max_dx = static_cast<int>(std::floor(row_extent));
+
+        for (int dx = min_dx; dx <= max_dx; dx++) {
+            const int ox = p_source.offset.x + dx;
+            const int oy = p_source.offset.y + dy;
+            const int distance = circular_tile_distance(dx, dy);
+
+            const uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
+            auto target_it = p_index_by_offset.find(offset_key);
+            if (target_it == p_index_by_offset.end()) {
+                continue;
+            }
+
+            const size_t target_index = target_it->second;
+            Vector2i final_step;
+            if (!line_has_direct_light(p_source.offset, p_cells[target_index].offset, p_cells, p_index_by_offset, &final_step)) {
+                continue;
+            }
+
+            const LightStrength candidate = strength_for_distance(distance, p_source_strength);
+            if (candidate <= LIGHT_STRENGTH_BLANK) {
+                continue;
+            }
+
+            if (p_cells[target_index].passes_light) {
+                r_samples[target_index].raise_cell(candidate);
+            } else if (distance == 0) {
+                r_samples[target_index].raise_all_faces(candidate);
+            } else {
+                raise_faces_for_step(r_samples[target_index], final_step, candidate);
+            }
+        }
     }
-    if (p_distance <= LOW_DISTANCE) {
-        return LightLevel::Low;
-    }
-    return LightLevel::Blank;
 }
 
 }
@@ -125,6 +186,7 @@ void LightMap::compute_natural_light(
     const std::vector<uint64_t>& p_offset_keys,
     const TileResolver& p_resolve_tile,
     const SkyResolver& p_is_sky_exposed,
+    const std::vector<LightEmitter>& p_emitters,
     std::unordered_map<uint64_t, LightSample>& r_samples
 ) {
     r_samples.clear();
@@ -162,100 +224,89 @@ void LightMap::compute_natural_light(
         r_samples[cell.cell_key] = LightSample();
     }
 
-    if (p_z < 0) {
-        return;
+    int light_area_radius = 0;
+    for (const LightCell& cell : cells) {
+        light_area_radius = std::max(light_area_radius, circular_tile_distance(cell.offset.x, cell.offset.y));
     }
 
     std::vector<LightSample> local_samples(cells.size());
-    std::vector<size_t> aperture_sources;
-    std::queue<size_t> queue;
 
-    for (size_t i = 0; i < cells.size(); i++) {
-        const LightCell& cell = cells[i];
-        if (!cell.passes_light || !cell.sky_exposed || cell.aperture) {
-            continue;
-        }
-        local_samples[i].cell = LightLevel::Bright;
-        queue.push(i);
-    }
+    if (p_z >= 0) {
+        std::vector<size_t> aperture_sources;
+        std::queue<size_t> queue;
 
-    static const Vector2i DIRECTIONS[4] = {
-        Vector2i(1, 0),
-        Vector2i(-1, 0),
-        Vector2i(0, 1),
-        Vector2i(0, -1)
-    };
-
-    while (!queue.empty()) {
-        const size_t index = queue.front();
-        queue.pop();
-
-        const LightCell& cell = cells[index];
-        const LightLevel current = local_samples[index].cell;
-        if (current == LightLevel::Blank) {
-            continue;
+        for (size_t i = 0; i < cells.size(); i++) {
+            const LightCell& cell = cells[i];
+            if (!cell.passes_light || !cell.sky_exposed || cell.aperture) {
+                continue;
+            }
+            local_samples[i].cell = LIGHT_STRENGTH_DAYLIGHT;
+            queue.push(i);
         }
 
-        for (const Vector2i& direction : DIRECTIONS) {
-            const Vector2i neighbour_offset = cell.offset + direction;
-            const uint64_t neighbour_key = WorldCoords::pack_coords(neighbour_offset.x, neighbour_offset.y);
-            auto neighbour_it = index_by_offset.find(neighbour_key);
-            if (neighbour_it == index_by_offset.end()) {
+        static const Vector2i DIRECTIONS[4] = {
+            Vector2i(1, 0),
+            Vector2i(-1, 0),
+            Vector2i(0, 1),
+            Vector2i(0, -1)
+        };
+
+        while (!queue.empty()) {
+            const size_t index = queue.front();
+            queue.pop();
+
+            const LightCell& cell = cells[index];
+            const LightStrength current = local_samples[index].cell;
+            if (current <= LIGHT_STRENGTH_BLANK) {
                 continue;
             }
 
-            const size_t neighbour_index = neighbour_it->second;
-            const LightCell& neighbour = cells[neighbour_index];
-            const LightLevel candidate = current;
+            for (const Vector2i& direction : DIRECTIONS) {
+                const Vector2i neighbour_offset = cell.offset + direction;
+                const uint64_t neighbour_key = WorldCoords::pack_coords(neighbour_offset.x, neighbour_offset.y);
+                auto neighbour_it = index_by_offset.find(neighbour_key);
+                if (neighbour_it == index_by_offset.end()) {
+                    continue;
+                }
 
-            if (!neighbour.passes_light) {
-                raise_faces_for_step(local_samples[neighbour_index], direction, candidate);
-                continue;
-            }
+                const size_t neighbour_index = neighbour_it->second;
+                const LightCell& neighbour = cells[neighbour_index];
+                const LightStrength candidate = current;
 
-            if (static_cast<uint8_t>(candidate) > static_cast<uint8_t>(local_samples[neighbour_index].cell)) {
-                local_samples[neighbour_index].cell = candidate;
-                if (neighbour.aperture || !neighbour.sky_exposed) {
-                    aperture_sources.push_back(neighbour_index);
-                } else if (candidate != LightLevel::Blank) {
-                    queue.push(neighbour_index);
+                if (!neighbour.passes_light) {
+                    raise_faces_for_step(local_samples[neighbour_index], direction, candidate);
+                    continue;
+                }
+
+                if (candidate > local_samples[neighbour_index].cell) {
+                    local_samples[neighbour_index].cell = candidate;
+                    if (neighbour.aperture || !neighbour.sky_exposed) {
+                        aperture_sources.push_back(neighbour_index);
+                    } else if (candidate > LIGHT_STRENGTH_BLANK) {
+                        queue.push(neighbour_index);
+                    }
                 }
             }
+        }
+
+        for (size_t aperture_index : aperture_sources) {
+            const LightCell& source = cells[aperture_index];
+            spill_from_source(source, local_samples[aperture_index].cell, light_area_radius, cells, index_by_offset, local_samples);
         }
     }
 
-    static constexpr int APERTURE_SPILL_RADIUS = 12;
-    for (size_t aperture_index : aperture_sources) {
-        const LightCell& source = cells[aperture_index];
-        for (int oy = source.offset.y - APERTURE_SPILL_RADIUS; oy <= source.offset.y + APERTURE_SPILL_RADIUS; oy++) {
-            for (int ox = source.offset.x - APERTURE_SPILL_RADIUS; ox <= source.offset.x + APERTURE_SPILL_RADIUS; ox++) {
-                const int dx = ox - source.offset.x;
-                const int dy = oy - source.offset.y;
-                const int distance = std::max(std::abs(dx), std::abs(dy));
-                if (distance > APERTURE_SPILL_RADIUS) {
-                    continue;
-                }
-
-                const uint64_t offset_key = WorldCoords::pack_coords(ox, oy);
-                auto target_it = index_by_offset.find(offset_key);
-                if (target_it == index_by_offset.end()) {
-                    continue;
-                }
-
-                const size_t target_index = target_it->second;
-                Vector2i final_step;
-                if (!line_has_direct_light(source.offset, cells[target_index].offset, cells, index_by_offset, &final_step)) {
-                    continue;
-                }
-
-                LightLevel candidate = spill_level_for_distance(distance);
-                if (cells[target_index].passes_light) {
-                    local_samples[target_index].raise_cell(candidate);
-                } else {
-                    raise_faces_for_step(local_samples[target_index], final_step, candidate);
-                }
-            }
+    for (const LightEmitter& emitter : p_emitters) {
+        if (emitter.z != p_z || emitter.strength <= LIGHT_STRENGTH_BLANK) {
+            continue;
         }
+
+        const Vector2i source_offset = emitter.position - p_origin;
+        auto source_it = index_by_offset.find(WorldCoords::pack_coords(source_offset.x, source_offset.y));
+        if (source_it == index_by_offset.end()) {
+            continue;
+        }
+
+        spill_from_source(cells[source_it->second], emitter.strength, light_area_radius, cells, index_by_offset, local_samples);
     }
 
     for (size_t i = 0; i < cells.size(); i++) {
@@ -268,7 +319,7 @@ LightLevel LightMap::get_level(
     uint64_t p_cell_key
 ) {
     auto it = p_samples.find(p_cell_key);
-    return it != p_samples.end() ? it->second.cell : LightLevel::Blank;
+    return it != p_samples.end() ? light_level_from_strength(it->second.cell) : LightLevel::Blank;
 }
 
 LightSample LightMap::get_sample(

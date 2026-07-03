@@ -1,6 +1,10 @@
 #include "world_bubble.h"
+#include "components/equipment.h"
 #include "entities/entity_pool.h"
+#include "entities/entity_ledger.h"
 #include "core/id_registry.h"
+#include "data/item_db.h"
+#include "data/race_db.h"
 #include "data/tile_db.h"
 #include "core/world_coords.h"
 #include "light_map.h"
@@ -67,6 +71,28 @@ static bool tile_is_opaque(const TileInfo* p_info) {
     return p_info && p_info->solid && !p_info->transparent;
 }
 
+static void append_light_emitter(std::vector<LightEmitter>& r_emitters, const Vector2i& p_position, int p_z, LightStrength p_strength) {
+    if (p_strength <= LIGHT_STRENGTH_BLANK) {
+        return;
+    }
+
+    LightEmitter emitter;
+    emitter.position = p_position;
+    emitter.z = p_z;
+    emitter.strength = p_strength;
+    r_emitters.push_back(emitter);
+}
+
+static LightStrength item_light_strength_by_id(ItemDb* p_item_db, uint16_t p_item_id) {
+    const ItemInfo* item = p_item_db ? p_item_db->get_item_info(p_item_id) : nullptr;
+    return item ? item->light.strength : LIGHT_STRENGTH_BLANK;
+}
+
+static LightStrength item_light_strength_by_string(ItemDb* p_item_db, const String& p_item_id) {
+    const ItemInfo* item = p_item_db ? p_item_db->get_item_info(p_item_id) : nullptr;
+    return item ? item->light.strength : LIGHT_STRENGTH_BLANK;
+}
+
 static bool player_minimum_light_contains_offset(int p_ox, int p_oy, int p_radius) {
     if (p_radius <= 0) {
         return p_ox == 0 && p_oy == 0;
@@ -80,60 +106,60 @@ static void raise_view_facing_faces(
     LightSample& p_sample,
     const Vector2i& p_view_origin,
     const Vector2i& p_cell_pos,
-    LightLevel p_level
+    LightStrength p_strength
 ) {
     const int dx = p_view_origin.x - p_cell_pos.x;
     const int dy = p_view_origin.y - p_cell_pos.y;
     bool raised = false;
 
     if (dx > 0) {
-        p_sample.raise_face(LightFace::East, p_level);
+        p_sample.raise_face(LightFace::East, p_strength);
         raised = true;
     } else if (dx < 0) {
-        p_sample.raise_face(LightFace::West, p_level);
+        p_sample.raise_face(LightFace::West, p_strength);
         raised = true;
     }
 
     if (dy > 0) {
-        p_sample.raise_face(LightFace::South, p_level);
+        p_sample.raise_face(LightFace::South, p_strength);
         raised = true;
     } else if (dy < 0) {
-        p_sample.raise_face(LightFace::North, p_level);
+        p_sample.raise_face(LightFace::North, p_strength);
         raised = true;
     }
 
     if (!raised) {
-        p_sample.raise_all_faces(p_level);
+        p_sample.raise_all_faces(p_strength);
     }
 }
 
-static LightLevel view_facing_light(
+static LightStrength view_facing_light(
     const LightSample& p_sample,
     const Vector2i& p_view_origin,
     const Vector2i& p_cell_pos
 ) {
     const int dx = p_view_origin.x - p_cell_pos.x;
     const int dy = p_view_origin.y - p_cell_pos.y;
-    LightLevel level = LightLevel::Blank;
+    LightStrength strength = LIGHT_STRENGTH_BLANK;
     bool sampled = false;
 
     if (dx > 0) {
-        level = light_stronger(level, p_sample.get_face(LightFace::East));
+        strength = light_strength_stronger(strength, p_sample.get_face(LightFace::East));
         sampled = true;
     } else if (dx < 0) {
-        level = light_stronger(level, p_sample.get_face(LightFace::West));
+        strength = light_strength_stronger(strength, p_sample.get_face(LightFace::West));
         sampled = true;
     }
 
     if (dy > 0) {
-        level = light_stronger(level, p_sample.get_face(LightFace::South));
+        strength = light_strength_stronger(strength, p_sample.get_face(LightFace::South));
         sampled = true;
     } else if (dy < 0) {
-        level = light_stronger(level, p_sample.get_face(LightFace::North));
+        strength = light_strength_stronger(strength, p_sample.get_face(LightFace::North));
         sampled = true;
     }
 
-    return sampled ? level : p_sample.strongest_face();
+    return sampled ? strength : p_sample.strongest_face();
 }
 
 void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer) {
@@ -622,10 +648,129 @@ TraversalSnapshot WorldBubble::build_traversal_snapshot(
     return TraversalSnapshot(this, start, goal, blocking_positions, ledger, entity_id, traversal_profile, allow_openable_tiles);
 }
 
+std::vector<LightEmitter> WorldBubble::collect_light_emitters(
+    const Vector2i& p_origin,
+    const std::vector<uint64_t>& p_offset_keys,
+    const EntityLedger* p_ledger
+) {
+    TileDb* tile_db = TileDb::get_singleton();
+    ItemDb* item_db = ItemDb::get_singleton();
+    RaceDb* race_db = RaceDb::get_singleton();
+
+    std::vector<LightEmitter> emitters;
+    std::unordered_set<uint64_t> offset_lookup;
+    offset_lookup.reserve(p_offset_keys.size());
+    for (uint64_t offset_key : p_offset_keys) {
+        offset_lookup.insert(offset_key);
+    }
+
+    collect_tile_light_emitters(p_origin, p_offset_keys, tile_db, emitters);
+    collect_dropped_item_light_emitters(p_origin, p_offset_keys, item_db, emitters);
+    collect_entity_light_emitters(p_origin, offset_lookup, p_ledger, item_db, race_db, emitters);
+    return emitters;
+}
+
+void WorldBubble::collect_tile_light_emitters(
+    const Vector2i& p_origin,
+    const std::vector<uint64_t>& p_offset_keys,
+    TileDb* p_tile_db,
+    std::vector<LightEmitter>& r_emitters
+) {
+    for (uint64_t offset_key : p_offset_keys) {
+        const Vector2i offset = WorldCoords::unpack_coords(offset_key);
+        const int world_x = p_origin.x + offset.x;
+        const int world_y = p_origin.y + offset.y;
+        const uint64_t cell_key = make_cell_key_at_z(world_x, world_y, active_z);
+        const uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, world_x, world_y, active_z);
+        const TileInfo* tile = p_tile_db ? p_tile_db->get_tile_info(tile_id) : nullptr;
+        if (tile && tile->light.emits()) {
+            append_light_emitter(r_emitters, Vector2i(world_x, world_y), active_z, tile->light.strength);
+        }
+    }
+}
+
+void WorldBubble::collect_dropped_item_light_emitters(
+    const Vector2i& p_origin,
+    const std::vector<uint64_t>& p_offset_keys,
+    ItemDb* p_item_db,
+    std::vector<LightEmitter>& r_emitters
+) {
+    for (uint64_t offset_key : p_offset_keys) {
+        const Vector2i offset = WorldCoords::unpack_coords(offset_key);
+        const int world_x = p_origin.x + offset.x;
+        const int world_y = p_origin.y + offset.y;
+        const uint64_t cell_key = make_cell_key_at_z(world_x, world_y, active_z);
+
+        LightStrength strongest_ground_light = LIGHT_STRENGTH_BLANK;
+        const std::vector<DroppedItem>* items = cell_data.get_items(cell_key);
+        if (items) {
+            for (const DroppedItem& item : *items) {
+                if (item.amount <= 0) {
+                    continue;
+                }
+                strongest_ground_light = light_strength_stronger(strongest_ground_light, item_light_strength_by_id(p_item_db, item.id));
+            }
+        }
+        append_light_emitter(r_emitters, Vector2i(world_x, world_y), active_z, strongest_ground_light);
+    }
+}
+
+void WorldBubble::collect_entity_light_emitters(
+    const Vector2i& p_origin,
+    const std::unordered_set<uint64_t>& p_offset_lookup,
+    const EntityLedger* p_ledger,
+    ItemDb* p_item_db,
+    RaceDb* p_race_db,
+    std::vector<LightEmitter>& r_emitters
+) {
+    if (!p_ledger || !entity_pool_source) {
+        return;
+    }
+
+    for (const auto& entry : entity_positions) {
+        const CellEntity& cell_entity = entry.second;
+        const Entity* entity = entity_pool_source->get_entity(cell_entity.entity_id);
+        if (!entity || entity->z != active_z) {
+            continue;
+        }
+
+        const Vector2i entity_pos(entity->x, entity->y);
+        const Vector2i entity_offset = entity_pos - p_origin;
+        if (p_offset_lookup.find(WorldCoords::pack_coords(entity_offset.x, entity_offset.y)) == p_offset_lookup.end()) {
+            continue;
+        }
+
+        const AnatomyData* anatomy = p_ledger->try_get_anatomy(entity->id);
+        const RaceInfo* race = (anatomy && p_race_db) ? p_race_db->get_race_info(anatomy->race_id) : nullptr;
+        if (race && race->light.emits()) {
+            append_light_emitter(r_emitters, entity_pos, entity->z, race->light.strength);
+        }
+
+        const EquipmentData* equipment = p_ledger->try_get_equipment(entity->id);
+        if (!equipment) {
+            continue;
+        }
+
+        LightStrength strongest_equipment_light = LIGHT_STRENGTH_BLANK;
+        for (const auto& slot_entry : equipment->slots) {
+            const EquipmentSlot& slot = slot_entry.second;
+            if (slot.item_id.is_empty()) {
+                continue;
+            }
+            strongest_equipment_light = light_strength_stronger(
+                strongest_equipment_light,
+                item_light_strength_by_string(p_item_db, slot.item_id)
+            );
+        }
+        append_light_emitter(r_emitters, entity_pos, entity->z, strongest_equipment_light);
+    }
+}
+
 void WorldBubble::update_lighting(
     const Vector2i& p_origin,
     const std::vector<uint64_t>& p_offset_keys,
-    bool p_lighting_enabled
+    bool p_lighting_enabled,
+    const EntityLedger* p_ledger
 ) {
     current_light_samples.clear();
     current_light_samples.reserve(p_offset_keys.size());
@@ -636,13 +781,15 @@ void WorldBubble::update_lighting(
             const int cx = p_origin.x + offset.x;
             const int cy = p_origin.y + offset.y;
             LightSample& sample = current_light_samples[make_cell_key_at_z(cx, cy, active_z)];
-            sample.cell = LightLevel::Bright;
-            sample.raise_all_faces(LightLevel::Bright);
+            sample.cell = LIGHT_STRENGTH_DAYLIGHT;
+            sample.raise_all_faces(LIGHT_STRENGTH_DAYLIGHT);
         }
         return;
     }
 
     TileDb* tile_db = TileDb::get_singleton();
+    std::vector<LightEmitter> emitters = collect_light_emitters(p_origin, p_offset_keys, p_ledger);
+
     LightMap::compute_natural_light(
         p_origin,
         active_z,
@@ -658,10 +805,11 @@ void WorldBubble::update_lighting(
             const TileInfo* above_info = tile_db ? tile_db->get_tile_info(above_tile_id) : nullptr;
             return tile_allows_sky(above_tile_id, above_info);
         },
+        emitters,
         current_light_samples
     );
 
-    static constexpr LightLevel PLAYER_MINIMUM_VISIBILITY = LightLevel::Lit;
+    static constexpr LightStrength PLAYER_MINIMUM_VISIBILITY = LIGHT_STRENGTH_LIT;
     for (int oy = -player_minimum_light_radius; oy <= player_minimum_light_radius; oy++) {
         for (int ox = -player_minimum_light_radius; ox <= player_minimum_light_radius; ox++) {
             if (!player_minimum_light_contains_offset(ox, oy, player_minimum_light_radius)) {
@@ -687,7 +835,7 @@ LightLevel WorldBubble::get_current_light_level(uint64_t p_cell_key) const {
     return LightMap::get_level(current_light_samples, p_cell_key);
 }
 
-LightLevel WorldBubble::get_apparent_light_level(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z) {
+LightStrength WorldBubble::get_apparent_light_strength(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z) {
     const uint64_t cell_key = make_cell_key_at_z(p_world_x, p_world_y, p_world_z);
     const LightSample sample = LightMap::get_sample(current_light_samples, cell_key);
 
@@ -699,6 +847,10 @@ LightLevel WorldBubble::get_apparent_light_level(const Vector2i& p_view_origin, 
     }
 
     return view_facing_light(sample, p_view_origin, Vector2i(p_world_x, p_world_y));
+}
+
+LightLevel WorldBubble::get_apparent_light_level(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z) {
+    return light_level_from_strength(get_apparent_light_strength(p_view_origin, p_world_x, p_world_y, p_world_z));
 }
 
 void WorldBubble::update_visibility(

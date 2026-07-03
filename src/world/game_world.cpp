@@ -339,7 +339,7 @@ void GameWorld::update_world_view_at_z(const Vector2i& render_focus, const Vecto
             ? bubble.get_player_vision_area(vision_origin).offset_keys()
             : render_offset_keys;
         const Vector2i visibility_origin = occlusion_enabled ? vision_origin : render_focus;
-        bubble.update_lighting(visibility_origin, visibility_offset_keys, occlusion_enabled);
+        bubble.update_lighting(visibility_origin, visibility_offset_keys, occlusion_enabled, &entity_ledger);
         bubble.update_visibility(visibility_origin, visibility_offset_keys, occlusion_enabled);
         if (process_streaming) {
             sync_entity_streaming(vision_origin);

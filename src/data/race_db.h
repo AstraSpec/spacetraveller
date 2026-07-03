@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include "database.h"
+#include "light_emission.h"
 
 namespace godot {
 
@@ -29,6 +30,7 @@ struct RaceInfo {
     String traversal_profile = "walker";
     std::vector<uint16_t> tags;
     std::vector<RacePartDefinition> parts;
+    LightEmissionInfo light;
 };
 
 class RaceDb : public Object, public DataBase<RaceInfo, RaceDb> {

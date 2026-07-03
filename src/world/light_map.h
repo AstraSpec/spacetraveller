@@ -11,6 +11,12 @@
 
 namespace godot {
 
+struct LightEmitter {
+    Vector2i position;
+    int z = 0;
+    LightStrength strength = LIGHT_STRENGTH_BLANK;
+};
+
 class LightMap {
 public:
     using TileResolver = std::function<uint16_t(int world_x, int world_y, int world_z)>;
@@ -22,6 +28,7 @@ public:
         const std::vector<uint64_t>& p_offset_keys,
         const TileResolver& p_resolve_tile,
         const SkyResolver& p_is_sky_exposed,
+        const std::vector<LightEmitter>& p_emitters,
         std::unordered_map<uint64_t, LightSample>& r_samples
     );
 

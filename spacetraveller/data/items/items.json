@@ -177,6 +177,7 @@
     "price": 50,
     "atlas": [ 8, 42 ],
     "weight": 0.3,
+    "light": { "strength": 11 },
     "tags":[]
   },
   {
@@ -197,6 +198,7 @@
     "price": 20,
     "atlas": [ 7, 42 ],
     "weight": 0.1,
+    "light": { "strength": 5 },
     "tags": []
   },
   {

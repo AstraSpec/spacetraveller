@@ -108,6 +108,8 @@ func _unequip_selected_item():
 		return
 	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
 		EventBus.post("inventory", "You take off %s." % _item_label(item_id), {"item_id": item_id})
+		TimeManager.advance_turn()
+		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 		refresh_view()
 	else:
 		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
