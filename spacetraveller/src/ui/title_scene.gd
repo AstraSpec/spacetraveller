@@ -2,12 +2,14 @@ extends Control
 
 @export var menu_container: ButtonListContainer
 @export var load_game_ui: BaseWindow
+@export var new_game_ui: BaseWindow
 @export var keybind_ui: BaseWindow
 @export var credits_ui: BaseWindow
 @export var options_ui: BaseWindow
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
+	ScenarioDb.initialize_data()
 	
 	if menu_container:
 		menu_container.item_selected.connect(_on_menu_item_selected)
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 func _on_ui_directional_input(direction: Vector2) -> void:
 	if load_game_ui and load_game_ui.visible: return
+	if new_game_ui and new_game_ui.visible: return
 	if keybind_ui and keybind_ui.visible: return
 	if credits_ui and credits_ui.visible: return
 	if options_ui and options_ui.visible: return
@@ -36,6 +39,7 @@ func _on_ui_directional_input(direction: Vector2) -> void:
 
 func _on_ui_accept() -> void:
 	if load_game_ui and load_game_ui.visible: return
+	if new_game_ui and new_game_ui.visible: return
 	if keybind_ui and keybind_ui.visible: return
 	if credits_ui and credits_ui.visible: return
 	if options_ui and options_ui.visible: return
@@ -50,8 +54,7 @@ func _on_menu_item_activated(_index: int, data: Variant) -> void:
 	
 	match data.id:
 		"new":
-			SaveManager.loaded_save_data = {}
-			get_tree().change_scene_to_file("res://main.tscn")
+			InputManager.toggle_menu("new_game")
 		"load":
 			InputManager.toggle_menu("load_game")
 		"options":

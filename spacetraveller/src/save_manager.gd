@@ -2,6 +2,7 @@ extends Node
 
 var _GameWorld: GameWorld
 var loaded_save_data: Dictionary = {}
+var new_game_options: Dictionary = {}
 
 func register_world(w: GameWorld) -> void:
 	_GameWorld = w
@@ -56,7 +57,17 @@ func load_save_to_memory(slot_name: String) -> bool:
 		return false
 		
 	loaded_save_data = json.data
+	new_game_options = {}
 	return true
+
+func begin_new_game(options: Dictionary = {}) -> void:
+	loaded_save_data = {}
+	new_game_options = options.duplicate(true)
+
+func consume_new_game_options() -> Dictionary:
+	var options := new_game_options.duplicate(true)
+	new_game_options = {}
+	return options
 
 func apply_loaded_data() -> void:
 	if loaded_save_data.is_empty():

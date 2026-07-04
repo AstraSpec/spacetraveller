@@ -7,6 +7,7 @@ signal moved_chunk(chunkPos :Vector2)
 @export var Camera :Camera2D
 @export var World : GameWorld
 @export var PathfindingTimer :Timer
+@export var ConfirmationPopup :Window
 
 var CHUNK_SIZE = GameWorld.get_chunk_size()
 
@@ -174,23 +175,18 @@ func _submit_move(dir: Vector2) -> bool:
 	var pos = Vector2i(cellPos())
 	var target = pos + Vector2i(dir)
 	if World.would_player_move_fall(target.x, target.y):
-		var popup := _get_confirmation_popup()
-		if popup:
-			PathfindingTimer.stop()
-			_clear_path()
-			popup.show_confirm(
-				"Jump off this ledge?",
-				[
-					{"label": "No"},
-					{"label": "Yes", "callback": Callable(self, "_confirm_ledge_jump").bind(target)},
-				]
-			)
-			return false
+		PathfindingTimer.stop()
+		_clear_path()
+		ConfirmationPopup.show_confirm(
+			"Jump off this ledge?",
+			[
+				{"label": "No"},
+				{"label": "Yes", "callback": Callable(self, "_confirm_ledge_jump").bind(target)},
+			]
+		)
+		return false
 	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")
 	return true
-
-func _get_confirmation_popup() -> ConfirmationPopup:
-	return get_tree().root.get_node_or_null("Main/Canvas/Window/ConfirmationPopup") as ConfirmationPopup
 
 func _confirm_ledge_jump(target: Vector2i) -> void:
 	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")

@@ -1,0 +1,129 @@
+[gd_scene load_steps=6 format=3 uid="uid://dcnywgameui01"]
+
+[ext_resource type="Script" uid="uid://bce4v1p8x2nyq" path="res://src/ui/new_game_ui.gd" id="1_new"]
+[ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="2_btns"]
+[ext_resource type="StyleBox" uid="uid://cl5k3aow0gvn" path="res://src/ui/theme/panel.tres" id="3_panel"]
+[ext_resource type="Script" uid="uid://cpl5r8s7n2m4a" path="res://src/ui/new_game/scenario_tab.gd" id="4_scenario"]
+[ext_resource type="PackedScene" uid="uid://bn3lstdeetbtn" path="res://src/ui/list_detail_button.tscn" id="5_button"]
+
+[node name="NewGameUI" type="Window" node_paths=PackedStringArray("tabs", "start_button", "cancel_button")]
+title = "New Game"
+initial_position = 1
+size = Vector2i(930, 560)
+visible = false
+unfocusable = true
+script = ExtResource("1_new")
+tabs = NodePath("MarginContainer/VBoxContainer/TabContainer")
+start_button = NodePath("MarginContainer/VBoxContainer/Footer/StartButton")
+cancel_button = NodePath("MarginContainer/VBoxContainer/Footer/CancelButton")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = ExtResource("3_panel")
+current_tab = 0
+clip_tabs = false
+tab_focus_mode = 0
+
+[node name="Scenario" type="MarginContainer" parent="MarginContainer/VBoxContainer/TabContainer" node_paths=PackedStringArray("stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("4_scenario")
+stripContainer = NodePath("HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonListContainer")
+titleLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Title")
+descriptionLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Description")
+detailsContainer = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/DetailsContainer")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario"]
+layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ButtonListContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" instance=ExtResource("2_btns")]
+layout_mode = 2
+button_scene = ExtResource("5_button")
+
+[node name="PanelContainer2" type="PanelContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Scenario"
+
+[node name="HSeparator1" type="HSeparator" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Description"
+autowrap_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DetailsLabel" type="Label" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Details"
+
+[node name="DetailsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Footer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 8
+alignment = 2
+
+[node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Start"
+
+[node name="CancelButton" type="Button" parent="MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Cancel"

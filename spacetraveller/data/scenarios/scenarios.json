@@ -1,0 +1,62 @@
+[
+  
+  {
+    "id": "adventurer",
+    "display_name": "Adventurer",
+    "description": "An armed adventurer preparing to enter a dungeon.",
+    "location": {
+      "display_name": "Dungeon Entrance",
+      "chunk_ids": [
+        "crypt_entrance",
+        "spider_cave_entrance",
+        "goblin_cave_entrance",
+        "bear_cave_entrance"
+      ]
+    },
+    "items": [
+      { "id": "torch", "amount": 4 },
+      { "id": "rope", "amount": 2 },
+      { "id": "flint", "amount": 2 },
+      { "id": "dried_meat", "amount": 3 },
+      { "id": "bread", "amount": 1 },
+      { "id": "leather_scrap", "amount": 2 }
+    ],
+    "equipment": [
+      { "id": "linen_shirt", "mode": "wear" },
+      { "id": "linen_trousers", "mode": "wear" },
+      { "id": "leather_armor", "mode": "wear" },
+      { "id": "leather_helmet", "mode": "wear" },
+      { "id": "leather_boots", "mode": "wear" },
+      { "id": "leather_arm_guards", "mode": "wear" },
+      { "id": "longsword", "mode": "wield" }
+    ]
+  },
+  {
+    "id": "villager",
+    "display_name": "Villager",
+    "default": true,
+    "description": "A villager who lives in town.",
+    "location": {
+      "display_name": "Village House",
+      "chunk_ids": [
+        "building"
+      ]
+    },
+    "items": [
+      { "id": "bread", "amount": 2 },
+      { "id": "apple", "amount": 3 },
+      { "id": "stick", "amount": 3 },
+      { "id": "fiber", "amount": 4 },
+      { "id": "rope", "amount": 1 },
+      { "id": "flint", "amount": 1 },
+      { "id": "stone_knife", "amount": 1 },
+      { "id": "torch", "amount": 1 }
+    ],
+    "equipment": [
+      { "id": "bra_wool", "mode": "wear" },
+      { "id": "panties_wool", "mode": "wear" },
+      { "id": "linen_shirt", "mode": "wear" },
+      { "id": "linen_trousers", "mode": "wear" }
+    ]
+  }
+]

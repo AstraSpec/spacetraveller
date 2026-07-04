@@ -95,7 +95,7 @@
     "tags": ["WEARABLE"],
     "clothing": [
       {
-        "part": "torso",
+        "part": "leg",
         "layer": "under",
         "armor": 0.0
       }

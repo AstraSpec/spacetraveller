@@ -26,6 +26,7 @@
 #include "data/dungeon_db.h"
 #include "data/attitude_db.h"
 #include "data/traversal_profile_db.h"
+#include "data/scenario_db.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -65,6 +66,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(DungeonDb);
 	GDREGISTER_CLASS(AttitudeDb);
 	GDREGISTER_CLASS(TraversalProfileDb);
+	GDREGISTER_CLASS(ScenarioDb);
 
 	TileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileDb", TileDb::get_singleton());
@@ -131,6 +133,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	TraversalProfileDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TraversalProfileDb", TraversalProfileDb::get_singleton());
+
+	ScenarioDb::create_singleton();
+	Engine::get_singleton()->register_singleton("ScenarioDb", ScenarioDb::get_singleton());
 }
 
 void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
@@ -203,6 +208,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("TraversalProfileDb");
 	TraversalProfileDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("ScenarioDb");
+	ScenarioDb::delete_singleton();
 }
 
 extern "C" {

@@ -24,14 +24,14 @@
 [ext_resource type="PackedScene" uid="uid://c5q3y8r4v1n2b" path="res://src/ui/load_game_ui.tscn" id="22_load_scene"]
 [ext_resource type="Script" uid="uid://nukwdjbvhnub" path="res://src/ui/quests/quest_tab.gd" id="22_seu75"]
 [ext_resource type="PackedScene" uid="uid://c3v6w8r4v1n2c" path="res://src/ui/keybind_window.tscn" id="23_kbw_scene"]
-[ext_resource type="PackedScene" uid="uid://d240jhymvw2v1" path="res://src/ui/quests/quest_button.tscn" id="23_seu75"]
+[ext_resource type="PackedScene" uid="uid://bn3lstdeetbtn" path="res://src/ui/list_detail_button.tscn" id="23_seu75"]
 [ext_resource type="PackedScene" uid="uid://b1v2x4y506w7" path="res://src/ui/options_window.tscn" id="24_opt_scene"]
 [ext_resource type="Script" uid="uid://cmeu5jthdi5wm" path="res://src/ui/death_screen.gd" id="25_death"]
 [ext_resource type="PackedScene" uid="uid://b2v3w5x7y81aa" path="res://src/ui/event_log.tscn" id="26_evlog"]
 [ext_resource type="Script" uid="uid://bxig5terglyd" path="res://src/ui/conversation/conversation_tab.gd" id="27_convt"]
 [ext_resource type="PackedScene" uid="uid://c0nv7btn0answ" path="res://src/ui/conversation/conversation_button.tscn" id="28_convbtn"]
+[ext_resource type="PackedScene" uid="uid://cbl1esoxlfnbp" path="res://src/ui/confirmation_popup.tscn" id="28_htxhm"]
 [ext_resource type="Script" uid="uid://bs2gm181d30e" path="res://src/ui/conversation/barter_tab.gd" id="29_bart"]
-[ext_resource type="Script" uid="uid://ofsgkbyk6vmi" path="res://src/ui/confirmation_popup.gd" id="30_confirm"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
@@ -67,11 +67,12 @@ script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 Player = NodePath("../Player")
 
-[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer")]
+[node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer", "ConfirmationPopup")]
 script = ExtResource("4_yn2v7")
 Camera = NodePath("Camera")
 World = NodePath("../GameWorld")
 PathfindingTimer = NodePath("PathfindingTimer")
+ConfirmationPopup = NodePath("../Canvas/Window/ConfirmationPopup")
 
 [node name="Camera" type="Camera2D" parent="Player"]
 position = Vector2(7, 7)
@@ -729,7 +730,7 @@ metadata/_tab_index = 1
 layout_mode = 2
 text = "Actions"
 
-[node name="Barter" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "debitLabel", "npcMoneyLabel", "playerItems", "npcItems")]
+[node name="Barter" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "debitLabel", "npcMoneyLabel", "playerItems", "npcItems", "ConfirmationPopup")]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
@@ -742,6 +743,7 @@ debitLabel = NodePath("VBoxContainer/Summary/DebitLabel")
 npcMoneyLabel = NodePath("VBoxContainer/Summary/NpcMoneyLabel")
 playerItems = NodePath("VBoxContainer/Body/YourColumn/PlayerItems")
 npcItems = NodePath("VBoxContainer/Body/TheirColumn/NpcItems")
+ConfirmationPopup = NodePath("../../../ConfirmationPopup")
 metadata/_tab_index = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Barter"]
@@ -918,56 +920,7 @@ theme_override_constants/separation = 6
 
 [node name="OptionsWindow" parent="Canvas/Window" instance=ExtResource("24_opt_scene")]
 
-[node name="ConfirmationPopup" type="Window" parent="Canvas/Window" node_paths=PackedStringArray("_message_label", "_button_row")]
-oversampling_override = 1.0
-initial_position = 1
-size = Vector2i(360, 140)
-visible = false
-borderless = true
-unfocusable = true
-script = ExtResource("30_confirm")
-_message_label = NodePath("CenterContainer/MarginContainer/VBoxContainer/Message")
-_button_row = NodePath("CenterContainer/MarginContainer/VBoxContainer/ButtonRow")
-
-[node name="Background" type="ColorRect" parent="Canvas/Window/ConfirmationPopup"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.140625, 0.140625, 0.140625, 1)
-
-[node name="CenterContainer" type="CenterContainer" parent="Canvas/Window/ConfirmationPopup"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="Canvas/Window/ConfirmationPopup/CenterContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ConfirmationPopup/CenterContainer/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Message" type="RichTextLabel" parent="Canvas/Window/ConfirmationPopup/CenterContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
-bbcode_enabled = true
-text = "Confirm?"
-fit_content = true
-horizontal_alignment = 1
-
-[node name="ButtonRow" type="HBoxContainer" parent="Canvas/Window/ConfirmationPopup/CenterContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 12
-alignment = 1
+[node name="ConfirmationPopup" parent="Canvas/Window" instance=ExtResource("28_htxhm")]
 
 [node name="ScreenUI" type="HBoxContainer" parent="Canvas"]
 anchors_preset = 15

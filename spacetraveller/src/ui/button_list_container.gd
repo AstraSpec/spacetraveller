@@ -140,7 +140,19 @@ func _update_selection_visuals() -> void:
 			btn.set_selected(is_selected)
 		elif btn is Button:
 			if is_selected:
-				btn.grab_focus()
+				_grab_focus_when_ready(btn)
+
+func _grab_focus_when_ready(btn: Button) -> void:
+	if not is_instance_valid(btn):
+		return
+	if btn.is_inside_tree():
+		btn.grab_focus()
+	else:
+		call_deferred("_grab_focus_deferred", btn)
+
+func _grab_focus_deferred(btn: Button) -> void:
+	if is_instance_valid(btn) and btn.is_inside_tree():
+		btn.grab_focus()
 
 func deselect() -> void:
 	selected_index = -1

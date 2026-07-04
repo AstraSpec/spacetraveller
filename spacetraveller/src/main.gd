@@ -34,15 +34,24 @@ func _ready() -> void:
 	SpawnDb.initialize_data()
 	EntityGroupDb.initialize_data()
 	QuestDb.initialize_data()
+	ScenarioDb.initialize_data()
 
 	SaveManager.register_world(_GameWorld)
-	_GameWorld.generate_world(Vector2i(2899, 2899))
+	var new_game_options := {}
+	var new_game_scenario_id := ""
+	var new_game_location := {}
+	if SaveManager.loaded_save_data.is_empty():
+		new_game_options = SaveManager.consume_new_game_options()
+		new_game_scenario_id = _resolve_scenario_id(new_game_options)
+		new_game_location = ScenarioDb.get_location(new_game_scenario_id)
+
+	_GameWorld.generate_world(Vector2i(2899, 2899), new_game_location)
 
 	if not SaveManager.loaded_save_data.is_empty():
 		SaveManager.apply_loaded_data()
 		SaveManager.loaded_save_data = {}
 	else:
-		_initialize_new_game()
+		_initialize_new_game(new_game_scenario_id)
 
 	InputManager.reset_stack(InputManager.InputMode.EXPLORATION)
 	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
@@ -51,74 +60,80 @@ func _ready() -> void:
 	_initialize_windows()
 	QuestService.bind_game_world(_GameWorld)
 
-func _initialize_new_game():
-	_GameWorld.add_entity_inventory_item(0, "stick", 5)
-	_GameWorld.add_entity_inventory_item(0, "rope", 2)
-	_GameWorld.add_entity_inventory_item(0, "flint", 1)
-	_GameWorld.add_entity_inventory_item(0, "spider_silk", 4)
-	_GameWorld.add_entity_inventory_item(0, "bone", 1)
-	_GameWorld.add_entity_inventory_item(0, "iron_ore", 1)
-	_GameWorld.add_entity_inventory_item(0, "longsword", 1)
-	_GameWorld.add_entity_inventory_item(0, "torch", 2)
+func _resolve_scenario_id(options: Dictionary = {}) -> String:
+	var scenario_id := str(options.get("scenario_id", "")).to_lower()
+	if not scenario_id.is_empty() and ScenarioDb.has_scenario(scenario_id):
+		return scenario_id
+	return ScenarioDb.get_default_scenario_id()
 
-	_GameWorld.add_entity_inventory_item(0, "bra_wool", 1)
-	_GameWorld.add_entity_inventory_item(0, "panties_wool", 1)
-	_GameWorld.add_entity_inventory_item(0, "linen_shirt", 1)
-	_GameWorld.add_entity_inventory_item(0, "linen_trousers", 1)
-	_GameWorld.add_entity_inventory_item(0, "silver_earrings", 2)
-	_GameWorld.add_entity_inventory_item(0, "gold_ring", 1)
-
-	var anatomy = _GameWorld.get_entity_anatomy(0)
-	
-	var torso_idx = -1
-	var leg_idx = -1
-	var ear_idx_1 = -1
-	var ear_idx_2 = -1
-	var finger_idx = -1
-
-	var parts = anatomy.get("parts", [])
-	for i in range(parts.size()):
-		var part = parts[i]
-		var type_id = part.get("type_id", "")
-		#var local_index = part.get("local_index", 0)
-
-		if type_id == "torso" and torso_idx == -1:
-			torso_idx = i
-		elif type_id == "leg" and leg_idx == -1:
-			leg_idx = i
-		elif type_id == "ear":
-			if ear_idx_1 == -1:
-				ear_idx_1 = i
-			elif ear_idx_2 == -1:
-				ear_idx_2 = i
-		elif type_id == "finger" and finger_idx == -1:
-			finger_idx = i
-	
-	if torso_idx != -1:
-		if _GameWorld.equip_entity_clothing(0, torso_idx, "bra_wool", "under"):
-			_GameWorld.remove_entity_inventory_item(0, "bra_wool", 1)
-		if _GameWorld.equip_entity_clothing(0, torso_idx, "panties_wool", "under"):
-			_GameWorld.remove_entity_inventory_item(0, "panties_wool", 1)
-		if _GameWorld.equip_entity_clothing(0, torso_idx, "linen_shirt", "outer"):
-			_GameWorld.remove_entity_inventory_item(0, "linen_shirt", 1)
-
-	if leg_idx != -1:
-		if _GameWorld.equip_entity_clothing(0, leg_idx, "linen_trousers", "outer"):
-			_GameWorld.remove_entity_inventory_item(0, "linen_trousers", 1)
-
-	if ear_idx_1 != -1:
-		if _GameWorld.equip_entity_clothing(0, ear_idx_1, "silver_earrings", "accessory"):
-			_GameWorld.remove_entity_inventory_item(0, "silver_earrings", 1)
-	if ear_idx_2 != -1:
-		if _GameWorld.equip_entity_clothing(0, ear_idx_2, "silver_earrings", "accessory"):
-			_GameWorld.remove_entity_inventory_item(0, "silver_earrings", 1)
-
-	if finger_idx != -1:
-		if _GameWorld.equip_entity_clothing(0, finger_idx, "gold_ring", "accessory"):
-			_GameWorld.remove_entity_inventory_item(0, "gold_ring", 1)
-
-
+func _initialize_new_game(scenario_id: String):
+	if scenario_id.is_empty():
+		return
+	_apply_scenario_loadout(scenario_id)
 	_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+
+func _apply_scenario_loadout(scenario_id: String) -> void:
+	var scenario := ScenarioDb.get_scenario(scenario_id)
+	for item in scenario.get("items", []):
+		_add_scenario_item(item)
+	for entry in scenario.get("equipment", []):
+		_apply_scenario_equipment(entry)
+
+func _add_scenario_item(item: Variant) -> void:
+	if not item is Dictionary:
+		return
+	var item_id := str(item.get("id", ""))
+	var amount := int(item.get("amount", 1))
+	if item_id.is_empty() or amount <= 0:
+		return
+	_GameWorld.add_entity_inventory_item(0, item_id, amount)
+
+func _apply_scenario_equipment(entry: Variant) -> void:
+	if not entry is Dictionary:
+		return
+	var item_id := str(entry.get("id", ""))
+	if item_id.is_empty():
+		return
+
+	_GameWorld.add_entity_inventory_item(0, item_id, 1)
+
+	var mode := str(entry.get("mode", "wear")).to_lower()
+	var equipped := false
+	if mode == "wield":
+		equipped = _GameWorld.wield_entity_weapon_by_string(0, item_id)
+	else:
+		equipped = _wear_scenario_item(item_id, entry)
+
+	if equipped:
+		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
+	else:
+		push_warning("Could not equip scenario item '%s'." % item_id)
+
+func _wear_scenario_item(item_id: String, entry: Dictionary) -> bool:
+	var part_type := str(entry.get("part", ""))
+	var layer := str(entry.get("layer", ""))
+	if part_type.is_empty() or layer.is_empty():
+		return _GameWorld.equip_entity_clothing_by_string(0, item_id)
+
+	var part_index := _find_anatomy_part_index(part_type, int(entry.get("part_index", 0)))
+	if part_index < 0:
+		return false
+	return _GameWorld.equip_entity_clothing(0, part_index, item_id, layer)
+
+func _find_anatomy_part_index(part_type: String, occurrence: int = 0) -> int:
+	var anatomy := _GameWorld.get_entity_anatomy(0)
+	var parts: Array = anatomy.get("parts", [])
+	var seen := 0
+	for i in range(parts.size()):
+		if not parts[i] is Dictionary:
+			continue
+		var part: Dictionary = parts[i]
+		if str(part.get("type_id", "")) != part_type:
+			continue
+		if seen == occurrence:
+			return i
+		seen += 1
+	return -1
 
 func _initialize_windows():
 	for window in Canvas.get_node("Window").get_children():
