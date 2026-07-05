@@ -5,11 +5,11 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x2, 1x1, 1x0, 1x1, 1x0, 1x3, 4x2, 1x0, 1x1, 3x0, 2x4, 2x0, 1x1)",
                 "palette": [
-                    "bar",
-                    "void",
-                    "dirt",
-                    "barrel",
-                    "table"
+                    {"tile": "bar"},
+                    {"tile": "void"},
+                    {"tile": "dirt"},
+                    {"tile": "barrel"},
+                    {"tile": "table"}
                 ],
                 "rules": [
                     {
@@ -63,12 +63,12 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x3, 1x0, 1x4, 1x1, 1x2, 1x4, 1x1, 4x3, 1x1, 1x2, 1x0, 4x1, 1x0, 1x1, 1x5)",
                 "palette": [
-                    "barrel",
-                    "bar",
-                    "void",
-                    "dirt",
-                    "w_crate",
-                    "hanging_sign"
+                    {"tile": "barrel"},
+                    {"tile": "bar"},
+                    {"tile": "void"},
+                    {"tile": "dirt"},
+                    {"tile": "w_crate"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -133,12 +133,12 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 2x3, 1x2, 1x0, 1x2, 1x0, 1x4, 1x3, 1x5, 2x3, 1x0, 1x2, 7x0, 1x2)",
                 "palette": [
-                    "bar",
-                    "w_crate",
-                    "void",
-                    "dirt",
-                    "chest",
-                    "barrel"
+                    {"tile": "bar"},
+                    {"tile": "w_crate"},
+                    {"tile": "void"},
+                    {"tile": "dirt"},
+                    {"tile": "chest"},
+                    {"tile": "barrel"}
                 ],
                 "rules": [
                     {
@@ -185,11 +185,11 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x3, 2x2, 1x0, 1x2, 1x0, 1x1, 2x3, 1x1, 1x2, 1x0, 1x2, 1x0, 4x4, 2x0, 1x2)",
                 "palette": [
-                    "bar",
-                    "barrel",
-                    "void",
-                    "dirt",
-                    "table"
+                    {"tile": "bar"},
+                    {"tile": "barrel"},
+                    {"tile": "void"},
+                    {"tile": "dirt"},
+                    {"tile": "table"}
                 ],
                 "rules": [
                     {
@@ -243,11 +243,11 @@
             "0": {
                 "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x1, 1x0, 1x3, 4x1, 1x0, 1x1, 7x0, 1x4)",
                 "palette": [
-                    "bar",
-                    "void",
-                    "dungeon_stuff",
-                    "w_crate",
-                    "hanging_sign"
+                    {"tile": "bar"},
+                    {"tile": "void"},
+                    {"tile": "dungeon_stuff"},
+                    {"tile": "w_crate"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -293,12 +293,12 @@
             "0": {
                 "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x3, 4x1, 1x0, 1x1, 1x4, 4x0, 1x4, 1x0, 1x5)",
                 "palette": [
-                    "bar",
-                    "void",
-                    "flower",
-                    "mannequin",
-                    "barrel",
-                    "hanging_sign"
+                    {"tile": "bar"},
+                    {"tile": "void"},
+                    {"tile": "flower"},
+                    {"tile": "mannequin"},
+                    {"tile": "barrel"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -344,12 +344,12 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 2x2, 1x3, 1x0, 1x4, 1x2, 1x0, 4x2, 1x0, 1x4, 1x2, 7x0, 1x5)",
                 "palette": [
-                    "bar",
-                    "bookcase",
-                    "void",
-                    "mannequin",
-                    "barrel",
-                    "hanging_sign"
+                    {"tile": "bar"},
+                    {"tile": "bookcase"},
+                    {"tile": "void"},
+                    {"tile": "mannequin"},
+                    {"tile": "barrel"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {

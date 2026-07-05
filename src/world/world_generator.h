@@ -173,7 +173,8 @@ private:
         int p_local_x,
         int p_local_y,
         const Vector2i& p_source_size,
-        uint8_t p_rotation
+        uint8_t p_rotation,
+        uint32_t p_position_hash = 0
     ) const;
 
 public:

@@ -859,7 +859,8 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
             case WorldCoords::ROT_EAST: rx = max_coord - ly; ry = lx; break;
         }
         String structure_id = get_structure_id_for_cell(x, y, world_seed);
-        uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, 0);
+        uint32_t structure_hash = get_hash(x, y, static_cast<uint32_t>(world_seed));
+        uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, 0, structure_hash);
         if (tile_id != id_void) return tile_id;
     }
 
@@ -897,10 +898,11 @@ uint16_t WorldGenerator::get_surface_feature_tile_at(
     int p_local_x,
     int p_local_y,
     const Vector2i& p_source_size,
-    uint8_t p_rotation
+    uint8_t p_rotation,
+    uint32_t p_position_hash
 ) const {
     const Vector2i source_pos = resolve_surface_feature_source_pos(p_local_x, p_local_y, p_source_size, p_rotation);
-    return s_db ? s_db->get_tile_at(p_feature_id, source_pos.x, source_pos.y, 0) : id_void;
+    return s_db ? s_db->get_tile_at(p_feature_id, source_pos.x, source_pos.y, 0, p_position_hash) : id_void;
 }
 
 bool WorldGenerator::validate_surface_feature_anchor(
@@ -918,7 +920,8 @@ bool WorldGenerator::validate_surface_feature_anchor(
 ) {
     for (int ly = 0; ly < p_placed_size.y; ly++) {
         for (int lx = 0; lx < p_placed_size.x; lx++) {
-            const uint16_t feature_tile = get_surface_feature_tile_at(p_feature_id, lx, ly, p_source_size, p_rotation);
+            const uint32_t feature_hash = get_hash(p_origin.x + lx, p_origin.y + ly, static_cast<uint32_t>(p_world_seed));
+            const uint16_t feature_tile = get_surface_feature_tile_at(p_feature_id, lx, ly, p_source_size, p_rotation, feature_hash);
             if (feature_tile == 0 || feature_tile == id_void) continue;
 
             const int world_x = p_origin.x + lx;
@@ -1255,7 +1258,8 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
 
                     const int local_x = x - placed.origin.x;
                     const int local_y = y - placed.origin.y;
-                    const uint16_t tile_id = get_surface_feature_tile_at(placed.feature_id, local_x, local_y, placed.source_size, placed.rotation);
+                    const uint32_t feature_hash = get_hash(x, y, static_cast<uint32_t>(world_seed));
+                    const uint16_t tile_id = get_surface_feature_tile_at(placed.feature_id, local_x, local_y, placed.source_size, placed.rotation, feature_hash);
                     if (p_include_void_tiles || (tile_id != 0 && tile_id != id_void)) {
                         r_instance = placed;
                         return true;
@@ -1278,7 +1282,8 @@ uint16_t WorldGenerator::get_feature_tile(int x, int y, int z, uint16_t base_til
 
     const int local_x = x - instance.origin.x;
     const int local_y = y - instance.origin.y;
-    return get_surface_feature_tile_at(instance.feature_id, local_x, local_y, instance.source_size, instance.rotation);
+    const uint32_t feature_hash = get_hash(x, y, static_cast<uint32_t>(world_seed));
+    return get_surface_feature_tile_at(instance.feature_id, local_x, local_y, instance.source_size, instance.rotation, feature_hash);
 }
 
 uint16_t WorldGenerator::get_dungeon_layout_tile(const DungeonLayout& p_layout, int x, int y, bool p_include_dynamic) const {
@@ -1888,7 +1893,8 @@ uint16_t WorldGenerator::get_base_tile_without_features(int x, int y, int z, int
             }
 
             String structure_id = get_structure_id_for_cell(x, y, z, world_seed);
-            uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, z);
+            uint32_t structure_hash = get_hash(x, y, static_cast<uint32_t>(world_seed));
+            uint16_t tile_id = s_db->get_tile_at(structure_id, rx, ry, z, structure_hash);
             if (tile_id != id_void) return tile_id;
         }
     }

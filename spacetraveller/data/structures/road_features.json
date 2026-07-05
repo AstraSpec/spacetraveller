@@ -5,14 +5,14 @@
             "0": {
                 "blueprint": "(2x0, 1x1, 1x0, 1x2, 1x3, 1x0, 1x4, 2x5, 1x4, 1x6, 2x0, 1x7, 1x0, 1x2, 1x3)",
                 "palette": [
-                    "w_wall",
-                    "w_door_c",
-                    "barrel",
-                    "sign",
-                    "chair",
-                    "w_floor",
-                    "void",
-                    "w_window_c"
+                    {"tile": "w_wall"},
+                    {"tile": "w_door_c"},
+                    {"tile": "barrel"},
+                    {"tile": "sign"},
+                    {"tile": "chair"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile_group": "window"}
                 ]
             }
         },
@@ -28,9 +28,9 @@
             "0": {
                 "blueprint": "(6x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 6x0)",
                 "palette": [
-                    "alley_flagstone",
-                    "water",
-                    "fountain"
+                    {"tile": "alley_flagstone"},
+                    {"tile": "water"},
+                    {"tile": "fountain"}
                 ]
             }
         },
@@ -46,15 +46,15 @@
             "0": {
                 "blueprint": "(4x0, 1x1, 2x2, 1x3, 1x2, 1x1, 1x4, 1x0, 2x5, 1x0, 1x6, 1x2, 3x5, 1x7, 1x6, 4x0, 1x1, 2x2, 1x8, 1x2, 1x1, 1x4)",
                 "palette": [
-                    "iron_bars",
-                    "barrel",
-                    "w_wall",
-                    "w_door_c",
-                    "sign",
-                    "w_floor",
-                    "void",
-                    "chair",
-                    "w_window_c"
+                    {"tile": "iron_bars"},
+                    {"tile": "barrel"},
+                    {"tile": "w_wall"},
+                    {"tile": "w_door_c"},
+                    {"tile": "sign"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile": "chair"},
+                    {"tile_group": "window"}
                 ],
                 "rules": [
                     {

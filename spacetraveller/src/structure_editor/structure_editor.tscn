@@ -11,16 +11,14 @@
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "LootGrid", "EntityGroupGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
-TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGrid")
+TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileGrid")
 ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemGrid")
 NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcGrid")
-LootGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot/LootScroll/LootGrid")
-EntityGroupGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups/EntityGroupScroll/EntityGroupGrid")
 ContentTabs = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer")
 ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
 NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
@@ -37,6 +35,9 @@ LoadWindow = NodePath("LoadWindow")
 CoordsLabel = NodePath("Canvas/MarginContainer/CoordsLabel")
 ChunkVisual = NodePath("ChunkVisual")
 ZLevelLabel = NodePath("Canvas/HBoxContainer/ZLevelLabel")
+TileGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGroupCheck")
+LootGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/LootGroupCheck")
+EntityGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/EntityGroupCheck")
 
 [node name="Editor" type="StructureEditor" parent="."]
 
@@ -95,11 +96,19 @@ current_tab = 0
 clip_tabs = false
 all_tabs_in_front = true
 
-[node name="Tiles" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+[node name="Tiles" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="TileGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+[node name="TileGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+layout_mode = 2
+text = "Group"
+
+[node name="TileScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TileGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
@@ -110,6 +119,10 @@ script = ExtResource("4_06qem")
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="LootGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+layout_mode = 2
+text = "Group"
 
 [node name="AmountContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
 layout_mode = 2
@@ -144,6 +157,10 @@ metadata/_tab_index = 2
 [node name="NpcOptions" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs"]
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="EntityGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
+layout_mode = 2
+text = "Group"
 
 [node name="NpcJobContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
 layout_mode = 2
@@ -181,38 +198,6 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="NpcGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 0
-theme_override_constants/v_separation = 0
-script = ExtResource("4_06qem")
-
-[node name="Loot" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 3
-
-[node name="LootScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="LootGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Loot/LootScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 0
-theme_override_constants/v_separation = 0
-script = ExtResource("4_06qem")
-
-[node name="Entity Groups" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 4
-
-[node name="EntityGroupScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="EntityGroupGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Entity Groups/EntityGroupScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0

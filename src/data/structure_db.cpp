@@ -1,4 +1,5 @@
 #include "structure_db.h"
+#include "tile_group_db.h"
 #include "core/id_registry.h"
 #include "core/world_coords.h"
 #include <godot_cpp/core/class_db.hpp>
@@ -174,18 +175,45 @@ static StructureLevelInfo parse_level(
     parse_rules(p_data.get("rules", Array()), p_structure_id, level, p_db, p_id_reg, p_size);
 
     std::vector<uint16_t> palette_ids;
+    std::vector<uint16_t> palette_tile_group_ids;
+    TileGroupDb* tile_group_db = TileGroupDb::get_singleton();
+
     for (int i = 0; i < level.palette.size(); i++) {
-        if (p_id_reg) {
-            palette_ids.push_back(p_id_reg->register_string(level.palette[i]));
-        } else {
-            palette_ids.push_back(0);
+        uint16_t tile_id = 0;
+        uint16_t tile_group_id = 0;
+        bool has_tile_group = false;
+
+        if (level.palette[i].get_type() == Variant::DICTIONARY) {
+            Dictionary entry = level.palette[i];
+            String tile_str = entry.get("tile", "");
+            String tile_group_str = entry.get("tile_group", "");
+
+            if (!tile_group_str.is_empty() && p_id_reg) {
+                tile_group_id = p_id_reg->register_string(tile_group_str);
+                has_tile_group = true;
+                if (tile_group_db) {
+                    const TileGroupInfo* tg_info = tile_group_db->get_tile_group(tile_group_str);
+                    if (tg_info && !tg_info->entries.empty()) {
+                        tile_id = tg_info->entries[0].tile_id;
+                    }
+                }
+            } else if (!tile_str.is_empty() && p_id_reg) {
+                tile_id = p_id_reg->register_string(tile_str);
+            }
+        } else if (p_id_reg) {
+            tile_id = p_id_reg->register_string(level.palette[i]);
         }
+
+        palette_ids.push_back(tile_id);
+        palette_tile_group_ids.push_back(has_tile_group ? tile_group_id : 0);
     }
 
     const int compact_total_tiles = level.size.x * level.size.y;
     const int chunk_total_tiles = WorldCoords::CHUNK_SIZE * WorldCoords::CHUNK_SIZE;
     std::vector<uint16_t> parsed_tiles;
+    std::vector<uint16_t> parsed_tile_group_ids;
     parsed_tiles.reserve(chunk_total_tiles);
+    parsed_tile_group_ids.reserve(chunk_total_tiles);
 
     String rle = level.blueprint;
     rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
@@ -202,19 +230,24 @@ static StructureLevelInfo parse_level(
         int palette_idx = sub[1].to_int();
 
         uint16_t tile_id = 0;
+        uint16_t tg_id = 0;
         if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
             tile_id = palette_ids[palette_idx];
+            tg_id = palette_tile_group_ids[palette_idx];
         }
 
         for (int j = 0; j < count; j++) {
             parsed_tiles.push_back(tile_id);
+            parsed_tile_group_ids.push_back(tg_id);
         }
     }
 
     level.data.assign(compact_total_tiles, 0);
+    level.tile_group_ids.assign(compact_total_tiles, 0);
     if (level.size == Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE) || (int)parsed_tiles.size() <= compact_total_tiles) {
         for (int i = 0; i < compact_total_tiles && i < (int)parsed_tiles.size(); i++) {
             level.data[i] = parsed_tiles[i];
+            level.tile_group_ids[i] = parsed_tile_group_ids[i];
         }
     } else {
         for (int y = 0; y < level.size.y; y++) {
@@ -223,6 +256,7 @@ static StructureLevelInfo parse_level(
                 const int target_idx = y * level.size.x + x;
                 if (source_idx >= 0 && source_idx < (int)parsed_tiles.size() && target_idx >= 0 && target_idx < (int)level.data.size()) {
                     level.data[target_idx] = parsed_tiles[source_idx];
+                    level.tile_group_ids[target_idx] = parsed_tile_group_ids[source_idx];
                 }
             }
         }
@@ -414,10 +448,14 @@ Vector2i StructureDb::get_structure_size(const String &p_structure_id) const {
 }
 
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y) const {
-    return get_tile_at(p_structure_id, p_x, p_y, 0);
+    return get_tile_at(p_structure_id, p_x, p_y, 0, 0);
 }
 
 uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const {
+    return get_tile_at(p_structure_id, p_x, p_y, p_z, 0);
+}
+
+uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z, uint32_t p_position_hash) const {
     const StructureInfo* info = get_info(p_structure_id);
     if (!info) return 0;
 
@@ -429,7 +467,30 @@ uint16_t StructureDb::get_tile_at(const String &p_structure_id, int p_x, int p_y
     int idx = p_y * level.size.x + p_x;
     if (idx < 0 || idx >= (int)level.data.size()) return 0;
 
-    return level.data[idx];
+    uint16_t tile_id = level.data[idx];
+
+    if (p_position_hash != 0 && idx < (int)level.tile_group_ids.size() && level.tile_group_ids[idx] != 0) {
+        IdRegistry* id_reg = IdRegistry::get_singleton();
+        TileGroupDb* tg_db = TileGroupDb::get_singleton();
+        if (id_reg && tg_db) {
+            String group_name = id_reg->get_string(level.tile_group_ids[idx]);
+            const TileGroupInfo* tg_info = tg_db->get_tile_group(group_name);
+            if (tg_info && tg_info->total_weight > 0) {
+                uint32_t roll = p_position_hash % static_cast<uint32_t>(tg_info->total_weight);
+                int cumulative = 0;
+                for (const auto& entry : tg_info->entries) {
+                    if (entry.weight <= 0) continue;
+                    cumulative += entry.weight;
+                    if (roll < static_cast<uint32_t>(cumulative)) {
+                        tile_id = entry.tile_id;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return tile_id;
 }
 
 }

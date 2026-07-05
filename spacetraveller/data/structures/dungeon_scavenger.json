@@ -5,11 +5,11 @@
             "0": {
                 "blueprint": "(2x0, 1x1, 3x2, 1x3, 3x4, 2x2, 1x1, 3x4, 1x3, 1x1)",
                 "palette": [
-                    "w_crate",
-                    "void",
-                    "carpet_green",
-                    "barrel",
-                    "carpet_blue"
+                    {"tile": "w_crate"},
+                    {"tile": "void"},
+                    {"tile": "carpet_green"},
+                    {"tile": "barrel"},
+                    {"tile": "carpet_blue"}
                 ],
                 "rules": [
                     {
@@ -37,10 +37,10 @@
             "0": {
                 "blueprint": "(1x0, 2x1, 2x0, 1x2, 1x1, 3x3, 1x0, 2x2, 3x3, 2x2)",
                 "palette": [
-                    "barrel",
-                    "carpet_yellow",
-                    "void",
-                    "carpet_red"
+                    {"tile": "barrel"},
+                    {"tile": "carpet_yellow"},
+                    {"tile": "void"},
+                    {"tile": "carpet_red"}
                 ],
                 "rules": [
                     {
@@ -68,11 +68,11 @@
             "0": {
                 "blueprint": "(1x0, 2x1, 1x2, 1x3, 2x4, 4x1, 7x4)",
                 "palette": [
-                    "barrel",
-                    "carpet_green",
-                    "chair",
-                    "w_crate",
-                    "void"
+                    {"tile": "barrel"},
+                    {"tile": "carpet_green"},
+                    {"tile": "chair"},
+                    {"tile": "w_crate"},
+                    {"tile": "void"}
                 ],
                 "rules": [
                     {
@@ -100,11 +100,11 @@
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x3, 2x0, 2x4, 2x1, 7x0)",
                 "palette": [
-                    "void",
-                    "carpet_purple",
-                    "chair",
-                    "barrel",
-                    "table"
+                    {"tile": "void"},
+                    {"tile": "carpet_purple"},
+                    {"tile": "chair"},
+                    {"tile": "barrel"},
+                    {"tile": "table"}
                 ],
                 "rules": [
                     {
@@ -132,10 +132,10 @@
             "0": {
                 "blueprint": "(2x0, 4x1, 1x2, 3x3, 2x1, 1x2, 3x3, 2x0)",
                 "palette": [
-                    "barrel",
-                    "carpet_blue",
-                    "void",
-                    "carpet_red"
+                    {"tile": "barrel"},
+                    {"tile": "carpet_blue"},
+                    {"tile": "void"},
+                    {"tile": "carpet_red"}
                 ],
                 "rules": [
                     {
@@ -163,9 +163,9 @@
             "0": {
                 "blueprint": "(2x0, 2x1, 1x2, 2x0, 1x1, 3x2, 3x0, 3x2, 1x0)",
                 "palette": [
-                    "void",
-                    "w_crate",
-                    "barrel"
+                    {"tile": "void"},
+                    {"tile": "w_crate"},
+                    {"tile": "barrel"}
                 ]
             }
         },
@@ -181,10 +181,10 @@
             "0": {
                 "blueprint": "(4x0, 2x1, 1x0, 2x1, 2x0, 1x2, 1x0, 2x1, 1x3, 2x0)",
                 "palette": [
-                    "void",
-                    "barrel",
-                    "dungeon_stuff",
-                    "chair"
+                    {"tile": "void"},
+                    {"tile": "barrel"},
+                    {"tile": "dungeon_stuff"},
+                    {"tile": "chair"}
                 ]
             }
         },
@@ -200,10 +200,10 @@
             "0": {
                 "blueprint": "(2x0, 5x1, 1x2, 2x1, 2x3, 4x1, 2x3)",
                 "palette": [
-                    "barrel",
-                    "void",
-                    "coffin",
-                    "w_crate"
+                    {"tile": "barrel"},
+                    {"tile": "void"},
+                    {"tile": "coffin"},
+                    {"tile": "w_crate"}
                 ]
             }
         },
@@ -219,9 +219,9 @@
             "0": {
                 "blueprint": "(3x0, 1x1, 2x2, 4x0, 1x1, 7x0)",
                 "palette": [
-                    "void",
-                    "barrel",
-                    "w_crate"
+                    {"tile": "void"},
+                    {"tile": "barrel"},
+                    {"tile": "w_crate"}
                 ]
             }
         },

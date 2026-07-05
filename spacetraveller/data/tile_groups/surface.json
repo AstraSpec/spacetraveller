@@ -64,5 +64,12 @@
     "entries": [
       { "tile": "w_wall", "weight": 1 }
     ]
+  },
+  {
+    "id": "window",
+    "entries": [
+      { "tile": "w_window_c", "weight": 1 },
+      { "tile": "w_window_curtain", "weight": 1 }
+    ]
   }
 ]

@@ -5,9 +5,9 @@
             "0": {
                 "blueprint": "(2x0, 1x1, 1x2, 1x0, 4x2)",
                 "palette": [
-                    "barrel",
-                    "w_crate",
-                    "void"
+                    {"tile": "barrel"},
+                    {"tile": "w_crate"},
+                    {"tile": "void"}
                 ]
             }
         },
@@ -23,9 +23,9 @@
             "0": {
                 "blueprint": "(3x0, 1x1, 1x2, 4x1)",
                 "palette": [
-                    "w_crate",
-                    "void",
-                    "barrel"
+                    {"tile": "w_crate"},
+                    {"tile": "void"},
+                    {"tile": "barrel"}
                 ]
             }
         },
@@ -41,9 +41,9 @@
             "0": {
                 "blueprint": "(1x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 1x0)",
                 "palette": [
-                    "alley_flagstone",
-                    "water",
-                    "fountain"
+                    {"tile": "alley_flagstone"},
+                    {"tile": "water"},
+                    {"tile": "fountain"}
                 ]
             }
         },
@@ -59,8 +59,8 @@
             "0": {
                 "blueprint": "(4x0, 1x1, 4x0)",
                 "palette": [
-                    "void",
-                    "dog_house"
+                    {"tile": "void"},
+                    {"tile": "dog_house"}
                 ]
             }
         },
@@ -76,8 +76,8 @@
             "0": {
                 "blueprint": "(4x0, 1x1, 4x0)",
                 "palette": [
-                    "w_floor",
-                    "gallows"
+                    {"tile": "w_floor"},
+                    {"tile": "gallows"}
                 ]
             }
         },
@@ -93,8 +93,8 @@
             "0": {
                 "blueprint": "(4x0, 1x1, 4x0)",
                 "palette": [
-                    "w_floor",
-                    "statue_body"
+                    {"tile": "w_floor"},
+                    {"tile": "statue_body"}
                 ]
             }
         },
@@ -110,8 +110,8 @@
             "0": {
                 "blueprint": "(3x0, 3x1, 3x0)",
                 "palette": [
-                    "chair",
-                    "table"
+                    {"tile": "chair"},
+                    {"tile": "table"}
                 ]
             }
         },
@@ -127,8 +127,8 @@
             "0": {
                 "blueprint": "(5x0, 1x1, 6x0)",
                 "palette": [
-                    "void",
-                    "cooking_pot"
+                    {"tile": "void"},
+                    {"tile": "cooking_pot"}
                 ],
                 "rules": [
                     {
@@ -226,8 +226,8 @@
             "0": {
                 "blueprint": "(1x0, 3x1, 1x0, 9x1, 1x0)",
                 "palette": [
-                    "void",
-                    "water"
+                    {"tile": "void"},
+                    {"tile": "water"}
                 ]
             }
         },
@@ -243,8 +243,8 @@
             "0": {
                 "blueprint": "(1x0, 2x1, 1x0, 4x1, 1x0, 3x1)",
                 "palette": [
-                    "void",
-                    "water"
+                    {"tile": "void"},
+                    {"tile": "water"}
                 ]
             }
         },
@@ -260,9 +260,9 @@
             "0": {
                 "blueprint": "(1x0, 2x1, 1x2, 5x1, 1x2, 2x1, 1x0, 2x1, 1x2, 1x1, 1x0)",
                 "palette": [
-                    "void",
-                    "water",
-                    "bridge"
+                    {"tile": "void"},
+                    {"tile": "water"},
+                    {"tile": "bridge"}
                 ]
             }
         },

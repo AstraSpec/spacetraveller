@@ -199,7 +199,8 @@ class EyedropperTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
-		editor.select_editor_content_at(pos, true, editor.active_content_type)
+		var base_type: String = editor._content_type_for_tab(editor.ContentTabs.current_tab) if editor.ContentTabs else "tile"
+		editor.select_editor_content_at(pos, true, base_type)
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 

@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/vector2i.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <vector>
 #include "database.h"
@@ -33,6 +34,7 @@ public:
 
     void initialize_data() { DataBase<TileGroupInfo, TileGroupDb>::initialize_data("res://data/tile_groups"); }
     Array get_ids() const { return DataBase<TileGroupInfo, TileGroupDb>::get_ids(); }
+    Vector2i get_atlas_coords(const String &p_id) const;
 
     const TileGroupInfo* get_tile_group(const String &p_id) const;
 };

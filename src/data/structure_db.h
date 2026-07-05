@@ -48,6 +48,7 @@ struct StructureRuleInfo {
 
 struct StructureLevelInfo {
     std::vector<uint16_t> data;
+    std::vector<uint16_t> tile_group_ids;
     String blueprint;
     Array palette;
     std::vector<StructureRuleInfo> rules;
@@ -98,6 +99,7 @@ public:
     Vector2i get_structure_size(const String &p_structure_id) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y) const;
     uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z) const;
+    uint16_t get_tile_at(const String &p_structure_id, int p_x, int p_y, int p_z, uint32_t p_position_hash) const;
 };
 
 }

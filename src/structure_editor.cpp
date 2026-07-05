@@ -4,6 +4,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "data/database.h"
 #include "data/race_db.h"
+#include "data/tile_group_db.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
 #include <unordered_set>
@@ -203,6 +204,8 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         atlas_coords = Vector2i(71, 18);
     } else if (entry_type == "entity_group") {
         atlas_coords = Vector2i(72, 18);
+    } else if (entry_type == "tile_group") {
+        atlas_coords = Vector2i(71, 18);
     } else {
         TileDb* tile_db = TileDb::get_singleton();
         if (!tile_db) return;

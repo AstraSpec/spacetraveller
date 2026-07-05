@@ -11,6 +11,7 @@ void TileGroupDb::_bind_methods() {
     ClassDB::bind_static_method("TileGroupDb", D_METHOD("get_singleton"), &TileGroupDb::get_singleton);
     ClassDB::bind_method(D_METHOD("initialize_data"), &TileGroupDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_ids"), &TileGroupDb::get_ids);
+    ClassDB::bind_method(D_METHOD("get_atlas_coords", "id"), &TileGroupDb::get_atlas_coords);
 }
 
 TileGroupDb::TileGroupDb() {}
@@ -51,6 +52,10 @@ TileGroupInfo TileGroupDb::_parse_row(const Dictionary &p_data) {
     }
 
     return info;
+}
+
+Vector2i TileGroupDb::get_atlas_coords(const String &) const {
+    return Vector2i(71, 18);
 }
 
 const TileGroupInfo* TileGroupDb::get_tile_group(const String &p_id) const {

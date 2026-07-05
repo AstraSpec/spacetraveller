@@ -100,10 +100,45 @@ static func _read_all(filepath: String) -> Array:
 	return []
 
 static func _write_all(data: Array, filepath: String):
+	# Convert all palette entries to encoded tokens before serialization
+	var encoded := _encode_palette_tokens(data)
 	var file = FileAccess.open(filepath, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify(data, "    "))
+		var text := JSON.stringify(encoded, "    ")
+		# Replace tokens with compact dict format
+		# __T__void -> {"tile": "void"}, __TG__window -> {"tile_group": "window"}
+		text = text.replace("\"__T__", "{\"tile\": \"")
+		text = text.replace("\"__TG__", "{\"tile_group\": \"")
+		text = text.replace("__END__\"", "\"}")
+		file.store_string(text)
 		file.close()
+
+static func _encode_palette_tokens(data: Array) -> Array:
+	for item in data:
+		if !(item is Dictionary):
+			continue
+		_encode_item_palette(item)
+		if item.has("levels") and item["levels"] is Dictionary:
+			for key in item["levels"].keys():
+				var level = item["levels"][key]
+				if level is Dictionary:
+					_encode_item_palette(level)
+	return data
+
+static func _encode_item_palette(d: Dictionary) -> void:
+	if !d.has("palette"):
+		return
+	var palette = d["palette"]
+	var encoded: Array = []
+	for entry in palette:
+		if entry is Dictionary:
+			if entry.has("tile_group"):
+				encoded.append("__TG__" + str(entry["tile_group"]) + "__END__")
+			else:
+				encoded.append("__T__" + str(entry.get("tile", "")) + "__END__")
+		else:
+			encoded.append("__T__" + str(entry) + "__END__")
+	d["palette"] = encoded
 
 static func _find_file_with_id(id: String, path: String) -> String:
 	var dir = DirAccess.open(path)

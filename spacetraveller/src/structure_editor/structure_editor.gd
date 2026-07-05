@@ -10,8 +10,6 @@ signal open_load
 @export var TileGrid :FlowContainer
 @export var ItemGrid :FlowContainer
 @export var NpcGrid :FlowContainer
-@export var LootGrid :FlowContainer
-@export var EntityGroupGrid :FlowContainer
 @export var ContentTabs :TabContainer
 @export var ItemAmountInput :SpinBox
 @export var NpcJobContainer :HBoxContainer
@@ -20,6 +18,9 @@ signal open_load
 @export var NpcDialogueContainer :HBoxContainer
 @export var NpcDialogueText :LineEdit
 @export var NpcDialoguePopup :MenuButton
+@export var TileGroupCheck :CheckBox
+@export var LootGroupCheck :CheckBox
+@export var EntityGroupCheck :CheckBox
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -48,6 +49,9 @@ var tileID1 :String
 var tileID2 :String
 var tileType1 :String = "tile"
 var tileType2 :String = "tile"
+var _tile_grid_type :String = "tile"
+var _item_grid_type :String = "item"
+var _npc_grid_type :String = "npc"
 var active_content_type :String = "tile"
 var primary_ids_by_content_type :Dictionary = {}
 var lastMousePos :Vector2i
@@ -69,6 +73,8 @@ var editor_loot_table_rules_by_level :Dictionary = {}
 var editor_loot_table_sprites :Dictionary = {}
 var editor_entity_group_rules_by_level :Dictionary = {}
 var editor_entity_group_sprites :Dictionary = {}
+var editor_tile_group_sprites :Dictionary = {}
+var editor_tile_group_rules_by_level :Dictionary = {}
 var editor_other_rules_by_level :Dictionary = {}
 
 var undo_stack : Array = []
@@ -76,6 +82,8 @@ var redo_stack : Array = []
 const MAX_UNDOS = 100
 const LOOT_TABLE_ATLAS := Vector2i(71, 18)
 const ENTITY_GROUP_ATLAS := Vector2i(72, 18)
+const GROUP_TYPE_MAP := {"tile": "tile_group", "item": "loot_table", "npc": "entity_group"}
+const TYPE_BASE_MAP := {"tile_group": "tile", "loot_table": "item", "entity_group": "npc"}
 const CONTENT_TYPES := {
 	"tile": {
 		"tab": "Tiles",
@@ -100,22 +108,29 @@ const CONTENT_TYPES := {
 		"erase_label": "erase NPC"
 	},
 	"loot_table": {
-		"tab": "Loot",
+		"tab": "",
 		"key": "loot_table",
 		"erase_id": "",
 		"erase_type": "loot_table_erase",
 		"erase_label": "erase loot table"
 	},
 	"entity_group": {
-		"tab": "Entity Groups",
+		"tab": "",
 		"key": "entity_group",
 		"erase_id": "",
 		"erase_type": "entity_group_erase",
 		"erase_label": "erase entity group"
+	},
+	"tile_group": {
+		"tab": "",
+		"key": "tile_group",
+		"erase_id": "",
+		"erase_type": "tile_group_erase",
+		"erase_label": "erase tile group"
 	}
 }
-const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group"]
-const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "tile"]
+const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group", "tile_group"]
+const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "tile_group", "tile"]
 
 func update_editor_visuals():
 	if World:
@@ -124,6 +139,7 @@ func update_editor_visuals():
 		FastTilemap.update_visuals(playerOffset, playerOffset)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_tile_group_markers()
 
 func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
@@ -157,19 +173,23 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	_update_chunk_visual()
 	_update_z_label()
 	
-	TileGrid.start(spacing, TileDb)
-	ItemGrid.start(spacing, ItemDb)
-	NpcGrid.start(spacing, RaceDb)
-	LootGrid.start(spacing, LootDb)
-	EntityGroupGrid.start(spacing, EntityGroupDb)
 	_setup_npc_option_menus()
 	_update_npc_options_for_race("")
 	
-	TileGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "tile", is_primary))
-	ItemGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "item", is_primary))
-	NpcGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "npc", is_primary))
-	LootGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "loot_table", is_primary))
-	EntityGroupGrid.selection_changed.connect(func(id, is_primary): _on_grid_selection_changed(id, "entity_group", is_primary))
+	TileGrid.start(spacing, TileDb)
+	ItemGrid.start(spacing, ItemDb)
+	NpcGrid.start(spacing, RaceDb)
+	
+	TileGrid.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, _tile_grid_type, is_primary))
+	ItemGrid.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, _item_grid_type, is_primary))
+	NpcGrid.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, _npc_grid_type, is_primary))
+	
+	TileGroupCheck.toggled.connect(_on_tile_group_toggled)
+	LootGroupCheck.toggled.connect(_on_loot_group_toggled)
+	EntityGroupCheck.toggled.connect(_on_entity_group_toggled)
 	
 	update_editor_visuals()
 
@@ -288,6 +308,7 @@ func _capture_editor_state() -> Dictionary:
 		"item_rules_by_level": editor_item_rules_by_level.duplicate(true),
 		"loot_table_rules_by_level": editor_loot_table_rules_by_level.duplicate(true),
 		"entity_group_rules_by_level": editor_entity_group_rules_by_level.duplicate(true),
+		"tile_group_rules_by_level": editor_tile_group_rules_by_level.duplicate(true),
 		"other_rules_by_level": editor_other_rules_by_level.duplicate(true)
 	}
 
@@ -301,6 +322,7 @@ func _restore_editor_state(state: Dictionary) -> void:
 	editor_item_rules_by_level = state.get("item_rules_by_level", {}).duplicate(true)
 	editor_loot_table_rules_by_level = state.get("loot_table_rules_by_level", {}).duplicate(true)
 	editor_entity_group_rules_by_level = state.get("entity_group_rules_by_level", {}).duplicate(true)
+	editor_tile_group_rules_by_level = state.get("tile_group_rules_by_level", {}).duplicate(true)
 	editor_other_rules_by_level = state.get("other_rules_by_level", {}).duplicate(true)
 	_apply_editor_rules_for_level(active_z)
 	update_editor_visuals()
@@ -354,7 +376,38 @@ func _content_type_for_tab(tab: int) -> String:
 	return active_content_type
 
 func _on_content_tab_changed(tab: int) -> void:
-	set_active_content_type(_content_type_for_tab(tab))
+	var base_type := _content_type_for_tab(tab)
+	if base_type.is_empty():
+		return
+	match base_type:
+		"item":
+			var group := LootGroupCheck.button_pressed
+			ItemAmountInput.visible = !group
+			ItemAmountInput.get_node("../AmountLabel").visible = !group
+			set_active_content_type(_item_grid_type, true)
+		"npc":
+			var group := EntityGroupCheck.button_pressed
+			NpcJobContainer.visible = !group
+			NpcDialogueContainer.visible = !group and _is_sapient_race(tileID1)
+			set_active_content_type(_npc_grid_type, true)
+		_:
+			set_active_content_type(_tile_grid_type, true)
+
+func _on_tile_group_toggled(pressed: bool) -> void:
+	_tile_grid_type = "tile_group" if pressed else "tile"
+	TileGrid.start(spacing, TileGroupDb if pressed else TileDb)
+
+func _on_loot_group_toggled(pressed: bool) -> void:
+	_item_grid_type = "loot_table" if pressed else "item"
+	ItemGrid.start(spacing, LootDb if pressed else ItemDb)
+	ItemAmountInput.visible = !pressed
+	ItemAmountInput.get_node("../AmountLabel").visible = !pressed
+
+func _on_entity_group_toggled(pressed: bool) -> void:
+	_npc_grid_type = "entity_group" if pressed else "npc"
+	NpcGrid.start(spacing, EntityGroupDb if pressed else RaceDb)
+	NpcJobContainer.visible = !pressed
+	NpcDialogueContainer.visible = !pressed
 
 func _on_grid_selection_changed(id: String, type: String, is_primary: bool) -> void:
 	if is_primary:
@@ -377,7 +430,8 @@ func set_active_content_type(type: String, restore_primary: bool = true) -> void
 		active_tool.on_hover(mousePos)
 
 func set_secondary_to_group_remover(type: String) -> void:
-	var config := _content_type_config(type)
+	var base_type: String = TYPE_BASE_MAP.get(type, type)
+	var config := _content_type_config(base_type)
 	if config.is_empty():
 		config = _content_type_config("tile")
 	tileID2 = str(config.get("erase_id", "void"))
@@ -542,6 +596,19 @@ func place_at(pos: Vector2i, id: String, type: String = "tile"):
 func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount: int = -1):
 	if id.is_empty() and !_is_erase_type(type):
 		return
+	if type == "tile":
+		_remove_tile_group_rule(world_pos)
+	elif type == "tile_group":
+		World.place_tile(world_pos.x, world_pos.y, "void")
+	elif type == "item" or type == "item_erase":
+		_remove_loot_table_rule(world_pos)
+	elif type == "loot_table" or type == "loot_table_erase":
+		_remove_all_items_at(world_pos)
+	elif type == "npc" or type == "npc_erase":
+		_remove_entity_group_rule(world_pos)
+	elif type == "entity_group" or type == "entity_group_erase":
+		erase_npc(world_pos)
+		_remove_npc_rule(world_pos)
 	match type:
 		"item":
 			var place_amount := amount if amount > 0 else item_amount
@@ -568,6 +635,10 @@ func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount:
 			_set_entity_group_rule(world_pos, id)
 		"entity_group_erase":
 			_remove_entity_group_rule(world_pos)
+		"tile_group":
+			_set_tile_group_rule(world_pos, id)
+		"tile_group_erase":
+			_remove_tile_group_rule(world_pos)
 		_:
 			World.place_tile(world_pos.x, world_pos.y, id)
 
@@ -760,6 +831,27 @@ func _remove_entity_group_rule(world_pos: Vector2i) -> void:
 	rules.erase(_pos_key(local_pos))
 	_refresh_entity_group_markers()
 
+func _set_tile_group_rule(world_pos: Vector2i, tile_group_id: String) -> void:
+	if tile_group_id.is_empty():
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules := _get_level_rule_dict(editor_tile_group_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = {
+		"type": "tile_group_ref",
+		"tile_group": tile_group_id,
+		"pos": _rule_pos_array(local_pos)
+	}
+	_refresh_tile_group_markers()
+
+func _remove_tile_group_rule(world_pos: Vector2i) -> void:
+	var key := _active_level_key()
+	if !editor_tile_group_rules_by_level.has(key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules: Dictionary = editor_tile_group_rules_by_level[key]
+	rules.erase(_pos_key(local_pos))
+	_refresh_tile_group_markers()
+
 func _world_pos_from_editor_pos(editor_pos: Vector2i) -> Vector2i:
 	return Vector2i(int(editor_pos.x + playerOffset.x), int(editor_pos.y + playerOffset.y))
 
@@ -785,6 +877,8 @@ func _single_rule_store_for_content_type(type: String) -> Dictionary:
 			return editor_loot_table_rules_by_level
 		"entity_group":
 			return editor_entity_group_rules_by_level
+		"tile_group":
+			return editor_tile_group_rules_by_level
 	return {}
 
 func _content_id_from_rule(type: String, rule: Dictionary) -> String:
@@ -797,6 +891,8 @@ func _content_id_from_rule(type: String, rule: Dictionary) -> String:
 			return str(rule.get("loot_table", "")).strip_edges()
 		"entity_group":
 			return str(rule.get("entity_group", rule.get("entity_group_id", ""))).strip_edges()
+		"tile_group":
+			return str(rule.get("tile_group", "")).strip_edges()
 	return ""
 
 func _get_item_contents_at(world_pos: Vector2i, local_pos: Vector2i, level_key: String) -> Array:
@@ -911,6 +1007,8 @@ func _clear_content_type_at(type: String, world_pos: Vector2i) -> void:
 			_erase_rule_at(editor_loot_table_rules_by_level, world_pos)
 		"entity_group":
 			_erase_rule_at(editor_entity_group_rules_by_level, world_pos)
+		"tile_group":
+			_erase_rule_at(editor_tile_group_rules_by_level, world_pos)
 
 func _place_content_value(type: String, world_pos: Vector2i, local_pos: Vector2i, value: Variant) -> void:
 	match type:
@@ -940,6 +1038,10 @@ func _place_content_value(type: String, world_pos: Vector2i, local_pos: Vector2i
 			if value is Dictionary:
 				var entity_group_rule: Dictionary = value
 				_store_entity_group_content(local_pos, entity_group_rule)
+		"tile_group":
+			if value is Dictionary:
+				var tile_group_rule: Dictionary = value
+				_store_tile_group_content(local_pos, tile_group_rule)
 
 func get_editor_contents_at(editor_pos: Vector2i) -> Dictionary:
 	if !World or !is_inside_bubble(editor_pos):
@@ -980,6 +1082,7 @@ func capture_editor_contents(rect: Rect2i, clear_map: bool = false) -> Dictionar
 	if clear_map:
 		_refresh_loot_table_markers()
 		_refresh_entity_group_markers()
+		_refresh_tile_group_markers()
 	return contents_by_pos
 
 func _store_npc_content(local_pos: Vector2i, rule: Dictionary) -> void:
@@ -1018,6 +1121,17 @@ func _store_entity_group_content(local_pos: Vector2i, rule: Dictionary) -> void:
 	var rules := _get_level_rule_dict(editor_entity_group_rules_by_level, _active_level_key())
 	rules[_pos_key(local_pos)] = stored_rule
 
+func _store_tile_group_content(local_pos: Vector2i, rule: Dictionary) -> void:
+	var tile_group_id := str(rule.get("tile_group", "")).strip_edges()
+	if tile_group_id.is_empty():
+		return
+	var stored_rule := rule.duplicate(true)
+	stored_rule["type"] = "tile_group_ref"
+	stored_rule["tile_group"] = tile_group_id
+	stored_rule["pos"] = _rule_pos_array(local_pos)
+	var rules := _get_level_rule_dict(editor_tile_group_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = stored_rule
+
 func place_editor_contents(origin: Vector2i, contents_by_pos: Dictionary) -> void:
 	if !World:
 		return
@@ -1040,14 +1154,47 @@ func place_editor_contents(origin: Vector2i, contents_by_pos: Dictionary) -> voi
 				_place_content_value(str(content_type), world_pos, local_pos, value)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_tile_group_markers()
+
+func _has_group_rule_at(world_pos: Vector2i, type: String) -> String:
+	var local_pos := _local_pos_from_world(world_pos)
+	var level_key := _active_level_key()
+	var store := _single_rule_store_for_content_type(type)
+	var rules: Dictionary = store.get(level_key, {})
+	var rule: Dictionary = rules.get(_pos_key(local_pos), {})
+	return str(rule.get(type, ""))
 
 func select_editor_content_at(editor_pos: Vector2i, is_primary: bool = true, type_filter: String = "") -> bool:
 	if type_filter == "tile":
 		if !World or !is_inside_bubble(editor_pos):
 			return false
 		var world_pos := _world_pos_from_editor_pos(editor_pos)
+		var tg := _has_group_rule_at(world_pos, "tile_group")
+		if !tg.is_empty():
+			select_entry(tg, "tile_group", is_primary)
+			return true
 		select_entry(str(World.get_tile_at(world_pos.x, world_pos.y)), "tile", is_primary)
 		return true
+	if type_filter == "item":
+		if !World or !is_inside_bubble(editor_pos):
+			return false
+		var world_pos := _world_pos_from_editor_pos(editor_pos)
+		var lt := _has_group_rule_at(world_pos, "loot_table")
+		if !lt.is_empty():
+			select_entry(lt, "loot_table", is_primary)
+			return true
+		var contents := get_editor_contents_at(editor_pos)
+		return _select_content_value("item", _content_value_from_contents(contents, "item"), is_primary)
+	if type_filter == "npc":
+		if !World or !is_inside_bubble(editor_pos):
+			return false
+		var world_pos := _world_pos_from_editor_pos(editor_pos)
+		var eg := _has_group_rule_at(world_pos, "entity_group")
+		if !eg.is_empty():
+			select_entry(eg, "entity_group", is_primary)
+			return true
+		var contents := get_editor_contents_at(editor_pos)
+		return _select_content_value("npc", _content_value_from_contents(contents, "npc"), is_primary)
 
 	var contents := get_editor_contents_at(editor_pos)
 	if contents.is_empty():
@@ -1101,6 +1248,48 @@ func _refresh_loot_table_markers() -> void:
 		add_child(marker)
 		editor_loot_table_sprites[rule_key] = marker
 
+func clear_editor_tile_group_markers() -> void:
+	for marker in editor_tile_group_sprites.values():
+		if is_instance_valid(marker):
+			marker.queue_free()
+	editor_tile_group_sprites.clear()
+
+func _refresh_tile_group_markers() -> void:
+	clear_editor_tile_group_markers()
+	if !FastTilemap:
+		return
+	var tilesheet: Texture2D = FastTilemap.get_tilesheet()
+	if !tilesheet:
+		return
+	var rules: Dictionary = editor_tile_group_rules_by_level.get(_active_level_key(), {})
+	var cell_size := FastTilemap.get_cell_size()
+	for rule_key in rules.keys():
+		var rule: Dictionary = rules[rule_key]
+		var tile_group_id := str(rule.get("tile_group", ""))
+		if tile_group_id.is_empty():
+			continue
+		var atlas: Vector2i = LOOT_TABLE_ATLAS
+		if atlas.x < 0 or atlas.y < 0:
+			continue
+		var local_pos := _rule_pos_from_variant(rule.get("pos", []))
+		var world_pos := _world_pos_from_local(local_pos)
+		var atlas_texture := AtlasTexture.new()
+		atlas_texture.atlas = tilesheet
+		atlas_texture.region = Rect2(
+			1 + atlas.x * (TILE_SIZE + 1),
+			1 + atlas.y * (TILE_SIZE + 1),
+			TILE_SIZE,
+			TILE_SIZE
+		)
+		var marker := Sprite2D.new()
+		marker.texture = atlas_texture
+		marker.centered = false
+		marker.modulate = Color(1, 1, 1, 0.7)
+		marker.z_index = 20
+		marker.position = (Vector2(world_pos.x, world_pos.y) - playerOffset) * cell_size
+		add_child(marker)
+		editor_tile_group_sprites[rule_key] = marker
+
 func clear_editor_entity_group_markers() -> void:
 	for marker in editor_entity_group_sprites.values():
 		if is_instance_valid(marker):
@@ -1150,6 +1339,8 @@ func _clear_editor_rule_state() -> void:
 	clear_editor_loot_table_markers()
 	editor_entity_group_rules_by_level.clear()
 	clear_editor_entity_group_markers()
+	editor_tile_group_rules_by_level.clear()
+	clear_editor_tile_group_markers()
 	editor_other_rules_by_level.clear()
 
 func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
@@ -1263,12 +1454,14 @@ func _clear_current_chunk(clear_rules: bool = false) -> void:
 	clear_editor_live_items()
 	clear_editor_loot_table_markers()
 	clear_editor_entity_group_markers()
+	clear_editor_tile_group_markers()
 	if clear_rules:
 		var key := _active_level_key()
 		editor_npc_rules_by_level.erase(key)
 		editor_item_rules_by_level.erase(key)
 		editor_loot_table_rules_by_level.erase(key)
 		editor_entity_group_rules_by_level.erase(key)
+		editor_tile_group_rules_by_level.erase(key)
 		editor_other_rules_by_level.erase(key)
 	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
 		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
@@ -1291,7 +1484,13 @@ func _level_has_non_void(level_data: Dictionary) -> bool:
 		var palette_index: int = int(pieces[1])
 		if count <= 0 or palette_index < 0 or palette_index >= palette.size():
 			continue
-		if str(palette[palette_index]) != "void":
+		var entry = palette[palette_index]
+		var tile_name := ""
+		if entry is Dictionary:
+			tile_name = str(entry.get("tile", str(entry.get("tile_group", ""))))
+		else:
+			tile_name = str(entry)
+		if tile_name != "void":
 			return true
 	return false
 
@@ -1344,7 +1543,11 @@ func _decode_level_tiles(level_data: Dictionary, source_size: Vector2i) -> Array
 		var palette_index: int = int(pieces[1])
 		var tile_id := "void"
 		if palette_index >= 0 and palette_index < palette.size():
-			tile_id = str(palette[palette_index])
+			var entry = palette[palette_index]
+			if entry is Dictionary:
+				tile_id = str(entry.get("tile", str(entry.get("tile_group", ""))))
+			else:
+				tile_id = str(entry)
 		for _i in range(count):
 			if current_pos >= total:
 				return tiles
@@ -1380,8 +1583,17 @@ func _encode_tiles_to_level(tiles: Array) -> Dictionary:
 			count = 1
 	_append_rle_run(parts, palette, id_to_index, current_id, count)
 
+	# Convert palette from strings to dict format
+	var dict_palette: Array = []
+	for entry in palette:
+		var s := str(entry)
+		if s.begins_with("__tg__"):
+			dict_palette.append({"tile_group": s.trim_prefix("__tg__")})
+		else:
+			dict_palette.append({"tile": s})
+
 	return {
-		"palette": palette,
+		"palette": dict_palette,
 		"blueprint": "(" + ", ".join(parts) + ")"
 	}
 
@@ -1419,6 +1631,9 @@ func _is_spawn_loot_table_rule(rule: Dictionary) -> bool:
 
 func _is_spawn_entity_group_rule(rule: Dictionary) -> bool:
 	return str(rule.get("type", "")) == "spawn_entity_group"
+
+func _is_spawn_tile_group_rule(rule: Dictionary) -> bool:
+	return str(rule.get("type", "")) == "tile_group_ref"
 
 func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 	var unmanaged: Array = []
@@ -1489,11 +1704,58 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 		level_data["rules"] = unmanaged
 	editor_other_rules_by_level[key] = unmanaged
 
-func _split_editor_rules_from_levels(imported_levels: Dictionary) -> void:
+func _split_editor_rules_from_levels(imported_levels: Dictionary, root_size: Vector2i = Vector2i(24, 24)) -> void:
 	for key in imported_levels.keys():
 		var value: Variant = imported_levels[key]
 		if value is Dictionary:
 			_split_editor_rules_for_level(str(key), value)
+			_create_tile_group_rules_from_palette(str(key), value, root_size)
+
+func _create_tile_group_rules_from_palette(key: String, level_data: Dictionary, size: Vector2i) -> void:
+	var palette: Array = level_data.get("palette", [])
+	var blueprint: String = str(level_data.get("blueprint", ""))
+	var total := size.x * size.y
+	if total <= 0:
+		return
+
+	var tg_indices := {}
+	for i in range(palette.size()):
+		var entry = palette[i]
+		if entry is Dictionary:
+			var tg := str(entry.get("tile_group", ""))
+			if !tg.is_empty():
+				tg_indices[i] = tg
+
+	if tg_indices.is_empty():
+		return
+
+	var rle: String = blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "")
+	var current_pos := 0
+	for raw_part in rle.split(","):
+		var part: String = raw_part.strip_edges()
+		if part.is_empty():
+			continue
+		var pieces: PackedStringArray = part.split("x")
+		if pieces.size() != 2:
+			continue
+		var count: int = int(pieces[0])
+		var palette_index: int = int(pieces[1])
+		if !tg_indices.has(palette_index):
+			current_pos += count
+			continue
+		var tg_name: String = tg_indices[palette_index]
+		var rules := _get_level_rule_dict(editor_tile_group_rules_by_level, key)
+		for _i in range(count):
+			if current_pos >= total:
+				return
+			var x := current_pos % size.x
+			var y := current_pos / size.x
+			rules[_pos_key(Vector2i(x, y))] = {
+				"type": "tile_group_ref",
+				"tile_group": tg_name,
+				"pos": [x, y]
+			}
+			current_pos += 1
 
 func _rules_for_level(key: String) -> Array:
 	var result: Array = []
@@ -1543,10 +1805,13 @@ func _sync_all_level_rules() -> void:
 		seen[str(key)] = true
 	for key in editor_entity_group_rules_by_level.keys():
 		seen[str(key)] = true
+	for key in editor_tile_group_rules_by_level.keys():
+		seen[str(key)] = true
 	for key in seen.keys():
 		var level_data: Dictionary = levels.get(key, {})
 		_sync_level_rules_into(key, level_data)
-		if _level_has_non_void(level_data) or _level_has_rules(level_data):
+		var has_tg: bool = !editor_tile_group_rules_by_level.get(key, {}).is_empty()
+		if _level_has_non_void(level_data) or _level_has_rules(level_data) or has_tg:
 			levels[key] = level_data
 		else:
 			levels.erase(key)
@@ -1576,8 +1841,9 @@ func _apply_editor_rules_for_level(z: int) -> void:
 		editor_live_item_rules[item_key] = rule.duplicate(true)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_tile_group_markers()
 
-func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i) -> Dictionary:
+func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i, level_key: String = "") -> Dictionary:
 	var source_tiles := _decode_level_tiles(level_data, source_size)
 	var target_tiles: Array = []
 	target_tiles.resize(target_size.x * target_size.y)
@@ -1591,6 +1857,18 @@ func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, targe
 				if source_index >= 0 and source_index < source_tiles.size():
 					tile_id = str(source_tiles[source_index])
 			target_tiles[target_index] = tile_id
+
+	# Inject tile_group overrides into the tile array
+	if !level_key.is_empty():
+		var tg_rules: Dictionary = editor_tile_group_rules_by_level.get(level_key, {})
+		for pos_key in tg_rules.keys():
+			var rule: Dictionary = tg_rules[pos_key]
+			var tg_name := str(rule.get("tile_group", "")).strip_edges()
+			if tg_name.is_empty():
+				continue
+			var pos := _rule_pos_from_variant(rule.get("pos", []))
+			if pos.x >= 0 and pos.x < target_size.x and pos.y >= 0 and pos.y < target_size.y:
+				target_tiles[pos.y * target_size.x + pos.x] = "__tg__" + tg_name
 
 	var compact_level := _encode_tiles_to_level(target_tiles)
 	var rules := _filter_rules_for_size(level_data.get("rules", []), target_size)
@@ -1607,7 +1885,8 @@ func _capture_active_level() -> void:
 	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z, structure_size)
 	level_data.erase("id")
 	_sync_level_rules_into(key, level_data)
-	if _level_has_non_void(level_data) or _level_has_rules(level_data):
+	var has_tg_rules: bool = !editor_tile_group_rules_by_level.get(key, {}).is_empty()
+	if _level_has_non_void(level_data) or _level_has_rules(level_data) or has_tg_rules:
 		levels[key] = level_data
 	else:
 		levels.erase(key)
@@ -1623,7 +1902,18 @@ func _apply_level(z: int) -> void:
 	var key: String = _level_key(z)
 	if levels.has(key):
 		var level_data: Dictionary = levels[key]
-		Editor.import_from_rle(level_data.get("blueprint", ""), level_data.get("palette", []), selectedChunkPos, z, structure_size)
+		var palette: Array = level_data.get("palette", [])
+		# Convert dict palette entries to plain strings for C++ import
+		var string_palette: Array = []
+		for entry in palette:
+			if entry is Dictionary:
+				if entry.has("tile_group"):
+					string_palette.append("void")
+				else:
+					string_palette.append(str(entry.get("tile", "")))
+			else:
+				string_palette.append(str(entry))
+		Editor.import_from_rle(level_data.get("blueprint", ""), string_palette, selectedChunkPos, z, structure_size)
 	_apply_editor_rules_for_level(z)
 	_reset_level_edit_state()
 	_update_z_label()
@@ -1695,7 +1985,7 @@ func import_structure(structure_data: Dictionary) -> void:
 			level_zero["rules"] = structure_data["rules"]
 		imported_levels["0"] = level_zero
 
-	_split_editor_rules_from_levels(imported_levels)
+	_split_editor_rules_from_levels(imported_levels, root_size)
 	var levels_to_clear: Array = levels.keys()
 	for key in imported_levels.keys():
 		if !levels_to_clear.has(key):
@@ -1734,7 +2024,7 @@ func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dic
 	sorted_keys.sort_custom(func(a, b): return int(str(a)) < int(str(b)))
 	for key in sorted_keys:
 		var level_data: Dictionary = levels[key]
-		var compact_level := _compact_level_to_size(level_data, source_size, footprint)
+		var compact_level := _compact_level_to_size(level_data, source_size, footprint, str(key))
 		if _level_has_non_void(compact_level) or _level_has_rules(compact_level):
 			result_levels[str(key)] = compact_level
 	if result_levels.is_empty():
