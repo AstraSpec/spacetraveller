@@ -36,9 +36,9 @@
     ]
   },
   {
-    "id": "dungeon_floor",
+    "id": "stone_brick_floor",
     "entries": [
-      { "tile": "dungeon_floor", "weight": 1 }
+      { "tile": "stone_brick_floor", "weight": 1 }
     ]
   },
   {

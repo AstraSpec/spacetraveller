@@ -58,8 +58,8 @@ layout_mode = 2
 
 [node name="LoadGameUI" parent="." instance=ExtResource("3_load")]
 
-[node name="NewGameUI" parent="." node_paths=PackedStringArray("ConfirmationPopup") instance=ExtResource("7_new")]
-ConfirmationPopup = NodePath("../ConfirmationPopup")
+[node name="NewGameUI" parent="." node_paths=PackedStringArray("_ConfirmationPopup") instance=ExtResource("7_new")]
+_ConfirmationPopup = NodePath("../ConfirmationPopup")
 
 [node name="KeybindWindow" parent="." instance=ExtResource("4_kbw")]
 

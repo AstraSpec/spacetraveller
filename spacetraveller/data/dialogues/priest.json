@@ -1,0 +1,77 @@
+{
+  "id": "priest",
+  "priority": 140,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "\"The church sees all who enter its halls. What brings you before the faith?\"",
+      "options": [
+        {
+          "text": "I seek the church's blessing.",
+          "next": "blessing"
+        },
+        {
+          "text": "I wish to prove my devotion. What would you have me do?",
+          "next": "priest_quest",
+          "constraints": { "quest_status": "none" },
+          "effects": { "quest_offer": "priest_gather" }
+        },
+        {
+          "text": "I've returned regarding the offering you asked for.",
+          "next": "turn_in",
+          "constraints": { "quest_status": "active" }
+        },
+        {
+          "text": "You mentioned a task?",
+          "next": "priest_quest",
+          "constraints": { "quest_status": "offered" }
+        }
+      ]
+    },
+    "blessing": {
+      "npc": "\"Blessings be with you, come back when you're willing to give more than words.\"",
+      "options": [
+        {
+          "text": "I will.",
+          "next": "start"
+        }
+      ]
+    },
+    "priest_quest": {
+      "npc": "\"The church always needs the faithful to serve. {quest_description} Do this, and your name will be known among us.\"",
+      "options": []
+    },
+    "turn_in": {
+      "npc": "\"Have you brought what was asked for {quest_label}?\"",
+      "options": [
+        {
+          "text": "Yes. The offering is ready.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true }
+        },
+        {
+          "text": "Not yet. I am still gathering.",
+          "next": "not_done",
+          "constraints": { "quest_status": "active", "can_complete_quest": false }
+        }
+      ]
+    },
+    "complete": {
+      "npc": "\"You have served well. The church does not forget its own. Your standing grows.\"",
+      "options": []
+    },
+    "not_done": {
+      "npc": "\"Then do not delay. The church still waits for its due. {quest_description}\"",
+      "options": []
+    },
+    "accepted": {
+      "npc": "\"Then go. The church will know of your devotion.\"",
+      "options": []
+    },
+    "declined": {
+      "npc": "\"Doubt is a heavy burden. Return when your faith is ready.\"",
+      "options": []
+    }
+  }
+}

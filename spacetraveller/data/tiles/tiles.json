@@ -302,6 +302,14 @@
     "tags": ["FLOOR"]
   },
   {
+    "id": "stained_window",
+    "name": "Stained Window",
+    "atlas": [ [ 9, 7 ], [ 10, 7 ], [ 11, 7 ], [ 12, 7 ] ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"],
+    "smash_loot_table": "glass_smashed"
+  },
+  {
     "id": "fountain",
     "name": "Fountain",
     "atlas": [ 20, 40 ],

@@ -36,6 +36,18 @@
       "medium": { "reward_loot_table": "scavenger_quest_rewards", "item_pool": ["torch", "spider_silk", "fire_starter"], "amount_range": [1, 2], "friendship": 5, "romance": 1 }
     }
   },
+  "priest_gather": {
+    "giver_jobs": ["priest"],
+    "item_type_filter": ["material", "consumable", "food"],
+    "target_loot_table": "priest_quest_targets",
+    "target_range": [2, 5],
+    "label_template": "Offer {count} {item_name} to the church",
+    "description_template": "Bring {count} {item_name} as an offering. The church honors those who give.",
+    "tiers": {
+      "small":  { "reward_loot_table": "priest_quest_rewards", "item_pool": ["candle", "honey", "bread", "cloth_scrap"], "amount_range": [1, 2], "friendship": 4, "romance": 0 },
+      "medium": { "reward_loot_table": "priest_quest_rewards", "item_pool": ["faith_book", "faith_necklace", "golden_coin"], "amount_range": [1, 1], "friendship": 6, "romance": 1 }
+    }
+  },
   "kill": {
     "race_exclude": ["human"],
     "target_range": [2, 5],

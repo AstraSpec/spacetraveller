@@ -257,14 +257,14 @@ void WorldGenerator::setup_biome_rules() {
     id_dirt = id_reg->register_string("dirt");
     id_crypt_entrance = id_reg->register_string("crypt_entrance");
     id_dungeon = id_reg->register_string("dungeon");
-    id_dungeon_floor = id_reg->register_string("dungeon_floor");
-    id_dungeon_wall = id_reg->register_string("dungeon_wall");
+    id_stone_brick_floor = id_reg->register_string("stone_brick_floor");
+    id_stone_brick_wall = id_reg->register_string("stone_brick_wall");
     id_dungeon_door = id_reg->register_string("w_door_c");
     id_spider_eggs = id_reg->register_string("spider_eggs");
-    id_dungeon_wall_web = id_reg->register_string("dungeon_wall_web");
-    id_dungeon_wall_web_thick = id_reg->register_string("dungeon_wall_web_thick");
-    id_dungeon_floor_web = id_reg->register_string("dungeon_floor_web");
-    id_dungeon_floor_web_thick = id_reg->register_string("dungeon_floor_web_thick");
+    id_stone_brick_wall_web = id_reg->register_string("stone_brick_wall_web");
+    id_stone_brick_wall_web_thick = id_reg->register_string("stone_brick_wall_web_thick");
+    id_stone_brick_floor_web = id_reg->register_string("stone_brick_floor_web");
+    id_stone_brick_floor_web_thick = id_reg->register_string("stone_brick_floor_web_thick");
 
     TagRegistry* tag_reg = TagRegistry::get_singleton();
     tag_road = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
@@ -1290,8 +1290,8 @@ uint16_t WorldGenerator::get_dungeon_layout_tile(const DungeonLayout& p_layout, 
     if (!p_layout.might_contain(x, y)) {
         return id_void;
     }
-    const uint16_t floor_tile = p_layout.floor_tile_id != 0 ? p_layout.floor_tile_id : id_dungeon_floor;
-    const uint16_t wall_tile = p_layout.wall_tile_id != 0 ? p_layout.wall_tile_id : id_dungeon_wall;
+    const uint16_t floor_tile = p_layout.floor_tile_id != 0 ? p_layout.floor_tile_id : id_stone_brick_floor;
+    const uint16_t wall_tile = p_layout.wall_tile_id != 0 ? p_layout.wall_tile_id : id_stone_brick_wall;
 
     if (p_include_dynamic) {
         auto dynamic_it = p_layout.dynamic_tiles.find(dungeon_dynamic_cell_key(x, y));
@@ -1475,7 +1475,7 @@ void WorldGenerator::try_place_dynamic_dungeon_features(
                 candidate_centers.reserve(room.bounds.size.x * room.bounds.size.y);
                 for (int y = room.bounds.origin.y; y < room.bounds.origin.y + room.bounds.size.y; y++) {
                     for (int x = room.bounds.origin.x; x < room.bounds.origin.x + room.bounds.size.x; x++) {
-                        const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_dungeon_floor;
+                        const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_stone_brick_floor;
                         if (get_dungeon_layout_tile(r_layout, x, y, false) == floor_tile) {
                             candidate_centers.push_back(Vector2i(x, y));
                         }
@@ -1499,7 +1499,7 @@ void WorldGenerator::try_place_dynamic_dungeon_features(
         if (feature.placement == "cave_scattered") {
             std::vector<Vector2i> candidate_centers;
             candidate_centers.reserve(r_layout.cave_chamber_centers.size());
-            const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_dungeon_floor;
+            const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_stone_brick_floor;
             for (int i = 0; i < static_cast<int>(r_layout.cave_chamber_centers.size()); i++) {
                 if (i == 0) continue;
 
@@ -1567,8 +1567,8 @@ bool WorldGenerator::try_place_spider_nest(
         SPIDER_NEST_SALT ^ p_salt
     );
 
-    const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_dungeon_floor;
-    const uint16_t wall_tile = r_layout.wall_tile_id != 0 ? r_layout.wall_tile_id : id_dungeon_wall;
+    const uint16_t floor_tile = r_layout.floor_tile_id != 0 ? r_layout.floor_tile_id : id_stone_brick_floor;
+    const uint16_t wall_tile = r_layout.wall_tile_id != 0 ? r_layout.wall_tile_id : id_stone_brick_wall;
     const int radius = rng.range(p_radius_min, p_radius_max);
     r_placed_radius = radius;
     SpiderNestArea area;
@@ -1625,7 +1625,7 @@ bool WorldGenerator::try_place_spider_nest(
         const int dx = cell.x - p_center.x;
         const int dy = cell.y - p_center.y;
         const bool near_center = dx * dx + dy * dy <= SPIDER_NEST_CENTER_RADIUS * SPIDER_NEST_CENTER_RADIUS;
-        const uint16_t web_tile_id = pick_web_tile(id_dungeon_wall_web, id_dungeon_wall_web_thick, near_center);
+        const uint16_t web_tile_id = pick_web_tile(id_stone_brick_wall_web, id_stone_brick_wall_web_thick, near_center);
         if (web_tile_id != 0) {
             r_layout.dynamic_tiles[dungeon_dynamic_cell_key(cell.x, cell.y)] = web_tile_id;
         }
@@ -1635,7 +1635,7 @@ bool WorldGenerator::try_place_spider_nest(
         const int dx = cell.x - p_center.x;
         const int dy = cell.y - p_center.y;
         const bool near_center = dx * dx + dy * dy <= SPIDER_NEST_CENTER_RADIUS * SPIDER_NEST_CENTER_RADIUS;
-        const uint16_t web_tile_id = pick_web_tile(id_dungeon_floor_web, id_dungeon_floor_web_thick, near_center);
+        const uint16_t web_tile_id = pick_web_tile(id_stone_brick_floor_web, id_stone_brick_floor_web_thick, near_center);
         if (web_tile_id != 0) {
             r_layout.dynamic_tiles[dungeon_dynamic_cell_key(cell.x, cell.y)] = web_tile_id;
         }
@@ -1848,9 +1848,9 @@ String WorldGenerator::get_dungeon_type_for_cell(int x, int y, int z, int world_
     return "";
 }
 
-bool WorldGenerator::is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed) {
+bool WorldGenerator::is_stone_brick_floor_loot_candidate(int x, int y, int z, int world_seed) {
     setup_biome_rules();
-    return get_dungeon_tile(x, y, z, world_seed) == id_dungeon_floor;
+    return get_dungeon_tile(x, y, z, world_seed) == id_stone_brick_floor;
 }
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {

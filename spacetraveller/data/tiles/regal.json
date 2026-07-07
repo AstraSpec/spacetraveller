@@ -1,0 +1,83 @@
+[
+  {
+    "id": "statue_head",
+    "name": "Head Statue",
+    "atlas": [ 26, 24 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "statue_bust",
+    "name": "Bust Statue",
+    "atlas": [ 28, 24 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "statue_body",
+    "name": "Statue",
+    "atlas": [ 27, 24 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "banner_church",
+    "name": "Church Banner",
+    "atlas": [ 35, 23 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "church_altar",
+    "name": "Church Altar",
+    "atlas": [ 39, 23 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "church_cross",
+    "name": "Church Cross",
+    "atlas": [ 32, 25 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "pillar",
+    "name": "Pillar",
+    "atlas": [ 26, 3 ],
+    "solid": true,
+    "tags": []
+  },
+  {
+    "id": "candelabra",
+    "name": "Candelabra",
+    "atlas": [ 36, 23 ],
+    "solid": true,
+    "light": { "strength": 13 },
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "brazier",
+    "name": "Brazier",
+    "atlas": [ 27, 22 ],
+    "solid": false,
+    "light": { "strength": 13 },
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "beaded_curtain_c",
+    "name": "Beaded Curtain",
+    "atlas": [ 31, 5 ],
+    "solid": true,
+    "tags": ["CAN_OPEN"],
+    "opens_to": "beaded_curtain_o"
+  },
+  {
+    "id": "beaded_curtain_o",
+    "name": "Open Beaded Curtain",
+    "atlas": [ 32, 5 ],
+    "solid": false,
+    "tags": ["CAN_CLOSE"],
+    "closes_to": "beaded_curtain_c"
+  }
+]

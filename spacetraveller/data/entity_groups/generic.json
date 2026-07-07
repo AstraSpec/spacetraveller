@@ -30,18 +30,5 @@
     "entries": [
       { "entity": "bear", "weight": 1, "job": "animal" }
     ]
-  },
-  {
-    "id": "crypt_prisoner_goblin",
-    "entries": [
-      { "none": true, "weight": 3 },
-      { "entity": "goblin", "weight": 1, "job": "prisoner" }
-    ]
-  },
-  {
-    "id": "carriage_prisoner_goblin",
-    "entries": [
-      { "entity": "goblin", "weight": 1, "job": "prisoner" }
-    ]
   }
 ]

@@ -1,0 +1,21 @@
+{
+  "id": "merchant_church",
+  "priority": 140,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "\"Blessings be upon you. I trade in sacred texts and symbols of faith.\"",
+      "options": [
+        {
+          "text": "Let me see what you have.",
+          "next": "post_trade",
+          "effects": { "open_tab": "Barter" }
+        }
+      ]
+    },
+    "post_trade": {
+      "npc": "\"May the light guide your choice.\"",
+      "options": []
+    }
+  }
+}

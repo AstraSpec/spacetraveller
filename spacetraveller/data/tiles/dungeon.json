@@ -1,6 +1,6 @@
 [
   {
-    "id": "dungeon_wall",
+    "id": "stone_brick_wall",
     "name": "Dungeon Wall",
     "atlas": [ [9, 2], [9, 2], [9, 2], [10, 2], [11, 2] ],
     "solid": true,
@@ -8,7 +8,7 @@
     "smash_loot_table": "brick_smashed"
   },
   {
-    "id": "dungeon_floor",
+    "id": "stone_brick_floor",
     "name": "Dungeon Floor",
     "atlas": [ [20, 3], [21, 3] ],
     "solid": false,
@@ -19,7 +19,14 @@
     "name": "Iron Bars",
     "atlas": [ 6, 40 ],
     "solid": true,
-    "tags": ["TRANSPARENT"]
+    "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "iron_gate",
+    "name": "Iron Gate",
+    "atlas": [ 3, 40 ],
+    "solid": true,
+    "tags": ["TRANSPARENT", "SMASHABLE"]
   },
   {
     "id": "coffin",
@@ -36,13 +43,6 @@
     "solid": false,
     "tags": ["SMASHABLE"],
     "smash_loot_table": "wooden_furniture_small_smashed"
-  },
-  {
-    "id": "candelabra",
-    "name": "Candelabra",
-    "atlas": [ [45, 25], [46, 25] ],
-    "solid": false,
-    "tags": ["SMASHABLE"]
   },
   {
     "id": "skull_pike",
@@ -66,7 +66,7 @@
     "tags": ["GROUND", "SMASHABLE"]
   },
   {
-    "id": "dungeon_wall_web",
+    "id": "stone_brick_wall_web",
     "name": "Webbed Dungeon Wall",
     "atlas": [ [14, 2], [ 15, 2] ],
     "solid": true,
@@ -74,7 +74,7 @@
     "smash_loot_table": "brick_smashed"
   },
   {
-    "id": "dungeon_wall_web_thick",
+    "id": "stone_brick_wall_web_thick",
     "name": "Webbed Dungeon Wall",
     "atlas": [ [12, 2], [ 13, 2] ],
     "solid": true,
@@ -82,17 +82,24 @@
     "smash_loot_table": "brick_smashed"
   },
   {
-    "id": "dungeon_floor_web",
+    "id": "stone_brick_floor_web",
     "name": "Webbed Dungeon Floor",
     "atlas": [ [19, 4], [20, 4] ],
     "solid": false,
     "tags": ["GROUND", "NATURAL_DARK"]
   },
   {
-    "id": "dungeon_floor_web_thick",
+    "id": "stone_brick_floor_web_thick",
     "name": "Webbed Dungeon Floor",
     "atlas": [ 21, 4 ],
     "solid": false,
     "tags": ["GROUND", "SMASHABLE", "NATURAL_DARK"]
+  },
+  {
+    "id": "bed_frame_iron",
+    "name": "Iron Bed Frame",
+    "atlas": [ 40, 23 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
   }
 ]

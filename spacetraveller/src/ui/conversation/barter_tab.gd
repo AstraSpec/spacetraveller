@@ -5,7 +5,7 @@ extends BaseListTab
 @export var npcMoneyLabel: RichTextLabel
 @export var playerItems: ButtonListContainer
 @export var npcItems: ButtonListContainer
-@export var ConfirmationPopup :Window
+@export var _ConfirmationPopup :Window
 
 var target_id: int = -1
 var active_side: String = "player"
@@ -162,7 +162,7 @@ func _target_from_talk_tab() -> int:
 func request_menu_close() -> bool:
 	if not _has_pending_trade():
 		return false
-	ConfirmationPopup.show_confirm("Accept this trade?", [
+	_ConfirmationPopup.show_confirm("Accept this trade?", [
 		{"label": "No", "callback": Callable(self, "_discard_trade_and_close")},
 		{"label": "Yes", "callback": Callable(self, "_accept_trade_and_close")},
 		{"label": "Cancel"},

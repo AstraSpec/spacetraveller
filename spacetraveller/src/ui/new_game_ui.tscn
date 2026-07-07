@@ -51,6 +51,7 @@ stripContainer = NodePath("HBoxContainer/PanelContainer/MarginContainer/VBoxCont
 titleLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Title")
 descriptionLabel = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Description")
 detailsContainer = NodePath("HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/DetailsContainer")
+metadata/_tab_index = 0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer/Scenario"]
 layout_mode = 2

@@ -180,7 +180,7 @@
     "structure_type": "tavern",
     "city_spawn_weight": 5,
     "city_zone_min": 0.0,
-    "city_zone_max": 0.3
+    "city_zone_max": 0.45
   },
   {
     "id": "adventurer_guild",
@@ -189,7 +189,16 @@
     "structure_type": "adventurer_guild",
     "city_spawn_weight": 3,
     "city_zone_min": 0.0,
-    "city_zone_max": 0.3
+    "city_zone_max": 0.45
+  },
+  {
+    "id": "church",
+    "atlas": [ 35, 2 ],
+    "tile_group": "grass_dirt",
+    "city_spawn_weight": 1,
+    "city_zone_min": 0.0,
+    "city_zone_max": 0.45,
+    "structure_type": "church"
   },
   {
     "id": "palace",
@@ -228,6 +237,6 @@
   {
     "id": "dungeon",
     "atlas": [ 72, 18 ],
-    "tile_group": "dungeon_floor"
+    "tile_group": "stone_brick_floor"
   }
 ]

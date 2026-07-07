@@ -151,5 +151,15 @@
       { "none": true, "weight": 2 },
       { "item_id": "plate", "weight": 1, "amount_min": 1, "amount_max": 1 }
     ]
+  },
+  {
+    "id": "faith_drops",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "faith_book", "weight": 50, "amount_min": 1, "amount_max": 1 },
+      { "none": true, "weight": 50 },
+      { "item_id": "faith_necklace", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
   }
 ]

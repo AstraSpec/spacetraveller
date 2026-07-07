@@ -22,6 +22,20 @@
     ]
   },
   {
+    "id": "priest_quest_targets",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "candle", "weight": 25 },
+      { "item_id": "honey", "weight": 20 },
+      { "item_id": "bread", "weight": 20 },
+      { "item_id": "cloth_scrap", "weight": 15 },
+      { "item_id": "golden_coin", "weight": 10 },
+      { "item_id": "faith_book", "weight": 5 },
+      { "item_id": "faith_necklace", "weight": 5 }
+    ]
+  },
+  {
     "id": "generic_quest_targets",
     "rolls_min": 1,
     "rolls_max": 1,

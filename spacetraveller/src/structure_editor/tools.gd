@@ -197,7 +197,7 @@ class ShapeTool extends Tool:
 class EyedropperTool extends Tool:
 	func get_cursor_id(): return "eyedropper"
 
-	func on_press(btn: String, pos: Vector2i):
+	func on_press(_btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var base_type: String = editor._content_type_for_tab(editor.ContentTabs.current_tab) if editor.ContentTabs else "tile"
 		editor.select_editor_content_at(pos, true, base_type)

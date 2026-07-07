@@ -78,14 +78,14 @@ private:
     uint16_t id_dirt = 0;
     uint16_t id_crypt_entrance = 0;
     uint16_t id_dungeon = 0;
-    uint16_t id_dungeon_floor = 0;
-    uint16_t id_dungeon_wall = 0;
+    uint16_t id_stone_brick_floor = 0;
+    uint16_t id_stone_brick_wall = 0;
     uint16_t id_dungeon_door = 0;
     uint16_t id_spider_eggs = 0;
-    uint16_t id_dungeon_wall_web = 0;
-    uint16_t id_dungeon_wall_web_thick = 0;
-    uint16_t id_dungeon_floor_web = 0;
-    uint16_t id_dungeon_floor_web_thick = 0;
+    uint16_t id_stone_brick_wall_web = 0;
+    uint16_t id_stone_brick_wall_web_thick = 0;
+    uint16_t id_stone_brick_floor_web = 0;
+    uint16_t id_stone_brick_floor_web_thick = 0;
     uint16_t tag_road = 0;
 
     std::unordered_map<uint64_t, DungeonLayout> dungeon_layout_cache;
@@ -196,7 +196,7 @@ public:
     DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
     SurfaceFeatureContext get_surface_feature_context(int x, int y, int z, int world_seed);
     String get_dungeon_type_for_cell(int x, int y, int z, int world_seed);
-    bool is_dungeon_floor_loot_candidate(int x, int y, int z, int world_seed);
+    bool is_stone_brick_floor_loot_candidate(int x, int y, int z, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t hash);

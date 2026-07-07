@@ -168,5 +168,22 @@
         "armor": 0.0
       }
     ]
+  },
+  {
+    "id": "faith_necklace",
+    "name": "Faith Necklace",
+    "description": "A shiny necklace that shows your faith.",
+    "type": "clothing",
+    "price": 500,
+    "atlas": [ 37, 23 ],
+    "weight": 0.02,
+    "tags": ["WEARABLE"],
+    "clothing": [
+      {
+        "part": "neck",
+        "layer": "outer",
+        "armor": 0.0
+      }
+    ]
   }
 ]

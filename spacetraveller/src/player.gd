@@ -7,7 +7,7 @@ signal moved_chunk(chunkPos :Vector2)
 @export var Camera :Camera2D
 @export var World : GameWorld
 @export var PathfindingTimer :Timer
-@export var ConfirmationPopup :Window
+@export var _ConfirmationPopup :Window
 
 var CHUNK_SIZE = GameWorld.get_chunk_size()
 
@@ -177,7 +177,7 @@ func _submit_move(dir: Vector2) -> bool:
 	if World.would_player_move_fall(target.x, target.y):
 		PathfindingTimer.stop()
 		_clear_path()
-		ConfirmationPopup.show_confirm(
+		_ConfirmationPopup.show_confirm(
 			"Jump off this ledge?",
 			[
 				{"label": "No"},

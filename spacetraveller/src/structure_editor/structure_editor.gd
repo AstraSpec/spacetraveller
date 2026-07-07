@@ -1183,8 +1183,8 @@ func select_editor_content_at(editor_pos: Vector2i, is_primary: bool = true, typ
 		if !lt.is_empty():
 			select_entry(lt, "loot_table", is_primary)
 			return true
-		var contents := get_editor_contents_at(editor_pos)
-		return _select_content_value("item", _content_value_from_contents(contents, "item"), is_primary)
+		var _contents := get_editor_contents_at(editor_pos)
+		return _select_content_value("item", _content_value_from_contents(_contents, "item"), is_primary)
 	if type_filter == "npc":
 		if !World or !is_inside_bubble(editor_pos):
 			return false
@@ -1193,8 +1193,8 @@ func select_editor_content_at(editor_pos: Vector2i, is_primary: bool = true, typ
 		if !eg.is_empty():
 			select_entry(eg, "entity_group", is_primary)
 			return true
-		var contents := get_editor_contents_at(editor_pos)
-		return _select_content_value("npc", _content_value_from_contents(contents, "npc"), is_primary)
+		var _contents := get_editor_contents_at(editor_pos)
+		return _select_content_value("npc", _content_value_from_contents(_contents, "npc"), is_primary)
 
 	var contents := get_editor_contents_at(editor_pos)
 	if contents.is_empty():

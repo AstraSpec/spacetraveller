@@ -1,0 +1,11 @@
+{
+  "id": "guard_church",
+  "priority": 140,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "\"The sanctum is under my protection.\"",
+      "options": []
+    }
+  }
+}

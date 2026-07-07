@@ -5,8 +5,8 @@
             "-1": {
                 "blueprint": "(25x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 10x1, 2x2, 10x1, 2x0, 22x1, 2x0, 22x1, 2x0, 7x1, 1x2, 2x1, 2x3, 2x1, 1x2, 7x1, 2x0, 7x1, 1x2, 2x1, 2x3, 2x1, 1x2, 7x1, 2x0, 22x1, 2x0, 22x1, 2x0, 10x1, 2x2, 10x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 2x0, 22x1, 25x0)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "stairs_down"},
                     {"tile": "stairs_up"}
                 ]
@@ -15,7 +15,7 @@
                 "blueprint": "(175x0, 10x1, 14x0, 4x1, 2x2, 4x1, 14x0, 10x1, 14x0, 10x1, 14x0, 1x1, 1x2, 6x1, 1x2, 1x1, 14x0, 1x1, 1x2, 6x1, 1x2, 1x1, 14x0, 10x1, 14x0, 10x1, 14x0, 4x1, 2x2, 4x1, 14x0, 10x1, 175x0)",
                 "palette": [
                     {"tile": "void"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "stairs_up"}
                 ]
             },
@@ -23,8 +23,8 @@
                 "blueprint": "(25x0, 3x1, 16x0, 3x1, 2x0, 9x1, 4x2, 9x1, 2x0, 3x1, 16x2, 3x1, 3x0, 1x1, 18x2, 1x1, 4x0, 1x1, 5x2, 8x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 2x2, 1x1, 2x2, 3x1, 2x2, 3x1, 2x2, 1x1, 2x2, 1x1, 4x0, 1x1, 2x2, 1x1, 2x2, 1x1, 6x2, 1x1, 2x2, 1x1, 2x2, 1x1, 4x0, 3x2, 1x1, 2x2, 1x1, 6x2, 1x1, 2x2, 1x1, 3x2, 4x0, 3x2, 1x1, 5x2, 2x3, 5x2, 1x1, 3x2, 4x0, 3x2, 1x1, 5x2, 2x3, 5x2, 1x1, 3x2, 4x0, 3x2, 1x1, 2x2, 1x1, 6x2, 1x1, 2x2, 1x1, 3x2, 4x0, 1x1, 2x2, 1x1, 2x2, 1x1, 6x2, 1x1, 2x2, 1x1, 2x2, 1x1, 4x0, 1x1, 2x2, 1x1, 2x2, 3x1, 2x2, 3x1, 2x2, 1x1, 2x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 5x2, 8x1, 5x2, 1x1, 4x0, 1x1, 18x2, 1x1, 3x0, 3x1, 16x2, 3x1, 2x0, 9x1, 4x2, 9x1, 2x0, 3x1, 16x0, 3x1, 25x0)",
                 "palette": [
                     {"tile": "void"},
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "stairs_down"}
                 ]
             }
@@ -49,8 +49,8 @@
             "0": {
                 "blueprint": "(9x0, 6x1, 2x0, 1x1, 1x2, 2x3, 1x2, 1x1, 2x0, 1x1, 1x2, 2x3, 1x2, 1x1, 2x0, 1x1, 1x2, 2x3, 1x2, 1x1, 2x0, 6x1, 9x0)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "chair"},
                     {"tile": "table"}
                 ]
@@ -74,9 +74,9 @@
             "0": {
                 "blueprint": "(11x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 7x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 7x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 1x0, 1x2, 3x4, 1x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 1x2, 3x5, 1x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 5x2, 1x3, 1x2, 1x3, 1x2, 1x0, 13x1, 1x0, 9x2, 1x0, 13x1, 11x0, 277x1)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
+                    {"tile": "stone_brick_wall"},
                     {"tile": "void"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "bookcase"},
                     {"tile": "table"},
                     {"tile": "chair"}
@@ -101,8 +101,8 @@
             "0": {
                 "blueprint": "(12x0, 9x1, 2x0, 9x1, 2x0, 9x2, 2x0, 9x1, 2x0, 9x1, 2x0, 9x1, 2x0, 9x2, 2x0, 9x1, 2x0, 9x1, 12x0)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "iron_bars"}
                 ],
                 "rules": [
@@ -143,9 +143,9 @@
             "0": {
                 "blueprint": "(8x0, 5x1, 2x0, 1x1, 4x2, 2x0, 1x1, 4x2, 2x0, 1x1, 2x2, 2x1, 2x0, 1x1, 2x2, 1x1, 8x0, 1x3)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
+                    {"tile": "stone_brick_wall"},
                     {"tile": "coffin"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "void"}
                 ]
             }
@@ -168,7 +168,7 @@
                 "blueprint": "(4x0, 13x1, 8x0, 1x1, 11x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 4x2, 1x4, 1x5, 1x4, 4x2, 1x1, 8x0, 1x1, 1x2, 1x3, 2x2, 3x4, 2x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 1x2, 1x3, 3x2, 1x4, 3x2, 1x3, 1x2, 1x1, 8x0, 1x1, 5x2, 1x4, 5x2, 1x1, 8x0, 1x1, 3x2, 1x6, 1x2, 1x4, 1x2, 1x6, 3x2, 1x1, 4x0, 5x1, 1x2, 1x1, 3x2, 1x4, 3x2, 1x1, 1x2, 3x1, 2x0, 1x1, 1x7, 1x1, 3x2, 1x1, 1x2, 1x6, 1x2, 1x4, 1x2, 1x6, 1x2, 1x1, 3x2, 1x1, 2x0, 1x1, 1x2, 1x8, 1x2, 3x1, 3x2, 1x4, 3x2, 3x1, 1x2, 1x1, 2x0, 1x1, 1x7, 1x1, 5x2, 1x6, 1x2, 1x4, 1x2, 1x6, 5x2, 1x1, 2x0, 3x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 3x1, 2x0, 1x1, 3x2, 1x3, 1x2, 1x3, 1x2, 1x9, 1x2, 1x3, 1x2, 1x3, 3x2, 1x1, 1x7, 1x1, 2x0, 1x1, 1x2, 1x1, 5x2, 1x9, 5x2, 1x1, 1x2, 1x8, 1x2, 1x1, 2x0, 1x1, 7x2, 1x9, 7x2, 1x1, 1x7, 1x1, 2x0, 19x1)",
                 "palette": [
                     {"tile": "void"},
-                    {"tile": "dungeon_wall"},
+                    {"tile": "stone_brick_wall"},
                     {"tile": "alley_bricks"},
                     {"tile": "candelabra"},
                     {"tile": "grass"},
@@ -201,8 +201,8 @@
                 "blueprint": "(5x0, 5x1, 10x0, 1x1, 3x2, 1x1, 10x0, 1x1, 3x2, 1x1, 8x0, 3x1, 3x2, 3x1, 6x0, 1x1, 7x2, 1x1, 3x0, 4x1, 7x2, 5x1, 13x2, 2x1, 13x2, 2x1, 13x2, 5x1, 7x2, 4x1, 3x0, 1x1, 7x2, 1x1, 6x0, 3x1, 3x2, 3x1, 8x0, 1x1, 3x2, 1x1, 10x0, 1x1, 3x2, 1x1, 10x0, 5x1, 5x0)",
                 "palette": [
                     {"tile": "void"},
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"}
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"}
                 ]
             }
         },
@@ -227,8 +227,8 @@
                 "blueprint": "(3x0, 7x1, 4x0, 3x1, 5x2, 3x1, 2x0, 1x1, 9x2, 1x1, 1x0, 2x1, 9x2, 3x1, 11x2, 2x1, 11x2, 2x1, 11x2, 2x1, 11x2, 2x1, 11x2, 3x1, 9x2, 2x1, 1x0, 1x1, 9x2, 1x1, 2x0, 3x1, 5x2, 3x1, 4x0, 7x1, 3x0)",
                 "palette": [
                     {"tile": "void"},
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"}
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"}
                 ]
             }
         },
@@ -252,8 +252,8 @@
             "0": {
                 "blueprint": "(10x0, 7x1, 2x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 2x1, 3x3, 2x1, 2x0, 2x1, 1x3, 1x4, 1x3, 2x1, 2x0, 2x1, 3x3, 2x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 7x1, 10x0)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "skull_pike"},
                     {"tile": "w_floor"},
                     {"tile": "chest"}
@@ -277,8 +277,8 @@
             "0": {
                 "blueprint": "(10x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 1x1, 1x2, 3x1, 1x2, 1x1, 2x0, 7x1, 2x0, 1x1, 5x3, 1x1, 2x0, 1x1, 1x3, 3x1, 1x3, 1x1, 2x0, 1x1, 1x3, 3x1, 1x3, 1x1, 2x0, 1x1, 1x3, 1x1, 1x4, 1x1, 1x3, 1x1, 10x0)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "candelabra"},
                     {"tile": "iron_bars"},
                     {"tile": "chest"}
@@ -304,8 +304,8 @@
             "0": {
                 "blueprint": "(9x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 2x0, 6x1, 9x0, 1x2, 1x3, 3x4, 1x5, 1x6, 2x2, 1x7, 4x4, 1x6, 2x2, 4x4, 1x8, 1x9, 1x2, 16x10)",
                 "palette": [
-                    {"tile": "dungeon_wall"},
-                    {"tile": "dungeon_floor"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "stone_brick_floor"},
                     {"tile": "w_wall"},
                     {"tile": "wardrobe"},
                     {"tile": "w_floor"},

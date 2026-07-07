@@ -37,9 +37,17 @@
   },
   "guard": {
     "display_name": "Guard",
-    "dialogues": ["default_stranger"],
+    "dialogues": ["guard"],
     "default_attitude": "neutral",
-    "default_ai_state": "wander",
+    "default_ai_state": "idle",
+    "atlas_offset": 17,
+    "traits": []
+  },
+  "guard_church": {
+    "display_name": "Church Guard",
+    "dialogues": ["guard_church"],
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
     "atlas_offset": 17,
     "traits": []
   },
@@ -49,6 +57,37 @@
     "default_attitude": "neutral",
     "default_ai_state": "wander",
     "traits": []
+  },
+  "priest": {
+    "display_name": "Priest",
+    "dialogues": ["priest"],
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "atlas_offset": 79,
+    "traits": [],
+    "quest_kinds": ["priest_gather"],
+    "quest_loot_tables": {
+      "targets": "priest_quest_targets",
+      "rewards": "priest_quest_rewards"
+    }
+  },
+  "merchant_church": {
+    "display_name": "Faith Merchant",
+    "dialogues": ["merchant_church"],
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "atlas_offset": 79,
+    "traits": [],
+    "vendor_loot_table": "merchant_church_stock"
+  },
+  "church_offering": {
+    "display_name": "Church Offering",
+    "dialogues": ["church_offering"],
+    "default_attitude": "neutral",
+    "default_ai_state": "idle",
+    "atlas_offset": 79,
+    "traits": [],
+    "vendor_loot_table": "offering_vendor_stock"
   },
   "merchant_fruit_veg": {
     "display_name": "Fruit and Veg Merchant",

@@ -135,5 +135,24 @@
       { "item_id": "blueberries", "weight": 12, "amount_min": 1, "amount_max": 6 },
       { "item_id": "mushroom", "weight": 16, "amount_min": 1, "amount_max": 6 }
     ]
+  },
+  {
+    "id": "merchant_church_stock",
+    "rolls_min": 3,
+    "rolls_max": 3,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "faith_necklace", "weight": 1, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "faith_book", "weight": 1, "amount_min": 2, "amount_max": 4 },
+      { "item_id": "candle", "weight": 1, "amount_min": 2, "amount_max": 5 }
+    ]
+  },
+  {
+    "id": "offering_vendor_stock",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "candle", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
   }
 ]

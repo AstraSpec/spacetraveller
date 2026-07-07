@@ -1,0 +1,11 @@
+{
+  "id": "guard",
+  "priority": 140,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "\"Keep moving.\"",
+      "options": []
+    }
+  }
+}

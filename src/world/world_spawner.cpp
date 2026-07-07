@@ -411,8 +411,8 @@ static bool apply_webbed_floor_spider_spawn(
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (!id_reg) return false;
 
-    const uint16_t web_floor_id = id_reg->get_id("dungeon_floor_web");
-    const uint16_t thick_web_floor_id = id_reg->get_id("dungeon_floor_web_thick");
+    const uint16_t web_floor_id = id_reg->get_id("stone_brick_floor_web");
+    const uint16_t thick_web_floor_id = id_reg->get_id("stone_brick_floor_web_thick");
     if (p_tile_id != web_floor_id && p_tile_id != thick_web_floor_id) return false;
     if (p_bubble.get_entity_at(p_pos.x, p_pos.y) != nullptr) return false;
     if (p_entity_archive.has_frozen_entity(WorldCoords::pack_coords_3d(p_pos.x, p_pos.y, p_pos3.z))) return false;

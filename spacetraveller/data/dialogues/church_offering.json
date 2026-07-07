@@ -1,0 +1,21 @@
+{
+  "id": "church_offering",
+  "priority": 140,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "\"The church accepts all offerings. Place what you wish to give, and take what blessings you need.\"",
+      "options": [
+        {
+          "text": "I have something to offer.",
+          "next": "post_offering",
+          "effects": { "open_tab": "Barter" }
+        }
+      ]
+    },
+    "post_offering": {
+      "npc": "\"Your generosity is noted.\"",
+      "options": []
+    }
+  }
+}

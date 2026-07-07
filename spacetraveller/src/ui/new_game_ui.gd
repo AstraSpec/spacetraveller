@@ -3,7 +3,7 @@ extends BaseWindow
 @export var tabs: TabContainer
 @export var start_button: Button
 @export var cancel_button: Button
-@export var ConfirmationPopup :Window
+@export var _ConfirmationPopup :Window
 
 var current_tab: BaseListTab
 
@@ -81,7 +81,7 @@ func _on_start_pressed() -> void:
 	if _get_selected_scenario_id().is_empty():
 		return
 
-	ConfirmationPopup.show_confirm("Start this game?", [
+	_ConfirmationPopup.show_confirm("Start this game?", [
 		{"label": "No"},
 		{"label": "Yes", "callback": Callable(self, "_confirm_start_game")},
 	])

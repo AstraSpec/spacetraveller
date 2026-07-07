@@ -371,8 +371,8 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "equipment_market"
     },
@@ -396,5 +396,204 @@
             24.0
         ],
         "type": "food_market"
+    },
+    {
+        "id": "church",
+        "levels": {
+            "-1": {
+                "blueprint": "(55x0, 10x1, 14x0, 1x1, 1x2, 2x3, 2x1, 2x3, 1x2, 1x1, 9x0, 6x1, 3x3, 2x1, 3x3, 6x1, 4x0, 1x1, 1x2, 2x3, 1x4, 1x1, 3x5, 2x1, 3x5, 1x1, 1x4, 2x3, 1x2, 1x1, 4x0, 1x1, 4x3, 1x6, 8x3, 1x6, 4x3, 1x1, 4x0, 1x1, 4x3, 1x6, 8x3, 1x6, 4x3, 1x1, 4x0, 1x1, 4x3, 1x6, 8x3, 1x6, 4x3, 1x1, 4x0, 1x1, 4x3, 10x1, 4x3, 1x1, 4x0, 1x1, 1x7, 3x3, 1x1, 1x8, 1x3, 1x9, 1x1, 1x10, 3x11, 1x12, 3x3, 1x7, 1x1, 4x0, 1x1, 4x3, 1x1, 3x3, 1x1, 4x11, 1x13, 4x3, 1x1, 4x0, 1x1, 8x3, 1x1, 1x14, 3x11, 1x12, 4x3, 1x1, 4x0, 1x1, 4x3, 10x1, 4x3, 1x1, 4x0, 1x1, 1x7, 3x3, 1x1, 1x8, 1x3, 1x9, 1x1, 1x10, 3x11, 1x12, 3x3, 1x7, 1x1, 4x0, 1x1, 4x3, 1x1, 3x3, 1x1, 4x11, 1x13, 4x3, 1x1, 4x0, 1x1, 8x3, 1x1, 1x14, 3x11, 1x12, 4x3, 1x1, 4x0, 1x1, 4x3, 10x1, 4x3, 1x1, 4x0, 1x1, 1x7, 3x3, 1x1, 1x8, 1x3, 1x9, 1x1, 1x10, 3x11, 1x12, 3x3, 1x7, 1x1, 4x0, 1x1, 4x3, 1x1, 3x3, 1x1, 4x11, 1x13, 4x3, 1x1, 4x0, 1x1, 8x3, 1x1, 1x14, 3x11, 1x12, 4x3, 1x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "candelabra"},
+                    {"tile": "w_floor"},
+                    {"tile": "stairs_up"},
+                    {"tile": "bar"},
+                    {"tile": "beaded_curtain_c"},
+                    {"tile": "brazier"},
+                    {"tile": "table"},
+                    {"tile": "bed"},
+                    {"tile": "bed_frame_iron"},
+                    {"tile": "stone_brick_floor"},
+                    {"tile": "iron_bars"},
+                    {"tile": "iron_gate"},
+                    {"tile": "toilet"}
+                ],
+                "rules": [
+                    {
+                        "dialogue_id": "church_offering",
+                        "entity": "human",
+                        "job": "church_offering",
+                        "pos": [
+                            14,
+                            4
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            17,
+                            9
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            6,
+                            9
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "merchant_church",
+                        "entity": "human",
+                        "job": "merchant_church",
+                        "pos": [
+                            9,
+                            4
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "faith_drops",
+                        "pos": [
+                            8,
+                            10
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "faith_drops",
+                        "pos": [
+                            8,
+                            14
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "faith_drops",
+                        "pos": [
+                            8,
+                            18
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "entity_group": "prisoner",
+                        "pos": [
+                            12,
+                            11
+                        ],
+                        "type": "spawn_entity_group"
+                    },
+                    {
+                        "entity_group": "prisoner",
+                        "pos": [
+                            12,
+                            15
+                        ],
+                        "type": "spawn_entity_group"
+                    },
+                    {
+                        "entity_group": "prisoner",
+                        "pos": [
+                            12,
+                            19
+                        ],
+                        "type": "spawn_entity_group"
+                    }
+                ]
+            },
+            "0": {
+                "blueprint": "(55x0, 10x1, 14x0, 1x1, 1x2, 1x3, 1x4, 2x5, 1x4, 1x3, 1x2, 1x1, 12x0, 3x1, 8x3, 3x1, 10x0, 1x1, 1x6, 1x1, 8x3, 1x1, 1x6, 1x1, 7x0, 2x1, 1x7, 1x1, 1x8, 1x1, 1x9, 2x3, 2x10, 2x3, 1x9, 1x1, 1x8, 1x1, 1x7, 2x1, 4x0, 1x1, 1x2, 3x11, 10x3, 3x11, 1x2, 1x1, 4x0, 1x1, 4x11, 10x3, 4x11, 1x1, 4x0, 1x12, 7x11, 4x13, 7x11, 1x12, 4x0, 1x12, 1x11, 5x14, 1x11, 4x13, 1x11, 5x14, 1x11, 1x12, 4x0, 1x12, 7x11, 4x13, 7x11, 1x12, 4x0, 1x12, 1x11, 5x14, 1x11, 4x13, 1x11, 5x14, 1x11, 1x12, 4x0, 1x1, 7x11, 4x13, 7x11, 1x1, 4x0, 1x1, 1x11, 5x14, 1x11, 4x13, 1x11, 5x14, 1x11, 1x1, 4x0, 1x12, 7x11, 4x13, 7x11, 1x12, 4x0, 1x12, 1x11, 5x14, 1x11, 4x13, 1x11, 5x14, 1x11, 1x12, 4x0, 1x12, 7x11, 4x13, 7x11, 1x12, 4x0, 1x12, 7x11, 4x13, 7x11, 1x12, 4x0, 1x1, 7x11, 4x13, 7x11, 1x1, 4x0, 1x1, 1x2, 2x11, 1x5, 3x11, 4x13, 3x11, 1x5, 2x11, 1x2, 1x1, 4x0, 9x1, 2x8, 9x1, 50x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "candelabra"},
+                    {"tile": "stone_brick_floor"},
+                    {"tile": "church_cross"},
+                    {"tile": "banner_church"},
+                    {"tile": "stairs_down"},
+                    {"tile_group": "window"},
+                    {"tile": "w_door_c"},
+                    {"tile": "pillar"},
+                    {"tile": "church_altar"},
+                    {"tile": "w_floor"},
+                    {"tile": "stained_window"},
+                    {"tile": "carpet_red"},
+                    {"tile": "chair"}
+                ],
+                "rules": [
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            10,
+                            20
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "priest",
+                        "entity": "human",
+                        "job": "priest",
+                        "pos": [
+                            12,
+                            5
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            13,
+                            20
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            16,
+                            7
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "dialogue_id": "guard_church",
+                        "entity": "human",
+                        "job": "guard_church",
+                        "pos": [
+                            7,
+                            7
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
+            },
+            "1": {
+                "blueprint": "(55x0, 10x1, 14x0, 10x1, 12x0, 14x1, 10x0, 14x1, 7x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_roof"}
+                ]
+            }
+        },
+        "size": [
+            24,
+            24
+        ],
+        "type": "church"
     }
 ]
