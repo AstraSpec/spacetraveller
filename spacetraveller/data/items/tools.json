@@ -1,42 +1,42 @@
 [
   {
-    "id": "stone_knife",
-    "name": "Stone Knife",
-    "description": "A sharp stone tool perfect for cutting and crafting.",
-    "type": "tool",
-    "price": 90,
-    "atlas": [ 7, 21 ],
-    "weight": 0.4,
-    "tags": []
+	"id": "stone_knife",
+	"name": "Stone Knife",
+	"description": "A sharp stone tool perfect for cutting and crafting.",
+	"type": "tool",
+	"price": 90,
+	"atlas": [ 7, 21 ],
+	"weight": 0.4,
+	"tags": []
   },
   {
-    "id": "stone_axe",
-    "name": "Stone Axe",
-    "description": "A stone head lashed to a handle, useful for chopping wood.",
-    "type": "tool",
-    "price": 140,
-    "atlas": [ 7, 21 ],
-    "weight": 0.4,
-    "tags": []
+	"id": "stone_axe",
+	"name": "Stone Axe",
+	"description": "A stone head lashed to a handle, useful for chopping wood.",
+	"type": "tool",
+	"price": 140,
+	"atlas": [ 7, 21 ],
+	"weight": 0.4,
+	"tags": []
   },
   {
-    "id": "crude_hammer",
-    "name": "Crude Hammer",
-    "description": "A basic hammer used for simple clobbering.",
-    "type": "tool",
-    "price": 260,
-    "atlas": [ 7, 21 ],
-    "weight": 0.4,
-    "tags": []
+	"id": "crude_hammer",
+	"name": "Crude Hammer",
+	"description": "A basic hammer used for simple clobbering.",
+	"type": "tool",
+	"price": 260,
+	"atlas": [ 7, 21 ],
+	"weight": 0.4,
+	"tags": []
   },
   {
-    "id": "pickaxe",
-    "name": "Pickaxe",
-    "description": "",
-    "type": "tool",
-    "price": 850,
-    "atlas": [ 1, 31 ],
-    "weight": 1.6,
-    "tags": []
+	"id": "pickaxe",
+	"name": "Pickaxe",
+	"description": "",
+	"type": "tool",
+	"price": 850,
+	"atlas": [ 1, 31 ],
+	"weight": 1.6,
+	"tags": []
   }
 ]

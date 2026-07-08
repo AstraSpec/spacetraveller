@@ -3,7 +3,7 @@
     "id": "roadside_features",
     "type": "structure_stamp",
     "entries": [
-      { "structure": "horse_carriage", "weight": 10 },
+      { "structure": "horse_carriage", "weight": 30 },
       { "structure": "horse_carriage_prison", "weight": 1 }
     ]
   },

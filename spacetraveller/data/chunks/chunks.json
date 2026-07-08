@@ -201,6 +201,13 @@
     "structure_type": "church"
   },
   {
+    "id": "graveyard",
+    "atlas": [ 5, 39 ],
+    "tile_group": "grass_dirt",
+    "city_spawn_weight": 1,
+    "structure_type": "graveyard"
+  },
+  {
     "id": "palace",
     "atlas": [ 32, 2 ],
     "tile_group": "palace_floor"

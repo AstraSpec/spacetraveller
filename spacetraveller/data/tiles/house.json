@@ -163,5 +163,13 @@
     "atlas": [ 31, 20 ],
     "solid": true,
     "tags": ["TRANSPARENT"]
+  },
+  {
+    "id": "w_fence",
+    "name": "Wooden Fence",
+    "atlas": [ 8, 40 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   }
 ]

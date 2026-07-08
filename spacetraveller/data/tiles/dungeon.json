@@ -101,5 +101,20 @@
     "atlas": [ 40, 23 ],
     "solid": false,
     "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "gravestone",
+    "name": "Gravestone",
+    "atlas": [ [ 5, 39 ], [ 6, 39 ], [ 7, 39 ], [ 8, 39 ] ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
+  },
+  {
+    "id": "upturned_dirt",
+    "name": "Upturned Dirt",
+    "atlas": [ 11, 39 ],
+    "solid": false,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "dirt_smashed"
   }
 ]

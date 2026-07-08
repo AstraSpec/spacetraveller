@@ -425,8 +425,8 @@
                         "entity": "human",
                         "job": "church_offering",
                         "pos": [
-                            14,
-                            4
+                            14.0,
+                            4.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -435,8 +435,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            17,
-                            9
+                            17.0,
+                            9.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -445,8 +445,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            6,
-                            9
+                            6.0,
+                            9.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -455,56 +455,56 @@
                         "entity": "human",
                         "job": "merchant_church",
                         "pos": [
-                            9,
-                            4
+                            9.0,
+                            4.0
                         ],
                         "type": "spawn_entity"
                     },
                     {
                         "loot_table": "faith_drops",
                         "pos": [
-                            8,
-                            10
+                            8.0,
+                            10.0
                         ],
                         "type": "spawn_loot_table"
                     },
                     {
                         "loot_table": "faith_drops",
                         "pos": [
-                            8,
-                            14
+                            8.0,
+                            14.0
                         ],
                         "type": "spawn_loot_table"
                     },
                     {
                         "loot_table": "faith_drops",
                         "pos": [
-                            8,
-                            18
+                            8.0,
+                            18.0
                         ],
                         "type": "spawn_loot_table"
                     },
                     {
                         "entity_group": "prisoner",
                         "pos": [
-                            12,
-                            11
+                            12.0,
+                            11.0
                         ],
                         "type": "spawn_entity_group"
                     },
                     {
                         "entity_group": "prisoner",
                         "pos": [
-                            12,
-                            15
+                            12.0,
+                            15.0
                         ],
                         "type": "spawn_entity_group"
                     },
                     {
                         "entity_group": "prisoner",
                         "pos": [
-                            12,
-                            19
+                            12.0,
+                            19.0
                         ],
                         "type": "spawn_entity_group"
                     }
@@ -535,8 +535,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            10,
-                            20
+                            10.0,
+                            20.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -545,8 +545,8 @@
                         "entity": "human",
                         "job": "priest",
                         "pos": [
-                            12,
-                            5
+                            12.0,
+                            5.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -555,8 +555,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            13,
-                            20
+                            13.0,
+                            20.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -565,8 +565,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            16,
-                            7
+                            16.0,
+                            7.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -575,8 +575,8 @@
                         "entity": "human",
                         "job": "guard_church",
                         "pos": [
-                            7,
-                            7
+                            7.0,
+                            7.0
                         ],
                         "type": "spawn_entity"
                     }
@@ -591,9 +591,65 @@
             }
         },
         "size": [
+            24.0,
+            24.0
+        ],
+        "type": "church"
+    },
+    {
+        "id": "graveyard",
+        "levels": {
+            "-1": {
+                "blueprint": "(16x0, 7x1, 17x0, 1x1, 1x2, 1x3, 1x4, 1x3, 1x2, 1x1, 4x0, 6x1, 1x0, 7x1, 2x3, 1x5, 2x3, 1x1, 4x0, 1x1, 4x3, 1x1, 1x0, 1x1, 5x3, 1x1, 5x3, 1x1, 4x0, 1x1, 4x3, 1x1, 1x0, 1x1, 5x3, 1x1, 1x2, 1x6, 3x3, 1x1, 4x0, 1x1, 4x3, 1x1, 1x0, 1x1, 2x3, 1x1, 2x3, 4x1, 2x3, 1x1, 4x0, 1x1, 1x7, 3x3, 1x1, 1x0, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 4x0, 2x1, 2x3, 2x1, 1x0, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 5x0, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 4x1, 2x3, 1x1, 2x3, 1x1, 2x0, 4x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 5x3, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 2x3, 4x1, 2x3, 1x1, 5x3, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 8x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 8x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 5x1, 2x3, 3x1, 2x3, 4x1, 2x3, 1x1, 2x0, 1x1, 2x3, 5x1, 2x3, 1x1, 1x0, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 2x0, 1x1, 9x3, 1x1, 1x0, 1x1, 2x3, 1x1, 2x0, 1x1, 2x3, 1x1, 2x0, 1x1, 9x3, 3x1, 2x3, 4x1, 2x3, 1x1, 2x0, 4x1, 2x3, 2x1, 10x3, 1x1, 2x3, 1x1, 5x0, 1x1, 2x3, 2x1, 10x3, 1x1, 2x3, 1x1, 5x0, 1x1, 2x3, 5x1, 2x3, 3x1, 5x3, 1x1, 5x0, 1x1, 2x3, 5x1, 2x3, 1x1, 1x0, 1x1, 5x3, 1x1, 5x0, 1x1, 9x3, 1x1, 1x0, 7x1, 5x0, 1x1, 9x3, 1x1, 13x0, 11x1, 9x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "candelabra"},
+                    {"tile": "stone_brick_floor"},
+                    {"tile": "church_cross"},
+                    {"tile": "sarcophagus"},
+                    {"tile": "chest"},
+                    {"tile": "stairs_up"}
+                ]
+            },
+            "0": {
+                "blueprint": "(25x0, 12x1, 1x2, 2x1, 1x2, 1x1, 2x2, 3x1, 2x0, 2x1, 6x3, 1x1, 1x2, 1x4, 1x5, 1x4, 3x1, 3x5, 2x1, 1x2, 2x0, 2x1, 1x3, 4x6, 1x7, 2x1, 1x4, 1x5, 1x4, 1x1, 1x2, 1x1, 3x4, 1x2, 2x1, 2x0, 1x1, 1x8, 1x3, 1x9, 2x6, 1x10, 1x7, 14x1, 2x0, 1x1, 1x9, 1x3, 4x10, 1x7, 3x1, 8x11, 3x1, 2x0, 1x1, 1x9, 1x3, 1x12, 3x10, 1x13, 12x11, 2x1, 2x0, 2x1, 6x3, 1x1, 11x11, 2x1, 2x0, 10x1, 3x11, 5x1, 2x11, 2x1, 2x0, 10x1, 3x11, 1x1, 1x14, 1x1, 1x14, 1x1, 2x11, 2x1, 2x0, 5x1, 8x11, 1x1, 1x15, 1x1, 1x15, 1x1, 2x11, 2x1, 2x0, 1x1, 1x15, 1x14, 1x1, 9x11, 5x1, 2x11, 2x1, 2x0, 4x1, 9x11, 1x1, 1x15, 1x1, 1x15, 5x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 1x1, 1x14, 1x1, 1x14, 5x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 9x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 10x11, 2x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 10x11, 2x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 9x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 3x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 1x1, 1x15, 1x1, 1x15, 1x1, 1x15, 3x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 9x1, 2x0, 4x1, 2x11, 4x1, 3x11, 9x1, 2x0, 10x1, 3x11, 9x1, 11x0, 1x1, 3x11, 1x1, 9x0)",
+                "palette": [
+                    {"tile": "w_fence"},
+                    {"tile": "void"},
+                    {"tile": "flower"},
+                    {"tile": "stone_brick_wall"},
+                    {"tile": "chair"},
+                    {"tile": "table"},
+                    {"tile": "coffin"},
+                    {"tile": "iron_bars"},
+                    {"tile": "w_crate"},
+                    {"tile": "barrel"},
+                    {"tile": "stone_brick_floor"},
+                    {"tile": "dirt"},
+                    {"tile": "stairs_down"},
+                    {"tile": "iron_gate"},
+                    {"tile": "upturned_dirt"},
+                    {"tile": "gravestone"}
+                ],
+                "rules": [
+                    {
+                        "dialogue_id": "guard",
+                        "entity": "human",
+                        "job": "guard",
+                        "pos": [
+                            9,
+                            5
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
+            }
+        },
+        "size": [
             24,
             24
         ],
-        "type": "church"
+        "type": "graveyard"
     }
 ]
