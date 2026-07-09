@@ -90,6 +90,16 @@
     "tags": []
   },
   {
+    "id": "raw_meat",
+    "name": "Raw Meat",
+    "description": "A chunk of raw animal meat.",
+    "type": "food",
+    "price": 150,
+    "atlas": [ 0, 0 ],
+    "weight": 0.3,
+    "tags": []
+  },
+  {
     "id": "honey",
     "name": "Honey",
     "description": "A golden translucent honey.",

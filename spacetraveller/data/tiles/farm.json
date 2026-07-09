@@ -1,0 +1,37 @@
+[
+  {
+    "id": "crop_wheat",
+    "name": "Wheat Crop",
+    "atlas": [ [ 0, 24 ], [ 1, 24 ] ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "crop_grow",
+    "name": "Growing Crop",
+    "atlas": [ [ 5, 24 ], [ 6, 24 ] ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "crop_cabbage",
+    "name": "Cabbage Crop",
+    "atlas": [ 7, 24 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "crop_dead",
+    "name": "Dead Crop",
+    "atlas": [ 11, 24 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
+  },
+  {
+    "id": "haybale",
+    "name": "Cabbage Crop",
+    "atlas": [ 3, 24 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
+  }  
+]

@@ -26,6 +26,16 @@
     ]
   },
   {
+    "id": "pasture_animals",
+    "entries": [
+      { "entity": "horse", "weight": 1, "job": "animal" },
+      { "entity": "cow", "weight": 2, "job": "animal" },
+      { "entity": "sheep", "weight": 3, "job": "animal" },
+      { "entity": "pig", "weight": 2, "job": "animal" },
+      { "entity": "chicken", "weight": 4, "job": "animal" }
+    ]
+  },
+  {
     "id": "bear_cave_entities",
     "entries": [
       { "entity": "bear", "weight": 1, "job": "animal" }

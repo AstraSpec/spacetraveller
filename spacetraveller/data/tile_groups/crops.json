@@ -1,0 +1,23 @@
+[
+  {
+    "id": "crop_wheat",
+    "entries": [
+      { "tile": "crop_wheat", "weight": 99 },
+      { "tile": "crop_dead", "weight": 1 }
+    ]
+  },
+  {
+    "id": "crop_grow",
+    "entries": [
+      { "tile": "crop_grow", "weight": 99 },
+      { "tile": "crop_dead", "weight": 1 }
+    ]
+  },
+  {
+    "id": "crop_cabbage",
+    "entries": [
+      { "tile": "crop_cabbage", "weight": 99 },
+      { "tile": "crop_dead", "weight": 1 }
+    ]
+  }
+]

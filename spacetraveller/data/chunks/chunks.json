@@ -1,7 +1,7 @@
 [
   {
     "id": "forest",
-    "atlas": [ 0, 8 ],
+    "atlas": [ 0, 34 ],
     "tile_group": "forest_floor",
     "ambient_entity_group": "forest_animals",
     "ambient_entity_chance": 0.0006,
@@ -206,6 +206,14 @@
     "tile_group": "grass_dirt",
     "city_spawn_weight": 1,
     "structure_type": "graveyard"
+  },
+  {
+    "id": "farm",
+    "atlas": [ 6, 34 ],
+    "tile_group": "grass_dirt",
+    "city_spawn_weight": 30,
+    "city_zone_min": 0.7,
+    "structure_type": "farm"
   },
   {
     "id": "palace",

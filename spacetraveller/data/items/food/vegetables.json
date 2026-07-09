@@ -15,7 +15,7 @@
     "description": "An orange root vegetable.",
     "type": "food",
     "price": 200,
-    "atlas": [ 3, 16 ],
+    "atlas": [ 2, 17 ],
     "weight": 0.2,
     "tags": []
   },

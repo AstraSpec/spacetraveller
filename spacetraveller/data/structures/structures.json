@@ -638,8 +638,8 @@
                         "entity": "human",
                         "job": "guard",
                         "pos": [
-                            9,
-                            5
+                            9.0,
+                            5.0
                         ],
                         "type": "spawn_entity"
                     }
@@ -647,9 +647,9 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "graveyard"
-    }
+    },
 ]

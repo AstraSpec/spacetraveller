@@ -32,6 +32,55 @@
     ]
   },
   {
+    "id": "horse_death",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "entries": [
+      { "item_id": "raw_meat", "weight": 50, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "bone", "weight": 35, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "leather_scrap", "weight": 15, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "cow_death",
+    "rolls_min": 1,
+    "rolls_max": 3,
+    "entries": [
+      { "item_id": "raw_meat", "weight": 50, "amount_min": 2, "amount_max": 4 },
+      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "leather_scrap", "weight": 20, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "sheep_death",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "entries": [
+      { "item_id": "raw_meat", "weight": 40, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "cloth_scrap", "weight": 30, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "pig_death",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "entries": [
+      { "item_id": "raw_meat", "weight": 50, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "leather_scrap", "weight": 20, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "chicken_death",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "entries": [
+      { "item_id": "raw_meat", "weight": 60, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bone", "weight": 40, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
     "id": "pale_spider_death",
     "rolls_min": 1,
     "rolls_max": 2,

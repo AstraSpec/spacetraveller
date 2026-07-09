@@ -70,6 +70,56 @@
     "tags": ["ALWAYS_TOP"]
   },
   {
+    "id": "corpse_horse",
+    "name": "Horse Corpse",
+    "description": "The remains of a horse.",
+    "type": "misc",
+    "price": 200,
+    "atlas": [ 0, 0 ],
+    "weight": 100.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_cow",
+    "name": "Cow Corpse",
+    "description": "The remains of a cow.",
+    "type": "misc",
+    "price": 250,
+    "atlas": [ 0, 0 ],
+    "weight": 120.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_sheep",
+    "name": "Sheep Corpse",
+    "description": "The remains of a sheep.",
+    "type": "misc",
+    "price": 100,
+    "atlas": [ 0, 0 ],
+    "weight": 40.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_pig",
+    "name": "Pig Corpse",
+    "description": "The remains of a pig.",
+    "type": "misc",
+    "price": 120,
+    "atlas": [ 0, 0 ],
+    "weight": 50.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
+    "id": "corpse_chicken",
+    "name": "Chicken Corpse",
+    "description": "The remains of a chicken.",
+    "type": "misc",
+    "price": 30,
+    "atlas": [ 0, 0 ],
+    "weight": 2.0,
+    "tags": ["ALWAYS_TOP"]
+  },
+  {
     "id": "corpse_pale_spider",
     "name": "Pale Spider Corpse",
     "description": "The curled remains of a pale spider.",

@@ -1,0 +1,27 @@
+{
+  "id": "pig",
+  "name": "Pig",
+  "atlas": [2, 16],
+  "perception_tier": "raycast",
+  "base_hp": 60,
+  "speed": 0.8,
+  "base_damage": 3,
+  "base_stamina": 80,
+  "corpse_item": "",
+  "death_loot_table": "pig_death",
+  "combat_style": "default",
+  "faction": "enemy",
+  "traversal_profile": "walker",
+  "parts": [
+    { "id": "torso", "parent": "", "count": 1, "height": "MID" },
+    { "id": "head", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "neck", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "leg", "parent": "torso", "count": 4, "height": "LOW" },
+    { "id": "eye", "parent": "head", "count": 2, "height": "HIGH" },
+    { "id": "nose", "parent": "head", "count": 1, "height": "HIGH" },
+    { "id": "mouth", "parent": "head", "count": 1, "height": "HIGH" },
+    { "id": "ear", "parent": "head", "count": 2, "height": "HIGH" },
+    { "id": "paw", "parent": "leg", "count": 1, "height": "LOW" },
+    { "id": "tail", "parent": "torso", "count": 1, "height": "LOW" }
+  ]
+}
