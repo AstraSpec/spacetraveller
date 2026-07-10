@@ -9,7 +9,7 @@ static func save_structure(ID: String, RLE: Dictionary, filepath: String):
 	var found = false
 	for i in range(structures.size()):
 		if structures[i]["id"] == ID:
-			structures[i] = _preserve_rule_metadata(structures[i], RLE)
+			structures[i] = RLE.duplicate(true)
 			found = true
 			break
 	
@@ -18,40 +18,6 @@ static func save_structure(ID: String, RLE: Dictionary, filepath: String):
 		
 	_write_all(structures, filepath)
 	StructureDb.initialize_data()
-
-static func _preserve_rule_metadata(existing: Dictionary, replacement: Dictionary) -> Dictionary:
-	var merged: Dictionary = replacement.duplicate(true)
-	var existing_placement: Variant = existing.get("placement", {})
-	if existing_placement is Dictionary and !merged.has("placement"):
-		merged["placement"] = existing_placement.duplicate(true)
-	var existing_levels: Dictionary = _get_structure_levels(existing)
-	var merged_levels: Dictionary = _get_structure_levels(merged)
-	for key in existing_levels.keys():
-		if !merged_levels.has(key):
-			continue
-		var existing_level: Dictionary = existing_levels[key]
-		if !existing_level.has("rules"):
-			continue
-		var merged_level: Dictionary = merged_levels[key]
-		if !merged_level.has("rules"):
-			merged_level["rules"] = existing_level["rules"]
-			merged_levels[key] = merged_level
-	if !merged_levels.is_empty():
-		merged["levels"] = merged_levels
-	merged.erase("blueprint")
-	merged.erase("palette")
-	merged.erase("rules")
-	return merged
-
-static func _get_structure_levels(structure_data: Dictionary) -> Dictionary:
-	var result: Dictionary = {}
-	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
-		var raw_levels: Dictionary = structure_data["levels"]
-		for key in raw_levels.keys():
-			var level_data: Variant = raw_levels[key]
-			if level_data is Dictionary:
-				result[str(key)] = level_data.duplicate(true)
-	return result
 
 static func delete_structure(id: String, filepath: String = ""):
 	if filepath == "":

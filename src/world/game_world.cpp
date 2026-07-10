@@ -163,6 +163,7 @@ void GameWorld::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("generate_quest_offers", "giver_entity_id", "count"), &GameWorld::generate_quest_offers, DEFVAL(1));
     ClassDB::bind_method(D_METHOD("generate_quest_offer", "giver_entity_id", "kind"), &GameWorld::generate_quest_offer);
+    ClassDB::bind_method(D_METHOD("generate_story_quest_offer", "giver_entity_id", "kind"), &GameWorld::generate_story_quest_offer);
     ClassDB::bind_method(D_METHOD("accept_quest", "quest_id"), &GameWorld::accept_quest);
     ClassDB::bind_method(D_METHOD("decline_quest", "quest_id"), &GameWorld::decline_quest);
     ClassDB::bind_method(D_METHOD("can_complete_quest", "quest_id"), &GameWorld::can_complete_quest);
@@ -189,8 +190,20 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("teleport_player_to_chunk", "chunk_pos"), &GameWorld::teleport_player_to_chunk);
     ClassDB::bind_method(D_METHOD("would_player_move_fall", "target_x", "target_y"), &GameWorld::would_player_move_fall);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
+    ClassDB::bind_method(D_METHOD("submit_player_targeted_attack", "target_id", "ability_id", "body_part_index"), &GameWorld::submit_player_targeted_attack);
     ClassDB::bind_method(D_METHOD("can_change_z", "entity_id", "delta"), &GameWorld::can_change_z);
     ClassDB::bind_method(D_METHOD("submit_player_change_z", "delta"), &GameWorld::submit_player_change_z);
+    ClassDB::bind_method(D_METHOD("is_entity_hostile_to", "entity_id", "target_id"), &GameWorld::is_entity_hostile_to);
+    ClassDB::bind_method(D_METHOD("is_entity_hostile_to_player", "entity_id"), &GameWorld::is_entity_hostile_to_player);
+    ClassDB::bind_method(D_METHOD("can_interact_with_entity", "entity_id"), &GameWorld::can_interact_with_entity);
+    ClassDB::bind_method(D_METHOD("set_entity_relation", "entity_id", "target_id", "relation"), &GameWorld::set_entity_relation);
+    ClassDB::bind_method(D_METHOD("get_entity_relation", "entity_id", "target_id"), &GameWorld::get_entity_relation);
+    ClassDB::bind_method(D_METHOD("start_follow", "entity_id"), &GameWorld::start_follow);
+    ClassDB::bind_method(D_METHOD("set_entity_behavior", "entity_id", "state", "target_id"), &GameWorld::set_entity_behavior, DEFVAL(-1));
+    ClassDB::bind_method(D_METHOD("get_entity_behavior_state", "entity_id"), &GameWorld::get_entity_behavior_state);
+    ClassDB::bind_method(D_METHOD("get_entity_behavior_target", "entity_id"), &GameWorld::get_entity_behavior_target);
+    ClassDB::bind_method(D_METHOD("get_player_attack_options", "target_id"), &GameWorld::get_player_attack_options);
+    ClassDB::bind_method(D_METHOD("get_entity_targetable_body_parts", "entity_id"), &GameWorld::get_entity_targetable_body_parts);
 
     ADD_SIGNAL(MethodInfo("entity_moved",
         PropertyInfo(Variant::INT, "entity_id"),
@@ -481,6 +494,11 @@ Array GameWorld::generate_quest_offers(int giver_entity_id, int count) {
 Dictionary GameWorld::generate_quest_offer(int giver_entity_id, const String& kind) {
     if (!quest_tracker) return Dictionary();
     return quest_tracker->generate_offer((uint32_t)giver_entity_id, kind);
+}
+
+Dictionary GameWorld::generate_story_quest_offer(int giver_entity_id, const String& kind) {
+    if (!quest_tracker) return Dictionary();
+    return quest_tracker->generate_story_offer((uint32_t)giver_entity_id, kind);
 }
 
 bool GameWorld::accept_quest(const String& quest_id) {
@@ -847,6 +865,71 @@ bool GameWorld::wield_entity_weapon_by_string(uint32_t entity_id, const String& 
 
 float GameWorld::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
     return sim_director.submit_player_intent(intent_type, target_x, target_y, param);
+}
+
+float GameWorld::submit_player_targeted_attack(int target_id, const String& ability_id, int body_part_index) {
+    if (target_id < 0) return 0.0f;
+    return sim_director.submit_player_targeted_attack(
+        static_cast<uint32_t>(target_id),
+        ability_id,
+        body_part_index
+    );
+}
+
+bool GameWorld::is_entity_hostile_to(int entity_id, int target_id) const {
+    if (entity_id < 0 || target_id < 0) return false;
+    return sim_director.entity_is_hostile_to(static_cast<uint32_t>(entity_id), static_cast<uint32_t>(target_id));
+}
+
+bool GameWorld::is_entity_hostile_to_player(int entity_id) const {
+    return is_entity_hostile_to(entity_id, static_cast<int>(player_entity_id));
+}
+
+bool GameWorld::can_interact_with_entity(int entity_id) const {
+    if (entity_id < 0) return false;
+    return sim_director.can_interact_with_entity(static_cast<uint32_t>(entity_id));
+}
+
+bool GameWorld::set_entity_relation(int entity_id, int target_id, const String& relation) {
+    if (entity_id < 0 || target_id < 0) return false;
+    return sim_director.set_entity_relation(static_cast<uint32_t>(entity_id), static_cast<uint32_t>(target_id), relation);
+}
+
+String GameWorld::get_entity_relation(int entity_id, int target_id) const {
+    if (entity_id < 0 || target_id < 0) return "neutral";
+    return sim_director.get_entity_relation(static_cast<uint32_t>(entity_id), static_cast<uint32_t>(target_id));
+}
+
+bool GameWorld::start_follow(int entity_id) {
+    if (entity_id < 0) return false;
+    return sim_director.start_entity_follow(static_cast<uint32_t>(entity_id));
+}
+
+bool GameWorld::set_entity_behavior(int entity_id, const String& state, int target_id) {
+    if (entity_id < 0) return false;
+    const uint32_t target = target_id < 0 ? EntityPool::INVALID_ID : static_cast<uint32_t>(target_id);
+    return sim_director.set_entity_behavior(static_cast<uint32_t>(entity_id), state, target);
+}
+
+String GameWorld::get_entity_behavior_state(int entity_id) const {
+    if (entity_id < 0) return "";
+    return sim_director.get_entity_behavior_state(static_cast<uint32_t>(entity_id));
+}
+
+int GameWorld::get_entity_behavior_target(int entity_id) const {
+    if (entity_id < 0) return -1;
+    const uint32_t target = sim_director.get_entity_behavior_target(static_cast<uint32_t>(entity_id));
+    return target == EntityPool::INVALID_ID ? -1 : static_cast<int>(target);
+}
+
+Array GameWorld::get_player_attack_options(int target_id) {
+    if (target_id < 0) return Array();
+    return sim_director.get_player_attack_options(static_cast<uint32_t>(target_id));
+}
+
+Array GameWorld::get_entity_targetable_body_parts(int entity_id) const {
+    if (entity_id < 0) return Array();
+    return sim_director.get_entity_targetable_body_parts(static_cast<uint32_t>(entity_id));
 }
 
 bool GameWorld::can_change_z(uint32_t entity_id, int delta) {

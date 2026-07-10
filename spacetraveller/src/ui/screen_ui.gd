@@ -70,7 +70,7 @@ func _on_interact_event(entity_id: int, target_id: int) -> void:
 		return
 	if target_id == entity_id:
 		return
-	if not _GameWorld or not _GameWorld.entity_has_sapient(target_id):
+	if not _GameWorld or not _GameWorld.can_interact_with_entity(target_id):
 		return
 	if not DialogueService.has_dialogue_for(_GameWorld, target_id):
 		return
@@ -79,7 +79,11 @@ func _on_interact_event(entity_id: int, target_id: int) -> void:
 func _on_quest_completed(quest_id: String) -> void:
 	var q: Dictionary = QuestService.get_quest(quest_id)
 	var label := str(q.get("label", "quest"))
-	EventBus.post("quest", "Quest completed: %s" % label, {"quest_id": quest_id, "status": "completed"})
+	var message := "Quest completed: %s" % label
+	var next_giver := str(q.get("next_giver", ""))
+	if not next_giver.is_empty():
+		message += " Speak to %s next." % next_giver
+	EventBus.post("quest", message, {"quest_id": quest_id, "status": "completed", "next_giver": next_giver})
 
 func _on_quest_failed(quest_id: String) -> void:
 	var q: Dictionary = QuestService.get_quest(quest_id)

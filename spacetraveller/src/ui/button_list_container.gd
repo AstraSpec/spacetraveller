@@ -132,6 +132,13 @@ func _setup_button(btn: Control, index: int, item: Variant):
 		if c is Color:
 			btn.set_font_color(c)
 
+	if item is Dictionary and item.has("disabled"):
+		var disabled := bool(item.get("disabled", false))
+		if btn.has_method("set_disabled"):
+			btn.set_disabled(disabled)
+		elif btn is Button:
+			btn.disabled = disabled
+
 func _update_selection_visuals() -> void:
 	for i in range(buttons.size()):
 		var btn = buttons[i]

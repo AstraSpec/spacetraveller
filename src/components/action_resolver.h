@@ -22,6 +22,8 @@ struct Intent {
     Vector2i target;
     String param;
     int amount = 0;
+    String attack_ability;
+    int attack_body_part = -1;
 };
 
 enum class ActionFailure {

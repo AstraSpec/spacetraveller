@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_COMBAT_RESOLVER_H
 
 #include "core/rng.h"
+#include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/string.hpp>
 
 namespace godot {
@@ -30,6 +31,8 @@ struct CombatContext {
     float base_damage = 10.0f;
     const StyleInfo* style = nullptr;
     StaminaData* attacker_stamina = nullptr;
+    String forced_ability_id;
+    int forced_body_part_index = -1;
 };
 
 struct CombatOutcome {
@@ -38,6 +41,7 @@ struct CombatOutcome {
     bool crit = false;
     bool exhausted = false;
     bool no_limbs = false;
+    bool invalid_selection = false;
     float damage = 0.0f;
     float speed = 1.0f;
     String verb;
@@ -52,6 +56,7 @@ struct CombatOutcome {
 
 namespace CombatResolver {
     CombatOutcome resolve_attack(const CombatContext& ctx);
+    Array get_attack_options(const CombatContext& ctx);
 }
 
 }

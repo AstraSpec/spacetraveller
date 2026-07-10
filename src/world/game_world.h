@@ -133,6 +133,7 @@ public:
 
     Array generate_quest_offers(int giver_entity_id, int count);
     Dictionary generate_quest_offer(int giver_entity_id, const String& kind);
+    Dictionary generate_story_quest_offer(int giver_entity_id, const String& kind);
     bool  accept_quest(const String& quest_id);
     bool  decline_quest(const String& quest_id);
     bool  can_complete_quest(const String& quest_id) const;
@@ -164,8 +165,20 @@ public:
     bool teleport_player_to_chunk(const Vector2i& chunk_pos);
     bool would_player_move_fall(int target_x, int target_y);
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
+    float submit_player_targeted_attack(int target_id, const String& ability_id, int body_part_index);
     bool can_change_z(uint32_t entity_id, int delta);
     float submit_player_change_z(int delta);
+    bool is_entity_hostile_to(int entity_id, int target_id) const;
+    bool is_entity_hostile_to_player(int entity_id) const;
+    bool can_interact_with_entity(int entity_id) const;
+    bool set_entity_relation(int entity_id, int target_id, const String& relation);
+    String get_entity_relation(int entity_id, int target_id) const;
+    bool start_follow(int entity_id);
+    bool set_entity_behavior(int entity_id, const String& state, int target_id = -1);
+    String get_entity_behavior_state(int entity_id) const;
+    int get_entity_behavior_target(int entity_id) const;
+    Array get_player_attack_options(int target_id);
+    Array get_entity_targetable_body_parts(int entity_id) const;
 
     bool add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);

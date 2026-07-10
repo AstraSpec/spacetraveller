@@ -16,6 +16,7 @@ AbilityDb::~AbilityDb() {}
 
 AbilityInfo AbilityDb::_parse_row(const Dictionary &p_data) {
     AbilityInfo info;
+    info.id = p_data.get("id", "");
     info.name = p_data.get("name", "");
     info.verb = p_data.get("verb", "strike");
     info.damage_mult = static_cast<float>(static_cast<double>(p_data.get("damage_mult", 1.0)));

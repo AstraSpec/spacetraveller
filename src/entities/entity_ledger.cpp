@@ -48,6 +48,16 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
 }
 
 void EntityLedger::destroy_entity(uint32_t id) {
+    for (auto& pair : ai_data) {
+        AIData& ai = pair.second;
+        ai.relations.erase(id);
+        if (ai.target_entity_id == id) {
+            ai.target_entity_id = EntityPool::INVALID_ID;
+            if (ai.state == AIState::COMBAT || ai.state == AIState::FOLLOW || ai.state == AIState::FLEE) {
+                ai.state = AIState::WANDER;
+            }
+        }
+    }
     anatomy_data.erase(id);
     clothing_data.erase(id);
     inventory_data.erase(id);

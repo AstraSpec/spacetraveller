@@ -24,16 +24,6 @@ static int floor_div_chunk(int p_value) {
 }
 
 static Vector2i variant_to_vector2i(const Variant& p_value, const Vector2i& p_fallback = Vector2i()) {
-    if (p_value.get_type() == Variant::VECTOR2I) {
-        return p_value;
-    }
-    if (p_value.get_type() == Variant::DICTIONARY) {
-        Dictionary values = p_value;
-        if (values.has("x") && values.has("y")) {
-            return Vector2i(static_cast<int>(values["x"]), static_cast<int>(values["y"]));
-        }
-        return p_fallback;
-    }
     if (p_value.get_type() != Variant::ARRAY) {
         return p_fallback;
     }

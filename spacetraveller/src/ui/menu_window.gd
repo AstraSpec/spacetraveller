@@ -6,6 +6,7 @@ extends BaseWindow
 @export var default_tab_on_open: String = ""
 
 var current_tab: BaseListTab
+var menu_params: Dictionary = {}
 
 func _ready() -> void:
 	super._ready()
@@ -35,20 +36,22 @@ func _on_menu_toggled(id: String, is_open: bool, params: Dictionary) -> void:
 	if id == menu_id:
 		if visible and not is_open:
 			_notify_menu_closed()
+			menu_params.clear()
 		visible = is_open
 		if visible:
+			menu_params = params.duplicate(true)
 			if params.has("tab"):
 				_switch_to_tab_by_name(params["tab"])
 			elif not default_tab_on_open.is_empty():
 				_switch_to_tab_by_name(default_tab_on_open)
 			
-			_update_active_tab()
-			
-			if current_tab and current_tab.has_method("set_params"):
-				current_tab.set_params(params)
+			_update_active_tab(true)
 	else:
 		# If another menu is opened, close this one
 		if is_open:
+			if visible:
+				_notify_menu_closed()
+			menu_params.clear()
 			visible = false
 
 func request_close() -> void:
@@ -81,7 +84,7 @@ func _switch_to_tab_by_name(tab_name: String) -> void:
 func _on_tab_changed(_tab_index: int) -> void:
 	_update_active_tab()
 
-func _update_active_tab():
+func _update_active_tab(apply_params: bool = false):
 	if tabs:
 		current_tab = tabs.get_current_tab_control() as BaseListTab
 	elif single_tab:
@@ -90,7 +93,10 @@ func _update_active_tab():
 		current_tab = null
 		
 	if current_tab:
-		current_tab.refresh_view()
+		if apply_params and current_tab.has_method("set_params"):
+			current_tab.set_params(menu_params)
+		else:
+			current_tab.refresh_view()
 
 func _notify_menu_closed() -> void:
 	if tabs:

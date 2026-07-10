@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=35 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -32,6 +32,7 @@
 [ext_resource type="PackedScene" uid="uid://c0nv7btn0answ" path="res://src/ui/conversation/conversation_button.tscn" id="28_convbtn"]
 [ext_resource type="PackedScene" uid="uid://cbl1esoxlfnbp" path="res://src/ui/confirmation_popup.tscn" id="28_htxhm"]
 [ext_resource type="Script" uid="uid://bs2gm181d30e" path="res://src/ui/conversation/barter_tab.gd" id="29_bart"]
+[ext_resource type="Script" path="res://src/ui/conversation/npc_action_tab.gd" id="30_npcact"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
@@ -717,18 +718,51 @@ layout_mode = 2
 button_scene = ExtResource("28_convbtn")
 button_separation = 8
 
-[node name="Actions" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer"]
-visible = false
+[node name="Actions" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "_ConfirmationPopup", "stripContainer", "titleLabel", "descriptionLabel")]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
+script = ExtResource("30_npcact")
+_GameWorld = NodePath("../../../../../GameWorld")
+_ConfirmationPopup = NodePath("../../../ConfirmationPopup")
+stripContainer = NodePath("VBoxContainer/HBoxContainer/ActionList/StripContainer")
+titleLabel = NodePath("VBoxContainer/HBoxContainer/Details/VBoxContainer/Title")
+descriptionLabel = NodePath("VBoxContainer/HBoxContainer/Details/VBoxContainer/Description")
 metadata/_tab_index = 1
 
-[node name="Placeholder" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Actions"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions"]
 layout_mode = 2
-text = "Actions"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ActionList" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 8
+
+[node name="StripContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer/ActionList" instance=ExtResource("10_4c57u")]
+layout_mode = 2
+
+[node name="Details" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer/Details"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer/Details/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="Description" type="Label" parent="Canvas/Window/ConversationUI/TabContainer/Actions/VBoxContainer/HBoxContainer/Details/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 2
 
 [node name="Barter" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "debitLabel", "npcMoneyLabel", "playerItems", "npcItems", "_ConfirmationPopup")]
 visible = false

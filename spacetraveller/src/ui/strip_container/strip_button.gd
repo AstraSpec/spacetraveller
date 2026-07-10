@@ -48,10 +48,16 @@ func set_underline(left: bool, right: bool):
 	_update_display(left, right, "[u]", "[/u]")
 
 func set_selected(is_selected: bool):
-	if is_selected:
+	if button.disabled:
+		self.modulate = Color(0.55, 0.55, 0.55)
+	elif is_selected:
 		self.modulate = Color(1.5, 1.5, 1.5)
 	else:
 		self.modulate = Color(1, 1, 1)
+
+func set_disabled(is_disabled: bool) -> void:
+	button.disabled = is_disabled
+	self.modulate = Color(0.55, 0.55, 0.55) if is_disabled else Color(1, 1, 1)
 
 func _on_mouse_entered():
 	hovered.emit()

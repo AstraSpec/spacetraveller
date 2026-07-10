@@ -127,24 +127,25 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     }
 
     AIData& ai = ledger.ai_data[id];
-    String default_attitude = race->faction.is_empty()
+    String default_disposition = race->faction.is_empty()
         ? String("neutral")
         : String("hostile");
     String default_ai_state = "wander";
 
     if (job_info) {
         if (!job_info->default_attitude.is_empty()) {
-            default_attitude = job_info->default_attitude;
+            default_disposition = job_info->default_attitude;
         }
         if (!job_info->default_ai_state.is_empty()) {
             default_ai_state = job_info->default_ai_state;
         }
     }
 
-    ai.attitude = overrides.attitude.is_empty() ? default_attitude : overrides.attitude.to_lower();
+    ai.disposition = AIController::normalize_disposition(
+        overrides.attitude.is_empty() ? default_disposition : overrides.attitude
+    );
     ai.state = AIController::state_from_string(
-        overrides.ai_state.is_empty() ? default_ai_state : overrides.ai_state,
-        AIState::WANDER
+        overrides.ai_state.is_empty() ? default_ai_state : overrides.ai_state
     );
     ai.wander_center = pos;
     ai.wander_radius = 4.0f;

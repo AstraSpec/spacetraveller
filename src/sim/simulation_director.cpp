@@ -7,7 +7,6 @@
 #include "data/race_db.h"
 #include "data/style_db.h"
 #include "data/loot_db.h"
-#include "data/attitude_db.h"
 #include "core/world_coords.h"
 #include "core/id_registry.h"
 #include "core/tag_registry.h"
@@ -58,23 +57,159 @@ String SimulationDirector::entity_faction(uint32_t entity_id) const {
     return race ? race->faction : String();
 }
 
-String SimulationDirector::entity_attitude(uint32_t entity_id) const {
-    const AIData* ai = d.ledger->try_get_ai(entity_id);
-    return ai ? ai->attitude : String("neutral");
-}
-
 bool SimulationDirector::entity_is_hostile_to(uint32_t entity_id, uint32_t target_id) const {
     if (entity_id == target_id) return false;
+    if (!d.ledger->is_alive(entity_id) || !d.ledger->is_alive(target_id)) return false;
 
-    String hostility_mode = "faction";
-    AttitudeDb* attitude_db = AttitudeDb::get_singleton();
-    if (attitude_db) {
-        hostility_mode = attitude_db->get_hostility_mode(entity_attitude(entity_id));
+    if (const AIData* ai = d.ledger->try_get_ai(entity_id)) {
+        auto relation_it = ai->relations.find(target_id);
+        if (relation_it != ai->relations.end()) {
+            if (relation_it->second == EntityRelation::HOSTILE) return true;
+            if (relation_it->second == EntityRelation::FRIENDLY) return false;
+        }
+
+        const String disposition = AIController::normalize_disposition(ai->disposition);
+        if (disposition == "friendly" || disposition == "fearful" || disposition == "passive") {
+            return false;
+        }
     }
 
-    if (hostility_mode == "never") return false;
-
     return Faction::are_hostile(entity_faction(entity_id), entity_faction(target_id));
+}
+
+bool SimulationDirector::can_interact_with_entity(uint32_t entity_id) const {
+    if (entity_id == d.player_entity_id || !d.ledger->is_alive(entity_id) || !d.ledger->is_sapient(entity_id)) {
+        return false;
+    }
+    if (entity_is_hostile_to(d.player_entity_id, entity_id) || entity_is_hostile_to(entity_id, d.player_entity_id)) {
+        return false;
+    }
+    const AIData* ai = d.ledger->try_get_ai(entity_id);
+    return !ai || ai->state != AIState::COMBAT;
+}
+
+bool SimulationDirector::set_entity_relation(uint32_t entity_id, uint32_t target_id, const String& relation) {
+    if (entity_id == target_id || !d.ledger->get_entity_pool().contains(entity_id) ||
+        !d.ledger->get_entity_pool().contains(target_id)) {
+        return false;
+    }
+    AIData* ai = d.ledger->try_get_ai(entity_id);
+    if (!ai) return false;
+
+    const EntityRelation value = AIController::relation_from_string(relation);
+    if (value == EntityRelation::NEUTRAL) {
+        ai->relations.erase(target_id);
+    } else {
+        ai->relations[target_id] = value;
+    }
+    return true;
+}
+
+String SimulationDirector::get_entity_relation(uint32_t entity_id, uint32_t target_id) const {
+    const AIData* ai = d.ledger->try_get_ai(entity_id);
+    if (!ai) return "neutral";
+    auto relation_it = ai->relations.find(target_id);
+    return relation_it == ai->relations.end() ? String("neutral") : AIController::relation_to_string(relation_it->second);
+}
+
+bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
+    if (entity_id == d.player_entity_id ||
+        !d.ledger->is_alive(entity_id) ||
+        !d.ledger->is_alive(d.player_entity_id) ||
+        !d.ledger->is_sapient(entity_id)) {
+        return false;
+    }
+
+    AIData* ai = d.ledger->try_get_ai(entity_id);
+    if (!ai) return false;
+
+    // Keep the relationship and behavior change together so the UI cannot
+    // leave an NPC friendly without also assigning its follow order.
+    ai->relations[d.player_entity_id] = EntityRelation::FRIENDLY;
+    ai->state = AIState::FOLLOW;
+    ai->target_entity_id = d.player_entity_id;
+    ai->stuck_counter = 0;
+    ai->has_follow_target_position = false;
+
+    if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
+        Locomotion::clear_path(*loco);
+    }
+    return true;
+}
+
+bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& state, uint32_t target_id) {
+    if (!AIController::is_valid_state_name(state)) return false;
+    AIData* ai = d.ledger->try_get_ai(entity_id);
+    if (!ai) return false;
+
+    const AIState next_state = AIController::state_from_string(state);
+    const bool needs_target = next_state == AIState::COMBAT || next_state == AIState::FOLLOW || next_state == AIState::FLEE;
+    if (needs_target) {
+        if (target_id == EntityPool::INVALID_ID || target_id == entity_id ||
+            !d.ledger->is_alive(target_id)) {
+            return false;
+        }
+        ai->target_entity_id = target_id;
+    } else {
+        ai->target_entity_id = EntityPool::INVALID_ID;
+    }
+    ai->state = next_state;
+    if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
+        Locomotion::clear_path(*loco);
+    }
+    return true;
+}
+
+String SimulationDirector::get_entity_behavior_state(uint32_t entity_id) const {
+    const AIData* ai = d.ledger->try_get_ai(entity_id);
+    return ai ? AIController::state_to_string(ai->state) : String();
+}
+
+uint32_t SimulationDirector::get_entity_behavior_target(uint32_t entity_id) const {
+    const AIData* ai = d.ledger->try_get_ai(entity_id);
+    return ai ? ai->target_entity_id : EntityPool::INVALID_ID;
+}
+
+Array SimulationDirector::get_player_attack_options(uint32_t target_id) {
+    Array result;
+    AnatomyData* attacker_anatomy = d.ledger->try_get_anatomy(d.player_entity_id);
+    AnatomyData* defender_anatomy = d.ledger->try_get_anatomy(target_id);
+    HealthData* defender_health = d.ledger->try_get_health(target_id);
+    EquipmentData* attacker_equipment = d.ledger->try_get_equipment(d.player_entity_id);
+    ClothingData* defender_clothing = d.ledger->try_get_clothing(target_id);
+    StaminaData* attacker_stamina = d.ledger->try_get_stamina(d.player_entity_id);
+    if (!attacker_anatomy || !defender_anatomy || !defender_health ||
+        !attacker_equipment || !attacker_stamina || !defender_health->alive) {
+        return result;
+    }
+
+    const StyleInfo* style = nullptr;
+    const String* style_id = d.ledger->try_get_combat_style(d.player_entity_id);
+    if (style_id) {
+        StyleDb* style_db = StyleDb::get_singleton();
+        if (style_db) style = style_db->get_style_info(*style_id);
+    }
+
+    Rng::Seeded rng = combat_rng_for(d.player_entity_id, target_id);
+    CombatContext ctx{
+        *attacker_anatomy,
+        *defender_anatomy,
+        *defender_health,
+        *attacker_equipment,
+        defender_clothing,
+        rng,
+        entity_base_damage(d.player_entity_id),
+        style,
+        attacker_stamina
+    };
+    return CombatResolver::get_attack_options(ctx);
+}
+
+Array SimulationDirector::get_entity_targetable_body_parts(uint32_t entity_id) const {
+    const AnatomyData* anatomy = d.ledger->try_get_anatomy(entity_id);
+    if (!anatomy) return Array();
+    Dictionary functional = Anatomy::get_functional_list(*anatomy);
+    return functional.get("parts", Array());
 }
 
 uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius) const {
@@ -140,7 +275,12 @@ Rng::Seeded SimulationDirector::action_rng_for(uint32_t entity_id, const Vector2
     return Rng::at(seed, target, stream, salt);
 }
 
-CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, uint32_t defender_id) {
+CombatOutcome SimulationDirector::resolve_entity_attack(
+    uint32_t attacker_id,
+    uint32_t defender_id,
+    const String& ability_id,
+    int body_part_index
+) {
     CombatOutcome outcome;
 
     AnatomyData* attacker_anatomy = d.ledger->try_get_anatomy(attacker_id);
@@ -171,7 +311,9 @@ CombatOutcome SimulationDirector::resolve_entity_attack(uint32_t attacker_id, ui
         rng,
         entity_base_damage(attacker_id),
         style,
-        attacker_stamina
+        attacker_stamina,
+        ability_id,
+        body_part_index
     };
     return CombatResolver::resolve_attack(ctx);
 }
@@ -400,7 +542,51 @@ ActionResult SimulationDirector::resolve_player_attack(const Intent& intent) {
         return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
     }
 
-    float cost = resolve_attack(d.player_entity_id, defender_id, true);
+    if (!intent.attack_ability.is_empty()) {
+        bool found_ability = false;
+        for (const Variant& option_value : get_player_attack_options(defender_id)) {
+            if (option_value.get_type() != Variant::DICTIONARY) continue;
+            Dictionary option = option_value;
+            if (String(option.get("id", "")) == intent.attack_ability) {
+                if (bool(option.get("disabled", false))) {
+                    return ActionResult::make_failure(ActionFailure::EXHAUSTED);
+                }
+                found_ability = true;
+                break;
+            }
+        }
+        if (!found_ability || intent.attack_body_part < 0) {
+            return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
+        }
+
+        bool found_body_part = false;
+        for (const Variant& part_value : get_entity_targetable_body_parts(defender_id)) {
+            if (part_value.get_type() != Variant::DICTIONARY) continue;
+            Dictionary part = part_value;
+            if (static_cast<int>(part.get("index", -1)) == intent.attack_body_part) {
+                found_body_part = true;
+                break;
+            }
+        }
+        if (!found_body_part) {
+            return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
+        }
+    }
+
+    // Attacking establishes a directional personal relationship and a concrete
+    // combat target, rather than relying on a temporary player-specific flag.
+    set_entity_relation(defender_id, d.player_entity_id, "hostile");
+    set_entity_behavior(defender_id, "combat", d.player_entity_id);
+    float cost = resolve_attack(
+        d.player_entity_id,
+        defender_id,
+        true,
+        intent.attack_ability,
+        intent.attack_body_part
+    );
+    if (cost <= 0.0f) {
+        return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
+    }
     return ActionResult::make_success(cost);
 }
 
@@ -512,16 +698,7 @@ bool SimulationDirector::finish_player_action(const ActionResult& result, float 
     return true;
 }
 
-float SimulationDirector::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
-    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
-        return 0.0f;
-    }
-
-    Intent intent;
-    intent.type = static_cast<IntentType>(intent_type);
-    intent.target = Vector2i(target_x, target_y);
-    intent.param = param;
-
+float SimulationDirector::execute_player_intent(Intent intent) {
     Entity* entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
     if (!entity) return 0.0f;
 
@@ -543,6 +720,52 @@ float SimulationDirector::submit_player_intent(int intent_type, int target_x, in
     finish_player_action(result, player_base_time, old_pos, old_z);
 
     return result.success ? result.cost : 0.0f;
+}
+
+float SimulationDirector::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
+    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
+        return 0.0f;
+    }
+
+    Intent intent;
+    intent.type = static_cast<IntentType>(intent_type);
+    intent.target = Vector2i(target_x, target_y);
+    intent.param = param;
+    return execute_player_intent(intent);
+}
+
+float SimulationDirector::submit_player_targeted_attack(
+    uint32_t target_id,
+    const String& ability_id,
+    int body_part_index
+) {
+    if (d.ledger == nullptr || d.tracker == nullptr || d.bubble == nullptr || d.scheduler == nullptr || d.sink == nullptr) {
+        return 0.0f;
+    }
+
+    Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    Entity* target = d.ledger->get_entity_pool().get_entity(target_id);
+    if (!player || !target || target_id == d.player_entity_id || !d.ledger->is_alive(target_id)) {
+        return 0.0f;
+    }
+
+    const int dx = abs(target->x - player->x);
+    const int dy = abs(target->y - player->y);
+    if (target->z != player->z || dx > 1 || dy > 1 || (dx == 0 && dy == 0)) {
+        return 0.0f;
+    }
+
+    const WorldBubble::CellEntity* occupant = d.bubble->get_entity_at(target->x, target->y);
+    if (!occupant || occupant->entity_id != target_id) {
+        return 0.0f;
+    }
+
+    Intent intent;
+    intent.type = IntentType::ATTACK;
+    intent.target = Vector2i(target->x, target->y);
+    intent.attack_ability = ability_id;
+    intent.attack_body_part = body_part_index;
+    return execute_player_intent(intent);
 }
 
 float SimulationDirector::submit_player_change_z(int delta) {
@@ -577,12 +800,22 @@ float SimulationDirector::submit_player_change_z(int delta) {
     return result.success ? result.cost : 0.0f;
 }
 
-float SimulationDirector::resolve_attack(uint32_t attacker_id, uint32_t defender_id, bool is_player) {
+float SimulationDirector::resolve_attack(
+    uint32_t attacker_id,
+    uint32_t defender_id,
+    bool is_player,
+    const String& ability_id,
+    int body_part_index
+) {
     if (!d.ledger->is_alive(defender_id)) {
         return 1.0f;
     }
 
-    CombatOutcome atk = resolve_entity_attack(attacker_id, defender_id);
+    CombatOutcome atk = resolve_entity_attack(attacker_id, defender_id, ability_id, body_part_index);
+
+    if (atk.invalid_selection) {
+        return 0.0f;
+    }
 
     if (atk.no_limbs) {
         d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "no_limbs", atk.verb, "");

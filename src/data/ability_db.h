@@ -7,6 +7,7 @@
 namespace godot {
 
 struct AbilityInfo {
+    String id;
     String name;
     String verb;
     std::vector<String> required_limbs;

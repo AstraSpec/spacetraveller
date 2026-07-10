@@ -202,7 +202,21 @@ CombatOutcome CombatResolver::resolve_attack(const CombatContext& ctx) {
     if (!BodyPartDb::get_singleton() || !AbilityDb::get_singleton()) return outcome;
 
     AttackPool pool = build_attack_pool(ctx);
-    AttackCandidate chosen = select_attack(pool, ctx.rng);
+    AttackCandidate chosen;
+    if (!ctx.forced_ability_id.is_empty()) {
+        for (const AttackCandidate& candidate : pool.candidates) {
+            if (candidate.ability && candidate.ability->id == ctx.forced_ability_id) {
+                chosen = candidate;
+                break;
+            }
+        }
+        if (!chosen.ability) {
+            outcome.invalid_selection = true;
+            return outcome;
+        }
+    } else {
+        chosen = select_attack(pool, ctx.rng);
+    }
 
     if (!chosen.ability) {
         if (pool.limb_capable && ctx.attacker_stamina) outcome.exhausted = true;
@@ -210,7 +224,45 @@ CombatOutcome CombatResolver::resolve_attack(const CombatContext& ctx) {
         return outcome;
     }
 
+    if (ctx.forced_body_part_index >= 0 &&
+        !Anatomy::is_functional(ctx.defender_anatomy, ctx.forced_body_part_index)) {
+        outcome.invalid_selection = true;
+        return outcome;
+    }
+
     DamagePacket packet = make_damage_packet(chosen);
     apply_damage_packet(ctx, packet, outcome);
     return outcome;
+}
+
+Array CombatResolver::get_attack_options(const CombatContext& ctx) {
+    Array result;
+    CombatContext option_context = ctx;
+    option_context.attacker_stamina = nullptr;
+    AttackPool pool = build_attack_pool(option_context);
+    std::vector<String> seen;
+    for (const AttackCandidate& candidate : pool.candidates) {
+        if (!candidate.ability) continue;
+
+        bool duplicate = false;
+        for (const String& id : seen) {
+            if (id == candidate.ability->id) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (duplicate) continue;
+        seen.push_back(candidate.ability->id);
+
+        Dictionary option;
+        option["id"] = candidate.ability->id;
+        option["display_name"] = candidate.ability->name;
+        option["verb"] = candidate.ability->verb;
+        option["stamina_cost"] = candidate.ability->stamina_cost;
+        option["disabled"] = ctx.attacker_stamina &&
+            !Stamina::can_afford(*ctx.attacker_stamina, candidate.ability->stamina_cost);
+        if (candidate.style) option["style"] = candidate.style->name;
+        result.push_back(option);
+    }
+    return result;
 }

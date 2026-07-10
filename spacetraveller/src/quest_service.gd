@@ -90,12 +90,20 @@ func offer(giver_entity_id: int, kind: String = "") -> String:
 	if not _game_world:
 		return ""
 	if not kind.is_empty() and _game_world.has_method("generate_quest_offer"):
+		if QuestDb.is_story_kind(kind):
+			return offer_story(giver_entity_id, kind)
 		var offer_data: Dictionary = _game_world.generate_quest_offer(giver_entity_id, kind)
 		return str(offer_data.get("quest_id", ""))
 	var offers: Array = _game_world.generate_quest_offers(giver_entity_id, 1)
 	if offers.is_empty():
 		return ""
 	return str(offers[0].get("quest_id", ""))
+
+func offer_story(giver_entity_id: int, kind: String) -> String:
+	if not _game_world:
+		return ""
+	var offer_data: Dictionary = _game_world.generate_story_quest_offer(giver_entity_id, kind)
+	return str(offer_data.get("quest_id", ""))
 
 func accept(quest_id: String) -> bool:
 	return _game_world != null and _game_world.accept_quest(quest_id)

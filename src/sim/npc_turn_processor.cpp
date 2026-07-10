@@ -59,6 +59,9 @@ float NpcTurnProcessor::resolve_move(
 ) {
     ActionResult move_result = ActionResolver::resolve_move(intent, entity, *director.d.bubble, loco, director.d.ledger, director.d.tracker);
     if (move_result.success && move_result.cost > 0.0f) {
+        if (ai.state == AIState::FOLLOW) {
+            ai.stuck_counter = 0;
+        }
         float cost = director.movement_action_cost(entity_id, move_result.cost, loco);
         for (auto& bp : blocking_positions) {
             Vector2i old_pos(entity.x - (intent.target.x - entity.x),
@@ -129,17 +132,47 @@ void NpcTurnProcessor::run_turn(
     }
 
     int acquire_radius = director.d.bubble->get_active_radius();
-    uint32_t target_id = director.find_nearest_hostile(entity_id, acquire_radius);
+    const bool state_requires_target = ai->state == AIState::COMBAT || ai->state == AIState::FOLLOW || ai->state == AIState::FLEE;
+    uint32_t target_id = state_requires_target ? ai->target_entity_id : EntityPool::INVALID_ID;
     Entity* target_entity = (target_id != EntityPool::INVALID_ID) ? pool.get_entity(target_id) : nullptr;
+    const bool target_is_alive = target_entity && director.d.ledger->is_alive(target_id);
+    bool target_same_level = target_is_alive && target_entity->z == entity->z;
+    const bool target_is_valid = target_is_alive && target_same_level &&
+        (ai->state != AIState::COMBAT || director.entity_is_hostile_to(entity_id, target_id));
+    if (state_requires_target && !target_is_valid) {
+        const bool preserve_follow_target = ai->state == AIState::FOLLOW && target_is_alive;
+        if (!preserve_follow_target) {
+            ai->target_entity_id = EntityPool::INVALID_ID;
+            ai->state = AIState::WANDER;
+            target_id = EntityPool::INVALID_ID;
+            target_entity = nullptr;
+        }
+    }
+    const bool can_auto_acquire = ai->state == AIState::WANDER || ai->state == AIState::COMBAT || ai->state == AIState::GUARD;
+    if (!target_entity && can_auto_acquire) {
+        target_id = director.find_nearest_hostile(entity_id, acquire_radius);
+        target_entity = (target_id != EntityPool::INVALID_ID) ? pool.get_entity(target_id) : nullptr;
+        if (target_entity) {
+            ai->state = AIState::COMBAT;
+            ai->target_entity_id = target_id;
+        }
+    }
+    target_same_level = target_entity &&
+        target_id != EntityPool::INVALID_ID &&
+        director.d.ledger->is_alive(target_id) &&
+        target_entity->z == entity->z;
     Vector2i target_pos = target_entity ? Vector2i(target_entity->x, target_entity->y)
                                         : Vector2i(entity->x, entity->y);
+    const Vector2i perception_target_pos = target_same_level
+        ? target_pos
+        : Vector2i(entity->x, entity->y);
 
     switch (ai->perception_tier) {
         case PerceptionTier::FULL_OCCLUSION:
-            Perception::tick_full(*mem, *entity, *director.d.bubble, target_pos, acquire_radius);
+            Perception::tick_full(*mem, *entity, *director.d.bubble, perception_target_pos, acquire_radius);
             break;
         case PerceptionTier::RAYCAST:
-            Perception::tick_raycast(*mem, *entity, target_pos, *director.d.bubble, tile_db);
+            Perception::tick_raycast(*mem, *entity, perception_target_pos, *director.d.bubble, tile_db);
             break;
         default:
             break;
@@ -167,16 +200,29 @@ void NpcTurnProcessor::run_turn(
     };
 
     std::function<bool(Vector2i)> can_enter_fn = [&](const Vector2i& pos) -> bool {
+        for (const Vector2i& blocked : blocking_positions) {
+            if (blocked == pos) return false;
+        }
         uint16_t tile_id = director.d.bubble->query_tile_id(pos.x, pos.y);
         return TraversalRules::can_enter(entity_id, tile_id, *director.d.ledger);
     };
 
-    AIContext ctx{*entity, *director.d.bubble, tile_db, *mem, target_pos, can_enter_fn, find_path_fn};
+    AIContext ctx{
+        *entity,
+        *director.d.bubble,
+        tile_db,
+        *mem,
+        target_pos,
+        target_entity != nullptr,
+        can_enter_fn,
+        find_path_fn,
+        target_same_level
+    };
     Intent intent = AIController::tick(*ai, *loco, ctx);
 
     float cost = 1.0f;
     if (intent.type == IntentType::MOVE) {
-        if (target_entity &&
+        if (ai->state == AIState::COMBAT && target_entity &&
             target_entity->z == entity->z &&
             intent.target.x == target_entity->x &&
             intent.target.y == target_entity->y) {
