@@ -23,6 +23,27 @@ static int floor_div_chunk(int p_value) {
         : ((p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
 }
 
+static Vector2i variant_to_vector2i(const Variant& p_value, const Vector2i& p_fallback = Vector2i()) {
+    if (p_value.get_type() == Variant::VECTOR2I) {
+        return p_value;
+    }
+    if (p_value.get_type() == Variant::DICTIONARY) {
+        Dictionary values = p_value;
+        if (values.has("x") && values.has("y")) {
+            return Vector2i(static_cast<int>(values["x"]), static_cast<int>(values["y"]));
+        }
+        return p_fallback;
+    }
+    if (p_value.get_type() != Variant::ARRAY) {
+        return p_fallback;
+    }
+    Array values = p_value;
+    if (values.size() != 2) {
+        return p_fallback;
+    }
+    return Vector2i(static_cast<int>(values[0]), static_cast<int>(values[1]));
+}
+
 WorldGenerator::WorldGenerator() {}
 WorldGenerator::~WorldGenerator() = default;
 
@@ -345,15 +366,199 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
         }
     }
 
+    city_structure_instances.clear();
+    city_structure_by_chunk.clear();
+    struct CityPlacementCandidate {
+        Vector2i anchor_chunk;
+        Vector2i origin_chunk;
+        uint16_t chunk_id = 0;
+        String structure_id;
+        Vector2i source_size;
+        Vector2i placed_size;
+        uint8_t rotation = WorldCoords::ROT_SOUTH;
+        int footprint_area = 0;
+        bool requires_palace_lot = false;
+    };
+    std::vector<CityPlacementCandidate> placement_candidates;
+    ChunkDb* city_chunk_db = ChunkDb::get_singleton();
+    const uint16_t city_wall_id = id_reg->get_id("wall");
+    const uint16_t city_gate_id = id_reg->get_id("gate");
+    const uint16_t city_water_id = id_reg->get_id("water");
+    const uint16_t city_palace_id = id_reg->get_id("palace");
+    const uint16_t city_plaza_id = id_reg->get_id("plaza");
+    if (city_chunk_db && s_db) {
+        for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
+            for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
+                if (cityGenGrid.getPixel(x, y).id != id_building) continue;
+
+                const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+                const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+                const int city_distance_sq = city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x];
+                const uint16_t chunk_id = pick_city_spawn_chunk(*city_chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
+                const ChunkInfo* chunk_info = city_chunk_db->get_chunk_info(chunk_id);
+                if (!chunk_info || chunk_info->structure_type.is_empty()) continue;
+
+                const std::vector<String>* structures = s_db->get_structure_ids_by_type(chunk_info->structure_type);
+                if (!structures || structures->empty()) continue;
+                const uint64_t structure_hash = Rng::hash_pos(static_cast<uint32_t>(world_seed), Vector2i(gx, gy), Rng::BIOME);
+                const String structure_id = (*structures)[structure_hash % structures->size()];
+                const StructureInfo* structure = s_db->get_structure_info(structure_id);
+                if (!structure || structure->size.x <= 0 || structure->size.y <= 0) continue;
+
+                const uint8_t preferred_rotation = static_cast<uint8_t>(cityGenGrid.getPixel(x, y).meta & WorldCoords::ROTATION_MASK);
+                uint8_t rotation = preferred_rotation;
+                if (std::find(structure->placement_rotations.begin(), structure->placement_rotations.end(), rotation) == structure->placement_rotations.end()) {
+                    rotation = structure->placement_rotations[structure_hash % structure->placement_rotations.size()];
+                }
+                const Vector2i placed_size = get_rotated_surface_feature_size(structure->size, rotation);
+                const int footprint_width = (placed_size.x + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                const int footprint_height = (placed_size.y + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                Vector2i origin_chunk(x, y);
+                switch (rotation) {
+                    case WorldCoords::ROT_SOUTH:
+                        origin_chunk.y -= footprint_height - 1;
+                        break;
+                    case WorldCoords::ROT_EAST:
+                        origin_chunk.x -= footprint_width - 1;
+                        break;
+                    case WorldCoords::ROT_NORTH:
+                    case WorldCoords::ROT_WEST:
+                    default:
+                        break;
+                }
+                placement_candidates.push_back({
+                    Vector2i(x, y), origin_chunk, chunk_id, structure_id, structure->size, placed_size, rotation,
+                    footprint_width * footprint_height, false
+                });
+            }
+        }
+
+        const std::vector<String>* palace_structures = s_db->get_structure_ids_by_type("palace");
+        if (palace_structures && !palace_structures->empty()) {
+            for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
+                for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
+                    if (cityGenGrid.getPixel(x, y).id != city_palace_id) continue;
+                    if ((x > 0 && cityGenGrid.getPixel(x - 1, y).id == city_palace_id) ||
+                        (y > 0 && cityGenGrid.getPixel(x, y - 1).id == city_palace_id)) {
+                        continue;
+                    }
+
+                    int palace_width = 0;
+                    while (x + palace_width < WorldCoords::REGION_SIZE &&
+                           cityGenGrid.getPixel(x + palace_width, y).id == city_palace_id) {
+                        palace_width++;
+                    }
+                    int palace_height = 0;
+                    while (y + palace_height < WorldCoords::REGION_SIZE &&
+                           cityGenGrid.getPixel(x, y + palace_height).id == city_palace_id) {
+                        palace_height++;
+                    }
+
+                    const Vector2i palace_center(x + palace_width / 2, y + palace_height / 2);
+                    const Vector2i global_center(
+                        regionPos.x * WorldCoords::REGION_SIZE + palace_center.x,
+                        regionPos.y * WorldCoords::REGION_SIZE + palace_center.y
+                    );
+                    const uint64_t palace_hash = Rng::hash_pos(static_cast<uint32_t>(world_seed), global_center, Rng::BIOME);
+                    const String structure_id = (*palace_structures)[palace_hash % palace_structures->size()];
+                    const StructureInfo* structure = s_db->get_structure_info(structure_id);
+                    if (!structure || structure->size.x <= 0 || structure->size.y <= 0) continue;
+
+                    const uint8_t rotation = WorldCoords::ROT_SOUTH;
+                    const Vector2i placed_size = get_rotated_surface_feature_size(structure->size, rotation);
+                    const int footprint_width = (placed_size.x + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                    const int footprint_height = (placed_size.y + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                    if (footprint_width > palace_width || footprint_height > palace_height) continue;
+
+                    const Vector2i origin_chunk(
+                        x + (palace_width - footprint_width) / 2,
+                        y + (palace_height - footprint_height) / 2
+                    );
+                    placement_candidates.push_back({
+                        palace_center, origin_chunk, city_palace_id, structure_id, structure->size, placed_size, rotation,
+                        footprint_width * footprint_height, true
+                    });
+                }
+            }
+        }
+    }
+
+    std::sort(placement_candidates.begin(), placement_candidates.end(), [](const CityPlacementCandidate& a, const CityPlacementCandidate& b) {
+        if (a.footprint_area != b.footprint_area) return a.footprint_area > b.footprint_area;
+        if (a.anchor_chunk.y != b.anchor_chunk.y) return a.anchor_chunk.y < b.anchor_chunk.y;
+        return a.anchor_chunk.x < b.anchor_chunk.x;
+    });
+
+    std::unordered_map<uint64_t, uint32_t> planned_city_chunks;
+    for (const CityPlacementCandidate& candidate : placement_candidates) {
+        const int footprint_width = (candidate.placed_size.x + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+        const int footprint_height = (candidate.placed_size.y + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+        bool can_place = true;
+        for (int dy = 0; dy < footprint_height && can_place; dy++) {
+            for (int dx = 0; dx < footprint_width; dx++) {
+                const int x = candidate.origin_chunk.x + dx;
+                const int y = candidate.origin_chunk.y + dy;
+                if (x < 0 || x >= WorldCoords::REGION_SIZE || y < 0 || y >= WorldCoords::REGION_SIZE ||
+                    planned_city_chunks.find(WorldCoords::pack_coords(
+                        regionPos.x * WorldCoords::REGION_SIZE + x,
+                        regionPos.y * WorldCoords::REGION_SIZE + y
+                    )) != planned_city_chunks.end()) {
+                    can_place = false;
+                    break;
+                }
+
+                const uint16_t lot_id = cityGenGrid.getPixel(x, y).id;
+                const bool wrong_lot = candidate.requires_palace_lot
+                    ? lot_id != city_palace_id
+                    : lot_id == id_road || lot_id == id_alley || lot_id == city_wall_id ||
+                        lot_id == city_gate_id || lot_id == city_water_id || lot_id == city_palace_id || lot_id == city_plaza_id ||
+                        lot_id == id_forest || lot_id == id_plains;
+                if (wrong_lot) {
+                    can_place = false;
+                    break;
+                }
+            }
+        }
+        if (!can_place) continue;
+
+        CityStructureInstance instance;
+        instance.structure_id = candidate.structure_id;
+        instance.origin = Vector2i(
+            (regionPos.x * WorldCoords::REGION_SIZE + candidate.origin_chunk.x) * WorldCoords::CHUNK_SIZE,
+            (regionPos.y * WorldCoords::REGION_SIZE + candidate.origin_chunk.y) * WorldCoords::CHUNK_SIZE
+        );
+        instance.source_size = candidate.source_size;
+        instance.placed_size = candidate.placed_size;
+        instance.rotation = candidate.rotation;
+        const size_t instance_index = city_structure_instances.size();
+        city_structure_instances.push_back(instance);
+
+        const uint32_t packed_chunk = (static_cast<uint32_t>(candidate.rotation) << WorldCoords::ORIENTATION_SHIFT) | candidate.chunk_id;
+        for (int dy = 0; dy < footprint_height; dy++) {
+            for (int dx = 0; dx < footprint_width; dx++) {
+                const int gx = regionPos.x * WorldCoords::REGION_SIZE + candidate.origin_chunk.x + dx;
+                const int gy = regionPos.y * WorldCoords::REGION_SIZE + candidate.origin_chunk.y + dy;
+                const uint64_t key = WorldCoords::pack_coords(gx, gy);
+                planned_city_chunks[key] = packed_chunk;
+                city_structure_by_chunk[key] = instance_index;
+            }
+        }
+    }
+
     Dictionary result;
     for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
         for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
             CityPixel pixel = cityGenGrid.getPixel(x, y);
             uint16_t chunk_id = pixel.id;
+            const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+            const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+            const uint64_t planned_key = WorldCoords::pack_coords(gx, gy);
+            auto planned_it = planned_city_chunks.find(planned_key);
             
-            if (chunk_id == id_void) {
-                int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
-                int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+            if (planned_it != planned_city_chunks.end()) {
+                chunk_id = static_cast<uint16_t>(planned_it->second & WorldCoords::ID_MASK);
+                pixel.meta = static_cast<uint8_t>(planned_it->second >> WorldCoords::ORIENTATION_SHIFT);
+            } else if (chunk_id == id_void) {
                 uint32_t h = get_hash(gx, gy, static_cast<uint32_t>(world_seed));
 
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
@@ -381,18 +586,14 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
             } else if (chunk_id == id_building) {
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
                 if (chunk_db) {
-                    const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
-                    const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
                     const int city_distance_sq = city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x];
                     chunk_id = pick_city_spawn_chunk(*chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
                 }
             }
 
             uint8_t rot = pixel.meta & WorldCoords::ROTATION_MASK;
-            int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
-            int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
 
-            uint64_t key = WorldCoords::pack_coords(gx, gy);
+            uint64_t key = planned_key;
 
             const uint32_t packed_chunk = (static_cast<uint32_t>(rot) << WorldCoords::ORIENTATION_SHIFT) | chunk_id;
             surface_chunks[key] = packed_chunk;
@@ -794,6 +995,8 @@ String WorldGenerator::get_structure_id_for_cell(int x, int y, int z, int world_
 }
 
 uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
+    CityStructureContext city_structure = get_city_structure_context(x, y, 0);
+
     int cx = floor_div_chunk(x);
     int cy = floor_div_chunk(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
@@ -844,6 +1047,21 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
             (south && !(last_chunk_neighbors & WorldCoords::NEIGH_SOUTH))) {
             return last_biome_ptr->border_tile_id;
         }
+    }
+
+    if (city_structure.valid && s_db) {
+        const uint16_t structure_tile = s_db->get_tile_at(
+            city_structure.structure_id,
+            city_structure.local_pos.x,
+            city_structure.local_pos.y,
+            0,
+            get_hash(x, y, static_cast<uint32_t>(world_seed))
+        );
+        if (structure_tile != id_void) return structure_tile;
+        if (last_biome_ptr) {
+            return pick_weighted_tile(*last_biome_ptr, get_hash(x, y, static_cast<uint32_t>(world_seed)));
+        }
+        return id_void;
     }
 
     ChunkDb* chunk_db = ChunkDb::get_singleton();
@@ -1806,6 +2024,38 @@ SurfaceFeatureContext WorldGenerator::get_surface_feature_context(int x, int y, 
     return context;
 }
 
+CityStructureContext WorldGenerator::get_city_structure_context(int x, int y, int z) const {
+    const uint64_t chunk_key = WorldCoords::pack_coords(floor_div_chunk(x), floor_div_chunk(y));
+    auto index_it = city_structure_by_chunk.find(chunk_key);
+    if (index_it == city_structure_by_chunk.end() || index_it->second >= city_structure_instances.size()) {
+        return CityStructureContext{};
+    }
+
+    const CityStructureInstance& instance = city_structure_instances[index_it->second];
+    const StructureInfo* structure = s_db ? s_db->get_structure_info(instance.structure_id) : nullptr;
+    if (!structure || structure->levels.find(z) == structure->levels.end()) {
+        return CityStructureContext{};
+    }
+    const int local_x = x - instance.origin.x;
+    const int local_y = y - instance.origin.y;
+    CityStructureContext context;
+    context.valid = true;
+    context.structure_id = instance.structure_id;
+    context.local_z = z;
+    context.local_pos = Vector2i(-1, -1);
+    if (local_x < 0 || local_y < 0 || local_x >= instance.placed_size.x || local_y >= instance.placed_size.y) {
+        return context;
+    }
+
+    const Vector2i source_pos = resolve_surface_feature_source_pos(local_x, local_y, instance.source_size, instance.rotation);
+    if (source_pos.x < 0 || source_pos.y < 0 || source_pos.x >= instance.source_size.x || source_pos.y >= instance.source_size.y) {
+        return context;
+    }
+
+    context.local_pos = source_pos;
+    return context;
+}
+
 String WorldGenerator::get_dungeon_type_for_cell(int x, int y, int z, int world_seed) {
     setup_biome_rules();
 
@@ -1861,6 +2111,17 @@ uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
 
 uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
     if (z == 0) return get_tile(x, y, world_seed);
+
+    CityStructureContext city_structure = get_city_structure_context(x, y, z);
+    if (city_structure.valid && s_db) {
+        return s_db->get_tile_at(
+            city_structure.structure_id,
+            city_structure.local_pos.x,
+            city_structure.local_pos.y,
+            z,
+            get_hash(x, y, static_cast<uint32_t>(world_seed))
+        );
+    }
 
     uint16_t base_tile_id = get_base_tile_without_features(x, y, z, world_seed);
     uint16_t feature_tile_id = get_feature_tile(x, y, z, base_tile_id, world_seed);
@@ -1921,6 +2182,8 @@ void WorldGenerator::set_region_chunks(const std::unordered_map<uint64_t, uint32
     layer.default_chunk_data = get_default_biome_chunk_data(0);
     layer.overrides = chunks;
     biome_layers[0] = std::move(layer);
+    city_structure_instances.clear();
+    city_structure_by_chunk.clear();
     last_chunk_valid = false;
     reset_dungeon_cache();
 }
@@ -1928,12 +2191,60 @@ void WorldGenerator::set_region_chunks(const std::unordered_map<uint64_t, uint32
 void WorldGenerator::set_biome_layers(const std::unordered_map<int, BiomeLayer>& layers) {
     setup_biome_rules();
     biome_layers = layers;
+    city_structure_instances.clear();
+    city_structure_by_chunk.clear();
     last_chunk_valid = false;
     reset_dungeon_cache();
 }
 
+Dictionary WorldGenerator::serialize_city_structures() const {
+    Array instances;
+    for (const CityStructureInstance& instance : city_structure_instances) {
+        Dictionary data;
+        data["id"] = instance.structure_id;
+        data["origin"] = Array::make(instance.origin.x, instance.origin.y);
+        data["source_size"] = Array::make(instance.source_size.x, instance.source_size.y);
+        data["placed_size"] = Array::make(instance.placed_size.x, instance.placed_size.y);
+        data["rotation"] = instance.rotation;
+        instances.push_back(data);
+    }
+    Dictionary result;
+    result["instances"] = instances;
+    return result;
+}
+
+void WorldGenerator::deserialize_city_structures(const Array& p_data) {
+    city_structure_instances.clear();
+    city_structure_by_chunk.clear();
+    for (int i = 0; i < p_data.size(); i++) {
+        if (p_data[i].get_type() != Variant::DICTIONARY) continue;
+        Dictionary data = p_data[i];
+        CityStructureInstance instance;
+        instance.structure_id = String(data.get("id", ""));
+        instance.origin = variant_to_vector2i(data.get("origin", Array()), Vector2i());
+        instance.source_size = variant_to_vector2i(data.get("source_size", Array()), Vector2i());
+        instance.placed_size = variant_to_vector2i(data.get("placed_size", Array()), Vector2i());
+        instance.rotation = static_cast<uint8_t>(static_cast<int>(data.get("rotation", 0)) & WorldCoords::ROTATION_MASK);
+        if (instance.structure_id.is_empty() || instance.source_size.x <= 0 || instance.source_size.y <= 0 || instance.placed_size.x <= 0 || instance.placed_size.y <= 0) continue;
+
+        const size_t index = city_structure_instances.size();
+        city_structure_instances.push_back(instance);
+        const int min_chunk_x = floor_div_chunk(instance.origin.x);
+        const int min_chunk_y = floor_div_chunk(instance.origin.y);
+        const int max_chunk_x = floor_div_chunk(instance.origin.x + instance.placed_size.x - 1);
+        const int max_chunk_y = floor_div_chunk(instance.origin.y + instance.placed_size.y - 1);
+        for (int chunk_y = min_chunk_y; chunk_y <= max_chunk_y; chunk_y++) {
+            for (int chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++) {
+                city_structure_by_chunk[WorldCoords::pack_coords(chunk_x, chunk_y)] = index;
+            }
+        }
+    }
+}
+
 void WorldGenerator::clear_region_chunks() {
     biome_layers.clear();
+    city_structure_instances.clear();
+    city_structure_by_chunk.clear();
     last_chunk_valid = false;
     reset_dungeon_cache();
 }

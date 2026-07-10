@@ -46,6 +46,7 @@ Dictionary WorldSaveSerializer::build_save_data(
         biome_layers[layer.z] = layer_data;
     }
     data["biome_layers"] = biome_layers;
+    data["city_structures"] = generator.serialize_city_structures();
 
     data["dropped_items"] = bubble.serialize_ground_items();
     data["tile_metadata"] = bubble.serialize_tile_metadata();
@@ -121,6 +122,9 @@ void WorldSaveSerializer::load_save_data(
         }
         generator.set_region_chunks(region_chunks);
     }
+
+    Dictionary city_structures = data.get("city_structures", Dictionary());
+    generator.deserialize_city_structures(city_structures.get("instances", Array()));
 
     bubble.deserialize_ground_items(data.get("dropped_items", Dictionary()));
     bubble.deserialize_tile_metadata(data.get("tile_metadata", Dictionary()));

@@ -1,15 +1,30 @@
 [
     {
         "id": "stall_fruit_veg",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x2, 1x1, 1x0, 1x1, 1x0, 1x3, 4x2, 1x0, 1x1, 3x0, 2x4, 2x0, 1x1)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "void"},
-                    {"tile": "dirt"},
-                    {"tile": "barrel"},
-                    {"tile": "table"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dirt"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "table"
+                    }
                 ],
                 "rules": [
                     {
@@ -50,25 +65,37 @@
                     }
                 ]
             }
-        },
+        }
+    },
+    {
+        "id": "stall_fish",
+        "type": "feature",
         "size": [
             8,
             3
         ],
-        "type": "feature"
-    },
-    {
-        "id": "stall_fish",
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x3, 1x0, 1x4, 1x1, 1x2, 1x4, 1x1, 4x3, 1x1, 1x2, 1x0, 4x1, 1x0, 1x1, 1x5)",
                 "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "bar"},
-                    {"tile": "void"},
-                    {"tile": "dirt"},
-                    {"tile": "w_crate"},
-                    {"tile": "hanging_sign"}
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dirt"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "hanging_sign"
+                    }
                 ],
                 "rules": [
                     {
@@ -120,25 +147,37 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "stall_food",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 2x3, 1x2, 1x0, 1x2, 1x0, 1x4, 1x3, 1x5, 2x3, 1x0, 1x2, 7x0, 1x2)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "w_crate"},
-                    {"tile": "void"},
-                    {"tile": "dirt"},
-                    {"tile": "chest"},
-                    {"tile": "barrel"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dirt"
+                    },
+                    {
+                        "tile": "chest"
+                    },
+                    {
+                        "tile": "barrel"
+                    }
                 ],
                 "rules": [
                     {
@@ -172,24 +211,34 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "stall_foraging",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x3, 2x2, 1x0, 1x2, 1x0, 1x1, 2x3, 1x1, 1x2, 1x0, 1x2, 1x0, 4x4, 2x0, 1x2)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "barrel"},
-                    {"tile": "void"},
-                    {"tile": "dirt"},
-                    {"tile": "table"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dirt"
+                    },
+                    {
+                        "tile": "table"
+                    }
                 ],
                 "rules": [
                     {
@@ -230,24 +279,34 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "stall_weapon",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x1, 1x0, 1x3, 4x1, 1x0, 1x1, 7x0, 1x4)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "void"},
-                    {"tile": "dungeon_stuff"},
-                    {"tile": "w_crate"},
-                    {"tile": "hanging_sign"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dungeon_stuff"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "hanging_sign"
+                    }
                 ],
                 "rules": [
                     {
@@ -280,25 +339,37 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "stall_clothing",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x3, 4x1, 1x0, 1x1, 1x4, 4x0, 1x4, 1x0, 1x5)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "void"},
-                    {"tile": "flower"},
-                    {"tile": "mannequin"},
-                    {"tile": "barrel"},
-                    {"tile": "hanging_sign"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "flower"
+                    },
+                    {
+                        "tile": "mannequin"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "hanging_sign"
+                    }
                 ],
                 "rules": [
                     {
@@ -331,25 +402,37 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "stall_armor",
+        "type": "feature",
+        "size": [
+            8,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 2x2, 1x3, 1x0, 1x4, 1x2, 1x0, 4x2, 1x0, 1x4, 1x2, 7x0, 1x5)",
                 "palette": [
-                    {"tile": "bar"},
-                    {"tile": "bookcase"},
-                    {"tile": "void"},
-                    {"tile": "mannequin"},
-                    {"tile": "barrel"},
-                    {"tile": "hanging_sign"}
+                    {
+                        "tile": "bar"
+                    },
+                    {
+                        "tile": "bookcase"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "mannequin"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "hanging_sign"
+                    }
                 ],
                 "rules": [
                     {
@@ -382,11 +465,6 @@
                     }
                 ]
             }
-        },
-        "size": [
-            8.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     }
 ]

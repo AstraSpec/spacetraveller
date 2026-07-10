@@ -47,6 +47,13 @@ struct SurfaceFeatureContext {
     int local_z = 0;
 };
 
+struct CityStructureContext {
+    bool valid = false;
+    String structure_id;
+    Vector2i local_pos;
+    int local_z = 0;
+};
+
 class WorldGenerator {
 private:
     std::unordered_map<int, BiomeLayer> biome_layers;
@@ -110,6 +117,15 @@ private:
         Vector2i placed_size;
         uint8_t rotation = WorldCoords::ROT_SOUTH;
     };
+    struct CityStructureInstance {
+        String structure_id;
+        Vector2i origin;
+        Vector2i source_size;
+        Vector2i placed_size;
+        uint8_t rotation = WorldCoords::ROT_SOUTH;
+    };
+    std::vector<CityStructureInstance> city_structure_instances;
+    std::unordered_map<uint64_t, size_t> city_structure_by_chunk;
     std::vector<DungeonEntranceRef> dungeon_entrance_cache;
     bool dungeon_entrance_cache_valid = false;
 
@@ -195,6 +211,7 @@ public:
     String get_structure_id_for_cell(int x, int y, int z, int world_seed) const;
     DungeonStructureContext get_dungeon_structure_context(int x, int y, int z, int world_seed);
     SurfaceFeatureContext get_surface_feature_context(int x, int y, int z, int world_seed);
+    CityStructureContext get_city_structure_context(int x, int y, int z) const;
     String get_dungeon_type_for_cell(int x, int y, int z, int world_seed);
     bool is_stone_brick_floor_loot_candidate(int x, int y, int z, int world_seed);
     
@@ -211,6 +228,8 @@ public:
     void set_region_chunks(const std::unordered_map<uint64_t, uint32_t>& chunks);
     void set_biome_layers(const std::unordered_map<int, BiomeLayer>& layers);
     void clear_region_chunks();
+    Dictionary serialize_city_structures() const;
+    void deserialize_city_structures(const Array& p_data);
     void invalidate_cache() { last_chunk_valid = false; reset_dungeon_cache(); }
 };
 

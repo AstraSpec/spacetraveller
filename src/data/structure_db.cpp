@@ -5,11 +5,45 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
+#include <cstdint>
 
 namespace godot {
 
 template<> StructureDb* DataBase<StructureInfo, StructureDb>::singleton = nullptr;
 const int StructureDb::CHUNK_SIZE = WorldCoords::CHUNK_SIZE;
+static constexpr int64_t MAX_STRUCTURE_CELLS = 1024 * 1024;
+
+static bool is_valid_structure_size(const Vector2i& p_size) {
+    const int64_t total = static_cast<int64_t>(p_size.x) * static_cast<int64_t>(p_size.y);
+    return p_size.x > 0 && p_size.y > 0 && total <= MAX_STRUCTURE_CELLS;
+}
+
+static std::vector<uint8_t> parse_placement_rotations(const Dictionary& p_data, const String& p_structure_id) {
+    std::vector<uint8_t> rotations;
+    Variant placement_var = p_data.get("placement", Variant());
+    if (placement_var.get_type() == Variant::DICTIONARY) {
+        Dictionary placement = placement_var;
+        Variant rotations_var = placement.get("rotations", Variant());
+        if (rotations_var.get_type() == Variant::ARRAY) {
+            Array values = rotations_var;
+            for (int i = 0; i < values.size(); i++) {
+                const int rotation = static_cast<int>(values[i]);
+                if (rotation < 0 || rotation > 3) {
+                    UtilityFunctions::push_error("[StructureDb] Invalid placement rotation in structure ", p_structure_id, ".");
+                    continue;
+                }
+                const uint8_t value = static_cast<uint8_t>(rotation);
+                if (std::find(rotations.begin(), rotations.end(), value) == rotations.end()) {
+                    rotations.push_back(value);
+                }
+            }
+        }
+    }
+    if (rotations.empty()) {
+        rotations = { WorldCoords::ROT_SOUTH, WorldCoords::ROT_WEST, WorldCoords::ROT_NORTH, WorldCoords::ROT_EAST };
+    }
+    return rotations;
+}
 
 static bool parse_rule_type(const String& p_type, RuleType& r_type) {
     if (p_type == "spawn_entity") {
@@ -208,12 +242,9 @@ static StructureLevelInfo parse_level(
         palette_tile_group_ids.push_back(has_tile_group ? tile_group_id : 0);
     }
 
-    const int compact_total_tiles = level.size.x * level.size.y;
-    const int chunk_total_tiles = WorldCoords::CHUNK_SIZE * WorldCoords::CHUNK_SIZE;
-    std::vector<uint16_t> parsed_tiles;
-    std::vector<uint16_t> parsed_tile_group_ids;
-    parsed_tiles.reserve(chunk_total_tiles);
-    parsed_tile_group_ids.reserve(chunk_total_tiles);
+    const int total_tiles = level.size.x * level.size.y;
+    level.data.reserve(total_tiles);
+    level.tile_group_ids.reserve(total_tiles);
 
     String rle = level.blueprint;
     rle = rle.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
@@ -224,42 +255,26 @@ static StructureLevelInfo parse_level(
         if (part.is_empty()) continue;
 
         PackedStringArray sub = part.split("x");
-        if (sub.size() != 2) continue;
+        if (sub.size() != 2 || !sub[0].is_valid_int() || !sub[1].is_valid_int()) {
+            UtilityFunctions::push_error("[StructureDb] Malformed RLE in ", p_structure_id, ": ", part);
+            return StructureLevelInfo();
+        }
 
         int count = sub[0].to_int();
         int palette_idx = sub[1].to_int();
-
-        uint16_t tile_id = 0;
-        uint16_t tg_id = 0;
-        if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
-            tile_id = palette_ids[palette_idx];
-            tg_id = palette_tile_group_ids[palette_idx];
+        if (count <= 0 || palette_idx < 0 || palette_idx >= static_cast<int>(palette_ids.size()) || count > total_tiles - static_cast<int>(level.data.size())) {
+            UtilityFunctions::push_error("[StructureDb] Invalid RLE run in ", p_structure_id, ": ", part);
+            return StructureLevelInfo();
         }
 
         for (int j = 0; j < count; j++) {
-            parsed_tiles.push_back(tile_id);
-            parsed_tile_group_ids.push_back(tg_id);
+            level.data.push_back(palette_ids[palette_idx]);
+            level.tile_group_ids.push_back(palette_tile_group_ids[palette_idx]);
         }
     }
-
-    level.data.assign(compact_total_tiles, 0);
-    level.tile_group_ids.assign(compact_total_tiles, 0);
-    if (level.size == Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE) || (int)parsed_tiles.size() <= compact_total_tiles) {
-        for (int i = 0; i < compact_total_tiles && i < (int)parsed_tiles.size(); i++) {
-            level.data[i] = parsed_tiles[i];
-            level.tile_group_ids[i] = parsed_tile_group_ids[i];
-        }
-    } else {
-        for (int y = 0; y < level.size.y; y++) {
-            for (int x = 0; x < level.size.x; x++) {
-                const int source_idx = y * WorldCoords::CHUNK_SIZE + x;
-                const int target_idx = y * level.size.x + x;
-                if (source_idx >= 0 && source_idx < (int)parsed_tiles.size() && target_idx >= 0 && target_idx < (int)level.data.size()) {
-                    level.data[target_idx] = parsed_tiles[source_idx];
-                    level.tile_group_ids[target_idx] = parsed_tile_group_ids[source_idx];
-                }
-            }
-        }
+    if (static_cast<int>(level.data.size()) != total_tiles) {
+        UtilityFunctions::push_error("[StructureDb] RLE cell count does not match size for ", p_structure_id, ".");
+        return StructureLevelInfo();
     }
 
     return level;
@@ -302,42 +317,40 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
     StructureInfo info;
     String structure_id = String(p_data.get("id", ""));
     info.type = String(p_data.get("type", ""));
+    info.placement_rotations = parse_placement_rotations(p_data, structure_id);
     info.entrances = parse_structure_entrances(p_data, structure_id);
     info.dungeon_room_entrance_mask = parse_dungeon_room_entrance_mask(p_data, structure_id);
     info.size = variant_to_vector2i(p_data.get("size", Array()), Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE));
-    if (info.size.x <= 0 || info.size.y <= 0) {
-        info.size = Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE);
+    if (!is_valid_structure_size(info.size)) {
+        UtilityFunctions::push_error("[StructureDb] Invalid structure size for ", structure_id, ".");
+        return info;
     }
 
     if (id_reg) {
         id_reg->register_string(structure_id);
     }
 
-    if (p_data.has("blueprint") || p_data.has("palette") || p_data.has("rules")) {
-        StructureLevelInfo level_zero = parse_level(p_data, structure_id, this, id_reg, info.size);
-        info.levels[0] = level_zero;
-    }
-
     Variant levels_var = p_data.get("levels", Variant());
-    if (levels_var.get_type() == Variant::DICTIONARY) {
-        Dictionary levels = levels_var;
-        Array keys = levels.keys();
-        for (int i = 0; i < keys.size(); i++) {
-            Variant key_var = keys[i];
-            Variant value = levels[key_var];
-            if (value.get_type() != Variant::DICTIONARY) continue;
-            int z = variant_to_level(key_var);
-            Dictionary level_data = value;
-            info.levels[z] = parse_level(level_data, structure_id, this, id_reg, info.size);
+    if (levels_var.get_type() != Variant::DICTIONARY) {
+        UtilityFunctions::push_error("[StructureDb] Missing levels dictionary for ", structure_id, ".");
+        return StructureInfo();
+    }
+    Dictionary levels = levels_var;
+    Array keys = levels.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        Variant key_var = keys[i];
+        Variant value = levels[key_var];
+        if (value.get_type() != Variant::DICTIONARY) {
+            UtilityFunctions::push_error("[StructureDb] Invalid level in ", structure_id, ".");
+            return StructureInfo();
         }
-    } else if (levels_var.get_type() == Variant::ARRAY) {
-        Array levels = levels_var;
-        for (int i = 0; i < levels.size(); i++) {
-            if (levels[i].get_type() != Variant::DICTIONARY) continue;
-            Dictionary level_data = levels[i];
-            int z = variant_to_level(level_data.get("z", level_data.get("level", 0)));
-            info.levels[z] = parse_level(level_data, structure_id, this, id_reg, info.size);
+        int z = variant_to_level(key_var);
+        Dictionary level_data = value;
+        StructureLevelInfo level = parse_level(level_data, structure_id, this, id_reg, info.size);
+        if (level.data.empty()) {
+            return StructureInfo();
         }
+        info.levels[z] = std::move(level);
     }
 
     auto level_zero_it = info.levels.find(0);

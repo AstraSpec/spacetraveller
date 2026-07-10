@@ -21,6 +21,9 @@ static func save_structure(ID: String, RLE: Dictionary, filepath: String):
 
 static func _preserve_rule_metadata(existing: Dictionary, replacement: Dictionary) -> Dictionary:
 	var merged: Dictionary = replacement.duplicate(true)
+	var existing_placement: Variant = existing.get("placement", {})
+	if existing_placement is Dictionary and !merged.has("placement"):
+		merged["placement"] = existing_placement.duplicate(true)
 	var existing_levels: Dictionary = _get_structure_levels(existing)
 	var merged_levels: Dictionary = _get_structure_levels(merged)
 	for key in existing_levels.keys():
@@ -48,13 +51,6 @@ static func _get_structure_levels(structure_data: Dictionary) -> Dictionary:
 			var level_data: Variant = raw_levels[key]
 			if level_data is Dictionary:
 				result[str(key)] = level_data.duplicate(true)
-	elif structure_data.has("blueprint") or structure_data.has("palette") or structure_data.has("rules"):
-		var level_zero: Dictionary = {}
-		level_zero["blueprint"] = structure_data.get("blueprint", "")
-		level_zero["palette"] = structure_data.get("palette", [])
-		if structure_data.has("rules"):
-			level_zero["rules"] = structure_data["rules"]
-		result["0"] = level_zero
 	return result
 
 static func delete_structure(id: String, filepath: String = ""):

@@ -54,12 +54,6 @@
     ]
   },
   {
-    "id": "palace_floor",
-    "entries": [
-      { "tile": "palace_floor", "weight": 1 }
-    ]
-  },
-  {
     "id": "wood_wall",
     "entries": [
       { "tile": "w_wall", "weight": 1 }

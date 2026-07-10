@@ -2,6 +2,7 @@ extends Node2D
 
 signal open_save
 signal open_load
+signal editor_area_changed(size: Vector2i)
 
 @onready var ToolOption :PackedScene = preload("res://src/structure_editor/tool_option.tscn")
 @export var Editor :StructureEditor
@@ -26,6 +27,7 @@ signal open_load
 @export var chunkMenu :PopupMenu
 @export var ToolOptions :HBoxContainer
 @export var LoadWindow :Window
+@export var SetTypeWindow :Window
 @export var CoordsLabel :Label
 @export var ChunkVisual :Line2D
 @export var ZLevelLabel :Label
@@ -42,9 +44,6 @@ var tools = {}
 var active_tool
 var active_selection : Rect2i = Rect2i()
 
-var selectedChunkPos : Vector2i
-var isMovingChunk : bool = false
-
 var tileID1 :String
 var tileID2 :String
 var tileType1 :String = "tile"
@@ -60,8 +59,12 @@ var playerOffset :Vector2
 var active_z :int = 0
 var levels :Dictionary = {}
 var structure_size :Vector2i = Vector2i(24, 24)
+var editor_area_size :Vector2i = Vector2i(24, 24)
+var editor_area_origin :Vector2i = Vector2i(-12, -12)
 var current_structure_id :String = ""
 var current_structure_type :String = "building"
+var is_feature_selected :bool = false
+var current_placement :Dictionary = {}
 var current_structure_path :String = "res://data/structures/structures.json"
 var current_dungeon_room_entrances :Array = ["north", "east", "south", "west"]
 var current_structure_entrances :Array = []
@@ -80,6 +83,7 @@ var editor_other_rules_by_level :Dictionary = {}
 var undo_stack : Array = []
 var redo_stack : Array = []
 const MAX_UNDOS = 100
+const MAX_STRUCTURE_CELLS = 1024 * 1024
 const LOOT_TABLE_ATLAS := Vector2i(71, 18)
 const ENTITY_GROUP_ATLAS := Vector2i(72, 18)
 const GROUP_TYPE_MAP := {"tile": "tile_group", "item": "loot_table", "npc": "entity_group"}
@@ -167,9 +171,9 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	_on_mode_changed("pencil")
 	
-	selectedChunkPos = Vector2i(floor(offset.x / CHUNK_SIZE), floor(offset.y / CHUNK_SIZE)) * CHUNK_SIZE
 	if !chunkMenu.index_pressed.is_connected(_on_chunk_index_pressed):
 		chunkMenu.index_pressed.connect(_on_chunk_index_pressed)
+	chunkMenu.set_item_disabled(0, true)
 	_update_chunk_visual()
 	_update_z_label()
 	
@@ -226,16 +230,8 @@ func _process(_delta: float) -> void:
 	var global_pos = mousePos + Vector2i(playerOffset)
 	CoordsLabel.update_text(global_pos, selection_size)
 
-	if isMovingChunk:
-		var abs_mouse = mousePos + Vector2i(playerOffset)
-		var new_chunk_pos = Vector2i(floor(float(abs_mouse.x) / CHUNK_SIZE), floor(float(abs_mouse.y) / CHUNK_SIZE)) * CHUNK_SIZE
-		if new_chunk_pos != selectedChunkPos:
-			selectedChunkPos = new_chunk_pos
-			_update_chunk_visual()
-
 func _on_mode_changed(m :String):
 	if tools.has(m):
-		isMovingChunk = false
 		if active_tool:
 			active_tool.on_deactivate()
 		active_tool = tools[m]
@@ -264,13 +260,6 @@ func _update_tool_options():
 		)
 
 func _on_mouse_input(button: String, action: InputManager.MouseAction):
-	if isMovingChunk:
-		if action == InputManager.MouseAction.PRESS and button == "left":
-			isMovingChunk = false
-			_update_chunk_visual()
-			_on_mode_changed("pencil")
-		return
-	
 	match action:
 		InputManager.MouseAction.PRESS:
 			active_tool.on_press(button, mousePos)
@@ -456,10 +445,16 @@ func get_tool_entry_for_button(button: String) -> Dictionary:
 	return { "id": tileID1, "type": tileType1 }
 
 func select_entry(id: String, type: String = "tile", is_primary: bool = true):
-	if !is_primary:
-		set_active_content_type(type)
-		return
 	if !_is_content_type(type):
+		return
+	if !is_primary:
+		if type == "tile" or type == "tile_group":
+			active_content_type = type
+			tileID2 = id
+			tileType2 = type
+			_update_selection_labels()
+		else:
+			set_active_content_type(type)
 		return
 	active_content_type = type
 	tileID1 = id
@@ -686,10 +681,13 @@ func _active_level_key() -> String:
 	return _level_key(active_z)
 
 func _local_pos_from_world(world_pos: Vector2i) -> Vector2i:
-	return world_pos - selectedChunkPos
+	return world_pos - _editor_world_origin()
 
 func _world_pos_from_local(local_pos: Vector2i) -> Vector2i:
-	return selectedChunkPos + local_pos
+	return _editor_world_origin() + local_pos
+
+func _editor_world_origin() -> Vector2i:
+	return Vector2i(playerOffset) + editor_area_origin
 
 func _pos_key(pos: Vector2i) -> String:
 	return "%d,%d" % [pos.x, pos.y]
@@ -1346,12 +1344,12 @@ func _clear_editor_rule_state() -> void:
 func commit_shape(shape_type: int, p1: Vector2i, p2: Vector2i, filled: bool, perfect: bool, id: String, type: String, amount: int = -1):
 	var points = Editor.get_shape_points(shape_type, p1, p2, filled, perfect)
 	for p in points:
-		place_entry(p, id, type, amount)
+		if is_inside_bubble(p - Vector2i(playerOffset)):
+			place_entry(p, id, type, amount)
 	update_editor_visuals()
 
 func is_inside_bubble(pos: Vector2i) -> bool:
-	var half = BUBBLE_SIZE / 2
-	return pos.x >= -half and pos.x < half and pos.y >= -half and pos.y < half
+	return Rect2i(editor_area_origin, editor_area_size).has_point(pos)
 
 func _on_clear_button_pressed() -> void:
 	save_undo_state()
@@ -1400,28 +1398,65 @@ func _on_edit_index_pressed(index: int) -> void:
 		_on_mode_changed(names[index])
 
 func _on_chunk_index_pressed(index: int) -> void:
-	if index == 0:
-		isMovingChunk = !isMovingChunk
-		if isMovingChunk:
-			if active_tool:
-				active_tool.on_deactivate()
-			active_tool = null
-			Input.set_custom_mouse_cursor(null)
-			Editor.clear_preview_tiles()
-		else:
-			_on_mode_changed("pencil")
+	if index == 1:
+		SetTypeWindow.call("open")
+
+func is_feature_structure() -> bool:
+	return is_feature_selected
+
+func set_structure_type_mode(feature_selected: bool, size: Vector2i) -> void:
+	var normalized_size := _normalize_structure_size(size)
+	if normalized_size == Vector2i.ZERO:
+		return
+	var previous_size := structure_size
+	var size_changed := normalized_size != previous_size
+	if size_changed:
+		_capture_active_level()
+		_sync_all_level_rules()
+		if !_validate_levels(levels, previous_size, current_structure_id):
+			return
+		var resized_levels: Dictionary = {}
+		for key in levels.keys():
+			var level_data: Dictionary = levels[key]
+			resized_levels[str(key)] = _compact_level_to_size(level_data, previous_size, normalized_size, str(key))
+		_clear_editor_rule_state()
+		levels = resized_levels
+		_split_editor_rules_from_levels(levels, normalized_size)
+	is_feature_selected = feature_selected
+	structure_size = normalized_size
+	if feature_selected:
+		current_structure_type = "feature"
+	elif current_structure_type == "feature":
+		current_structure_type = "building"
+	_set_editor_area(normalized_size)
+	if size_changed:
+		_apply_level(active_z)
+
+func _set_editor_area(size: Vector2i) -> void:
+	var new_area_size := Vector2i(maxi(size.x, 1), maxi(size.y, 1))
+	var new_bubble_size := maxi(new_area_size.x, new_area_size.y)
+	if new_bubble_size % 2 != 0:
+		new_bubble_size += 1
+	var area_changed := new_area_size != editor_area_size or new_bubble_size != BUBBLE_SIZE
+	editor_area_size = new_area_size
+	BUBBLE_SIZE = new_bubble_size
+	# The editor footprint is anchored at world cell (0, 0), so resizing grows
+	# or shrinks from its top-left corner rather than its centre.
+	editor_area_origin = Vector2i(-int(BUBBLE_SIZE / 2), -int(BUBBLE_SIZE / 2))
+	_update_chunk_visual()
+	if area_changed:
+		editor_area_changed.emit(editor_area_size)
 
 func _update_chunk_visual():
 	var cell_size = FastTilemap.get_cell_size()
-	var size = CHUNK_SIZE * cell_size
+	var size = editor_area_size * cell_size
 	ChunkVisual.points = PackedVector2Array([
 		Vector2(0, 0),
-		Vector2(size, 0),
-		Vector2(size, size),
-		Vector2(0, size)
+		Vector2(size.x, 0),
+		Vector2(size.x, size.y),
+		Vector2(0, size.y)
 	])
-	var rel_pos = selectedChunkPos - Vector2i(playerOffset)
-	ChunkVisual.position = Vector2(rel_pos) * cell_size
+	ChunkVisual.position = Vector2(editor_area_origin) * cell_size
 	update_editor_visuals()
 
 func _level_key(z: int) -> String:
@@ -1463,8 +1498,9 @@ func _clear_current_chunk(clear_rules: bool = false) -> void:
 		editor_entity_group_rules_by_level.erase(key)
 		editor_tile_group_rules_by_level.erase(key)
 		editor_other_rules_by_level.erase(key)
-	for x in range(selectedChunkPos.x, selectedChunkPos.x + CHUNK_SIZE):
-		for y in range(selectedChunkPos.y, selectedChunkPos.y + CHUNK_SIZE):
+	var area_world_origin := _editor_world_origin()
+	for x in range(area_world_origin.x, area_world_origin.x + editor_area_size.x):
+		for y in range(area_world_origin.y, area_world_origin.y + editor_area_size.y):
 			World.place_tile(x, y, "void")
 
 func _level_has_non_void(level_data: Dictionary) -> bool:
@@ -1501,14 +1537,10 @@ func _level_has_rules(level_data: Dictionary) -> bool:
 	return rules is Array and !rules.is_empty()
 
 func _normalize_structure_size(size: Vector2i) -> Vector2i:
-	var normalized := size
-	if normalized.x <= 0:
-		normalized.x = CHUNK_SIZE
-	if normalized.y <= 0:
-		normalized.y = CHUNK_SIZE
-	normalized.x = clampi(normalized.x, 1, CHUNK_SIZE)
-	normalized.y = clampi(normalized.y, 1, CHUNK_SIZE)
-	return normalized
+	if size.x <= 0 or size.y <= 0 or size.x * size.y > MAX_STRUCTURE_CELLS:
+		push_error("Invalid structure size: " + str(size))
+		return Vector2i.ZERO
+	return size
 
 func _structure_size_from_variant(value: Variant, fallback: Vector2i = Vector2i(24, 24)) -> Vector2i:
 	var size := fallback
@@ -1520,15 +1552,23 @@ func _structure_size_from_variant(value: Variant, fallback: Vector2i = Vector2i(
 		size = Vector2i(int(value[0]), int(value[1]))
 	return _normalize_structure_size(size)
 
-func _decode_level_tiles(level_data: Dictionary, source_size: Vector2i) -> Array:
+func _decode_level_tiles(level_data: Dictionary, source_size: Vector2i) -> Dictionary:
+	if source_size.x <= 0 or source_size.y <= 0:
+		return {"ok": false, "error": "invalid level dimensions"}
 	var total := source_size.x * source_size.y
 	var tiles: Array = []
 	tiles.resize(total)
 	for i in range(total):
 		tiles[i] = "void"
 
-	var palette: Array = level_data.get("palette", [])
-	var blueprint: String = str(level_data.get("blueprint", ""))
+	var palette_var: Variant = level_data.get("palette", [])
+	if !(palette_var is Array):
+		return {"ok": false, "error": "palette is not an array"}
+	var blueprint_var: Variant = level_data.get("blueprint", "")
+	if !(blueprint_var is String):
+		return {"ok": false, "error": "blueprint is not a string"}
+	var palette: Array = palette_var
+	var blueprint: String = blueprint_var
 	var rle: String = blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "")
 	var current_pos := 0
 
@@ -1537,24 +1577,39 @@ func _decode_level_tiles(level_data: Dictionary, source_size: Vector2i) -> Array
 		if part.is_empty():
 			continue
 		var pieces: PackedStringArray = part.split("x")
-		if pieces.size() != 2:
-			continue
+		if pieces.size() != 2 or !pieces[0].is_valid_int() or !pieces[1].is_valid_int():
+			return {"ok": false, "error": "malformed RLE run '" + part + "'"}
 		var count: int = int(pieces[0])
 		var palette_index: int = int(pieces[1])
+		if count <= 0 or palette_index < 0 or palette_index >= palette.size():
+			return {"ok": false, "error": "invalid RLE run '" + part + "'"}
+		if count > total - current_pos:
+			return {"ok": false, "error": "RLE exceeds " + str(total) + " cells"}
 		var tile_id := "void"
-		if palette_index >= 0 and palette_index < palette.size():
-			var entry = palette[palette_index]
-			if entry is Dictionary:
-				tile_id = str(entry.get("tile", str(entry.get("tile_group", ""))))
-			else:
-				tile_id = str(entry)
+		var entry = palette[palette_index]
+		if entry is Dictionary:
+			tile_id = str(entry.get("tile", str(entry.get("tile_group", ""))))
+		else:
+			tile_id = str(entry)
 		for _i in range(count):
-			if current_pos >= total:
-				return tiles
 			tiles[current_pos] = tile_id
 			current_pos += 1
 
-	return tiles
+	if current_pos != total:
+		return {"ok": false, "error": "RLE has " + str(current_pos) + " cells; expected " + str(total)}
+	return {"ok": true, "tiles": tiles}
+
+func _validate_levels(levels_to_validate: Dictionary, size: Vector2i, structure_id: String = "") -> bool:
+	for key in levels_to_validate.keys():
+		var level_variant: Variant = levels_to_validate[key]
+		if !(level_variant is Dictionary):
+			push_error("Invalid level for structure '" + structure_id + "' at z=" + str(key) + ".")
+			return false
+		var decoded := _decode_level_tiles(level_variant, size)
+		if !bool(decoded.get("ok", false)):
+			push_error("Invalid RLE for structure '" + structure_id + "' at z=" + str(key) + ": " + str(decoded.get("error", "unknown error")))
+			return false
+	return true
 
 func _append_rle_run(parts: PackedStringArray, palette: Array, id_to_index: Dictionary, tile_id: String, count: int) -> void:
 	if count <= 0:
@@ -1844,7 +1899,11 @@ func _apply_editor_rules_for_level(z: int) -> void:
 	_refresh_tile_group_markers()
 
 func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i, level_key: String = "") -> Dictionary:
-	var source_tiles := _decode_level_tiles(level_data, source_size)
+	var decoded := _decode_level_tiles(level_data, source_size)
+	if !bool(decoded.get("ok", false)):
+		push_error("Cannot resize invalid RLE level: " + str(decoded.get("error", "unknown error")))
+		return {}
+	var source_tiles: Array = decoded["tiles"]
 	var target_tiles: Array = []
 	target_tiles.resize(target_size.x * target_size.y)
 
@@ -1882,7 +1941,7 @@ func _capture_active_level() -> void:
 	if active_tool:
 		active_tool.on_deactivate()
 	var key: String = _level_key(active_z)
-	var level_data: Dictionary = Editor.export_to_rle("", selectedChunkPos, active_z, structure_size)
+	var level_data: Dictionary = Editor.export_to_rle("", _editor_world_origin(), active_z, structure_size)
 	level_data.erase("id")
 	_sync_level_rules_into(key, level_data)
 	var has_tg_rules: bool = !editor_tile_group_rules_by_level.get(key, {}).is_empty()
@@ -1913,7 +1972,7 @@ func _apply_level(z: int) -> void:
 					string_palette.append(str(entry.get("tile", "")))
 			else:
 				string_palette.append(str(entry))
-		Editor.import_from_rle(level_data.get("blueprint", ""), string_palette, selectedChunkPos, z, structure_size)
+		Editor.import_from_rle(level_data.get("blueprint", ""), string_palette, _editor_world_origin(), z, structure_size)
 	_apply_editor_rules_for_level(z)
 	_reset_level_edit_state()
 	_update_z_label()
@@ -1935,6 +1994,8 @@ func new_structure() -> void:
 	_clear_editor_rule_state()
 	levels.clear()
 	structure_size = Vector2i(CHUNK_SIZE, CHUNK_SIZE)
+	is_feature_selected = false
+	current_placement.clear()
 	set_current_structure_details("", "building", structure_size, ["north", "east", "south", "west"], [], "res://data/structures/structures.json")
 	active_z = 0
 	World.set_active_z(active_z)
@@ -1944,16 +2005,28 @@ func new_structure() -> void:
 	update_editor_visuals()
 
 func import_structure(structure_data: Dictionary) -> void:
-	if !World:
-		return
-	if active_tool:
-		active_tool.on_deactivate()
-	clear_editor_npcs()
-	clear_editor_live_items()
-	_clear_editor_rule_state()
 	var imported_levels: Dictionary = {}
 	var root_size := _structure_size_from_variant(structure_data.get("size", []))
-	structure_size = root_size
+	if root_size == Vector2i.ZERO:
+		push_error("Cannot import structure with invalid size.")
+		return
+	if !(structure_data.get("levels", {}) is Dictionary):
+		push_error("Cannot import structure without levels.")
+		return
+	var raw_levels: Dictionary = structure_data["levels"]
+	for key in raw_levels.keys():
+		var value: Variant = raw_levels[key]
+		if !(value is Dictionary):
+			push_error("Cannot import structure with an invalid level at z=" + str(key) + ".")
+			return
+		imported_levels[str(key)] = value.duplicate(true)
+	var structure_id := str(structure_data.get("id", ""))
+	if !_validate_levels(imported_levels, root_size, structure_id):
+		return
+	var placement: Dictionary = {}
+	var placement_var: Variant = structure_data.get("placement", {})
+	if placement_var is Dictionary:
+		placement = placement_var.duplicate(true)
 	var dungeon_entrances: Array = []
 	var dungeon_room_var: Variant = structure_data.get("dungeon_room", {})
 	if dungeon_room_var is Dictionary:
@@ -1963,28 +2036,22 @@ func import_structure(structure_data: Dictionary) -> void:
 	var structure_entrance_var: Variant = structure_data.get("entrance", [])
 	if structure_entrance_var is Array:
 		structure_entrances = structure_entrance_var.duplicate()
+
+	if active_tool:
+		active_tool.on_deactivate()
+	clear_editor_npcs()
+	clear_editor_live_items()
+	_clear_editor_rule_state()
+	structure_size = root_size
 	set_current_structure_details(
-		str(structure_data.get("id", "")),
+		structure_id,
 		str(structure_data.get("type", "building")),
 		root_size,
 		dungeon_entrances,
 		structure_entrances,
 		str(structure_data.get("filepath", "res://data/structures/structures.json"))
 	)
-	if structure_data.has("levels") and structure_data["levels"] is Dictionary:
-		var raw_levels: Dictionary = structure_data["levels"]
-		for key in raw_levels.keys():
-			var value: Variant = raw_levels[key]
-			if value is Dictionary:
-				imported_levels[str(key)] = value.duplicate(true)
-	elif structure_data.has("blueprint") or structure_data.has("palette") or structure_data.has("rules"):
-		var level_zero: Dictionary = {}
-		level_zero["blueprint"] = structure_data.get("blueprint", "")
-		level_zero["palette"] = structure_data.get("palette", [])
-		if structure_data.has("rules"):
-			level_zero["rules"] = structure_data["rules"]
-		imported_levels["0"] = level_zero
-
+	current_placement = placement
 	_split_editor_rules_from_levels(imported_levels, root_size)
 	var levels_to_clear: Array = levels.keys()
 	for key in imported_levels.keys():
@@ -2001,9 +2068,14 @@ func import_structure(structure_data: Dictionary) -> void:
 	_apply_level(0)
 
 func set_current_structure_details(id: String, type: String, size: Vector2i, dungeon_entrances: Array = [], structure_entrances: Array = [], filepath: String = "") -> void:
+	var normalized_size := _normalize_structure_size(size)
+	if normalized_size == Vector2i.ZERO:
+		return
 	current_structure_id = id.strip_edges()
 	current_structure_type = type.strip_edges() if !type.strip_edges().is_empty() else "building"
-	structure_size = _normalize_structure_size(size)
+	is_feature_selected = current_structure_type == "feature"
+	structure_size = normalized_size
+	_set_editor_area(normalized_size)
 	current_dungeon_room_entrances = dungeon_entrances.duplicate()
 	current_structure_entrances = structure_entrances.duplicate()
 	if !filepath.strip_edges().is_empty():
@@ -2013,13 +2085,20 @@ func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dic
 	_capture_active_level()
 	_sync_all_level_rules()
 	footprint = _normalize_structure_size(footprint)
+	if footprint == Vector2i.ZERO:
+		push_error("Cannot export structure with invalid size.")
+		return {}
 	var source_size := structure_size
+	if !_validate_levels(levels, source_size, id):
+		return {}
 	var result_levels: Dictionary = {}
 	var result: Dictionary = {
 		"id": id,
 		"size": [footprint.x, footprint.y],
 		"levels": result_levels
 	}
+	if !current_placement.is_empty():
+		result["placement"] = current_placement.duplicate(true)
 	var sorted_keys: Array = levels.keys()
 	sorted_keys.sort_custom(func(a, b): return int(str(a)) < int(str(b)))
 	for key in sorted_keys:
@@ -2028,7 +2107,7 @@ func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dic
 		if _level_has_non_void(compact_level) or _level_has_rules(compact_level):
 			result_levels[str(key)] = compact_level
 	if result_levels.is_empty():
-		var blank_level: Dictionary = Editor.export_to_rle("", selectedChunkPos, 0, footprint)
+		var blank_level: Dictionary = Editor.export_to_rle("", _editor_world_origin(), 0, footprint)
 		blank_level.erase("id")
 		result_levels["0"] = blank_level
 	structure_size = footprint

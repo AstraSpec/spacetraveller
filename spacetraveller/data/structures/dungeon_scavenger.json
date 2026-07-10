@@ -1,15 +1,30 @@
 [
     {
         "id": "dungeon_scavenger_1",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(2x0, 1x1, 3x2, 1x3, 3x4, 2x2, 1x1, 3x4, 1x3, 1x1)",
                 "palette": [
-                    {"tile": "w_crate"},
-                    {"tile": "void"},
-                    {"tile": "carpet_green"},
-                    {"tile": "barrel"},
-                    {"tile": "carpet_blue"}
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "carpet_green"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "carpet_blue"
+                    }
                 ],
                 "rules": [
                     {
@@ -24,23 +39,31 @@
                     }
                 ]
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_2",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 2x1, 2x0, 1x2, 1x1, 3x3, 1x0, 2x2, 3x3, 2x2)",
                 "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "carpet_yellow"},
-                    {"tile": "void"},
-                    {"tile": "carpet_red"}
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "carpet_yellow"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "carpet_red"
+                    }
                 ],
                 "rules": [
                     {
@@ -55,24 +78,34 @@
                     }
                 ]
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_3",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 2x1, 1x2, 1x3, 2x4, 4x1, 7x4)",
                 "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "carpet_green"},
-                    {"tile": "chair"},
-                    {"tile": "w_crate"},
-                    {"tile": "void"}
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "carpet_green"
+                    },
+                    {
+                        "tile": "chair"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "void"
+                    }
                 ],
                 "rules": [
                     {
@@ -87,24 +120,34 @@
                     }
                 ]
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_4",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x3, 2x0, 2x4, 2x1, 7x0)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "carpet_purple"},
-                    {"tile": "chair"},
-                    {"tile": "barrel"},
-                    {"tile": "table"}
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "carpet_purple"
+                    },
+                    {
+                        "tile": "chair"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "table"
+                    }
                 ],
                 "rules": [
                     {
@@ -119,23 +162,31 @@
                     }
                 ]
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_6",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(2x0, 4x1, 1x2, 3x3, 2x1, 1x2, 3x3, 2x0)",
                 "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "carpet_blue"},
-                    {"tile": "void"},
-                    {"tile": "carpet_red"}
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "carpet_blue"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "carpet_red"
+                    }
                 ],
                 "rules": [
                     {
@@ -150,85 +201,112 @@
                     }
                 ]
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_7",
-        "levels": {
-            "0": {
-                "blueprint": "(2x0, 2x1, 1x2, 2x0, 1x1, 3x2, 3x0, 3x2, 1x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_crate"},
-                    {"tile": "barrel"}
-                ]
-            }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
-    },
-    {
-        "id": "dungeon_scavenger_8",
-        "levels": {
-            "0": {
-                "blueprint": "(4x0, 2x1, 1x0, 2x1, 2x0, 1x2, 1x0, 2x1, 1x3, 2x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "barrel"},
-                    {"tile": "dungeon_stuff"},
-                    {"tile": "chair"}
-                ]
-            }
-        },
+        "type": "feature",
         "size": [
             6,
             3
         ],
-        "type": "dungeon_scavenger"
+        "levels": {
+            "0": {
+                "blueprint": "(2x0, 2x1, 1x2, 2x0, 1x1, 3x2, 3x0, 3x2, 1x0)",
+                "palette": [
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "barrel"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "dungeon_scavenger_8",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 1x0, 2x1, 2x0, 1x2, 1x0, 2x1, 1x3, 2x0)",
+                "palette": [
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "dungeon_stuff"
+                    },
+                    {
+                        "tile": "chair"
+                    }
+                ],
+                "rules": []
+            }
+        }
     },
     {
         "id": "dungeon_scavenger_9",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(2x0, 5x1, 1x2, 2x1, 2x3, 4x1, 2x3)",
                 "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "void"},
-                    {"tile": "coffin"},
-                    {"tile": "w_crate"}
-                ]
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "coffin"
+                    },
+                    {
+                        "tile": "w_crate"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     },
     {
         "id": "dungeon_scavenger_10",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(3x0, 1x1, 2x2, 4x0, 1x1, 7x0)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "barrel"},
-                    {"tile": "w_crate"}
-                ]
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "w_crate"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "dungeon_scavenger"
+        }
     }
 ]

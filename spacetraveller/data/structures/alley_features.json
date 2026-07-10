@@ -1,134 +1,184 @@
 [
     {
         "id": "alley_barrels",
-        "levels": {
-            "0": {
-                "blueprint": "(2x0, 1x1, 1x2, 1x0, 4x2)",
-                "palette": [
-                    {"tile": "barrel"},
-                    {"tile": "w_crate"},
-                    {"tile": "void"}
-                ]
-            }
-        },
-        "size": [
-            3.0,
-            3.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "alley_crates",
-        "levels": {
-            "0": {
-                "blueprint": "(3x0, 1x1, 1x2, 4x1)",
-                "palette": [
-                    {"tile": "w_crate"},
-                    {"tile": "void"},
-                    {"tile": "barrel"}
-                ]
-            }
-        },
-        "size": [
-            3.0,
-            3.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "alley_fountain",
-        "levels": {
-            "0": {
-                "blueprint": "(1x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 1x0)",
-                "palette": [
-                    {"tile": "alley_flagstone"},
-                    {"tile": "water"},
-                    {"tile": "fountain"}
-                ]
-            }
-        },
-        "size": [
-            5.0,
-            3.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "alley_dog_house",
-        "levels": {
-            "0": {
-                "blueprint": "(4x0, 1x1, 4x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "dog_house"}
-                ]
-            }
-        },
-        "size": [
-            3.0,
-            3.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "alley_gallows",
-        "levels": {
-            "0": {
-                "blueprint": "(4x0, 1x1, 4x0)",
-                "palette": [
-                    {"tile": "w_floor"},
-                    {"tile": "gallows"}
-                ]
-            }
-        },
-        "size": [
-            3.0,
-            3.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "alley_statue",
-        "levels": {
-            "0": {
-                "blueprint": "(4x0, 1x1, 4x0)",
-                "palette": [
-                    {"tile": "w_floor"},
-                    {"tile": "statue_body"}
-                ]
-            }
-        },
+        "type": "feature",
         "size": [
             3,
             3
         ],
-        "type": "feature"
+        "levels": {
+            "0": {
+                "blueprint": "(2x0, 1x1, 1x2, 1x0, 4x2)",
+                "palette": [
+                    {
+                        "tile": "barrel"
+                    },
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "void"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "alley_crates",
+        "type": "feature",
+        "size": [
+            3,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 1x1, 1x2, 4x1)",
+                "palette": [
+                    {
+                        "tile": "w_crate"
+                    },
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "barrel"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "alley_fountain",
+        "type": "feature",
+        "size": [
+            5,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 1x0)",
+                "palette": [
+                    {
+                        "tile": "alley_flagstone"
+                    },
+                    {
+                        "tile": "water"
+                    },
+                    {
+                        "tile": "fountain"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "alley_dog_house",
+        "type": "feature",
+        "size": [
+            3,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "dog_house"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "alley_gallows",
+        "type": "feature",
+        "size": [
+            3,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    {
+                        "tile": "w_floor"
+                    },
+                    {
+                        "tile": "gallows"
+                    }
+                ],
+                "rules": []
+            }
+        }
+    },
+    {
+        "id": "alley_statue",
+        "type": "feature",
+        "size": [
+            3,
+            3
+        ],
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 1x1, 4x0)",
+                "palette": [
+                    {
+                        "tile": "w_floor"
+                    },
+                    {
+                        "tile": "statue_body"
+                    }
+                ],
+                "rules": []
+            }
+        }
     },
     {
         "id": "alley_bench",
+        "type": "feature",
+        "size": [
+            3,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(3x0, 3x1, 3x0)",
                 "palette": [
-                    {"tile": "chair"},
-                    {"tile": "table"}
-                ]
+                    {
+                        "tile": "chair"
+                    },
+                    {
+                        "tile": "table"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            3.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "alley_cooking_area",
+        "type": "feature",
+        "size": [
+            4,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(5x0, 1x1, 6x0)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "cooking_pot"}
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "cooking_pot"
+                    }
                 ],
                 "rules": [
                     {
@@ -213,63 +263,75 @@
                     }
                 ]
             }
-        },
-        "size": [
-            4.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "alley_pond_1",
+        "type": "feature",
+        "size": [
+            5,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 3x1, 1x0, 9x1, 1x0)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "water"}
-                ]
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "water"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            5.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "alley_pond_2",
+        "type": "feature",
+        "size": [
+            4,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 2x1, 1x0, 4x1, 1x0, 3x1)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "water"}
-                ]
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "water"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            4.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     },
     {
         "id": "alley_pond_3",
+        "type": "feature",
+        "size": [
+            6,
+            3
+        ],
         "levels": {
             "0": {
                 "blueprint": "(1x0, 2x1, 1x2, 5x1, 1x2, 2x1, 1x0, 2x1, 1x2, 1x1, 1x0)",
                 "palette": [
-                    {"tile": "void"},
-                    {"tile": "water"},
-                    {"tile": "bridge"}
-                ]
+                    {
+                        "tile": "void"
+                    },
+                    {
+                        "tile": "water"
+                    },
+                    {
+                        "tile": "bridge"
+                    }
+                ],
+                "rules": []
             }
-        },
-        "size": [
-            6.0,
-            3.0
-        ],
-        "type": "feature"
+        }
     }
 ]

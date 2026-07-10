@@ -617,6 +617,56 @@ void WorldSpawner::spawn_for_active_cells(
         }
 
         SurfaceFeatureContext surface_feature = p_generator.get_surface_feature_context(pos.x, pos.y, pos3.z, static_cast<int>(p_world_seed));
+        if (!surface_feature.valid) {
+        CityStructureContext city_structure = p_generator.get_city_structure_context(pos.x, pos.y, pos3.z);
+        if (city_structure.valid) {
+            StructureDb* structure_db = StructureDb::get_singleton();
+            const StructureInfo* structure = structure_db ? structure_db->get_structure_info(city_structure.structure_id) : nullptr;
+            if (structure) {
+                auto level_it = structure->levels.find(city_structure.local_z);
+                if (level_it != structure->levels.end()) {
+                    const StructureLevelInfo& level = level_it->second;
+                    bool spawned_from_rule = false;
+                    bool custom_loot_rule_matched = false;
+                    for (const StructureRuleInfo& rule : level.rules) {
+                        if (rule.pos != city_structure.local_pos) continue;
+
+                        switch (rule.type) {
+                            case RuleType::SPAWN_LOOT_TABLE:
+                                custom_loot_rule_matched = true;
+                                apply_structure_loot_rule(p_world_seed, city_structure.structure_id, rule, pos, p_bubble);
+                                break;
+                            case RuleType::SPAWN_ITEM:
+                                custom_loot_rule_matched = true;
+                                apply_structure_spawn_item(pos, rule, p_bubble);
+                                break;
+                            case RuleType::SPAWN_ENTITY:
+                                if (!spawned_from_rule) {
+                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                }
+                                break;
+                            case RuleType::SPAWN_ENTITY_GROUP:
+                                if (!spawned_from_rule) {
+                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                }
+                                break;
+                            case RuleType::SET_METADATA:
+                                p_bubble.set_tile_metadata(pos, rule.params);
+                                break;
+                        }
+                    }
+
+                    if (!custom_loot_rule_matched) {
+                        const uint16_t tile_id = p_bubble.query_tile_id_at_z(pos.x, pos.y, pos3.z);
+                        apply_tile_spawn_loot(p_world_seed, city_structure.structure_id, tile_id, pos, p_bubble);
+                    }
+                }
+                p_spawn_state.mark_attempted(packed);
+            }
+            continue;
+        }
+        }
+
         if (surface_feature.valid) {
             StructureDb* structure_db = StructureDb::get_singleton();
             const StructureInfo* structure = structure_db ? structure_db->get_structure_info(surface_feature.structure_id) : nullptr;

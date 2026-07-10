@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=12 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" uid="uid://cnfmyow707345" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Script" uid="uid://cus5p87q6jx26" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
@@ -7,11 +7,12 @@
 [ext_resource type="Script" uid="uid://62f0dcmhyy1u" path="res://src/structure_editor/save_window.gd" id="5_dh32f"]
 [ext_resource type="Script" uid="uid://bql7a6oaypjq4" path="res://src/structure_editor/db_access.gd" id="5_uujpl"]
 [ext_resource type="Script" uid="uid://8xqc3qvwdw3v" path="res://src/structure_editor/load_window.gd" id="6_fdwd8"]
+[ext_resource type="Script" path="res://src/structure_editor/set_type_window.gd" id="7_settype"]
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -27,17 +28,18 @@ NpcJobPopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContaine
 NpcDialogueContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer")
 NpcDialogueText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer/NpcDialogueText")
 NpcDialoguePopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcDialogueContainer/NpcDialoguePopup")
-SelectionVisual = NodePath("SelectionVisual")
-editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
-chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Chunk")
-ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
-LoadWindow = NodePath("LoadWindow")
-CoordsLabel = NodePath("Canvas/MarginContainer/CoordsLabel")
-ChunkVisual = NodePath("ChunkVisual")
-ZLevelLabel = NodePath("Canvas/HBoxContainer/ZLevelLabel")
 TileGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGroupCheck")
 LootGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/LootGroupCheck")
 EntityGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/EntityGroupCheck")
+SelectionVisual = NodePath("SelectionVisual")
+editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
+chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Struct")
+ToolOptions = NodePath("Canvas/HBoxContainer/ToolOptions")
+LoadWindow = NodePath("LoadWindow")
+SetTypeWindow = NodePath("SetTypeWindow")
+CoordsLabel = NodePath("Canvas/MarginContainer/CoordsLabel")
+ChunkVisual = NodePath("ChunkVisual")
+ZLevelLabel = NodePath("Canvas/HBoxContainer/ZLevelLabel")
 
 [node name="Editor" type="StructureEditor" parent="."]
 
@@ -231,12 +233,14 @@ item_1/id = 1
 auto_translate_mode = 1
 unresizable = false
 
-[node name="Chunk" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
+[node name="Struct" type="PopupMenu" parent="Canvas/HBoxContainer/MenuBar"]
 auto_translate_mode = 1
 unresizable = false
-item_count = 1
+item_count = 2
 item_0/text = "Select Chunk"
 item_0/id = 0
+item_1/text = "Set Type"
+item_1/id = 1
 
 [node name="ToolOptions" type="HBoxContainer" parent="Canvas/HBoxContainer"]
 layout_mode = 2
@@ -245,7 +249,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Z: 0"
 
-[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "WidthText", "HeightText", "TypeText", "TypePopup", "DirsContainer", "NorthCheck", "EastCheck", "SouthCheck", "WestCheck", "EntranceContainer", "EntranceText", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
+[node name="SaveWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "StructureID", "TypeText", "TypePopup", "DirsContainer", "NorthCheck", "EastCheck", "SouthCheck", "WestCheck", "EntranceContainer", "EntranceText", "CreateButton", "ExistingButton", "CreateFP", "ExistingFP")]
 oversampling_override = 1.0
 title = "Save Structure"
 initial_position = 1
@@ -256,8 +260,6 @@ script = ExtResource("5_dh32f")
 structureEditor = NodePath("..")
 Editor = NodePath("../Editor")
 StructureID = NodePath("MarginContainer/VBoxContainer/StructureIDText")
-WidthText = NodePath("MarginContainer/VBoxContainer/SizeContainer/WidthText")
-HeightText = NodePath("MarginContainer/VBoxContainer/SizeContainer/HeightText")
 TypeText = NodePath("MarginContainer/VBoxContainer/TypeContainer/TypeText")
 TypePopup = NodePath("MarginContainer/VBoxContainer/TypeContainer/TypePopup")
 DirsContainer = NodePath("MarginContainer/VBoxContainer/DirsContainer")
@@ -296,35 +298,6 @@ text = "1. Structure Data"
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "ID"
-
-[node name="SizeContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Width" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
-modulate = Color(0.67069, 0.67069, 0.67069, 1)
-layout_mode = 2
-text = "Width: "
-
-[node name="WidthText" type="SpinBox" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
-custom_minimum_size = Vector2(28, 40)
-layout_mode = 2
-min_value = 1.0
-max_value = 24.0
-value = 24.0
-rounded = true
-
-[node name="Height" type="Label" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
-modulate = Color(0.67069, 0.67069, 0.67069, 1)
-layout_mode = 2
-text = "Height: "
-
-[node name="HeightText" type="SpinBox" parent="SaveWindow/MarginContainer/VBoxContainer/SizeContainer"]
-custom_minimum_size = Vector2(28, 40)
-layout_mode = 2
-min_value = 1.0
-max_value = 24.0
-value = 24.0
-rounded = true
 
 [node name="TypeContainer" type="HBoxContainer" parent="SaveWindow/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -455,6 +428,95 @@ text = "Save"
 layout_mode = 2
 text = "Cancel"
 
+[node name="SetTypeWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "TypePicker", "SizeLabel", "WidthText", "HeightText")]
+oversampling_override = 1.0
+title = "Set Type"
+initial_position = 1
+size = Vector2i(320, 250)
+visible = false
+popup_window = true
+script = ExtResource("7_settype")
+structureEditor = NodePath("..")
+TypePicker = NodePath("MarginContainer/VBoxContainer/TypeContainer/TypePicker")
+SizeLabel = NodePath("MarginContainer/VBoxContainer/SizeLabel")
+WidthText = NodePath("MarginContainer/VBoxContainer/SizeContainer/WidthText")
+HeightText = NodePath("MarginContainer/VBoxContainer/SizeContainer/HeightText")
+
+[node name="MarginContainer" type="MarginContainer" parent="SetTypeWindow"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SetTypeWindow/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TypeContainer" type="HBoxContainer" parent="SetTypeWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Type" type="Label" parent="SetTypeWindow/MarginContainer/VBoxContainer/TypeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Type: "
+
+[node name="TypePicker" type="OptionButton" parent="SetTypeWindow/MarginContainer/VBoxContainer/TypeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SizeLabel" type="Label" parent="SetTypeWindow/MarginContainer/VBoxContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Size (chunks)"
+
+[node name="SizeContainer" type="HBoxContainer" parent="SetTypeWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Width" type="Label" parent="SetTypeWindow/MarginContainer/VBoxContainer/SizeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Width: "
+
+[node name="WidthText" type="SpinBox" parent="SetTypeWindow/MarginContainer/VBoxContainer/SizeContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+min_value = 1.0
+max_value = 1.0
+value = 1.0
+rounded = true
+
+[node name="Height" type="Label" parent="SetTypeWindow/MarginContainer/VBoxContainer/SizeContainer"]
+modulate = Color(0.67069, 0.67069, 0.67069, 1)
+layout_mode = 2
+text = "Height: "
+
+[node name="HeightText" type="SpinBox" parent="SetTypeWindow/MarginContainer/VBoxContainer/SizeContainer"]
+custom_minimum_size = Vector2(28, 40)
+layout_mode = 2
+min_value = 1.0
+max_value = 1.0
+value = 1.0
+rounded = true
+
+[node name="Footer" type="HBoxContainer" parent="SetTypeWindow/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 10
+alignment = 2
+
+[node name="Apply" type="Button" parent="SetTypeWindow/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Apply"
+
+[node name="Cancel" type="Button" parent="SetTypeWindow/MarginContainer/VBoxContainer/Footer"]
+layout_mode = 2
+text = "Cancel"
+
 [node name="LoadWindow" type="Window" parent="." node_paths=PackedStringArray("structureEditor", "Editor", "LoadContainer", "LoadButton", "DeleteButton")]
 auto_translate_mode = 1
 oversampling_override = 1.0
@@ -512,7 +574,7 @@ text = "Cancel"
 [connection signal="pressed" from="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/File" to="." method="_on_file_index_pressed"]
 [connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Edit" to="." method="_on_edit_index_pressed"]
-[connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Chunk" to="." method="_on_chunk_index_pressed"]
+[connection signal="index_pressed" from="Canvas/HBoxContainer/MenuBar/Struct" to="." method="_on_chunk_index_pressed"]
 [connection signal="close_requested" from="SaveWindow" to="SaveWindow" method="_on_close_requested"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/CreateButton" to="SaveWindow" method="_on_create_button_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/ExistingButton" to="SaveWindow" method="_on_existing_button_pressed"]
@@ -520,6 +582,9 @@ text = "Cancel"
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/ExistingFP" to="SaveWindow" method="_on_existing_fp_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Save" to="SaveWindow" method="_on_save_pressed"]
 [connection signal="pressed" from="SaveWindow/MarginContainer/VBoxContainer/Footer/Close" to="SaveWindow" method="_on_close_pressed"]
+[connection signal="close_requested" from="SetTypeWindow" to="SetTypeWindow" method="_on_close_requested"]
+[connection signal="pressed" from="SetTypeWindow/MarginContainer/VBoxContainer/Footer/Apply" to="SetTypeWindow" method="_on_apply_pressed"]
+[connection signal="pressed" from="SetTypeWindow/MarginContainer/VBoxContainer/Footer/Cancel" to="SetTypeWindow" method="_on_cancel_pressed"]
 [connection signal="close_requested" from="LoadWindow" to="LoadWindow" method="_on_close_requested"]
 [connection signal="pressed" from="LoadWindow/MarginContainer/VBoxContainer/Footer/Load" to="LoadWindow" method="_on_load_pressed"]
 [connection signal="pressed" from="LoadWindow/MarginContainer/VBoxContainer/Footer/Delete" to="LoadWindow" method="_on_delete_pressed"]

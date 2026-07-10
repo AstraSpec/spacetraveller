@@ -59,6 +59,8 @@ class Tool:
 		return { "tex": tex, "hot": hot }
 	
 	func is_pos_valid(pos: Vector2i) -> bool:
+		if !editor.is_inside_bubble(pos):
+			return false
 		if editor.active_selection.size == Vector2i.ZERO:
 			return true
 		return editor.active_selection.has_point(pos)
@@ -180,7 +182,9 @@ class ShapeTool extends Tool:
 	func on_hover(pos: Vector2i):
 		if is_drawing:
 			var entry = editor.get_tool_entry_for_button(button)
-			editor.Editor.update_preview_shape(shape_type, start_pos, pos, get_effective_option(0), get_effective_option(1), entry.id, entry.type)
+			var points = editor.Editor.get_shape_points(shape_type, start_pos, pos, get_effective_option(0), get_effective_option(1))
+			points = points.filter(func(p): return editor.is_inside_bubble(p))
+			editor.Editor.update_preview_tiles(points, entry.id, entry.type)
 		else:
 			if is_pos_valid(pos):
 				var entry = editor.get_tool_entry_for_button("left")
@@ -197,10 +201,10 @@ class ShapeTool extends Tool:
 class EyedropperTool extends Tool:
 	func get_cursor_id(): return "eyedropper"
 
-	func on_press(_btn: String, pos: Vector2i):
+	func on_press(btn: String, pos: Vector2i):
 		if !editor.is_inside_bubble(pos): return
 		var base_type: String = editor._content_type_for_tab(editor.ContentTabs.current_tab) if editor.ContentTabs else "tile"
-		editor.select_editor_content_at(pos, true, base_type)
+		editor.select_editor_content_at(pos, btn != "right", base_type)
 	func on_hover(_pos: Vector2i):
 		editor.Editor.clear_preview_tiles()
 
@@ -219,10 +223,9 @@ class FillTool extends Tool:
 		editor.save_undo_state()
 		
 		if editor.active_selection.size != Vector2i.ZERO:
-			var inside = editor.active_selection.has_point(pos)
-			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, editor.active_selection, !inside, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, editor.active_selection, false, get_effective_option(0))
 		else:
-			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, Rect2i(), false, get_effective_option(0))
+			editor.World.fill_tiles(pos.x + editor.playerOffset.x, pos.y + editor.playerOffset.y, entry.id, editor.playerOffset, Rect2i(editor.editor_area_origin, editor.editor_area_size), false, get_effective_option(0))
 			
 		editor.update_editor_visuals()
 	func on_hover(_pos: Vector2i):
@@ -241,6 +244,7 @@ class SelectionTool extends Tool:
 
 	func on_press(btn: String, pos: Vector2i):
 		if btn != "left": return
+		if !editor.is_inside_bubble(pos): return
 		
 		var rect = selection_rect
 		if is_moving: rect.position += move_offset
@@ -269,8 +273,10 @@ class SelectionTool extends Tool:
 		if btn != "left": return
 		
 		if is_selecting:
-			var min_pos = Vector2i(min(drag_start_pos.x, pos.x), min(drag_start_pos.y, pos.y))
-			var max_pos = Vector2i(max(drag_start_pos.x, pos.x), max(drag_start_pos.y, pos.y))
+			var bounds := Rect2i(editor.editor_area_origin, editor.editor_area_size)
+			var clamped_pos := Vector2i(clampi(pos.x, bounds.position.x, bounds.end.x - 1), clampi(pos.y, bounds.position.y, bounds.end.y - 1))
+			var min_pos = Vector2i(min(drag_start_pos.x, clamped_pos.x), min(drag_start_pos.y, clamped_pos.y))
+			var max_pos = Vector2i(max(drag_start_pos.x, clamped_pos.x), max(drag_start_pos.y, clamped_pos.y))
 			selection_rect = Rect2i(min_pos, max_pos - min_pos + Vector2i.ONE)
 			_update_visuals()
 		elif is_moving:
@@ -383,7 +389,7 @@ class SelectionTool extends Tool:
 				continue
 			var rel_p: Vector2i = rel_p_variant
 			var contents: Dictionary = contents_variant
-			if contents.has("tile"):
+			if contents.has("tile") and editor.is_inside_bubble(current_pos + rel_p):
 				preview_data[current_pos + rel_p] = contents["tile"]
 		editor.Editor.update_preview_tiles_with_data(preview_data)
 
@@ -415,8 +421,12 @@ class SelectionTool extends Tool:
 
 	func _commit_move():
 		if !is_floating: return
-		
-		editor.place_editor_contents(selection_rect.position, captured_contents)
+
+		var bounded_contents := {}
+		for rel_p_variant in captured_contents.keys():
+			if rel_p_variant is Vector2i and editor.is_inside_bubble(selection_rect.position + rel_p_variant):
+				bounded_contents[rel_p_variant] = captured_contents[rel_p_variant]
+		editor.place_editor_contents(selection_rect.position, bounded_contents)
 		
 		editor.update_editor_visuals()
 		captured_contents.clear()

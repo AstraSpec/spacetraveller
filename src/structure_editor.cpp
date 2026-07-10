@@ -9,17 +9,24 @@
 #include "core/rng.h"
 #include <unordered_set>
 #include <algorithm>
+#include <cstdint>
 
 using namespace godot;
 
-static Vector2i normalize_structure_editor_size(const Vector2i &p_size) {
-    const int max_size = GameWorld::get_chunk_size();
+static constexpr int64_t MAX_STRUCTURE_CELLS = 1024 * 1024;
+
+static bool resolve_structure_editor_size(const Vector2i &p_size, Vector2i &r_size) {
     Vector2i size = p_size;
-    if (size.x <= 0) size.x = max_size;
-    if (size.y <= 0) size.y = max_size;
-    size.x = std::clamp(size.x, 1, max_size);
-    size.y = std::clamp(size.y, 1, max_size);
-    return size;
+    if (size == Vector2i()) {
+        size = Vector2i(GameWorld::get_chunk_size(), GameWorld::get_chunk_size());
+    }
+    const int64_t total = static_cast<int64_t>(size.x) * static_cast<int64_t>(size.y);
+    if (size.x <= 0 || size.y <= 0 || total > MAX_STRUCTURE_CELLS) {
+        UtilityFunctions::push_error("[StructureEditor] Invalid structure size: ", size, ".");
+        return false;
+    }
+    r_size = size;
+    return true;
 }
 
 void StructureEditor::_bind_methods() {
@@ -69,7 +76,8 @@ FastTileMap *StructureEditor::get_tilemap() const {
 Dictionary StructureEditor::export_to_rle(const String &p_id, const Vector2i &p_offset, int p_z, const Vector2i &p_size) const {
     Dictionary result;
 
-    const Vector2i size = normalize_structure_editor_size(p_size);
+    Vector2i size;
+    if (!resolve_structure_editor_size(p_size, size)) return result;
     if (!world) return result;
     Dictionary cache = world->get_tile_id_cache(GameWorld::LAYER_TILE);
 
@@ -140,7 +148,8 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
     String rle = p_blueprint.replace("(", "").replace(")", "").replace("[", "").replace("]", "");
     PackedStringArray parts = rle.split(",");
 
-    const Vector2i size = normalize_structure_editor_size(p_size);
+    Vector2i size;
+    if (!resolve_structure_editor_size(p_size, size)) return;
     int current_pos = 0;
     int total_expected = size.x * size.y;
 
@@ -151,17 +160,25 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
         if (part.is_empty()) continue;
 
         PackedStringArray sub = part.split("x");
-        if (sub.size() != 2) continue;
+        if (sub.size() != 2 || !sub[0].is_valid_int() || !sub[1].is_valid_int()) {
+            UtilityFunctions::push_error("[StructureEditor] Malformed RLE run: ", part);
+            return;
+        }
 
         int count = sub[0].to_int();
         int palette_idx = sub[1].to_int();
+
+        if (count <= 0 || palette_idx < 0 || palette_idx >= static_cast<int>(palette_ids.size()) || count > total_expected - current_pos) {
+            UtilityFunctions::push_error("[StructureEditor] Invalid RLE run: ", part);
+            return;
+        }
 
         uint16_t tile_id = 0; // Default to void
         if (palette_idx >= 0 && palette_idx < (int)palette_ids.size()) {
             tile_id = palette_ids[palette_idx];
         }
 
-        for (int j = 0; j < count && current_pos < total_expected; j++) {
+        for (int j = 0; j < count; j++) {
             int x = (current_pos % size.x) + p_offset.x;
             int y = (current_pos / size.x) + p_offset.y;
             
@@ -170,6 +187,10 @@ void StructureEditor::import_from_rle(const String &p_blueprint, const Array &p_
             
             current_pos++;
         }
+    }
+    if (current_pos != total_expected) {
+        UtilityFunctions::push_error("[StructureEditor] RLE cell count does not match structure size.");
+        return;
     }
     world->merge_tile_id_cache(new_cache, GameWorld::LAYER_TILE);
 }

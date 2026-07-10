@@ -218,7 +218,7 @@
   {
     "id": "palace",
     "atlas": [ 32, 2 ],
-    "tile_group": "palace_floor"
+    "tile_group": "grass_dirt"
   },
   {
     "id": "alley",

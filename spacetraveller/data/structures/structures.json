@@ -1,276 +1,47 @@
 [
     {
-        "entrance": [
-            12.0
-        ],
-        "id": "house01",
+        "id": "tavern",
         "levels": {
-            "-1": {
-                "blueprint": "(50x0, 13x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x1, 3x2, 1x1, 11x0, 1x1, 7x2, 1x3, 3x2, 1x1, 11x0, 9x1, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x5, 3x2, 1x1, 11x0, 1x1, 6x2, 1x1, 1x4, 3x2, 1x1, 11x0, 3x1, 1x3, 5x1, 3x2, 8x1, 4x0, 1x1, 15x2, 1x3, 2x2, 1x1, 4x0, 1x1, 15x2, 1x1, 2x2, 1x1, 4x0, 1x1, 1x6, 14x2, 1x1, 1x7, 1x8, 1x1, 4x0, 10x1, 1x3, 9x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x4, 6x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 18x2, 1x1, 4x0, 1x1, 7x2, 1x1, 3x2, 1x1, 6x2, 1x1, 4x0, 20x1, 50x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile": "alley_bricks"},
-                    {"tile": "w_door_c"},
-                    {"tile": "bookcase"},
-                    {"tile": "table"},
-                    {"tile": "stairs_up"},
-                    {"tile": "barrel"},
-                    {"tile": "toilet"}
-                ]
-            },
             "0": {
-                "blueprint": "(50x0, 4x1, 1x2, 4x1, 3x2, 1x1, 11x0, 1x1, 1x3, 1x4, 3x5, 1x4, 1x3, 1x1, 1x5, 1x6, 1x7, 1x1, 11x0, 1x2, 7x5, 1x1, 3x5, 1x1, 11x0, 1x1, 1x8, 1x5, 1x7, 1x6, 3x5, 1x9, 3x5, 1x1, 11x0, 9x1, 3x5, 1x1, 11x0, 1x1, 1x6, 2x5, 1x10, 1x5, 1x7, 1x1, 1x11, 3x5, 1x1, 11x0, 1x2, 1x6, 4x5, 1x8, 1x1, 1x6, 3x5, 1x2, 11x0, 1x1, 1x7, 4x5, 1x8, 1x1, 1x11, 3x5, 1x1, 11x0, 3x1, 1x9, 5x1, 3x5, 2x1, 1x2, 5x1, 4x0, 1x2, 15x5, 1x9, 2x5, 1x1, 4x0, 1x2, 15x5, 1x1, 2x5, 1x1, 4x0, 1x2, 1x12, 14x5, 1x1, 1x13, 1x14, 1x1, 4x0, 10x1, 1x9, 9x1, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x11, 2x5, 1x15, 1x16, 1x13, 1x15, 1x1, 4x0, 1x2, 1x6, 1x7, 1x5, 2x6, 2x5, 1x1, 3x5, 1x11, 5x5, 1x15, 1x2, 4x0, 1x1, 1x6, 16x5, 1x15, 1x1, 4x0, 1x1, 1x6, 17x5, 1x1, 4x0, 1x2, 1x6, 2x5, 2x6, 12x5, 1x17, 1x2, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x1, 4x5, 2x15, 1x1, 4x0, 4x1, 2x2, 4x1, 1x9, 4x1, 2x2, 3x1, 13x0, 3x18, 21x0, 3x18, 10x0)",
+                "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 44x0)",
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_wall"},
                     {"tile_group": "window"},
-                    {"tile": "dresser"},
+                    {"tile": "w_door_c"},
                     {"tile": "bed"},
                     {"tile": "w_floor"},
                     {"tile": "table"},
-                    {"tile": "chair"},
-                    {"tile": "wardrobe"},
-                    {"tile": "w_door_c"},
-                    {"tile": "bed_double"},
-                    {"tile": "bookcase"},
-                    {"tile": "stairs_down"},
-                    {"tile": "barrel"},
-                    {"tile": "toilet"},
-                    {"tile": "bar"},
                     {"tile": "fireplace"},
-                    {"tile": "pot"},
-                    {"tile": "alley_flagstone"}
+                    {"tile": "barrel_wine"},
+                    {"tile": "bar"},
+                    {"tile": "chair"},
+                    {"tile": "barrel"},
+                    {"tile": "stairs_up"},
+                    {"tile": "stairs_down"},
+                    {"tile": "toilet"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
-                        "entity": "human",
-                        "job": "scavenger",
+                        "data": {
+                            "text": "Tavern"
+                        },
+                        "meta_type": "signage",
                         "pos": [
-                            7.0,
-                            17.0
+                            3.0,
+                            22.0
                         ],
-                        "type": "spawn_entity"
+                        "type": "set_metadata"
                     }
                 ]
-            },
-            "1": {
-                "blueprint": "(50x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_roof"}
-                ]
             }
         },
         "size": [
-            24.0,
-            24.0
-        ],
-        "type": "building"
-    },
-    {
-        "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 44x0)",
-        "id": "tavern",
-        "palette": [
-            {"tile": "void"},
-            {"tile": "w_wall"},
-            {"tile_group": "window"},
-            {"tile": "w_door_c"},
-            {"tile": "bed"},
-            {"tile": "w_floor"},
-            {"tile": "table"},
-            {"tile": "fireplace"},
-            {"tile": "barrel_wine"},
-            {"tile": "bar"},
-            {"tile": "chair"},
-            {"tile": "barrel"},
-            {"tile": "stairs_up"},
-            {"tile": "stairs_down"},
-            {"tile": "toilet"},
-            {"tile": "hanging_sign"}
-        ],
-        "rules": [
-            {
-                "data": {
-                    "text": "Tavern"
-                },
-                "meta_type": "signage",
-                "pos": [
-                    3.0,
-                    22.0
-                ],
-                "type": "set_metadata"
-            }
+            24,
+            24
         ],
         "type": "tavern"
-    },
-    {
-        "entrance": [
-            10.0
-        ],
-        "id": "house02",
-        "levels": {
-            "-1": {
-                "blueprint": "(50x0, 20x1, 4x0, 1x1, 7x2, 1x1, 1x3, 1x2, 1x4, 7x2, 1x1, 4x0, 1x1, 7x2, 4x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 1x1, 10x2, 1x1, 7x2, 1x1, 4x0, 9x1, 1x4, 2x1, 7x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 1x1, 5x2, 1x4, 12x2, 1x1, 4x0, 1x1, 5x2, 1x1, 12x2, 1x1, 4x0, 7x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 7x2, 1x1, 4x2, 1x1, 10x0, 1x1, 6x2, 1x5, 1x1, 4x2, 1x1, 10x0, 14x1, 50x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile": "alley_bricks"},
-                    {"tile": "toilet"},
-                    {"tile": "w_door_c"},
-                    {"tile": "stairs_up"}
-                ]
-            },
-            "0": {
-                "blueprint": "(50x0, 3x1, 2x2, 15x1, 4x0, 1x1, 1x3, 1x4, 2x5, 1x6, 2x4, 1x1, 1x7, 1x4, 1x8, 2x4, 1x9, 1x10, 1x9, 2x4, 1x1, 4x0, 1x1, 2x4, 2x5, 3x4, 4x1, 7x4, 1x2, 4x0, 1x2, 1x11, 9x4, 1x1, 7x4, 1x2, 4x0, 1x1, 10x4, 1x1, 2x4, 3x12, 2x4, 1x2, 4x0, 1x1, 2x13, 8x4, 1x1, 3x4, 1x14, 3x4, 1x1, 4x0, 9x1, 1x8, 2x1, 7x4, 1x1, 4x0, 1x1, 1x6, 1x15, 2x4, 1x13, 1x1, 12x4, 1x1, 4x0, 1x2, 1x4, 1x15, 3x4, 1x1, 12x4, 1x2, 4x0, 1x2, 5x4, 1x1, 12x4, 1x2, 4x0, 1x1, 5x4, 1x1, 6x4, 3x16, 3x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x8, 5x4, 5x1, 2x4, 1x1, 4x0, 1x1, 2x4, 1x16, 2x4, 1x1, 6x4, 1x3, 1x1, 1x9, 3x4, 1x1, 4x0, 7x1, 4x4, 1x14, 2x4, 1x1, 1x9, 3x4, 1x1, 10x0, 1x1, 2x4, 1x14, 2x12, 1x14, 1x4, 1x1, 4x4, 1x1, 10x0, 1x1, 3x4, 2x12, 7x4, 1x1, 10x0, 1x2, 3x4, 1x14, 8x4, 1x2, 10x0, 1x1, 7x4, 1x1, 4x4, 1x1, 10x0, 1x1, 6x4, 1x17, 1x1, 1x9, 1x18, 2x9, 1x1, 10x0, 2x1, 1x8, 1x1, 1x2, 5x1, 2x2, 2x1, 11x0, 3x19, 21x0, 3x19, 12x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile_group": "window"},
-                    {"tile": "pot"},
-                    {"tile": "w_floor"},
-                    {"tile": "bed_double"},
-                    {"tile": "dresser"},
-                    {"tile": "toilet"},
-                    {"tile": "w_door_c"},
-                    {"tile": "bar"},
-                    {"tile": "fireplace"},
-                    {"tile": "chest"},
-                    {"tile": "table"},
-                    {"tile": "wardrobe"},
-                    {"tile": "chair"},
-                    {"tile": "bed"},
-                    {"tile": "bookcase"},
-                    {"tile": "stairs_down"},
-                    {"tile": "barrel"},
-                    {"tile": "alley_flagstone"}
-                ]
-            },
-            "1": {
-                "blueprint": "(50x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 10x0, 14x1, 50x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_roof"}
-                ]
-            }
-        },
-        "size": [
-            24.0,
-            24.0
-        ],
-        "type": "building"
-    },
-    {
-        "entrance": [
-            18.0
-        ],
-        "id": "house03",
-        "levels": {
-            "0": {
-                "blueprint": "(98x0, 5x1, 2x2, 4x1, 1x2, 3x1, 9x0, 1x1, 4x3, 2x4, 1x5, 1x1, 1x6, 2x7, 1x8, 1x7, 1x1, 1x0, 1x9, 7x0, 1x1, 4x3, 2x4, 1x3, 1x1, 2x3, 1x10, 2x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 1x1, 2x0, 1x12, 6x0, 1x1, 1x8, 1x3, 1x11, 4x3, 1x1, 5x3, 1x1, 9x0, 1x1, 2x3, 1x11, 4x3, 1x1, 5x3, 6x1, 4x0, 2x1, 1x13, 1x1, 4x3, 1x13, 9x3, 1x6, 1x1, 4x0, 1x1, 1x14, 1x3, 1x1, 2x15, 2x3, 1x1, 4x3, 1x10, 5x3, 1x1, 4x0, 9x1, 3x3, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 2x3, 1x10, 4x16, 1x10, 2x3, 1x2, 4x0, 1x1, 7x3, 1x1, 5x3, 1x10, 4x3, 1x2, 4x0, 1x2, 18x3, 1x1, 4x0, 1x2, 3x3, 1x10, 6x3, 2x11, 6x3, 1x1, 4x0, 1x2, 7x3, 7x1, 3x3, 2x1, 4x0, 1x1, 1x3, 1x10, 2x3, 1x10, 3x3, 1x11, 1x3, 2x11, 1x1, 5x3, 1x1, 4x0, 1x1, 11x3, 1x17, 1x1, 5x3, 1x2, 4x0, 1x1, 2x3, 2x7, 1x18, 4x3, 1x19, 1x11, 1x3, 1x1, 5x3, 1x1, 4x0, 2x1, 1x2, 4x1, 1x2, 8x1, 1x13, 3x1, 19x0, 3x20, 21x0, 3x20, 4x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile_group": "window"},
-                    {"tile": "w_floor"},
-                    {"tile": "bed"},
-                    {"tile": "dresser"},
-                    {"tile": "pot"},
-                    {"tile": "bar"},
-                    {"tile": "barrel"},
-                    {"tile": "tree_birch"},
-                    {"tile": "chair"},
-                    {"tile": "bookcase"},
-                    {"tile": "tree_stump"},
-                    {"tile": "w_door_c"},
-                    {"tile": "toilet"},
-                    {"tile": "wardrobe"},
-                    {"tile": "table"},
-                    {"tile": "chest"},
-                    {"tile": "fireplace"},
-                    {"tile": "barrel_wine"},
-                    {"tile": "alley_flagstone"}
-                ]
-            },
-            "1": {
-                "blueprint": "(98x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 15x1, 9x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_roof"}
-                ]
-            }
-        },
-        "size": [
-            24.0,
-            24.0
-        ],
-        "type": "building"
-    },
-    {
-        "entrance": [
-            12.0
-        ],
-        "id": "house04",
-        "levels": {
-            "0": {
-                "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 4x3, 1x4, 2x5, 1x1, 15x0, 1x2, 5x3, 2x5, 1x1, 15x0, 1x1, 7x3, 3x1, 1x2, 2x1, 4x0, 7x1, 1x6, 2x1, 4x3, 1x1, 1x7, 1x3, 1x8, 1x4, 1x1, 4x0, 1x1, 2x9, 3x3, 1x1, 2x3, 1x1, 4x3, 1x1, 2x3, 1x8, 1x3, 1x1, 4x0, 1x2, 1x3, 1x10, 3x3, 1x1, 1x11, 1x12, 1x1, 1x7, 3x3, 1x1, 4x3, 1x2, 4x0, 1x1, 5x3, 6x1, 1x6, 2x1, 4x3, 1x2, 4x0, 1x1, 5x3, 1x1, 7x3, 1x1, 4x3, 1x1, 4x0, 1x1, 1x13, 8x3, 1x10, 3x3, 1x1, 1x6, 1x1, 2x3, 1x1, 4x0, 1x1, 1x13, 7x3, 3x9, 4x3, 1x1, 1x3, 1x11, 1x1, 4x0, 1x2, 1x13, 1x10, 6x3, 1x10, 6x3, 1x1, 1x3, 1x14, 1x1, 4x0, 1x1, 1x13, 4x3, 1x1, 9x3, 1x1, 1x11, 1x14, 1x1, 4x0, 12x1, 3x3, 5x1, 8x0, 1x1, 1x15, 1x13, 1x3, 1x1, 6x3, 1x14, 1x1, 11x0, 1x1, 3x3, 1x6, 6x3, 1x14, 1x1, 11x0, 1x1, 1x16, 1x3, 1x17, 1x1, 6x3, 1x14, 1x1, 11x0, 2x1, 1x2, 3x1, 1x6, 1x1, 2x2, 3x1, 16x0, 3x18, 21x0, 3x18, 10x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile_group": "window"},
-                    {"tile": "w_floor"},
-                    {"tile": "dresser"},
-                    {"tile": "bed_double"},
-                    {"tile": "w_door_c"},
-                    {"tile": "wardrobe"},
-                    {"tile": "bed"},
-                    {"tile": "table"},
-                    {"tile": "chair"},
-                    {"tile": "barrel"},
-                    {"tile": "toilet"},
-                    {"tile": "bar"},
-                    {"tile": "bookcase"},
-                    {"tile": "fireplace"},
-                    {"tile": "stairs_up"},
-                    {"tile": "chest"},
-                    {"tile": "alley_flagstone"}
-                ]
-            },
-            "1": {
-                "blueprint": "(104x0, 2x1, 2x2, 5x1, 15x0, 1x1, 1x3, 1x4, 3x5, 1x6, 1x5, 1x1, 15x0, 1x2, 1x3, 6x5, 1x1, 15x0, 1x1, 7x5, 3x1, 1x2, 2x1, 4x0, 7x1, 1x7, 2x1, 4x5, 1x1, 1x4, 1x5, 2x8, 1x1, 4x0, 1x1, 4x9, 1x5, 1x1, 2x5, 1x1, 1x10, 3x5, 1x1, 2x5, 2x8, 1x1, 4x0, 1x2, 5x5, 1x1, 1x11, 1x12, 1x1, 1x10, 3x5, 1x1, 4x5, 1x2, 4x0, 1x1, 5x5, 6x1, 1x7, 2x1, 4x5, 1x2, 4x0, 1x1, 1x11, 3x9, 1x5, 1x1, 7x5, 1x1, 1x5, 2x6, 1x5, 1x1, 4x0, 1x1, 8x5, 1x13, 4x5, 1x1, 1x7, 2x1, 1x7, 1x1, 4x0, 1x1, 7x5, 1x14, 1x13, 6x5, 1x1, 1x11, 1x5, 1x1, 4x0, 1x2, 8x5, 1x13, 6x5, 1x1, 2x5, 1x1, 4x0, 1x1, 2x9, 1x11, 1x9, 1x5, 1x1, 8x5, 1x15, 1x1, 1x5, 1x12, 1x1, 4x0, 12x1, 3x5, 5x1, 8x0, 1x1, 1x15, 2x5, 1x1, 6x5, 1x10, 1x1, 11x0, 1x1, 3x5, 1x7, 6x5, 1x10, 1x1, 11x0, 1x1, 1x16, 1x5, 1x11, 1x1, 6x5, 1x10, 1x1, 11x0, 2x1, 1x2, 3x1, 1x7, 1x1, 2x2, 3x1, 53x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_wall"},
-                    {"tile_group": "window"},
-                    {"tile": "bed"},
-                    {"tile": "dresser"},
-                    {"tile": "w_floor"},
-                    {"tile": "wardrobe"},
-                    {"tile": "w_door_c"},
-                    {"tile": "bed_double"},
-                    {"tile": "barrel_wine"},
-                    {"tile": "bookcase"},
-                    {"tile": "barrel"},
-                    {"tile": "toilet"},
-                    {"tile": "table"},
-                    {"tile": "chair"},
-                    {"tile": "pot"},
-                    {"tile": "stairs_down"}
-                ]
-            },
-            "2": {
-                "blueprint": "(104x0, 9x1, 15x0, 9x1, 15x0, 9x1, 15x0, 14x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 8x0, 13x1, 11x0, 13x1, 11x0, 13x1, 11x0, 13x1, 53x0)",
-                "palette": [
-                    {"tile": "void"},
-                    {"tile": "w_roof"}
-                ]
-            }
-        },
-        "size": [
-            24.0,
-            24.0
-        ],
-        "type": "building"
     },
     {
         "id": "adventurer_guild",
@@ -337,7 +108,8 @@
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_roof"}
-                ]
+                ],
+                "rules": []
             }
         },
         "size": [
@@ -360,14 +132,16 @@
                     {"tile": "w_wall"},
                     {"tile": "w_floor"},
                     {"tile_group": "window"}
-                ]
+                ],
+                "rules": []
             },
             "1": {
                 "blueprint": "(26x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 8x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 4x0, 20x1, 50x0)",
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_roof"}
-                ]
+                ],
+                "rules": []
             }
         },
         "size": [
@@ -388,7 +162,8 @@
                     {"tile": "void"},
                     {"tile": "flower"},
                     {"tile": "dirt"}
-                ]
+                ],
+                "rules": []
             }
         },
         "size": [
@@ -587,7 +362,8 @@
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_roof"}
-                ]
+                ],
+                "rules": []
             }
         },
         "size": [
@@ -610,7 +386,8 @@
                     {"tile": "sarcophagus"},
                     {"tile": "chest"},
                     {"tile": "stairs_up"}
-                ]
+                ],
+                "rules": []
             },
             "0": {
                 "blueprint": "(25x0, 12x1, 1x2, 2x1, 1x2, 1x1, 2x2, 3x1, 2x0, 2x1, 6x3, 1x1, 1x2, 1x4, 1x5, 1x4, 3x1, 3x5, 2x1, 1x2, 2x0, 2x1, 1x3, 4x6, 1x7, 2x1, 1x4, 1x5, 1x4, 1x1, 1x2, 1x1, 3x4, 1x2, 2x1, 2x0, 1x1, 1x8, 1x3, 1x9, 2x6, 1x10, 1x7, 14x1, 2x0, 1x1, 1x9, 1x3, 4x10, 1x7, 3x1, 8x11, 3x1, 2x0, 1x1, 1x9, 1x3, 1x12, 3x10, 1x13, 12x11, 2x1, 2x0, 2x1, 6x3, 1x1, 11x11, 2x1, 2x0, 10x1, 3x11, 5x1, 2x11, 2x1, 2x0, 10x1, 3x11, 1x1, 1x14, 1x1, 1x14, 1x1, 2x11, 2x1, 2x0, 5x1, 8x11, 1x1, 1x15, 1x1, 1x15, 1x1, 2x11, 2x1, 2x0, 1x1, 1x15, 1x14, 1x1, 9x11, 5x1, 2x11, 2x1, 2x0, 4x1, 9x11, 1x1, 1x15, 1x1, 1x15, 5x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 1x1, 1x14, 1x1, 1x14, 5x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 9x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 10x11, 2x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 10x11, 2x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 9x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 3x1, 2x0, 1x1, 1x15, 1x14, 1x1, 2x11, 4x1, 3x11, 1x1, 1x15, 1x1, 1x15, 1x1, 1x15, 3x1, 2x0, 4x1, 2x11, 1x1, 1x14, 1x15, 1x1, 3x11, 9x1, 2x0, 4x1, 2x11, 4x1, 3x11, 9x1, 2x0, 10x1, 3x11, 9x1, 11x0, 1x1, 3x11, 1x1, 9x0)",
@@ -651,5 +428,5 @@
             24.0
         ],
         "type": "graveyard"
-    },
+    }
 ]
