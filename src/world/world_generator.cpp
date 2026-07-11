@@ -34,6 +34,22 @@ static Vector2i variant_to_vector2i(const Variant& p_value, const Vector2i& p_fa
     return Vector2i(static_cast<int>(values[0]), static_cast<int>(values[1]));
 }
 
+static bool city_spawn_zone_contains(
+    int p_city_distance_sq,
+    int p_max_city_distance_sq,
+    float p_city_zone_min,
+    float p_city_zone_max
+) {
+    const float city_distance_sq = static_cast<float>(p_city_distance_sq);
+    const float max_city_distance_sq = static_cast<float>(p_max_city_distance_sq);
+    if (p_max_city_distance_sq > 0) {
+        const float min_distance_sq = p_city_zone_min * p_city_zone_min * max_city_distance_sq;
+        const float max_distance_sq = p_city_zone_max * p_city_zone_max * max_city_distance_sq;
+        return city_distance_sq >= min_distance_sq && city_distance_sq <= max_distance_sq;
+    }
+    return p_city_zone_min <= 0.0f;
+}
+
 WorldGenerator::WorldGenerator() {}
 WorldGenerator::~WorldGenerator() = default;
 
@@ -134,22 +150,33 @@ std::unordered_map<uint64_t, uint32_t>& WorldGenerator::get_surface_biome_overri
     return get_or_create_biome_layer(0).overrides;
 }
 
-uint16_t WorldGenerator::pick_city_spawn_chunk(const ChunkDb& p_chunk_db, int p_city_distance_sq, int p_max_city_distance_sq, const Vector2i& p_chunk_pos, int p_world_seed) const {
-    const float city_distance_sq = static_cast<float>(p_city_distance_sq);
-    const float max_city_distance_sq = static_cast<float>(p_max_city_distance_sq);
-    const bool has_city_radius = p_max_city_distance_sq > 0;
+uint16_t WorldGenerator::pick_city_spawn_chunk(
+    const ChunkDb& p_chunk_db,
+    int p_city_distance_sq,
+    int p_max_city_distance_sq,
+    const Vector2i& p_chunk_pos,
+    int p_world_seed,
+    const std::unordered_map<uint16_t, int>* p_city_chunk_counts
+) const {
     std::vector<const CityChunkSpawnInfo*> eligible_spawns;
     int eligible_total_weight = 0;
 
     for (const CityChunkSpawnInfo& spawn_info : p_chunk_db.get_city_spawn_chunks()) {
         if (spawn_info.weight <= 0) continue;
 
-        if (has_city_radius) {
-            const float min_distance_sq = spawn_info.city_zone_min * spawn_info.city_zone_min * max_city_distance_sq;
-            const float max_distance_sq = spawn_info.city_zone_max * spawn_info.city_zone_max * max_city_distance_sq;
-            if (city_distance_sq < min_distance_sq || city_distance_sq > max_distance_sq) continue;
-        } else if (spawn_info.city_zone_min > 0.0f) {
+        if (!city_spawn_zone_contains(
+                p_city_distance_sq,
+                p_max_city_distance_sq,
+                spawn_info.city_zone_min,
+                spawn_info.city_zone_max)) {
             continue;
+        }
+
+        if (p_city_chunk_counts && spawn_info.city_max_count >= 0) {
+            auto count_it = p_city_chunk_counts->find(spawn_info.id);
+            if (count_it != p_city_chunk_counts->end() && count_it->second >= spawn_info.city_max_count) {
+                continue;
+            }
         }
 
         eligible_spawns.push_back(&spawn_info);
@@ -356,6 +383,102 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
         }
     }
 
+    struct CityLot {
+        Vector2i global_pos;
+        int distance_sq = 0;
+        uint64_t key = 0;
+    };
+
+    ChunkDb* city_chunk_db = ChunkDb::get_singleton();
+    std::vector<CityLot> city_lots;
+    std::unordered_map<uint64_t, uint16_t> assigned_city_chunks;
+    std::unordered_map<uint16_t, int> city_chunk_counts;
+    std::vector<Vector2i> selected_city_lots;
+
+    if (city_chunk_db) {
+        for (int y = 0; y < WorldCoords::REGION_SIZE; y++) {
+            for (int x = 0; x < WorldCoords::REGION_SIZE; x++) {
+                if (cityGenGrid.getPixel(x, y).id != id_building) continue;
+                const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
+                const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
+                city_lots.push_back({
+                    Vector2i(gx, gy),
+                    city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x],
+                    WorldCoords::pack_coords(gx, gy)
+                });
+            }
+        }
+
+        auto choose_spread_lot = [&](const CityChunkSpawnInfo& rule) -> const CityLot* {
+            const CityLot* best_lot = nullptr;
+            int best_distance = -1;
+            uint64_t best_hash = 0;
+
+            for (const CityLot& lot : city_lots) {
+                if (assigned_city_chunks.find(lot.key) != assigned_city_chunks.end()) continue;
+                if (!city_spawn_zone_contains(
+                        lot.distance_sq,
+                        max_city_distance_sq,
+                        rule.city_zone_min,
+                        rule.city_zone_max)) {
+                    continue;
+                }
+
+                int distance = selected_city_lots.empty() ? 0 : 0x7FFFFFFF;
+                for (const Vector2i& selected : selected_city_lots) {
+                    const int dx = lot.global_pos.x - selected.x;
+                    const int dy = lot.global_pos.y - selected.y;
+                    distance = std::min(distance, dx * dx + dy * dy);
+                }
+
+                const uint64_t hash = Rng::hash_pos(
+                    static_cast<uint32_t>(world_seed),
+                    lot.global_pos,
+                    Rng::BIOME
+                ) ^ static_cast<uint64_t>(rule.id);
+                if (!best_lot || distance > best_distance ||
+                    (distance == best_distance && hash > best_hash)) {
+                    best_lot = &lot;
+                    best_distance = distance;
+                    best_hash = hash;
+                }
+            }
+            return best_lot;
+        };
+
+        for (const CityChunkSpawnInfo& rule : city_chunk_db->get_city_spawn_chunks()) {
+            if (rule.city_min_count <= 0) continue;
+            int& count = city_chunk_counts[rule.id];
+            while (count < rule.city_min_count) {
+                const CityLot* lot = choose_spread_lot(rule);
+                if (!lot) break;
+                assigned_city_chunks[lot->key] = rule.id;
+                selected_city_lots.push_back(lot->global_pos);
+                count++;
+            }
+        }
+
+        std::sort(city_lots.begin(), city_lots.end(), [&](const CityLot& a, const CityLot& b) {
+            const uint64_t hash_a = Rng::hash_pos(static_cast<uint32_t>(world_seed), a.global_pos, Rng::BIOME);
+            const uint64_t hash_b = Rng::hash_pos(static_cast<uint32_t>(world_seed), b.global_pos, Rng::BIOME);
+            return hash_a != hash_b ? hash_a < hash_b : a.key < b.key;
+        });
+
+        for (const CityLot& lot : city_lots) {
+            if (assigned_city_chunks.find(lot.key) != assigned_city_chunks.end()) continue;
+            const uint16_t chunk_id = pick_city_spawn_chunk(
+                *city_chunk_db,
+                lot.distance_sq,
+                max_city_distance_sq,
+                lot.global_pos,
+                world_seed,
+                &city_chunk_counts
+            );
+            assigned_city_chunks[lot.key] = chunk_id;
+            city_chunk_counts[chunk_id]++;
+        }
+    }
+
     city_structure_instances.clear();
     city_structure_by_chunk.clear();
     struct CityPlacementCandidate {
@@ -370,7 +493,6 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
         bool requires_palace_lot = false;
     };
     std::vector<CityPlacementCandidate> placement_candidates;
-    ChunkDb* city_chunk_db = ChunkDb::get_singleton();
     const uint16_t city_wall_id = id_reg->get_id("wall");
     const uint16_t city_gate_id = id_reg->get_id("gate");
     const uint16_t city_water_id = id_reg->get_id("water");
@@ -384,7 +506,11 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 const int gx = regionPos.x * WorldCoords::REGION_SIZE + x;
                 const int gy = regionPos.y * WorldCoords::REGION_SIZE + y;
                 const int city_distance_sq = city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x];
-                const uint16_t chunk_id = pick_city_spawn_chunk(*city_chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
+                const uint64_t city_lot_key = WorldCoords::pack_coords(gx, gy);
+                auto assignment_it = assigned_city_chunks.find(city_lot_key);
+                const uint16_t chunk_id = assignment_it != assigned_city_chunks.end()
+                    ? assignment_it->second
+                    : pick_city_spawn_chunk(*city_chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
                 const ChunkInfo* chunk_info = city_chunk_db->get_chunk_info(chunk_id);
                 if (!chunk_info || chunk_info->structure_type.is_empty()) continue;
 
@@ -577,7 +703,12 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
                 if (chunk_db) {
                     const int city_distance_sq = city_distance_sq_by_cell[y * WorldCoords::REGION_SIZE + x];
-                    chunk_id = pick_city_spawn_chunk(*chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
+                    auto assignment_it = assigned_city_chunks.find(planned_key);
+                    if (assignment_it != assigned_city_chunks.end()) {
+                        chunk_id = assignment_it->second;
+                    } else {
+                        chunk_id = pick_city_spawn_chunk(*chunk_db, city_distance_sq, max_city_distance_sq, Vector2i(gx, gy), world_seed);
+                    }
                 }
             }
 

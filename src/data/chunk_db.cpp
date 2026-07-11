@@ -32,7 +32,14 @@ void ChunkDb::initialize_data() {
     for (uint16_t id = 0; id < fast_cache.size(); id++) {
         const ChunkInfo& info = fast_cache[id];
         if (info.city_spawn_weight > 0) {
-            city_spawn_chunks.push_back({ id, info.city_spawn_weight, info.city_zone_min, info.city_zone_max });
+            city_spawn_chunks.push_back({
+                id,
+                info.city_spawn_weight,
+                info.city_zone_min,
+                info.city_zone_max,
+                info.city_min_count,
+                info.city_max_count
+            });
             city_spawn_total_weight += info.city_spawn_weight;
         }
 
@@ -60,6 +67,9 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
         info.city_zone_min = 0.0f;
         info.city_zone_max = 1.0f;
     }
+
+    info.city_min_count = std::max(0, static_cast<int>(p_data.get("city_min_count", 0)));
+    info.city_max_count = static_cast<int>(p_data.get("city_max_count", -1));
     
     info.wilderness_spawn_chance = static_cast<float>(static_cast<double>(p_data.get("wilderness_spawn_chance", 0.0)));
     if (info.wilderness_spawn_chance < 0.0f) info.wilderness_spawn_chance = 0.0f;

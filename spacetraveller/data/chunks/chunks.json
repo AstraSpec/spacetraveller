@@ -180,7 +180,9 @@
     "structure_type": "tavern",
     "city_spawn_weight": 5,
     "city_zone_min": 0.0,
-    "city_zone_max": 0.45
+    "city_zone_max": 0.45,
+    "city_min_count": 1,
+    "city_max_count": 3
   },
   {
     "id": "adventurer_guild",
@@ -189,7 +191,9 @@
     "structure_type": "adventurer_guild",
     "city_spawn_weight": 3,
     "city_zone_min": 0.0,
-    "city_zone_max": 0.45
+    "city_zone_max": 0.45,
+    "city_min_count": 1,
+    "city_max_count": 1
   },
   {
     "id": "church",
@@ -198,6 +202,8 @@
     "city_spawn_weight": 1,
     "city_zone_min": 0.0,
     "city_zone_max": 0.45,
+    "city_min_count": 1,
+    "city_max_count": 1,
     "structure_type": "church"
   },
   {

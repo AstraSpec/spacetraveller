@@ -27,6 +27,8 @@ struct ChunkInfo {
     int city_spawn_weight = 0;
     float city_zone_min = 0.0f;
     float city_zone_max = 1.0f;
+    int city_min_count = 0;
+    int city_max_count = -1;
     float wilderness_spawn_chance = 0.0f;
     String structure_type;
     String dungeon_type;
@@ -43,6 +45,8 @@ struct CityChunkSpawnInfo {
     int weight = 0;
     float city_zone_min = 0.0f;
     float city_zone_max = 1.0f;
+    int city_min_count = 0;
+    int city_max_count = -1;
 };
 
 class ChunkDb : public Object, public DataBase<ChunkInfo, ChunkDb> {
