@@ -9,6 +9,7 @@
 #include "core/rng.h"
 #include "core/tag_registry.h"
 #include "entities/entity.h"
+#include "world/world_generator.h"
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -19,9 +20,24 @@ static inline int _randi_index(int p_size) {
     return (int)((uint32_t)UtilityFunctions::randi() % (uint32_t)p_size);
 }
 
-void QuestTracker::configure(EntityLedger* p_ledger, QuestDb* p_db, uint32_t p_player_id, const int* p_world_seed) {
+static String quest_race_name(const String& p_race_id, int p_count) {
+    String name = p_race_id.replace("_", " ").capitalize();
+    if (p_count == 1) return name;
+    if (p_race_id == "mouse") return "Mice";
+    if (!name.ends_with("s")) name += "s";
+    return name;
+}
+
+void QuestTracker::configure(
+    EntityLedger* p_ledger,
+    QuestDb* p_db,
+    uint32_t p_player_id,
+    const int* p_world_seed,
+    WorldGenerator* p_generator
+) {
     ledger = p_ledger;
     db = p_db;
+    generator = p_generator;
     player_entity_id = p_player_id;
     world_seed = p_world_seed;
 }
@@ -42,12 +58,70 @@ void QuestTracker::set_emit_callback(EmitFn p_emit, void* p_userdata) {
     emit_userdata = p_userdata;
 }
 
+float QuestTracker::_current_turn() const {
+    if (!ledger) return 0.0f;
+    const Entity* player = ledger->get_entity_pool().get_entity(player_entity_id);
+    return player ? player->next_turn_time : 0.0f;
+}
+
+String QuestTracker::_failure_key(uint32_t p_giver_entity_id, const String& p_kind) const {
+    return String::num_int64(static_cast<int64_t>(p_giver_entity_id)) + ":" + p_kind;
+}
+
+const QuestFailureHistory* QuestTracker::_get_failure_history(
+    uint32_t p_giver_entity_id,
+    const String& p_kind
+) const {
+    const auto it = failure_history.find(_failure_key(p_giver_entity_id, p_kind));
+    return it == failure_history.end() ? nullptr : &it->second;
+}
+
+bool QuestTracker::_failure_allows_offer(uint32_t p_giver_entity_id, const String& p_kind) const {
+    const QuestFailureHistory* history = _get_failure_history(p_giver_entity_id, p_kind);
+    if (!history) return true;
+
+    if (!history->ever_failed) return true;
+    if (!db || db->get_failure_policy(p_kind) != "cooldown") return false;
+    const int cooldown = db->get_failure_cooldown_turns(p_kind);
+    if (cooldown <= 0) return false;
+    return _current_turn() >= history->last_failed_turn + static_cast<float>(cooldown);
+}
+
+void QuestTracker::_record_failure(const QuestInstance& p_q) {
+    if (p_q.template_kind.is_empty()) return;
+    const String key = _failure_key(p_q.giver_entity_id, p_q.template_kind);
+    QuestFailureHistory& history = failure_history[key];
+    history.template_kind = p_q.template_kind;
+    history.giver_entity_id = p_q.giver_entity_id;
+    history.ever_failed = true;
+    history.last_failed_turn = _current_turn();
+    history.failure_count += 1;
+}
+
 void QuestTracker::_emit(const String& p_quest_id) {
     if (emit_quest_updated) emit_quest_updated(emit_userdata, p_quest_id);
 }
 
 bool QuestTracker::_is_gather_kind(const String& p_kind) const {
-    return p_kind == "gather" || p_kind.ends_with("_gather");
+    const String objective_kind = db ? db->get_objective_kind(p_kind) : p_kind;
+    return objective_kind == "gather" || objective_kind.ends_with("_gather");
+}
+
+bool QuestTracker::_location_matches(const String& p_kind, const Vector2i& p_position, int p_z) const {
+    if (!db) return false;
+    const String context = db->get_location_context(p_kind);
+    if (context.is_empty()) return true;
+    if (!generator || !world_seed) return false;
+
+    const int seed = *world_seed;
+    if (context == "dungeon") {
+        return !generator->get_dungeon_type_for_cell(p_position.x, p_position.y, p_z, seed).is_empty();
+    }
+    if (context == "forest") {
+        IdRegistry* reg = IdRegistry::get_singleton();
+        return reg && generator->get_biome_id_for_cell(p_position.x, p_position.y, p_z, seed) == reg->get_id("forest");
+    }
+    return false;
 }
 
 void QuestTracker::on_game_event(const GameEvent& p_event) {
@@ -60,10 +134,13 @@ void QuestTracker::on_game_event(const GameEvent& p_event) {
             if (anatomy.is_empty()) return;
             String race_id = String(anatomy.get("race_id", ""));
             if (race_id.is_empty()) return;
+            const Entity* victim = ledger->get_entity_pool().get_entity(p_event.target_id);
+            const int victim_z = victim ? victim->z : 0;
             for (auto& pair : instances) {
                 QuestInstance& q = pair.second;
                 if (q.status != "active") continue;
-                if (q.template_kind != "kill") continue;
+                if ((db ? db->get_objective_kind(q.template_kind) : q.template_kind) != "kill") continue;
+                if (!_location_matches(q.template_kind, p_event.position, victim_z)) continue;
                 if (String(q.params.get("race_id", "")) != race_id) continue;
                 _advance(pair.first, 1);
             }
@@ -91,7 +168,7 @@ void QuestTracker::on_game_event(const GameEvent& p_event) {
             for (auto& pair : instances) {
                 QuestInstance& q = pair.second;
                 if (q.status != "active") continue;
-                if (q.template_kind != "reach") continue;
+                if ((db ? db->get_objective_kind(q.template_kind) : q.template_kind) != "reach") continue;
                 if (q.target <= 0) continue;
                 _advance(pair.first, q.target); // reach objectives are one-shot
                 break;
@@ -231,11 +308,19 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         } else {
             inst.params["__unfilled"] = true;
         }
-    } else if (p_kind == "kill") {
+    } else if ((db ? db->get_objective_kind(p_kind) : p_kind) == "kill") {
         Array race_exclude = db->get_race_exclude(p_kind);
         std::vector<String> candidates;
+        std::vector<String> target_races;
+        db->get_target_races_vec(p_kind, target_races);
         RaceDb* race_db_singleton = RaceDb::get_singleton();
-        if (race_db_singleton) {
+        if (!target_races.empty()) {
+            for (const String& race_id : target_races) {
+                if (race_db_singleton && race_db_singleton->get_race_info(race_id)) {
+                    candidates.push_back(race_id);
+                }
+            }
+        } else if (race_db_singleton) {
             Array ids = race_db_singleton->get_ids();
             for (int i = 0; i < ids.size(); i++) {
                 String id = String(ids[i]);
@@ -249,7 +334,7 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         if (!candidates.empty()) {
             String pick = candidates[quest_rng.range(0, (int)candidates.size() - 1)];
             inst.params["race_id"] = pick;
-            String race_name = pick.capitalize();
+            String race_name = quest_race_name(pick, inst.target);
             String label_tmpl = db->get_label_template(p_kind);
             String count_str = String::num_int64(inst.target);
             String label_after_count = label_tmpl.replace("{count}", count_str);
@@ -260,7 +345,7 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         } else {
             inst.params["__unfilled"] = true;
         }
-    } else if (p_kind == "reach") {
+    } else if ((db ? db->get_objective_kind(p_kind) : p_kind) == "reach") {
         std::vector<String> candidates;
         TileDb* tile_db_singleton = TileDb::get_singleton();
         if (tile_db_singleton) {
@@ -303,10 +388,20 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
 
 bool QuestTracker::_giver_can_offer(const String& p_kind, uint32_t p_giver_entity_id) const {
     if (!db) return false;
+
+    const String required_dialogue_id = db->get_giver_dialogue_id(p_kind);
     std::vector<String> jobs;
-    if (!db->get_giver_jobs_vec(p_kind, jobs)) return true;
+    const bool has_job_filter = db->get_giver_jobs_vec(p_kind, jobs);
+    if (!has_job_filter && required_dialogue_id.is_empty()) return true;
     if (!ledger) return false;
+
     Dictionary profile = ledger->get_social_profile(p_giver_entity_id);
+    if (!required_dialogue_id.is_empty() &&
+        String(profile.get("dialogue_id", "")) != required_dialogue_id) {
+        return false;
+    }
+
+    if (!has_job_filter) return true;
     String job = String(profile.get("job", ""));
     for (const String& allowed : jobs) {
         if (allowed == job) return true;
@@ -315,13 +410,68 @@ bool QuestTracker::_giver_can_offer(const String& p_kind, uint32_t p_giver_entit
 }
 
 Dictionary QuestTracker::generate_offer(uint32_t p_giver_entity_id, const String& p_kind) {
-    if (!db || p_kind.is_empty()) return Dictionary();
+    if (!db || p_kind.is_empty() || db->is_story_kind(p_kind)) return Dictionary();
     if (!_giver_can_offer(p_kind, p_giver_entity_id)) return Dictionary();
+    if (!_failure_allows_offer(p_giver_entity_id, p_kind)) return Dictionary();
     QuestInstance inst = _sample_one(p_kind, p_giver_entity_id);
     if (inst.params.has("__unfilled")) return Dictionary();
     instances[inst.id] = inst;
     Dictionary view = _view(inst.id, inst);
     _emit(inst.id);
+    return view;
+}
+
+Dictionary QuestTracker::generate_story_offer(uint32_t p_giver_entity_id, const String& p_kind) {
+    if (!db || p_kind.is_empty() || !db->is_story_kind(p_kind)) return Dictionary();
+    if (!_giver_can_offer(p_kind, p_giver_entity_id)) return Dictionary();
+    if (!_failure_allows_offer(p_giver_entity_id, p_kind)) return Dictionary();
+
+    const String objective_kind = db->get_objective_kind(p_kind);
+    const bool supported_objective = _is_gather_kind(p_kind) ||
+        objective_kind == "kill" || objective_kind == "reach";
+    if (!supported_objective) return Dictionary();
+
+    const String prerequisite = db->get_prerequisite_quest(p_kind);
+    if (!prerequisite.is_empty() && !is_completed(prerequisite)) {
+        return Dictionary();
+    }
+    if (prerequisite.is_empty()) {
+        bool predecessor_declared = false;
+        bool predecessor_completed = false;
+        for (const Variant& kind_value : db->get_kinds()) {
+            const String predecessor = String(kind_value);
+            if (!db->is_story_kind(predecessor) || db->get_next_quest(predecessor) != p_kind) {
+                continue;
+            }
+            predecessor_declared = true;
+            if (is_completed(predecessor)) predecessor_completed = true;
+        }
+        if (predecessor_declared && !predecessor_completed) return Dictionary();
+    }
+
+    auto existing = instances.find(p_kind);
+    if (existing != instances.end()) {
+        QuestInstance& q = existing->second;
+        if (q.giver_entity_id != p_giver_entity_id) return Dictionary();
+        if (q.status == "completed") return Dictionary();
+        if (q.status == "declined" || q.status == "failed") {
+            q.status = "offered";
+            q.progress = 0;
+            q.params.erase("__failure_reason");
+            q.params.erase("__failure_turn");
+            _emit(p_kind);
+        }
+        return _view(p_kind, q);
+    }
+
+    QuestInstance inst = _sample_one(p_kind, p_giver_entity_id);
+    if (inst.params.has("__unfilled")) return Dictionary();
+    // Story kinds are their own stable instance IDs.  This makes completion
+    // checks and prerequisites independent of the random-offer ID scheme.
+    inst.id = p_kind;
+    instances[p_kind] = inst;
+    Dictionary view = _view(p_kind, inst);
+    _emit(p_kind);
     return view;
 }
 
@@ -344,7 +494,9 @@ Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
         bool filled = false;
         for (int j = 0; j < order.size(); j++) {
             String kind = String(order[j]);
+            if (db->is_story_kind(kind)) continue;
             if (!_giver_can_offer(kind, p_giver_entity_id)) continue;
+            if (!_failure_allows_offer(p_giver_entity_id, kind)) continue;
             QuestInstance inst = _sample_one(kind, p_giver_entity_id);
             if (!inst.params.has("__unfilled")) {
                 instances[inst.id] = inst;
@@ -355,6 +507,7 @@ Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
             }
         }
         if (!filled) {
+            if (!_failure_allows_offer(p_giver_entity_id, "gather")) return out;
             QuestInstance inst = _sample_one("gather", p_giver_entity_id);
             inst.params["item_id"] = "stick";
             inst.params["__label"] = String("Gather ") + String::num_int64(inst.target) + String(" sticks");
@@ -407,8 +560,10 @@ void QuestTracker::_fail(const String& p_quest_id, const String& p_reason) {
     if (it == instances.end()) return;
     QuestInstance& q = it->second;
     if (q.status != "offered" && q.status != "active") return;
+    _record_failure(q);
     q.status = "failed";
     q.params["__failure_reason"] = p_reason;
+    q.params["__failure_turn"] = _current_turn();
     _emit(p_quest_id);
 }
 
@@ -506,6 +661,17 @@ Dictionary QuestTracker::_view(const String& p_quest_id, const QuestInstance& p_
     d["can_complete"]    = p_q.status == "active" && objective_ready;
     d["params"]          = p_q.params;
     d["rewards"]         = p_q.rewards;
+    if (db) {
+        const String location_context = db->get_location_context(p_q.template_kind);
+        if (!location_context.is_empty()) d["location_context"] = location_context;
+    }
+    if (db && db->is_story_kind(p_q.template_kind)) {
+        d["story_id"] = p_q.template_kind;
+        d["objective_kind"] = db->get_objective_kind(p_q.template_kind);
+        d["prerequisite_quest"] = db->get_prerequisite_quest(p_q.template_kind);
+        d["next_quest"] = db->get_next_quest(p_q.template_kind);
+        d["next_giver"] = db->get_next_giver(p_q.template_kind);
+    }
     return d;
 }
 
@@ -549,6 +715,38 @@ Dictionary QuestTracker::get_quest(const String& p_quest_id) const {
     return _view(it->first, it->second);
 }
 
+bool QuestTracker::is_completed(const String& p_quest_id) const {
+    auto it = instances.find(p_quest_id);
+    return it != instances.end() && it->second.status == "completed";
+}
+
+bool QuestTracker::has_failed(uint32_t p_giver_entity_id, const String& p_quest_ref) const {
+    if (p_quest_ref.is_empty()) return false;
+
+    auto instance_it = instances.find(p_quest_ref);
+    if (instance_it != instances.end() &&
+        instance_it->second.status == "failed" &&
+        instance_it->second.giver_entity_id == p_giver_entity_id) {
+        return true;
+    }
+
+    const QuestFailureHistory* history = _get_failure_history(p_giver_entity_id, p_quest_ref);
+    if (history) return history->ever_failed;
+    return false;
+}
+
+bool QuestTracker::can_offer(uint32_t p_giver_entity_id, const String& p_kind) const {
+    if (!db || p_kind.is_empty()) return false;
+    if (!_giver_can_offer(p_kind, p_giver_entity_id)) return false;
+    for (const auto& pair : instances) {
+        const QuestInstance& q = pair.second;
+        if (q.giver_entity_id != p_giver_entity_id || q.template_kind != p_kind) continue;
+        if (q.status == "offered" || q.status == "active") return false;
+        if (q.status == "completed" && db->is_story_kind(p_kind)) return false;
+    }
+    return _failure_allows_offer(p_giver_entity_id, p_kind);
+}
+
 Dictionary QuestTracker::serialize() const {
     Dictionary data;
     data["version"] = 1;
@@ -557,12 +755,43 @@ Dictionary QuestTracker::serialize() const {
         arr.push_back(_view(pair.first, pair.second));
     }
     data["instances"] = arr;
+
+    Array failures;
+    for (const auto& pair : failure_history) {
+        const QuestFailureHistory& history = pair.second;
+        Dictionary entry;
+        entry["kind"] = history.template_kind;
+        entry["giver_entity_id"] = static_cast<int64_t>(history.giver_entity_id);
+        entry["ever_failed"] = history.ever_failed;
+        entry["last_failed_turn"] = history.last_failed_turn;
+        entry["failure_count"] = history.failure_count;
+        failures.push_back(entry);
+    }
+    data["failure_history"] = failures;
     return data;
 }
 
 void QuestTracker::deserialize(const Dictionary& p_data) {
     instances.clear();
+    failure_history.clear();
     if (p_data.is_empty()) return;
+
+    Array failures = p_data.get("failure_history", Array());
+    for (int i = 0; i < failures.size(); i++) {
+        Dictionary d = failures[i];
+        const String kind = String(d.get("kind", ""));
+        if (kind.is_empty()) continue;
+        QuestFailureHistory history;
+        history.template_kind = kind;
+        history.giver_entity_id = static_cast<uint32_t>(static_cast<int64_t>(d.get("giver_entity_id", 0)));
+        history.ever_failed = bool(d.get("ever_failed", true));
+        history.last_failed_turn = static_cast<float>(static_cast<double>(d.get("last_failed_turn", -1.0)));
+        history.failure_count = int(d.get("failure_count", 1));
+        if (history.failure_count <= 0) history.failure_count = 1;
+        if (history.failure_count > 0) history.ever_failed = true;
+        failure_history[_failure_key(history.giver_entity_id, history.template_kind)] = history;
+    }
+
     Array arr = p_data.get("instances", Array());
     for (int i = 0; i < arr.size(); i++) {
         Dictionary d = arr[i];

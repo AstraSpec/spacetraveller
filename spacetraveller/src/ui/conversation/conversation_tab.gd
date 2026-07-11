@@ -59,6 +59,7 @@ func _get_display_data() -> Array:
 		var effects: Dictionary = entry.get("effects", {})
 		var quest_offer = effects.get("quest_offer", false)
 		var has_quest_offer: bool = (typeof(quest_offer) == TYPE_STRING and not str(quest_offer).is_empty()) or (typeof(quest_offer) == TYPE_BOOL and bool(quest_offer))
+		has_quest_offer = has_quest_offer or not str(effects.get("story_quest_offer", "")).is_empty()
 		var ui_color := str(entry.get("ui_color", ""))
 		var color := Color(1, 1, 1)
 		if ui_color == "quest_accept":

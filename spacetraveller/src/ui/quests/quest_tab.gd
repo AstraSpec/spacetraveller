@@ -36,6 +36,7 @@ func _get_display_data() -> Array:
 			"target": int(q.get("target", 0)),
 			"progress": int(q.get("progress", 0)),
 			"rewards": q.get("rewards", {}),
+			"next_giver": str(q.get("next_giver", "")),
 		})
 	return formatted
 
@@ -69,6 +70,10 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	var r_delta: int = int(rewards.get("romance_delta", 0))
 	if r_delta != 0:
 		_add_detail("Romance", ("+" if r_delta > 0 else "") + str(r_delta))
+
+	var next_giver := str(item_data.get("next_giver", ""))
+	if not next_giver.is_empty():
+		_add_detail("Next", "Speak to %s" % next_giver)
 
 	if detailsContainer.get_child_count() == 0:
 		_add_detail("None", "")
@@ -108,5 +113,6 @@ func _on_objective_progressed(quest_id: String, _progress: int, _target: int) ->
 		"target": int(q.get("target", 0)),
 		"progress": int(q.get("progress", 0)),
 		"rewards": q.get("rewards", {}),
+		"next_giver": str(q.get("next_giver", "")),
 	}
 	_update_details_ui(data)

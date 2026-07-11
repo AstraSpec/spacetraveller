@@ -35,6 +35,20 @@
     "atlas_offset": 46,
     "traits": []
   },
+  "guild_master": {
+    "display_name": "Guild Master",
+    "dialogues": ["guild_master"],
+    "default_attitude": "friendly",
+    "default_ai_state": "idle",
+    "atlas_offset": 46,
+    "traits": [],
+    "quest_kinds": [
+      "adventurer_forest_kill",
+      "adventurer_dungeon_kill",
+      "adventurer_gather_herb",
+      "adventurer_gather_mineral"
+    ]
+  },
   "guard": {
     "display_name": "Guard",
     "dialogues": ["guard"],

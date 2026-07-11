@@ -123,6 +123,12 @@ func is_active(quest_id: String) -> bool:
 func is_completed(quest_id: String) -> bool:
 	return _game_world != null and _game_world.is_quest_completed(quest_id)
 
+func is_failed(quest_ref: String, giver_entity_id: int) -> bool:
+	return _game_world != null and _game_world.is_quest_failed(quest_ref, giver_entity_id)
+
+func can_offer(giver_entity_id: int, kind: String) -> bool:
+	return _game_world != null and _game_world.can_offer_quest(giver_entity_id, kind)
+
 func get_quest(quest_id: String) -> Dictionary:
 	if not _game_world:
 		return {}

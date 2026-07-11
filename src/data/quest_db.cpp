@@ -11,6 +11,14 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("initialize_data"), &QuestDb::initialize_data);
     ClassDB::bind_method(D_METHOD("get_ids"), &QuestDb::get_ids);
     ClassDB::bind_method(D_METHOD("get_kinds"), &QuestDb::get_kinds);
+    ClassDB::bind_method(D_METHOD("is_story_kind", "kind"), &QuestDb::is_story_kind);
+    ClassDB::bind_method(D_METHOD("get_failure_policy", "kind"), &QuestDb::get_failure_policy);
+    ClassDB::bind_method(D_METHOD("get_failure_cooldown_turns", "kind"), &QuestDb::get_failure_cooldown_turns);
+    ClassDB::bind_method(D_METHOD("get_objective_kind", "kind"), &QuestDb::get_objective_kind);
+    ClassDB::bind_method(D_METHOD("get_prerequisite_quest", "kind"), &QuestDb::get_prerequisite_quest);
+    ClassDB::bind_method(D_METHOD("get_next_quest", "kind"), &QuestDb::get_next_quest);
+    ClassDB::bind_method(D_METHOD("get_next_giver", "kind"), &QuestDb::get_next_giver);
+    ClassDB::bind_method(D_METHOD("get_giver_dialogue_id", "kind"), &QuestDb::get_giver_dialogue_id);
     ClassDB::bind_method(D_METHOD("get_label_template", "kind"), &QuestDb::get_label_template);
     ClassDB::bind_method(D_METHOD("get_description_template", "kind"), &QuestDb::get_description_template);
     ClassDB::bind_method(D_METHOD("get_target_range", "kind"), &QuestDb::get_target_range);
@@ -19,6 +27,8 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_target_item_tags", "kind"), &QuestDb::get_target_item_tags);
     ClassDB::bind_method(D_METHOD("get_target_loot_table", "kind"), &QuestDb::get_target_loot_table);
     ClassDB::bind_method(D_METHOD("get_giver_jobs", "kind"), &QuestDb::get_giver_jobs);
+    ClassDB::bind_method(D_METHOD("get_target_races", "kind"), &QuestDb::get_target_races);
+    ClassDB::bind_method(D_METHOD("get_location_context", "kind"), &QuestDb::get_location_context);
     ClassDB::bind_method(D_METHOD("get_race_exclude", "kind"), &QuestDb::get_race_exclude);
     ClassDB::bind_method(D_METHOD("get_tier_names", "kind"), &QuestDb::get_tier_names);
     ClassDB::bind_method(D_METHOD("get_tier_item_pool", "kind", "tier"), &QuestDb::get_tier_item_pool);
@@ -46,6 +56,16 @@ static std::vector<uint16_t> resolve_item_ids(const Array &p_strings) {
 QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     QuestTemplate t;
     t.kind                = p_data.get("id", "");
+    t.objective_kind      = p_data.get("objective_kind", t.kind);
+    t.story               = bool(p_data.get("story", false));
+    t.failure_policy      = String(p_data.get("failure_policy", "permanent")).to_lower();
+    if (t.failure_policy != "cooldown") t.failure_policy = "permanent";
+    t.failure_cooldown_turns = int(p_data.get("failure_cooldown_turns", 0));
+    if (t.failure_cooldown_turns < 0) t.failure_cooldown_turns = 0;
+    t.prerequisite_quest  = p_data.get("prerequisite_quest", "");
+    t.next_quest          = p_data.get("next_quest", "");
+    t.next_giver          = p_data.get("next_giver", "");
+    t.giver_dialogue_id   = p_data.get("giver_dialogue_id", "");
     t.label_template      = p_data.get("label_template", "");
     t.description_template = p_data.get("description_template", "");
 
@@ -74,6 +94,12 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     for (int i = 0; i < giver_jobs.size(); i++) {
         t.giver_jobs.emplace_back(String(giver_jobs[i]));
     }
+
+    Array target_races = p_data.get("target_races", Array());
+    for (int i = 0; i < target_races.size(); i++) {
+        t.target_races.emplace_back(String(target_races[i]));
+    }
+    t.location_context = String(p_data.get("location_context", "")).to_lower();
 
     // kill-only filter
     Array re = p_data.get("race_exclude", Array());
@@ -119,6 +145,46 @@ Array QuestDb::get_kinds() const {
         arr.push_back(pair.first);
     }
     return arr;
+}
+
+bool QuestDb::is_story_kind(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t && t->story;
+}
+
+String QuestDb::get_failure_policy(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->failure_policy : String("permanent");
+}
+
+int QuestDb::get_failure_cooldown_turns(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->failure_cooldown_turns : 0;
+}
+
+String QuestDb::get_objective_kind(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->objective_kind : String();
+}
+
+String QuestDb::get_prerequisite_quest(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->prerequisite_quest : String();
+}
+
+String QuestDb::get_next_quest(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->next_quest : String();
+}
+
+String QuestDb::get_next_giver(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->next_giver : String();
+}
+
+String QuestDb::get_giver_dialogue_id(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->giver_dialogue_id : String();
 }
 
 String QuestDb::get_label_template(const String &p_kind) const {
@@ -170,6 +236,18 @@ Array QuestDb::get_giver_jobs(const String &p_kind) const {
     const QuestTemplate* t = get_info(p_kind);
     if (t) for (const String& v : t->giver_jobs) arr.push_back(v);
     return arr;
+}
+
+Array QuestDb::get_target_races(const String &p_kind) const {
+    Array arr;
+    const QuestTemplate* t = get_info(p_kind);
+    if (t) for (const String& v : t->target_races) arr.push_back(v);
+    return arr;
+}
+
+String QuestDb::get_location_context(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->location_context : String();
 }
 
 Array QuestDb::get_race_exclude(const String &p_kind) const {
@@ -252,6 +330,14 @@ bool QuestDb::get_target_item_tags_vec(const String &p_kind, std::vector<uint16_
     const QuestTemplate* t = get_info(p_kind);
     if (!t) return false;
     r_out = t->target_item_tags;
+    return !r_out.empty();
+}
+
+bool QuestDb::get_target_races_vec(const String &p_kind, std::vector<String> &r_out) const {
+    r_out.clear();
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return false;
+    r_out = t->target_races;
     return !r_out.empty();
 }
 

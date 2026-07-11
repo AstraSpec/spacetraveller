@@ -1,0 +1,126 @@
+{
+  "id": "guild_master",
+  "priority": 170,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "The guild has work for capable adventurers. What kind of contract are you after?",
+      "options": [
+        {
+          "text": "I want a hunting contract.",
+          "next": "hunt_contracts",
+          "constraints": { "quest_status": "none" }
+        },
+        {
+          "text": "I want a gathering contract.",
+          "next": "gather_contracts",
+          "constraints": { "quest_status": "none" }
+        },
+        {
+          "text": "I have an active contract to report.",
+          "next": "turn_in",
+          "constraints": { "quest_status": "active" }
+        },
+        {
+          "text": "I need to decide on a contract.",
+          "next": "pending_contract",
+          "constraints": { "quest_status": "offered" }
+        }
+      ]
+    },
+    "hunt_contracts": {
+      "npc": "Choose your prey carefully.",
+      "options": [
+        {
+          "text": "Forest hunt quest",
+          "next": "forest_kill_offer",
+          "constraints": { "quest_available": "adventurer_forest_kill" },
+          "effects": { "quest_offer": "adventurer_forest_kill" }
+        },
+        {
+          "text": "Dungeon hunt quest",
+          "next": "dungeon_kill_offer",
+          "constraints": { "quest_available": "adventurer_dungeon_kill" },
+          "effects": { "quest_offer": "adventurer_dungeon_kill" }
+        },
+        {
+          "text": "Back to the guild desk.",
+          "next": "start"
+        }
+      ]
+    },
+    "gather_contracts": {
+      "npc": "The guild always pays for useful supplies.",
+      "options": [
+        {
+          "text": "Gather herbs",
+          "next": "herb_offer",
+          "constraints": { "quest_available": "adventurer_gather_herb" },
+          "effects": { "quest_offer": "adventurer_gather_herb" }
+        },
+        {
+          "text": "Gather minerals",
+          "next": "mineral_offer",
+          "constraints": { "quest_available": "adventurer_gather_mineral" },
+          "effects": { "quest_offer": "adventurer_gather_mineral" }
+        },
+        {
+          "text": "Back to the guild desk.",
+          "next": "start"
+        }
+      ]
+    },
+    "forest_kill_offer": {
+      "npc": "Here is the forest contract: {quest_description}",
+      "options": []
+    },
+    "dungeon_kill_offer": {
+      "npc": "Here is the dungeon contract: {quest_description}",
+      "options": []
+    },
+    "herb_offer": {
+      "npc": "The herb contract is simple: {quest_description}",
+      "options": []
+    },
+    "mineral_offer": {
+      "npc": "The mineral contract is worth the risk: {quest_description}",
+      "options": []
+    },
+    "pending_contract": {
+      "npc": "The contract is still waiting for your answer: {quest_description}",
+      "options": []
+    },
+    "turn_in": {
+      "npc": "You are back. How is {quest_label} progressing?",
+      "options": [
+        {
+          "text": "The contract is complete.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true }
+        },
+        {
+          "text": "I am still working on it.",
+          "next": "not_done",
+          "constraints": { "quest_status": "active", "can_complete_quest": false }
+        }
+      ]
+    },
+    "complete": {
+      "npc": "Excellent work. The guild will remember your reliability.",
+      "options": []
+    },
+    "not_done": {
+      "npc": "Then keep moving. The contract remains: {quest_description}",
+      "options": []
+    },
+    "accepted": {
+      "npc": "Contract accepted. Return when {quest_label} is finished.",
+      "options": []
+    },
+    "declined": {
+      "npc": "Very well. The guild will keep the contract open for another day.",
+      "options": []
+    }
+  }
+}

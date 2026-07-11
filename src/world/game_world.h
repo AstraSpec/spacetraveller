@@ -145,6 +145,8 @@ public:
     Dictionary get_quest(const String& quest_id) const;
     bool is_quest_active(const String& quest_id) const;
     bool is_quest_completed(const String& quest_id) const;
+    bool is_quest_failed(const String& quest_ref, int giver_entity_id) const;
+    bool can_offer_quest(int giver_entity_id, const String& kind) const;
 
     bool is_cell_seen(const Vector2i& pos) const;
     bool has_entity_at_cell(int x, int y) const;

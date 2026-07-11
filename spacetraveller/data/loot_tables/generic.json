@@ -41,6 +41,7 @@
       { "item_id": "bronze_coin", "weight": 15, "amount_min": 1, "amount_max": 3 },
       { "item_id": "silver_coin", "weight": 8,  "amount_min": 1, "amount_max": 2 },
       { "item_id": "golden_coin", "weight": 2,  "amount_min": 1, "amount_max": 1 },
+      { "item_id": "diamond", "weight": 1,  "amount_min": 1, "amount_max": 1 },
       { "item_id": "rusty_sword", "weight": 3,  "amount_min": 1, "amount_max": 1 },
       { "item_id": "flint", "weight": 8, "amount_min": 1, "amount_max": 1 },
       { "item_id": "iron_ore", "weight": 3,  "amount_min": 1, "amount_max": 1 }

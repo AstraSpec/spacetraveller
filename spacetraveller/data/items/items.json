@@ -100,6 +100,16 @@
     "tags": []
   },
   {
+    "id": "diamond",
+    "name": "Diamond",
+    "description": "A brilliant gemstone prized by craftsmen and collectors.",
+    "type": "material",
+    "price": 5000,
+    "atlas": [ 1, 21 ],
+    "weight": 0.1,
+    "tags": []
+  },
+  {
     "id": "iron_ingot",
     "name": "Iron Ingot",
     "description": "An iron ingot.",

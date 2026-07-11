@@ -32,7 +32,7 @@ func load_dialogues() -> void:
 	_dialogues.sort_custom(func(a, b): return int(a.get("priority", 0)) > int(b.get("priority", 0)))
 
 func has_dialogue_for(world, target_id: int) -> bool:
-	return not _pick_dialogue(world, target_id).is_empty()
+	return not _dialogue_candidates(world, target_id).is_empty()
 
 func start_state(world, target_id: int, saved: Dictionary = {}) -> Dictionary:
 	if _is_saved_state_valid(saved):
@@ -51,7 +51,7 @@ func get_npc_text(state: Dictionary, world, target_id: int) -> String:
 	var node := _get_node(state)
 	if node.is_empty():
 		return "They have nothing to say."
-	return _format_text(str(node.get("npc", "")), state, world, target_id)
+	return _format_text(_get_npc_template(node, state), state, world, target_id)
 
 func get_options(state: Dictionary, world, target_id: int) -> Array:
 	var node := _get_node(state)
@@ -134,27 +134,64 @@ func _is_saved_state_valid(saved: Dictionary) -> bool:
 	return nodes.has(nid)
 
 func _pick_dialogue(world: Node, target_id: int) -> Dictionary:
+	var candidates := _dialogue_candidates(world, target_id)
+	if candidates.is_empty():
+		return {}
+	return candidates[0]
+
+func _get_npc_template(node: Dictionary, state: Dictionary) -> String:
+	var variants: Array = []
+	var configured_text = node.get("npc", "")
+	if configured_text is Array:
+		for variant in configured_text:
+			var text := str(variant)
+			if not text.is_empty():
+				variants.append(text)
+
+	if variants.is_empty():
+		return str(configured_text)
+
+	var dialogue_id := str(state.get("dialogue_id", ""))
+	var node_id := str(state.get("node_id", ""))
+	var variant_key := "%s:%s" % [dialogue_id, node_id]
+	var selected_variants: Dictionary = state.get("npc_variant_selections", {})
+	if selected_variants.has(variant_key):
+		return str(selected_variants[variant_key])
+
+	var selected := str(variants[randi() % variants.size()])
+	selected_variants[variant_key] = selected
+	state["npc_variant_selections"] = selected_variants
+	return selected
+
+func _dialogue_candidates(world: Node, target_id: int) -> Array:
 	var ctx := _build_context(world, target_id)
 	var dialogue_id := str(ctx.get("dialogue_id", "")).strip_edges()
 	if not dialogue_id.is_empty() and _dialogues_by_id.has(dialogue_id):
-		return _dialogues_by_id[dialogue_id]
+		return [_dialogues_by_id[dialogue_id]]
 
 	var job := str(ctx.get("job", "")).strip_edges()
+	var candidates: Array = []
 	if not job.is_empty():
 		for job_dialogue_id in JobDb.get_dialogues(job):
 			dialogue_id = str(job_dialogue_id).strip_edges()
 			if not dialogue_id.is_empty() and _dialogues_by_id.has(dialogue_id):
-				return _dialogues_by_id[dialogue_id]
-	return _dialogues_by_id.get(FALLBACK_DIALOGUE_ID, {})
+				candidates.append(_dialogues_by_id[dialogue_id])
+	if not candidates.is_empty():
+		return candidates
+	if _dialogues_by_id.has(FALLBACK_DIALOGUE_ID):
+		return [_dialogues_by_id[FALLBACK_DIALOGUE_ID]]
+	return []
 
 func _constraints_pass(constraints: Dictionary, state: Dictionary, world, target_id: int) -> bool:
 	if constraints.is_empty():
 		return true
 	var ctx := _build_context(world, target_id)
+	ctx["target_id"] = target_id
 	ctx["pending_quest_id"] = str(state.get("pending_quest_id", ""))
 	return _dict_constraints_pass(constraints, ctx)
 
 func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
+	var giver_id := int(ctx.get("target_id", -1))
 	if c.has("race") and str(c["race"]) != str(ctx.get("race", "")):
 		return false
 	if c.has("job") and str(c["job"]) != str(ctx.get("job", "")):
@@ -173,6 +210,30 @@ func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if c.has("can_complete_quest") and bool(c["can_complete_quest"]) != bool(ctx.get("can_complete_quest", false)):
 		return false
+	if c.has("completed_quest"):
+		var completed_requirement = c["completed_quest"]
+		if completed_requirement is Array:
+			for quest_id in completed_requirement:
+				if not QuestService.is_completed(str(quest_id)):
+					return false
+		elif not QuestService.is_completed(str(completed_requirement)):
+			return false
+	if c.has("failed_quest"):
+		var failed_requirement = c["failed_quest"]
+		if failed_requirement is Array:
+			for quest_ref in failed_requirement:
+				if not QuestService.is_failed(str(quest_ref), giver_id):
+					return false
+		elif not QuestService.is_failed(str(failed_requirement), giver_id):
+			return false
+	if c.has("quest_available"):
+		var available_requirement = c["quest_available"]
+		if available_requirement is Array:
+			for quest_kind in available_requirement:
+				if not QuestService.can_offer(giver_id, str(quest_kind)):
+					return false
+		elif not QuestService.can_offer(giver_id, str(available_requirement)):
+			return false
 	if c.has("has_pending_quest") and bool(c["has_pending_quest"]) != (not str(ctx.get("pending_quest_id", ctx.get("quest_id", ""))).is_empty()):
 		return false
 	return true
@@ -219,8 +280,7 @@ func _get_node(state: Dictionary) -> Dictionary:
 	return nodes.get(nid, {})
 
 func _append_quest_decision_options(out: Array, node: Dictionary, state: Dictionary, world, target_id: int) -> void:
-	var npc_text := str(node.get("npc", ""))
-	if not npc_text.contains("{quest_description}") and not npc_text.contains("{quest_label}"):
+	if not _node_has_quest_placeholder(node):
 		return
 	var ctx := _build_context(world, target_id)
 	if str(ctx.get("quest_status", "none")) != QuestService.STATUS_OFFERED:
@@ -235,15 +295,26 @@ func _append_quest_decision_options(out: Array, node: Dictionary, state: Diction
 	out.append({
 		"text": "Accept quest",
 		"next": "accepted",
-		"effects": { "quest_accept": true, "friendship_delta": 5 },
+		"effects": { "quest_accept": true },
 		"ui_color": "quest_accept"
 	})
 	out.append({
 		"text": "Decline quest",
 		"next": "declined",
-		"effects": { "quest_decline": true, "friendship_delta": -3 },
+		"effects": { "quest_decline": true },
 		"ui_color": "quest_decline"
 	})
+
+func _node_has_quest_placeholder(node: Dictionary) -> bool:
+	var configured_text = node.get("npc", "")
+	if configured_text is Array:
+		for variant in configured_text:
+			var variant_text := str(variant)
+			if variant_text.contains("{quest_description}") or variant_text.contains("{quest_label}"):
+				return true
+		return false
+	var npc_text := str(configured_text)
+	return npc_text.contains("{quest_description}") or npc_text.contains("{quest_label}")
 
 func _has_effect_option(options: Array, effect_name: String) -> bool:
 	for option in options:
@@ -286,6 +357,11 @@ func _apply_effects(effects: Dictionary, state: Dictionary, result: Dictionary, 
 		state["pending_quest_id"] = qid
 
 	var pending := str(state.get("pending_quest_id", ""))
+	if effects.has("story_quest_offer") and pending.is_empty():
+		var story_kind := str(effects.get("story_quest_offer", ""))
+		if not story_kind.is_empty():
+			pending = QuestService.offer_story(target_id, story_kind)
+			state["pending_quest_id"] = pending
 	if bool(effects.get("quest_accept", false)) and not pending.is_empty():
 		QuestService.accept(pending)
 	if bool(effects.get("quest_decline", false)) and not pending.is_empty():

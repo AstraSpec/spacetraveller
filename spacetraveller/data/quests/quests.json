@@ -65,5 +65,63 @@
     "tiers": {
       "small":  { "reward_loot_table": "generic_quest_rewards", "item_pool": ["flint", "stick"],                        "amount_range": [2, 4], "friendship": 1, "romance": 0 }
     }
+  },
+  "adventurer_forest_kill": {
+    "objective_kind": "kill",
+    "giver_jobs": ["guild_master"],
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "target_races": ["bear", "mouse"],
+    "location_context": "forest",
+    "target_range": [3, 6],
+    "label_template": "Hunt {count} {race_name} in the forest",
+    "description_template": "Hunt {count} {race_name} in the forest and return to the Guild Master.",
+    "tiers": {
+      "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 3, "romance": 0 },
+      "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 5, "romance": 1 }
+    }
+  },
+  "adventurer_dungeon_kill": {
+    "objective_kind": "kill",
+    "giver_jobs": ["guild_master"],
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "target_races": ["deepling", "pale_spider"],
+    "location_context": "dungeon",
+    "target_range": [3, 6],
+    "label_template": "Hunt {count} {race_name} in a dungeon",
+    "description_template": "Hunt {count} {race_name} in a dungeon and return to the Guild Master.",
+    "tiers": {
+      "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 4, "romance": 0 },
+      "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 6, "romance": 1 }
+    }
+  },
+  "adventurer_gather_herb": {
+    "objective_kind": "gather",
+    "giver_jobs": ["guild_master"],
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "target_item_pool": ["apple"],
+    "target_range": [3, 7],
+    "label_template": "Gather {count} {item_name}",
+    "description_template": "Gather {count} {item_name} for the Guild Master.",
+    "tiers": {
+      "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 3], "friendship": 2, "romance": 0 },
+      "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 4, "romance": 1 }
+    }
+  },
+  "adventurer_gather_mineral": {
+    "objective_kind": "gather",
+    "giver_jobs": ["guild_master"],
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "target_item_pool": ["diamond"],
+    "target_range": [2, 4],
+    "label_template": "Gather {count} {item_name}",
+    "description_template": "Gather {count} {item_name} for the Guild Master.",
+    "tiers": {
+      "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 5, "romance": 0 },
+      "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 8, "romance": 1 }
+    }
   }
 }

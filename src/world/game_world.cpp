@@ -175,6 +175,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_quest", "quest_id"), &GameWorld::get_quest);
     ClassDB::bind_method(D_METHOD("is_quest_active", "quest_id"), &GameWorld::is_quest_active);
     ClassDB::bind_method(D_METHOD("is_quest_completed", "quest_id"), &GameWorld::is_quest_completed);
+    ClassDB::bind_method(D_METHOD("is_quest_failed", "quest_ref", "giver_entity_id"), &GameWorld::is_quest_failed);
+    ClassDB::bind_method(D_METHOD("can_offer_quest", "giver_entity_id", "kind"), &GameWorld::can_offer_quest);
 
     ADD_SIGNAL(MethodInfo("quest_updated",
         PropertyInfo(Variant::STRING, "quest_id")));
@@ -248,7 +250,7 @@ GameWorld::GameWorld() {
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
     trade_system.configure(&entity_ledger, &world_seed);
 
-    quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed);
+    quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed, generator.get());
     quest_tracker->set_emit_callback(&GameWorld::_quest_updated_trampoline, this);
 
     SimulationDirectorDeps deps;
@@ -547,6 +549,14 @@ bool GameWorld::is_quest_completed(const String& quest_id) const {
     if (!quest_tracker) return false;
     Dictionary q = quest_tracker->get_quest(quest_id);
     return String(q.get("status", "")) == "completed";
+}
+
+bool GameWorld::is_quest_failed(const String& quest_ref, int giver_entity_id) const {
+    return quest_tracker && quest_tracker->has_failed(static_cast<uint32_t>(giver_entity_id), quest_ref);
+}
+
+bool GameWorld::can_offer_quest(int giver_entity_id, const String& kind) const {
+    return quest_tracker && quest_tracker->can_offer(static_cast<uint32_t>(giver_entity_id), kind);
 }
 
 bool GameWorld::is_cell_seen(const Vector2i& pos) const {
