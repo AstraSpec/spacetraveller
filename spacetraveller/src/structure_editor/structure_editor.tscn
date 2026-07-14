@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c7bpkfyb6qvuq"]
+[gd_scene load_steps=13 format=3 uid="uid://c7bpkfyb6qvuq"]
 
 [ext_resource type="Script" uid="uid://cnfmyow707345" path="res://src/structure_editor/structure_editor.gd" id="1_urqvf"]
 [ext_resource type="Script" uid="uid://cus5p87q6jx26" path="res://src/structure_editor/tools.gd" id="4_6l3wk"]
@@ -11,15 +11,22 @@
 [ext_resource type="ButtonGroup" uid="uid://q664mpnrdso2" path="res://src/structure_editor/filepath_button_group.tres" id="9_2e8hg"]
 [ext_resource type="PackedScene" uid="uid://d4kkxelc8bkwf" path="res://src/ui/button_list_container.tscn" id="10_4c57u"]
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
+[ext_resource type="Script" path="res://src/structure_editor/group_list.gd" id="12_group"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileGrid", "ItemGrid", "NpcGrid", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileSearch", "TileGrid", "TileGroupList", "ItemSearch", "ItemGrid", "ItemGroupList", "NpcSearch", "NpcGrid", "NpcGroupList", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
 TileIDLabel2 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel2")
-TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileGrid")
-ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemGrid")
-NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcGrid")
+TileSearch = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileSearch")
+TileGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileContent/TileGrid")
+TileGroupList = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileContent/TileGroupList")
+ItemSearch = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemSearch")
+ItemGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemContent/ItemGrid")
+ItemGroupList = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemContent/ItemGroupList")
+NpcSearch = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcSearch")
+NpcGrid = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcContent/NpcGrid")
+NpcGroupList = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcContent/NpcGroupList")
 ContentTabs = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer")
 ItemAmountInput = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/AmountContainer/ItemAmountInput")
 NpcJobContainer = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/NpcJobContainer")
@@ -102,6 +109,11 @@ all_tabs_in_front = true
 layout_mode = 2
 metadata/_tab_index = 0
 
+[node name="TileSearch" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
+layout_mode = 2
+placeholder_text = "Search"
+clear_button_enabled = true
+
 [node name="TileGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
 layout_mode = 2
 text = "Group"
@@ -109,18 +121,35 @@ text = "Group"
 [node name="TileScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="TileGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll"]
+[node name="TileContent" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TileGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 script = ExtResource("4_06qem")
 
+[node name="TileGroupList" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileScroll/TileContent"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+script = ExtResource("12_group")
+
 [node name="Items" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="ItemSearch" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
+layout_mode = 2
+placeholder_text = "Search"
+clear_button_enabled = true
 
 [node name="LootGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
 layout_mode = 2
@@ -143,13 +172,25 @@ value = 1.0
 [node name="ItemScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="ItemGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
+[node name="ItemContent" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 script = ExtResource("4_06qem")
+
+[node name="ItemGroupList" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/ItemScroll/ItemContent"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+script = ExtResource("12_group")
 
 [node name="NPCs" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
 visible = false
@@ -159,6 +200,11 @@ metadata/_tab_index = 2
 [node name="NpcOptions" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs"]
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="NpcSearch" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
+layout_mode = 2
+placeholder_text = "Search"
+clear_button_enabled = true
 
 [node name="EntityGroupCheck" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions"]
 layout_mode = 2
@@ -198,13 +244,25 @@ text = "Pick"
 [node name="NpcScroll" type="ScrollContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="NpcGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll"]
+[node name="NpcContent" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NpcGrid" type="FlowContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 0
 theme_override_constants/v_separation = 0
 script = ExtResource("4_06qem")
+
+[node name="NpcGroupList" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcScroll/NpcContent"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+script = ExtResource("12_group")
 
 [node name="CoordsLabel" type="Label" parent="Canvas/MarginContainer"]
 layout_mode = 2

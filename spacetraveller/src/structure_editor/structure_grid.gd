@@ -3,14 +3,48 @@ extends FlowContainer
 signal selection_changed(id: String, is_primary: bool)
 
 var spacing = 1
+var _db: Object
+var _ids: Array = []
+var _filter_query := ""
 
-func start(_spacing :int, db: Object) -> void:
+func start(_spacing :int, db: Object, filter_query: String = "") -> void:
+	_db = db
+	_filter_query = filter_query
+	_ids = db.get_ids()
+	_rebuild()
+
+func set_filter(filter_query: String) -> void:
+	_filter_query = filter_query
+	_rebuild()
+
+func _rebuild() -> void:
 	for child in get_children():
 		child.queue_free()
-		
-	var ids = db.get_ids()
-	for id in ids:
-		add_entry_button(id, db)
+
+	if !_db:
+		return
+
+	for raw_id in _ids:
+		var id := str(raw_id)
+		if _matches_filter(id):
+			add_entry_button(id, _db)
+
+func _matches_filter(id: String) -> bool:
+	var query := _normalize_search(_filter_query)
+	if query.is_empty():
+		return true
+	if _normalize_search(id).contains(query):
+		return true
+
+	for method_name in ["get_tile_name", "get_item_name"]:
+		if _db.has_method(method_name):
+			var display_name := str(_db.call(method_name, id))
+			if _normalize_search(display_name).contains(query):
+				return true
+	return false
+
+func _normalize_search(value: String) -> String:
+	return value.to_lower().replace("_", " ").replace("-", " ").strip_edges()
 
 func add_entry_button(id: String, db: Object) -> void:
 	var button = preload("res://src/structure_editor/tile_button.tscn").instantiate()

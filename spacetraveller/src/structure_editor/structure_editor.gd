@@ -8,9 +8,15 @@ signal editor_area_changed(size: Vector2i)
 @export var Editor :StructureEditor
 @export var TileIDLabel1 :Label
 @export var TileIDLabel2 :Label
+@export var TileSearch :LineEdit
 @export var TileGrid :FlowContainer
+@export var TileGroupList :VBoxContainer
+@export var ItemSearch :LineEdit
 @export var ItemGrid :FlowContainer
+@export var ItemGroupList :VBoxContainer
+@export var NpcSearch :LineEdit
 @export var NpcGrid :FlowContainer
+@export var NpcGroupList :VBoxContainer
 @export var ContentTabs :TabContainer
 @export var ItemAmountInput :SpinBox
 @export var NpcJobContainer :HBoxContainer
@@ -200,16 +206,31 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	_setup_npc_option_menus()
 	_update_npc_options_for_race("")
 	
-	TileGrid.start(spacing, TileDb)
-	ItemGrid.start(spacing, ItemDb)
-	NpcGrid.start(spacing, RaceDb)
+	TileGrid.visible = true
+	TileGroupList.visible = false
+	ItemGrid.visible = true
+	ItemGroupList.visible = false
+	NpcGrid.visible = true
+	NpcGroupList.visible = false
+	TileGrid.start(spacing, TileDb, TileSearch.text)
+	ItemGrid.start(spacing, ItemDb, ItemSearch.text)
+	NpcGrid.start(spacing, RaceDb, NpcSearch.text)
 	
 	TileGrid.selection_changed.connect(func(id, is_primary):
 		_on_grid_selection_changed(id, _tile_grid_type, is_primary))
+	TileGroupList.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, "tile_group", is_primary))
 	ItemGrid.selection_changed.connect(func(id, is_primary):
 		_on_grid_selection_changed(id, _item_grid_type, is_primary))
+	ItemGroupList.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, "loot_table", is_primary))
 	NpcGrid.selection_changed.connect(func(id, is_primary):
 		_on_grid_selection_changed(id, _npc_grid_type, is_primary))
+	NpcGroupList.selection_changed.connect(func(id, is_primary):
+		_on_grid_selection_changed(id, "entity_group", is_primary))
+	TileSearch.text_changed.connect(_on_tile_search_changed)
+	ItemSearch.text_changed.connect(_on_item_search_changed)
+	NpcSearch.text_changed.connect(_on_npc_search_changed)
 	
 	TileGroupCheck.toggled.connect(_on_tile_group_toggled)
 	LootGroupCheck.toggled.connect(_on_loot_group_toggled)
@@ -394,6 +415,7 @@ func _content_type_for_tab(tab: int) -> String:
 	return active_content_type
 
 func _on_content_tab_changed(tab: int) -> void:
+	_clear_search_fields()
 	var base_type := _content_type_for_tab(tab)
 	if base_type.is_empty():
 		return
@@ -411,21 +433,53 @@ func _on_content_tab_changed(tab: int) -> void:
 		_:
 			set_active_content_type(_tile_grid_type, true)
 
+func _clear_search_fields() -> void:
+	TileSearch.text = ""
+	ItemSearch.text = ""
+	NpcSearch.text = ""
+
 func _on_tile_group_toggled(pressed: bool) -> void:
 	_tile_grid_type = "tile_group" if pressed else "tile"
-	TileGrid.start(spacing, TileGroupDb if pressed else TileDb)
+	TileGrid.visible = !pressed
+	TileGroupList.visible = pressed
+	if pressed:
+		TileGroupList.start(TileGroupDb, TileSearch.text)
+	else:
+		TileGrid.start(spacing, TileDb, TileSearch.text)
 
 func _on_loot_group_toggled(pressed: bool) -> void:
 	_item_grid_type = "loot_table" if pressed else "item"
-	ItemGrid.start(spacing, LootDb if pressed else ItemDb)
+	ItemGrid.visible = !pressed
+	ItemGroupList.visible = pressed
+	if pressed:
+		ItemGroupList.start(LootDb, ItemSearch.text)
+	else:
+		ItemGrid.start(spacing, ItemDb, ItemSearch.text)
 	ItemAmountInput.visible = !pressed
 	ItemAmountInput.get_node("../AmountLabel").visible = !pressed
 
 func _on_entity_group_toggled(pressed: bool) -> void:
 	_npc_grid_type = "entity_group" if pressed else "npc"
-	NpcGrid.start(spacing, EntityGroupDb if pressed else RaceDb)
+	NpcGrid.visible = !pressed
+	NpcGroupList.visible = pressed
+	if pressed:
+		NpcGroupList.start(EntityGroupDb, NpcSearch.text)
+	else:
+		NpcGrid.start(spacing, RaceDb, NpcSearch.text)
 	NpcJobContainer.visible = !pressed
 	NpcDialogueContainer.visible = !pressed
+
+func _on_tile_search_changed(query: String) -> void:
+	TileGrid.set_filter(query)
+	TileGroupList.set_filter(query)
+
+func _on_item_search_changed(query: String) -> void:
+	ItemGrid.set_filter(query)
+	ItemGroupList.set_filter(query)
+
+func _on_npc_search_changed(query: String) -> void:
+	NpcGrid.set_filter(query)
+	NpcGroupList.set_filter(query)
 
 func _on_grid_selection_changed(id: String, type: String, is_primary: bool) -> void:
 	if is_primary:
