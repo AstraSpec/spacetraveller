@@ -9,6 +9,7 @@
         {
           "text": "I'm happy to help you search, maybe together we can find something worthwhile.",
           "next": "try_search",
+          "constraints": { "quest_status": "none" },
           "effects": { "friendship_delta": 5, "romance_delta": 1 }
         },
         {
@@ -24,9 +25,10 @@
           "effects": { "friendship_delta": -8 }
         },
         {
-          "text": "About that salvage job...",
-          "next": "turn_in",
-          "constraints": { "quest_status": "active" }
+          "text": "Deliver the salvage.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true }
         },
         {
           "text": "About that salvage you mentioned...",
@@ -41,6 +43,7 @@
         {
           "text": "That's fine. Just my one good deed of the day.",
           "next": "scavenger_quest_positive",
+          "constraints": { "quest_status": "none" },
           "effects": { "quest_offer": "scavenger_gather", "friendship_delta": 5 }
         },
         {
@@ -63,28 +66,8 @@
       "npc": "Look, you're the one butting into my business. It's either my way or the highway. {quest_description} Bring it back clean enough and maybe I'll cut you in.",
       "options": []
     },
-    "turn_in": {
-      "npc": "Back already? Tell me you found something useful for {quest_label}.",
-      "options": [
-        {
-          "text": "I found what you asked for.",
-          "next": "complete",
-          "constraints": { "quest_status": "active", "can_complete_quest": true },
-          "effects": { "quest_complete": true }
-        },
-        {
-          "text": "Not yet. I am still looking.",
-          "next": "not_done",
-          "constraints": { "quest_status": "active", "can_complete_quest": false }
-        }
-      ]
-    },
     "complete": {
       "npc": "Good eye. Most people walk over value and call it dirt. Take your share.",
-      "options": []
-    },
-    "not_done": {
-      "npc": "Then keep your eyes low and your hands ready. {quest_description}",
       "options": []
     },
     "accepted": {

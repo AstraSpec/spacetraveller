@@ -28,6 +28,8 @@ const BINDABLE_ACTIONS = {
 	"Structure Editor": [
 		{"id": "structure_undo", "name": "Undo"},
 		{"id": "structure_redo", "name": "Redo"},
+		{"id": "structure_toggle_items", "name": "Toggle Items / Loot Tables"},
+		{"id": "structure_toggle_npcs", "name": "Toggle NPCs / Entity Groups"},
 		{"id": "delete", "name": "Delete Selected"}
 	]
 }

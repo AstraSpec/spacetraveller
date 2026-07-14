@@ -70,6 +70,8 @@ var current_dungeon_room_entrances :Array = ["north", "east", "south", "west"]
 var current_structure_entrances :Array = []
 var editor_npc_entities :Dictionary = {}
 var editor_live_item_rules :Dictionary = {}
+var show_item_content :bool = true
+var show_npc_content :bool = true
 var editor_npc_rules_by_level :Dictionary = {}
 var editor_item_rules_by_level :Dictionary = {}
 var editor_loot_table_rules_by_level :Dictionary = {}
@@ -136,6 +138,21 @@ const CONTENT_TYPES := {
 const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group", "tile_group"]
 const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "tile_group", "tile"]
 
+func _apply_content_visibility() -> void:
+	if FastTilemap and is_instance_valid(FastTilemap):
+		FastTilemap.set_show_items(show_item_content)
+		FastTilemap.set_show_entities(show_npc_content)
+
+func _toggle_item_content_visibility() -> void:
+	show_item_content = !show_item_content
+	_apply_content_visibility()
+	update_editor_visuals()
+
+func _toggle_npc_content_visibility() -> void:
+	show_npc_content = !show_npc_content
+	_apply_content_visibility()
+	update_editor_visuals()
+
 func update_editor_visuals():
 	if World:
 		World.update_world_bubble_at_z(playerOffset, active_z, false)
@@ -149,6 +166,9 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
+	show_item_content = true
+	show_npc_content = true
+	_apply_content_visibility()
 	
 	playerOffset = offset
 
@@ -199,6 +219,9 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 
 func _exit_tree() -> void:
 	Input.set_custom_mouse_cursor(null)
+	show_item_content = true
+	show_npc_content = true
+	_apply_content_visibility()
 
 func setup_tools():
 	tools = {
@@ -279,6 +302,12 @@ func _on_key_input(key: String):
 			if active_tool and active_tool.has_method("on_key"):
 				active_tool.on_key(key)
 			redo()
+			return
+		"toggle_items":
+			_toggle_item_content_visibility()
+			return
+		"toggle_npcs":
+			_toggle_npc_content_visibility()
 			return
 		"ascend_level":
 			change_z(1)
@@ -462,7 +491,6 @@ func select_entry(id: String, type: String = "tile", is_primary: bool = true):
 	primary_ids_by_content_type[type] = id
 	if type == "npc":
 		_update_npc_options_for_race(id)
-	set_secondary_to_group_remover(type)
 	_update_selection_labels()
 
 func on_tile_changed(_pos: Vector2i):
@@ -1212,7 +1240,7 @@ func clear_editor_loot_table_markers() -> void:
 
 func _refresh_loot_table_markers() -> void:
 	clear_editor_loot_table_markers()
-	if !FastTilemap:
+	if !FastTilemap or !show_item_content:
 		return
 	var tilesheet: Texture2D = FastTilemap.get_tilesheet()
 	if !tilesheet:
@@ -1296,7 +1324,7 @@ func clear_editor_entity_group_markers() -> void:
 
 func _refresh_entity_group_markers() -> void:
 	clear_editor_entity_group_markers()
-	if !FastTilemap:
+	if !FastTilemap or !show_npc_content:
 		return
 	var tilesheet: Texture2D = FastTilemap.get_tilesheet()
 	if !tilesheet:

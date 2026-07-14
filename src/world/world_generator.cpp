@@ -2235,13 +2235,15 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
 
     CityStructureContext city_structure = get_city_structure_context(x, y, z);
     if (city_structure.valid && s_db) {
-        return s_db->get_tile_at(
+        const uint16_t structure_tile = s_db->get_tile_at(
             city_structure.structure_id,
             city_structure.local_pos.x,
             city_structure.local_pos.y,
             z,
             get_hash(x, y, static_cast<uint32_t>(world_seed))
         );
+        if (structure_tile != id_void) return structure_tile;
+        return get_base_tile_without_features(x, y, z, world_seed);
     }
 
     uint16_t base_tile_id = get_base_tile_without_features(x, y, z, world_seed);

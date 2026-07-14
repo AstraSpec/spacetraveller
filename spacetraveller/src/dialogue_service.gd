@@ -36,7 +36,14 @@ func has_dialogue_for(world, target_id: int) -> bool:
 
 func start_state(world, target_id: int, saved: Dictionary = {}) -> Dictionary:
 	if _is_saved_state_valid(saved):
-		return saved.duplicate(true)
+		var restored := saved.duplicate(true)
+		var resume_node := str(restored.get("resume_node", ""))
+		if not resume_node.is_empty():
+			var saved_dialogue: Dictionary = _dialogues_by_id.get(str(restored.get("dialogue_id", "")), {})
+			var saved_nodes: Dictionary = saved_dialogue.get("nodes", {})
+			if saved_nodes.has(resume_node):
+				restored["node_id"] = resume_node
+		return restored
 	var dialogue := _pick_dialogue(world, target_id)
 	if dialogue.is_empty():
 		return {}
@@ -94,6 +101,8 @@ func should_save_state(state: Dictionary) -> bool:
 	var node := _get_node(state)
 	if node.is_empty():
 		return false
+	if not str(state.get("resume_node", "")).is_empty():
+		return true
 	if bool(node.get("resume", false)):
 		return true
 	var node_id := str(state.get("node_id", ""))
@@ -332,6 +341,11 @@ func _end_option() -> Dictionary:
 	}
 
 func _apply_effects(effects: Dictionary, state: Dictionary, result: Dictionary, world, target_id: int) -> void:
+	if effects.has("resume_node"):
+		var resume_node := str(effects.get("resume_node", ""))
+		if not resume_node.is_empty():
+			state["resume_node"] = resume_node
+
 	if world:
 		var df := int(effects.get("friendship_delta", 0))
 		var dr := int(effects.get("romance_delta", 0))
@@ -362,17 +376,26 @@ func _apply_effects(effects: Dictionary, state: Dictionary, result: Dictionary, 
 		if not story_kind.is_empty():
 			pending = QuestService.offer_story(target_id, story_kind)
 			state["pending_quest_id"] = pending
+	var quest_accepted := false
 	if bool(effects.get("quest_accept", false)) and not pending.is_empty():
-		QuestService.accept(pending)
+		quest_accepted = QuestService.accept(pending)
+	if bool(effects.get("start_follow", false)) and world:
+		if not bool(effects.get("quest_accept", false)) or quest_accepted:
+			world.start_follow(target_id)
 	if bool(effects.get("quest_decline", false)) and not pending.is_empty():
 		QuestService.decline(pending)
 		state["pending_quest_id"] = ""
+	var quest_completed := false
 	if bool(effects.get("quest_complete", false)) and not pending.is_empty():
-		if QuestService.complete(pending):
+		quest_completed = QuestService.complete(pending)
+		if quest_completed:
 			result["message"] = "Quest completed."
 			state["pending_quest_id"] = ""
 		else:
 			result["message"] = "You do not have everything needed yet."
+	if bool(effects.get("stop_follow", false)) and world:
+		if not bool(effects.get("quest_complete", false)) or quest_completed:
+			world.set_entity_behavior(target_id, "guard")
 
 func _format_text(template: String, state: Dictionary, world, target_id: int) -> String:
 	var out := template

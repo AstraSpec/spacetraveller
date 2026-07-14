@@ -317,6 +317,9 @@ Dictionary AIController::serialize(const AIData& data) {
     if (data.target_entity_id != std::numeric_limits<uint32_t>::max()) {
         d["target_entity_id"] = static_cast<int64_t>(data.target_entity_id);
     }
+    if (data.follow_leader_id != std::numeric_limits<uint32_t>::max()) {
+        d["follow_leader_id"] = static_cast<int64_t>(data.follow_leader_id);
+    }
     std::vector<uint32_t> relation_targets;
     relation_targets.reserve(data.relations.size());
     for (const auto& pair : data.relations) {
@@ -347,6 +350,11 @@ void AIController::deserialize(AIData& data, const Dictionary& dict) {
     const int64_t target_id = static_cast<int64_t>(dict.get("target_entity_id", static_cast<int64_t>(-1)));
     if (target_id >= 0 && target_id <= static_cast<int64_t>(std::numeric_limits<uint32_t>::max())) {
         data.target_entity_id = static_cast<uint32_t>(target_id);
+    }
+    data.follow_leader_id = std::numeric_limits<uint32_t>::max();
+    const int64_t follow_leader_id = static_cast<int64_t>(dict.get("follow_leader_id", static_cast<int64_t>(-1)));
+    if (follow_leader_id >= 0 && follow_leader_id <= static_cast<int64_t>(std::numeric_limits<uint32_t>::max())) {
+        data.follow_leader_id = static_cast<uint32_t>(follow_leader_id);
     }
     data.relations.clear();
     Variant relations_var = dict.get("relations", Array());

@@ -101,6 +101,9 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         ledger.init_social_profile(id, job, overrides.dialogue_id);
 
         SocialProfileData& profile = ledger.social_profiles[id];
+        if (job_info && !job_info->faction.is_empty()) {
+            profile.faction = job_info->faction;
+        }
         if (!overrides.traits.is_empty()) {
             for (int i = 0; i < overrides.traits.size(); i++) {
                 profile.traits.push_back(String(overrides.traits[i]));

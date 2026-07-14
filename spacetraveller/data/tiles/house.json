@@ -40,6 +40,14 @@
     "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
+    "id": "shelf_small",
+    "name": "Small Shelf",
+    "atlas": [ 24, 36 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT", "HIDDEN_ITEMS"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
     "id": "w_crate",
     "name": "Wooden Crate",
     "atlas": [ [22, 35], [23, 35] ],
@@ -48,17 +56,33 @@
     "smash_loot_table": "wooden_furniture_large_smashed"
   },
   {
+    "id": "coat_rack",
+    "name": "Coat Rack",
+    "atlas": [ 24, 35 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
     "id": "dresser",
     "name": "Dresser",
     "atlas": [ 4, 36 ],
     "solid": false,
-    "tags": ["SMASHABLE"],
+    "tags": ["SMASHABLE", "HIDDEN_ITEMS"],
     "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
     "id": "chair",
     "name": "Chair",
     "atlas": [ 5, 36 ],
+    "solid": false,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "dining_chair",
+    "name": "Dining Chair",
+    "atlas": [ 17, 36 ],
     "solid": false,
     "tags": ["SMASHABLE"],
     "smash_loot_table": "wooden_furniture_small_smashed"
@@ -76,7 +100,7 @@
     "name": "Bar",
     "atlas": [ 7, 36 ],
     "solid": false,
-    "tags": ["SMASHABLE"],
+    "tags": ["SMASHABLE", "HIDDEN_ITEMS"],
     "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
@@ -84,7 +108,7 @@
     "name": "Barrel",
     "atlas": [ 11, 36 ],
     "solid": false,
-    "tags": ["SMASHABLE"],
+    "tags": ["SMASHABLE", "HIDDEN_ITEMS"],
     "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
@@ -92,7 +116,7 @@
     "name": "Wine Barrel",
     "atlas": [ 12, 36 ],
     "solid": false,
-    "tags": ["SMASHABLE"],
+    "tags": ["SMASHABLE", "HIDDEN_ITEMS"],
     "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {

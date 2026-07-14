@@ -1,0 +1,116 @@
+{
+  "id": "chief_butler",
+  "priority": 180,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": [
+        "Forgive the reception. I am {npc_name}, the Chief Butler. I would offer you tea, but the kitchen has just become a crime scene."
+      ],
+      "options": [
+        {
+          "text": "You look like you need help.",
+          "next": "hub",
+          "effects": { "resume_node": "hub" }
+        },
+        {
+          "text": "I am listening.",
+          "next": "hub",
+          "effects": { "resume_node": "hub" }
+        }
+      ]
+    },
+    "hub": {
+      "npc": "The palace has survived wars. Tonight it may be defeated by a poisoned soup.",
+      "options": [
+        {
+          "text": "I can prepare a replacement dish.",
+          "next": "quest_offer",
+          "constraints": { "quest_available": "chief_butler_banquet" },
+          "effects": { "quest_offer": "chief_butler_banquet" }
+        },
+        {
+          "text": "What happened to the chef?",
+          "next": "briefing",
+          "constraints": { "quest_status": "none" }
+        },
+        {
+          "text": "Deliver the royal stew.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true, "resume_node": "hub" }
+        },
+        {
+          "text": "I need to decide about the banquet contract.",
+          "next": "quest_offer",
+          "constraints": { "quest_status": "offered" }
+        },
+        {
+          "text": "I was too late.",
+          "next": "failed",
+          "constraints": { "failed_quest": "chief_butler_banquet" }
+        },
+        {
+          "text": "The banquet was saved.",
+          "next": "completed",
+          "constraints": { "completed_quest": "chief_butler_banquet" }
+        }
+      ]
+    },
+    "briefing": {
+      "npc": "Someone put poison in the chef's broth. Until I know who, I need a safe dish and a little time I do not have.",
+      "options": [
+        {
+          "text": "I will get it done.",
+          "next": "quest_offer",
+          "constraints": { "quest_available": "chief_butler_banquet" },
+          "effects": { "quest_offer": "chief_butler_banquet" }
+        },
+        {
+          "text": "Let's talk about something else.",
+          "constraints": { "quest_available": "chief_butler_banquet" },
+          "next": "hub"
+        }
+      ]
+    },
+    "quest_offer": {
+      "npc": "Please hurry. {quest_description} Time is not on our side.",
+      "options": [
+        {
+          "text": "I will save the banquet.",
+          "next": "accepted",
+          "constraints": { "quest_status": "offered" },
+          "effects": { "quest_accept": true, "resume_node": "hub" },
+          "ui_color": "quest_accept"
+        },
+        {
+          "text": "I cannot promise that.",
+          "next": "declined",
+          "constraints": { "quest_status": "offered" },
+          "effects": { "quest_decline": true, "resume_node": "hub" },
+          "ui_color": "quest_decline"
+        }
+      ]
+    },
+    "complete": {
+      "npc": "The first course is served, the guests are smiling, and nobody has been poisoned. By palace standards, you have performed a miracle.",
+      "options": []
+    },
+    "accepted": {
+      "npc": "Accepted. I will keep the banquet standing; you keep the stew coming.",
+      "options": []
+    },
+    "declined": {
+      "npc": "Very well. I will find another solution, though I dislike the ones currently available.",
+      "options": []
+    },
+    "failed": {
+      "npc": "The guests were fed, but not well. Someone wanted this evening ruined, and we let them have a piece of it.",
+      "options": []
+    },
+    "completed": {
+      "npc": "The nobles are praising the menu. I am praising you more quietly, which is safer for everyone.",
+      "options": []
+    }
+  }
+}

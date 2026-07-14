@@ -51,6 +51,8 @@ protected:
     WorldBubble* bubble_source = nullptr;
 
     bool occlusion_enabled = false;
+    bool show_items = true;
+    bool show_entities = true;
 
     Vector2i last_render_focus;
     Vector2i last_view_origin;
@@ -75,6 +77,10 @@ public:
     WorldBubble* get_bubble() const { return bubble_source; }
     void set_occlusion_enabled(bool p_enabled) { occlusion_enabled = p_enabled; }
     bool is_occlusion_enabled() const { return occlusion_enabled; }
+    void set_show_items(bool p_enabled) { show_items = p_enabled; }
+    bool get_show_items() const { return show_items; }
+    void set_show_entities(bool p_enabled) { show_entities = p_enabled; }
+    bool get_show_entities() const { return show_entities; }
 
     void set_spacing(int p_spacing) { spacing = p_spacing; }
     int get_spacing() const { return spacing; }

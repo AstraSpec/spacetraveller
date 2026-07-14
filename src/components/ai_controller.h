@@ -27,6 +27,9 @@ struct AIData {
     String disposition = "neutral";
     std::unordered_map<uint32_t, EntityRelation> relations;
     uint32_t target_entity_id = std::numeric_limits<uint32_t>::max();
+    // The leader remains separate from target_entity_id so an escort can
+    // temporarily enter combat and then resume following afterward.
+    uint32_t follow_leader_id = std::numeric_limits<uint32_t>::max();
     PerceptionTier perception_tier = PerceptionTier::RAYCAST;
     Vector2i wander_center;
     float wander_radius = 4.0f;

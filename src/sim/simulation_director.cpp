@@ -128,6 +128,7 @@ bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
     ai->relations[d.player_entity_id] = EntityRelation::FRIENDLY;
     ai->state = AIState::FOLLOW;
     ai->target_entity_id = d.player_entity_id;
+    ai->follow_leader_id = d.player_entity_id;
     ai->stuck_counter = 0;
     ai->has_follow_target_position = false;
 
@@ -152,6 +153,11 @@ bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& s
         ai->target_entity_id = target_id;
     } else {
         ai->target_entity_id = EntityPool::INVALID_ID;
+    }
+    if (next_state == AIState::FOLLOW) {
+        ai->follow_leader_id = target_id;
+    } else {
+        ai->follow_leader_id = EntityPool::INVALID_ID;
     }
     ai->state = next_state;
     if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {

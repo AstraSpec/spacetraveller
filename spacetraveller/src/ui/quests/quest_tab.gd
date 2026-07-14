@@ -35,6 +35,7 @@ func _get_display_data() -> Array:
 			"description": str(q.get("description", "")),
 			"target": int(q.get("target", 0)),
 			"progress": int(q.get("progress", 0)),
+			"time_remaining_turns": int(q.get("time_remaining_turns", 0)),
 			"rewards": q.get("rewards", {}),
 			"next_giver": str(q.get("next_giver", "")),
 		})
@@ -48,6 +49,10 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	_progress_bar.max_value = max(1, target)
 	_progress_bar.value = clamp(progress, 0, _progress_bar.max_value)
 	_progress_text.text = "%d / %d" % [progress, target]
+
+	var time_remaining: int = int(item_data.get("time_remaining_turns", 0))
+	if time_remaining > 0:
+		_add_detail("Time", "%d:%02d remaining" % [time_remaining / 60, time_remaining % 60])
 
 	var rewards: Dictionary = item_data.get("rewards", {})
 	if rewards.is_empty():
@@ -112,6 +117,7 @@ func _on_objective_progressed(quest_id: String, _progress: int, _target: int) ->
 	var data: Dictionary = {
 		"target": int(q.get("target", 0)),
 		"progress": int(q.get("progress", 0)),
+		"time_remaining_turns": int(q.get("time_remaining_turns", 0)),
 		"rewards": q.get("rewards", {}),
 		"next_giver": str(q.get("next_giver", "")),
 	}

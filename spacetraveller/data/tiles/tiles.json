@@ -195,14 +195,6 @@
     "tags": ["FLOOR"]
   },
   {
-    "id": "palace_wall",
-    "name": "Palace Wall",
-    "atlas": [ 17, 2 ],
-    "solid": true,
-    "tags": ["SMASHABLE"],
-    "smash_loot_table": "brick_smashed"
-  },
-  {
     "id": "road_flagstone",
     "name": "Flagstone Road",
     "atlas": [ 5, 2 ],

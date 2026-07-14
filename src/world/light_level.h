@@ -25,7 +25,7 @@ static constexpr LightStrength LIGHT_STRENGTH_BLANK = 0;
 static constexpr LightStrength LIGHT_STRENGTH_LOW = 1;
 static constexpr LightStrength LIGHT_STRENGTH_LIT = 4;
 static constexpr LightStrength LIGHT_STRENGTH_BRIGHT = 6;
-static constexpr LightStrength LIGHT_STRENGTH_DAYLIGHT = 13;
+static constexpr LightStrength LIGHT_STRENGTH_DAYLIGHT = 15;
 static constexpr LightStrength LIGHT_STRENGTH_FALLOFF_PER_TILE = 1;
 
 inline LightLevel light_stronger(LightLevel a, LightLevel b) {

@@ -14,6 +14,7 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("is_story_kind", "kind"), &QuestDb::is_story_kind);
     ClassDB::bind_method(D_METHOD("get_failure_policy", "kind"), &QuestDb::get_failure_policy);
     ClassDB::bind_method(D_METHOD("get_failure_cooldown_turns", "kind"), &QuestDb::get_failure_cooldown_turns);
+    ClassDB::bind_method(D_METHOD("get_time_limit_turns", "kind"), &QuestDb::get_time_limit_turns);
     ClassDB::bind_method(D_METHOD("get_objective_kind", "kind"), &QuestDb::get_objective_kind);
     ClassDB::bind_method(D_METHOD("get_prerequisite_quest", "kind"), &QuestDb::get_prerequisite_quest);
     ClassDB::bind_method(D_METHOD("get_next_quest", "kind"), &QuestDb::get_next_quest);
@@ -28,6 +29,7 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_target_loot_table", "kind"), &QuestDb::get_target_loot_table);
     ClassDB::bind_method(D_METHOD("get_giver_jobs", "kind"), &QuestDb::get_giver_jobs);
     ClassDB::bind_method(D_METHOD("get_target_races", "kind"), &QuestDb::get_target_races);
+    ClassDB::bind_method(D_METHOD("get_target_jobs", "kind"), &QuestDb::get_target_jobs);
     ClassDB::bind_method(D_METHOD("get_location_context", "kind"), &QuestDb::get_location_context);
     ClassDB::bind_method(D_METHOD("get_race_exclude", "kind"), &QuestDb::get_race_exclude);
     ClassDB::bind_method(D_METHOD("get_tier_names", "kind"), &QuestDb::get_tier_names);
@@ -62,6 +64,8 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     if (t.failure_policy != "cooldown") t.failure_policy = "permanent";
     t.failure_cooldown_turns = int(p_data.get("failure_cooldown_turns", 0));
     if (t.failure_cooldown_turns < 0) t.failure_cooldown_turns = 0;
+    t.time_limit_turns = int(p_data.get("time_limit_turns", 0));
+    if (t.time_limit_turns < 0) t.time_limit_turns = 0;
     t.prerequisite_quest  = p_data.get("prerequisite_quest", "");
     t.next_quest          = p_data.get("next_quest", "");
     t.next_giver          = p_data.get("next_giver", "");
@@ -98,6 +102,10 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
     Array target_races = p_data.get("target_races", Array());
     for (int i = 0; i < target_races.size(); i++) {
         t.target_races.emplace_back(String(target_races[i]));
+    }
+    Array target_jobs = p_data.get("target_jobs", Array());
+    for (int i = 0; i < target_jobs.size(); i++) {
+        t.target_jobs.emplace_back(String(target_jobs[i]));
     }
     t.location_context = String(p_data.get("location_context", "")).to_lower();
 
@@ -160,6 +168,11 @@ String QuestDb::get_failure_policy(const String &p_kind) const {
 int QuestDb::get_failure_cooldown_turns(const String &p_kind) const {
     const QuestTemplate* t = get_info(p_kind);
     return t ? t->failure_cooldown_turns : 0;
+}
+
+int QuestDb::get_time_limit_turns(const String &p_kind) const {
+    const QuestTemplate* t = get_info(p_kind);
+    return t ? t->time_limit_turns : 0;
 }
 
 String QuestDb::get_objective_kind(const String &p_kind) const {
@@ -242,6 +255,13 @@ Array QuestDb::get_target_races(const String &p_kind) const {
     Array arr;
     const QuestTemplate* t = get_info(p_kind);
     if (t) for (const String& v : t->target_races) arr.push_back(v);
+    return arr;
+}
+
+Array QuestDb::get_target_jobs(const String &p_kind) const {
+    Array arr;
+    const QuestTemplate* t = get_info(p_kind);
+    if (t) for (const String& v : t->target_jobs) arr.push_back(v);
     return arr;
 }
 
@@ -338,6 +358,14 @@ bool QuestDb::get_target_races_vec(const String &p_kind, std::vector<String> &r_
     const QuestTemplate* t = get_info(p_kind);
     if (!t) return false;
     r_out = t->target_races;
+    return !r_out.empty();
+}
+
+bool QuestDb::get_target_jobs_vec(const String &p_kind, std::vector<String> &r_out) const {
+    r_out.clear();
+    const QuestTemplate* t = get_info(p_kind);
+    if (!t) return false;
+    r_out = t->target_jobs;
     return !r_out.empty();
 }
 

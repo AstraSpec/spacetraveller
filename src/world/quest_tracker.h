@@ -25,7 +25,8 @@ struct QuestInstance {
     int     target = 0;
     int     progress = 0;
     int     started_turn = -1;
-    Dictionary params;     // {"item_id":"flint","race_id":"bear","tile_id":"oak",…}
+    float   deadline_turn = -1.0f;
+    Dictionary params;     // {"item_id":"flint","race_id":"bear","target_job":"bandit","tile_id":"oak",…}
     Dictionary rewards;    // baked at offer time
 };
 
@@ -72,17 +73,17 @@ public:
     bool  accept(const String& p_quest_id);
     bool  decline(const String& p_quest_id);
     bool  fail_for_dead_giver(uint32_t p_giver_entity_id);
-    bool  can_complete(const String& p_quest_id) const;
+    bool  can_complete(const String& p_quest_id);
     bool  complete(const String& p_quest_id);
 
-    Array      get_offers_for(uint32_t p_giver_entity_id) const;
-    Array      get_active() const;
-    Array      get_completed() const;
-    Array      get_offered() const;
-    Dictionary get_quest(const String& p_quest_id) const;
-    bool       is_completed(const String& p_quest_id) const;
-    bool       has_failed(uint32_t p_giver_entity_id, const String& p_quest_ref) const;
-    bool       can_offer(uint32_t p_giver_entity_id, const String& p_kind) const;
+    Array      get_offers_for(uint32_t p_giver_entity_id);
+    Array      get_active();
+    Array      get_completed();
+    Array      get_offered();
+    Dictionary get_quest(const String& p_quest_id);
+    bool       is_completed(const String& p_quest_id);
+    bool       has_failed(uint32_t p_giver_entity_id, const String& p_quest_ref);
+    bool       can_offer(uint32_t p_giver_entity_id, const String& p_kind);
 
     Dictionary serialize() const;
     void       deserialize(const Dictionary& p_data);
@@ -99,6 +100,7 @@ private:
     bool          _failure_allows_offer(uint32_t p_giver_entity_id, const String& p_kind) const;
     void          _record_failure(const QuestInstance& p_q);
     void          _fail(const String& p_quest_id, const String& p_reason);
+    void          _expire_due_quests();
     void          _advance(const String& p_quest_id, int p_delta);
     bool          _has_required_items(const QuestInstance& p_q) const;
     bool          _remove_required_items(const QuestInstance& p_q);

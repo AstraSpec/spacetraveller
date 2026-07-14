@@ -876,6 +876,45 @@ void WorldBubble::update_visibility(
         }
     };
 
+    auto propagate_vertical_air_visibility = [&]() {
+        std::vector<Vector3i> active_cells;
+        active_cells.reserve(visible_cells.size());
+        for (uint64_t cell_key : visible_cells) {
+            Vector3i pos = WorldCoords::unpack_coords_3d(cell_key);
+            if (pos.z == active_z) {
+                active_cells.push_back(pos);
+            }
+        }
+
+        auto mark_vertical_cell = [&](int x, int y, int z) {
+            const uint64_t cell_key = make_cell_key_at_z(x, y, z);
+            visible_cells.insert(cell_key);
+            const LightLevel light_level = get_apparent_light_level(player_pos, x, y, z);
+            if (light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
+                newly_seen_cells.push_back(cell_key);
+            }
+        };
+
+        for (const Vector3i& cell : active_cells) {
+            const uint64_t cell_key = make_cell_key_at_z(cell.x, cell.y, cell.z);
+            const uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, cell.x, cell.y, cell.z);
+            const bool is_air = tile_is_air(tile_id);
+            for (int direction = is_air ? -1 : 1; direction <= 1; direction += 2) {
+                for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
+                    const int z = cell.z + direction * depth;
+                    const uint64_t vertical_key = make_cell_key_at_z(cell.x, cell.y, z);
+                    const uint16_t vertical_tile = resolve_tile_id(
+                        LAYER_TILE, vertical_key, cell.x, cell.y, z
+                    );
+                    mark_vertical_cell(cell.x, cell.y, z);
+                    if (!tile_is_air(vertical_tile)) {
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
     if (!occlusion_enabled) {
         for (uint64_t offset_key : offset_keys) {
             Vector2i offset = WorldCoords::unpack_coords(offset_key);
@@ -885,6 +924,7 @@ void WorldBubble::update_visibility(
             resolve_tile_id(LAYER_TILE, cell_key, cx, cy, active_z);
             remember_visible_cell(cx, cy, active_z);
         }
+        propagate_vertical_air_visibility();
         return;
     }
 
@@ -905,6 +945,8 @@ void WorldBubble::update_visibility(
         Vector2i pos = WorldCoords::unpack_coords(visible_key);
         remember_visible_cell(pos.x, pos.y, active_z);
     }
+
+    propagate_vertical_air_visibility();
 }
 
 WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(

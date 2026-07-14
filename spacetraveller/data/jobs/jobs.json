@@ -27,6 +27,15 @@
       "rewards": "scavenger_quest_rewards"
     }
   },
+  "bandit": {
+    "display_name": "Bandit",
+    "dialogues": [],
+    "default_attitude": "hostile",
+    "default_ai_state": "wander",
+    "faction": "bandit",
+    "atlas_offset": 42,
+    "traits": []
+  },
   "adventurer": {
     "display_name": "Adventurer",
     "dialogues": ["adventurer"],
@@ -49,17 +58,27 @@
       "adventurer_gather_mineral"
     ]
   },
+  "mercenary": {
+    "display_name": "Mercenary",
+    "dialogues": ["mercenary"],
+    "default_attitude": "neutral",
+    "default_ai_state": "guard",
+    "atlas_offset": 17,
+    "traits": [],
+    "quest_kinds": ["mercenary_bandit_extermination"]
+  },
+  "chief_butler": {
+    "display_name": "Chief Butler",
+    "dialogues": ["chief_butler"],
+    "default_attitude": "friendly",
+    "default_ai_state": "idle",
+    "atlas_offset": 79,
+    "traits": [],
+    "quest_kinds": ["chief_butler_banquet"]
+  },
   "guard": {
     "display_name": "Guard",
-    "dialogues": ["guard"],
-    "default_attitude": "neutral",
-    "default_ai_state": "idle",
-    "atlas_offset": 17,
-    "traits": []
-  },
-  "guard_church": {
-    "display_name": "Church Guard",
-    "dialogues": ["guard_church"],
+    "dialogues": ["guard", "guard_church"],
     "default_attitude": "neutral",
     "default_ai_state": "idle",
     "atlas_offset": 17,

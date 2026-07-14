@@ -1,0 +1,108 @@
+{
+  "id": "mercenary",
+  "priority": 180,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": "Mercenary. {npc_name}, if you need a name. I keep caravans alive between the palace and the outer road, usually by noticing trouble first.",
+      "options": [
+        {
+          "text": "What's wrong?",
+          "next": "hub",
+          "effects": { "resume_node": "hub" }
+        }
+      ]
+    },
+    "hub": {
+      "npc": "The roads are being bled dry by a bandit pack. They have started taking people instead of just coin.",
+      "options": [
+        {
+          "text": "I will take the contract.",
+          "next": "quest_offer",
+          "constraints": { "quest_available": "mercenary_bandit_extermination" },
+          "effects": { "quest_offer": "mercenary_bandit_extermination" }
+        },
+        {
+          "text": "Tell me about the bandits.",
+          "next": "briefing",
+          "constraints": { "quest_status": "none" }
+        },
+        {
+          "text": "Report the completed contract.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true, "stop_follow": true, "resume_node": "hub" }
+        },
+        {
+          "text": "I need to decide about the contract.",
+          "next": "quest_offer",
+          "constraints": { "quest_status": "offered" }
+        },
+        {
+          "text": "I failed the contract.",
+          "next": "failed",
+          "constraints": { "failed_quest": "mercenary_bandit_extermination" }
+        },
+        {
+          "text": "The bandits are dealt with.",
+          "next": "completed",
+          "constraints": { "completed_quest": "mercenary_bandit_extermination" }
+        }
+      ]
+    },
+    "briefing": {
+      "npc": "Some thieves are hungry. These ones have a system: scouts, camps, stolen wagons. Put down the people running it and the road can breathe again.",
+      "options": [
+        {
+          "text": "I will do it.",
+          "next": "quest_offer",
+          "constraints": { "quest_available": "mercenary_bandit_extermination" },
+          "effects": { "quest_offer": "mercenary_bandit_extermination" }
+        },
+        {
+          "text": "Not now.",
+          "next": "hub"
+        }
+      ]
+    },
+    "quest_offer": {
+      "npc": "Here is the contract. {quest_description} Stay close, watch the tree line, and do not mistake silence for safety.",
+      "options": [
+        {
+          "text": "Accept. Lead the way.",
+          "next": "accepted",
+          "constraints": { "quest_status": "offered" },
+          "effects": { "quest_accept": true, "start_follow": true, "resume_node": "hub" },
+          "ui_color": "quest_accept"
+        },
+        {
+          "text": "Decline the contract.",
+          "next": "declined",
+          "constraints": { "quest_status": "offered" },
+          "effects": { "quest_decline": true, "resume_node": "hub" },
+          "ui_color": "quest_decline"
+        }
+      ]
+    },
+    "accepted": {
+      "npc": "Good. Stay within sight. I draw the first attack; you cover my flank. If I say fall back, fall back.",
+      "options": []
+    },
+    "declined": {
+      "npc": "Your choice. The road will not become safer out of respect for it.",
+      "options": []
+    },
+    "complete": {
+      "npc": "The road is safer. I expected you to run when the first arrow flew. I was wrong.",
+      "options": []
+    },
+    "failed": {
+      "npc": "The bandits are still out there, and now they know someone is hunting them. Next time, bring a better plan.",
+      "options": []
+    },
+    "completed": {
+      "npc": "You did what you said you would. That is rare enough to be useful.",
+      "options": []
+    }
+  }
+}

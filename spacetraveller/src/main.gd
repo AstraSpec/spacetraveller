@@ -146,6 +146,8 @@ func _on_structure_editor_toggled(active: bool):
 		structure_editor_instance.World = _GameWorld
 		structure_editor_instance.FastTilemap = _GameWorld.get_renderer()
 		_GameWorld.get_renderer().set_occlusion_enabled(false)
+		_GameWorld.get_renderer().set_show_items(true)
+		_GameWorld.get_renderer().set_show_entities(true)
 		structure_editor_instance.spacing = 1
 		structure_editor_instance.start_editor(_GameWorld.get_player_position())
 		Player.Camera.locked = false
@@ -159,6 +161,8 @@ func _on_structure_editor_toggled(active: bool):
 		Player.Camera.locked = true
 		Canvas.visible = true
 
+		_GameWorld.get_renderer().set_show_items(true)
+		_GameWorld.get_renderer().set_show_entities(true)
 		_GameWorld.get_renderer().set_occlusion_enabled(true)
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 

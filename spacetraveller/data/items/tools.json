@@ -5,7 +5,7 @@
 	"description": "A sharp stone tool perfect for cutting and crafting.",
 	"type": "tool",
 	"price": 90,
-	"atlas": [ 7, 21 ],
+	"atlas": [ 44, 6 ],
 	"weight": 0.4,
 	"tags": []
   },
@@ -15,17 +15,17 @@
 	"description": "A stone head lashed to a handle, useful for chopping wood.",
 	"type": "tool",
 	"price": 140,
-	"atlas": [ 7, 21 ],
+	"atlas": [ 28, 9 ],
 	"weight": 0.4,
 	"tags": []
   },
   {
 	"id": "crude_hammer",
 	"name": "Crude Hammer",
-	"description": "A basic hammer used for simple clobbering.",
+	"description": "A basic hammer.",
 	"type": "tool",
 	"price": 260,
-	"atlas": [ 7, 21 ],
+	"atlas": [ 5, 31 ],
 	"weight": 0.4,
 	"tags": []
   },

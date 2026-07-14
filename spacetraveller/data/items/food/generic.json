@@ -95,7 +95,7 @@
     "description": "A chunk of raw animal meat.",
     "type": "food",
     "price": 150,
-    "atlas": [ 0, 0 ],
+    "atlas": [ 1, 17 ],
     "weight": 0.3,
     "tags": []
   },

@@ -27,6 +27,7 @@ struct QuestTemplate {
     bool story = false;         // authored, deterministic quest rather than a random offer
     String failure_policy = "permanent";
     int failure_cooldown_turns = 0;
+    int time_limit_turns = 0;   // active quest deadline; zero means no deadline
     String prerequisite_quest;  // stable story quest kind that must be completed first
     String next_quest;          // stable story quest kind unlocked after completion
     String next_giver;          // authored handoff text / character identifier
@@ -37,6 +38,7 @@ struct QuestTemplate {
     uint16_t target_loot_table = 0;
     std::vector<String> giver_jobs;
     std::vector<String> target_races;        // kill: one race is selected from this pool
+    std::vector<String> target_jobs;         // kill: one job is selected from this pool
     String location_context;                // optional kill location: forest or dungeon
     std::vector<String> race_exclude;     // kill
     std::vector<int>    target_range;
@@ -66,6 +68,7 @@ public:
     bool is_story_kind(const String &p_kind) const;
     String get_failure_policy(const String &p_kind) const;
     int get_failure_cooldown_turns(const String &p_kind) const;
+    int get_time_limit_turns(const String &p_kind) const;
     String get_objective_kind(const String &p_kind) const;
     String get_prerequisite_quest(const String &p_kind) const;
     String get_next_quest(const String &p_kind) const;
@@ -81,6 +84,7 @@ public:
     String get_target_loot_table(const String &p_kind) const;
     Array  get_giver_jobs(const String &p_kind) const;
     Array  get_target_races(const String &p_kind) const;
+    Array  get_target_jobs(const String &p_kind) const;
     String get_location_context(const String &p_kind) const;
     Array  get_race_exclude(const String &p_kind) const;
     Array  get_tier_names(const String &p_kind) const;
@@ -96,6 +100,7 @@ public:
     bool get_target_item_pool_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
     bool get_target_item_tags_vec(const String &p_kind, std::vector<uint16_t> &r_out) const;
     bool get_target_races_vec(const String &p_kind, std::vector<String> &r_out) const;
+    bool get_target_jobs_vec(const String &p_kind, std::vector<String> &r_out) const;
     uint16_t get_target_loot_table_id(const String &p_kind) const;
     uint16_t get_tier_reward_loot_table_id(const String &p_kind, const String &p_tier) const;
     bool get_giver_jobs_vec(const String &p_kind, std::vector<String> &r_out) const;

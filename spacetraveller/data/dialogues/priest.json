@@ -17,9 +17,10 @@
           "effects": { "quest_offer": "priest_gather" }
         },
         {
-          "text": "I've returned regarding the offering you asked for.",
-          "next": "turn_in",
-          "constraints": { "quest_status": "active" }
+          "text": "Deliver the offering.",
+          "next": "complete",
+          "constraints": { "quest_status": "active", "can_complete_quest": true },
+          "effects": { "quest_complete": true }
         },
         {
           "text": "You mentioned a task?",
@@ -41,28 +42,8 @@
       "npc": "\"The church always needs the faithful to serve. {quest_description} Do this, and your name will be known among us.\"",
       "options": []
     },
-    "turn_in": {
-      "npc": "\"Have you brought what was asked for {quest_label}?\"",
-      "options": [
-        {
-          "text": "Yes. The offering is ready.",
-          "next": "complete",
-          "constraints": { "quest_status": "active", "can_complete_quest": true },
-          "effects": { "quest_complete": true }
-        },
-        {
-          "text": "Not yet. I am still gathering.",
-          "next": "not_done",
-          "constraints": { "quest_status": "active", "can_complete_quest": false }
-        }
-      ]
-    },
     "complete": {
       "npc": "\"You have served well. The church does not forget its own. Your standing grows.\"",
-      "options": []
-    },
-    "not_done": {
-      "npc": "\"Then do not delay. The church still waits for its due. {quest_description}\"",
       "options": []
     },
     "accepted": {

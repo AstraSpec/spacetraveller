@@ -3,6 +3,7 @@
 #include "data/quest_db.h"
 #include "data/item_db.h"
 #include "data/race_db.h"
+#include "data/job_db.h"
 #include "data/tile_db.h"
 #include "data/loot_db.h"
 #include "core/id_registry.h"
@@ -12,6 +13,7 @@
 #include "world/world_generator.h"
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <cmath>
 
 namespace godot {
 
@@ -26,6 +28,15 @@ static String quest_race_name(const String& p_race_id, int p_count) {
     if (p_race_id == "mouse") return "Mice";
     if (!name.ends_with("s")) name += "s";
     return name;
+}
+
+static String quest_job_name(const String& p_job_id) {
+    JobDb* job_db = JobDb::get_singleton();
+    if (job_db) {
+        String display_name = job_db->get_display_name(p_job_id);
+        if (!display_name.is_empty()) return display_name;
+    }
+    return p_job_id.replace("_", " ").capitalize();
 }
 
 void QuestTracker::configure(
@@ -125,15 +136,17 @@ bool QuestTracker::_location_matches(const String& p_kind, const Vector2i& p_pos
 }
 
 void QuestTracker::on_game_event(const GameEvent& p_event) {
+    _expire_due_quests();
     switch (p_event.type) {
         case GameEventType::ENTITY_KILLED: {
             fail_for_dead_giver(p_event.target_id);
             if (p_event.subject_id != player_entity_id) return;
             if (!ledger) return;
             Dictionary anatomy = ledger->get_anatomy(p_event.target_id);
-            if (anatomy.is_empty()) return;
             String race_id = String(anatomy.get("race_id", ""));
-            if (race_id.is_empty()) return;
+            Dictionary profile = ledger->get_social_profile(p_event.target_id);
+            String job_id = String(profile.get("job", ""));
+            if (race_id.is_empty() && job_id.is_empty()) return;
             const Entity* victim = ledger->get_entity_pool().get_entity(p_event.target_id);
             const int victim_z = victim ? victim->z : 0;
             for (auto& pair : instances) {
@@ -141,7 +154,10 @@ void QuestTracker::on_game_event(const GameEvent& p_event) {
                 if (q.status != "active") continue;
                 if ((db ? db->get_objective_kind(q.template_kind) : q.template_kind) != "kill") continue;
                 if (!_location_matches(q.template_kind, p_event.position, victim_z)) continue;
-                if (String(q.params.get("race_id", "")) != race_id) continue;
+                const String target_race = String(q.params.get("race_id", ""));
+                const String target_job = String(q.params.get("target_job", ""));
+                if (!target_race.is_empty() && target_race != race_id) continue;
+                if (!target_job.is_empty() && target_job != job_id) continue;
                 _advance(pair.first, 1);
             }
             break;
@@ -310,17 +326,21 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
         }
     } else if ((db ? db->get_objective_kind(p_kind) : p_kind) == "kill") {
         Array race_exclude = db->get_race_exclude(p_kind);
-        std::vector<String> candidates;
+        std::vector<String> race_candidates;
+        std::vector<String> job_candidates;
         std::vector<String> target_races;
+        std::vector<String> target_jobs;
         db->get_target_races_vec(p_kind, target_races);
+        db->get_target_jobs_vec(p_kind, target_jobs);
         RaceDb* race_db_singleton = RaceDb::get_singleton();
+        JobDb* job_db_singleton = JobDb::get_singleton();
         if (!target_races.empty()) {
             for (const String& race_id : target_races) {
                 if (race_db_singleton && race_db_singleton->get_race_info(race_id)) {
-                    candidates.push_back(race_id);
+                    race_candidates.push_back(race_id);
                 }
             }
-        } else if (race_db_singleton) {
+        } else if (target_jobs.empty() && race_db_singleton) {
             Array ids = race_db_singleton->get_ids();
             for (int i = 0; i < ids.size(); i++) {
                 String id = String(ids[i]);
@@ -328,20 +348,40 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
                 for (int j = 0; j < race_exclude.size(); j++) {
                     if (id == String(race_exclude[j])) { excluded = true; break; }
                 }
-                if (!excluded) candidates.push_back(id);
+                if (!excluded) race_candidates.push_back(id);
             }
         }
-        if (!candidates.empty()) {
-            String pick = candidates[quest_rng.range(0, (int)candidates.size() - 1)];
-            inst.params["race_id"] = pick;
-            String race_name = quest_race_name(pick, inst.target);
+        for (const String& job_id : target_jobs) {
+            if (job_db_singleton && job_db_singleton->get_job_info(job_id)) {
+                job_candidates.push_back(job_id);
+            }
+        }
+        const bool race_filter_valid = target_races.empty() || !race_candidates.empty();
+        const bool job_filter_valid = target_jobs.empty() || !job_candidates.empty();
+        if (race_filter_valid && job_filter_valid) {
+            String race_name;
+            if (!race_candidates.empty()) {
+                String pick_race = race_candidates[quest_rng.range(0, (int)race_candidates.size() - 1)];
+                inst.params["race_id"] = pick_race;
+                race_name = quest_race_name(pick_race, inst.target);
+            }
+
+            String job_name;
+            if (!job_candidates.empty()) {
+                String pick_job = job_candidates[quest_rng.range(0, (int)job_candidates.size() - 1)];
+                inst.params["target_job"] = pick_job;
+                job_name = quest_job_name(pick_job);
+            }
+
             String label_tmpl = db->get_label_template(p_kind);
             String count_str = String::num_int64(inst.target);
             String label_after_count = label_tmpl.replace("{count}", count_str);
-            inst.params["__label"] = label_after_count.replace("{race_name}", race_name);
+            label_after_count = label_after_count.replace("{race_name}", race_name);
+            inst.params["__label"] = label_after_count.replace("{job_name}", job_name);
             String desc_tmpl = db->get_description_template(p_kind);
             String desc_after_count = desc_tmpl.replace("{count}", count_str);
-            inst.params["__description"] = desc_after_count.replace("{race_name}", race_name);
+            desc_after_count = desc_after_count.replace("{race_name}", race_name);
+            inst.params["__description"] = desc_after_count.replace("{job_name}", job_name);
         } else {
             inst.params["__unfilled"] = true;
         }
@@ -410,6 +450,7 @@ bool QuestTracker::_giver_can_offer(const String& p_kind, uint32_t p_giver_entit
 }
 
 Dictionary QuestTracker::generate_offer(uint32_t p_giver_entity_id, const String& p_kind) {
+    _expire_due_quests();
     if (!db || p_kind.is_empty() || db->is_story_kind(p_kind)) return Dictionary();
     if (!_giver_can_offer(p_kind, p_giver_entity_id)) return Dictionary();
     if (!_failure_allows_offer(p_giver_entity_id, p_kind)) return Dictionary();
@@ -422,6 +463,7 @@ Dictionary QuestTracker::generate_offer(uint32_t p_giver_entity_id, const String
 }
 
 Dictionary QuestTracker::generate_story_offer(uint32_t p_giver_entity_id, const String& p_kind) {
+    _expire_due_quests();
     if (!db || p_kind.is_empty() || !db->is_story_kind(p_kind)) return Dictionary();
     if (!_giver_can_offer(p_kind, p_giver_entity_id)) return Dictionary();
     if (!_failure_allows_offer(p_giver_entity_id, p_kind)) return Dictionary();
@@ -457,6 +499,8 @@ Dictionary QuestTracker::generate_story_offer(uint32_t p_giver_entity_id, const 
         if (q.status == "declined" || q.status == "failed") {
             q.status = "offered";
             q.progress = 0;
+            q.started_turn = -1;
+            q.deadline_turn = -1.0f;
             q.params.erase("__failure_reason");
             q.params.erase("__failure_turn");
             _emit(p_kind);
@@ -476,6 +520,7 @@ Dictionary QuestTracker::generate_story_offer(uint32_t p_giver_entity_id, const 
 }
 
 Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
+    _expire_due_quests();
     Array out;
     if (!db) return out;
     Array kinds = db->get_kinds();
@@ -521,11 +566,17 @@ Array QuestTracker::generate_offers(uint32_t p_giver_entity_id, int p_count) {
 }
 
 bool QuestTracker::accept(const String& p_quest_id) {
+    _expire_due_quests();
     auto it = instances.find(p_quest_id);
     if (it == instances.end()) return false;
     if (it->second.status != "offered") return false;
     it->second.status = "active";
     it->second.progress = 0;
+    it->second.started_turn = static_cast<int>(std::floor(_current_turn()));
+    const int time_limit = db ? db->get_time_limit_turns(it->second.template_kind) : 0;
+    it->second.deadline_turn = time_limit > 0
+        ? _current_turn() + static_cast<float>(time_limit)
+        : -1.0f;
     _emit(p_quest_id);
     return true;
 }
@@ -567,6 +618,20 @@ void QuestTracker::_fail(const String& p_quest_id, const String& p_reason) {
     _emit(p_quest_id);
 }
 
+void QuestTracker::_expire_due_quests() {
+    const float now = _current_turn();
+    std::vector<String> due;
+    for (const auto& pair : instances) {
+        const QuestInstance& q = pair.second;
+        if (q.status == "active" && q.deadline_turn >= 0.0f && now >= q.deadline_turn) {
+            due.push_back(pair.first);
+        }
+    }
+    for (const String& quest_id : due) {
+        _fail(quest_id, "timeout");
+    }
+}
+
 bool QuestTracker::_has_required_items(const QuestInstance& p_q) const {
     if (!_is_gather_kind(p_q.template_kind)) return true;
     if (!ledger) return false;
@@ -584,7 +649,8 @@ bool QuestTracker::_remove_required_items(const QuestInstance& p_q) {
     return ledger->remove_inventory_item(player_entity_id, item_id, p_q.target);
 }
 
-bool QuestTracker::can_complete(const String& p_quest_id) const {
+bool QuestTracker::can_complete(const String& p_quest_id) {
+    _expire_due_quests();
     auto it = instances.find(p_quest_id);
     if (it == instances.end()) return false;
     const QuestInstance& q = it->second;
@@ -594,6 +660,7 @@ bool QuestTracker::can_complete(const String& p_quest_id) const {
 }
 
 bool QuestTracker::complete(const String& p_quest_id) {
+    _expire_due_quests();
     auto it = instances.find(p_quest_id);
     if (it == instances.end()) return false;
     QuestInstance& q = it->second;
@@ -657,8 +724,18 @@ Dictionary QuestTracker::_view(const String& p_quest_id, const QuestInstance& p_
     d["status"]          = p_q.status;
     d["target"]          = p_q.target;
     d["progress"]        = p_q.progress;
+    d["started_turn"]    = p_q.started_turn;
+    d["deadline_turn"]   = p_q.deadline_turn;
+    int time_remaining = 0;
+    if (p_q.status == "active" && p_q.deadline_turn >= 0.0f) {
+        time_remaining = static_cast<int>(std::ceil(p_q.deadline_turn - _current_turn()));
+        if (time_remaining < 0) time_remaining = 0;
+    }
+    d["time_remaining_turns"] = time_remaining;
+    const bool deadline_passed = p_q.status == "active" &&
+        p_q.deadline_turn >= 0.0f && _current_turn() >= p_q.deadline_turn;
     bool objective_ready = _is_gather_kind(p_q.template_kind) ? _has_required_items(p_q) : p_q.progress >= p_q.target;
-    d["can_complete"]    = p_q.status == "active" && objective_ready;
+    d["can_complete"]    = p_q.status == "active" && !deadline_passed && objective_ready;
     d["params"]          = p_q.params;
     d["rewards"]         = p_q.rewards;
     if (db) {
@@ -675,7 +752,8 @@ Dictionary QuestTracker::_view(const String& p_quest_id, const QuestInstance& p_
     return d;
 }
 
-Array QuestTracker::get_offers_for(uint32_t p_giver_entity_id) const {
+Array QuestTracker::get_offers_for(uint32_t p_giver_entity_id) {
+    _expire_due_quests();
     Array out;
     for (const auto& pair : instances) {
         if (pair.second.giver_entity_id != p_giver_entity_id) continue;
@@ -685,7 +763,8 @@ Array QuestTracker::get_offers_for(uint32_t p_giver_entity_id) const {
     return out;
 }
 
-Array QuestTracker::get_active() const {
+Array QuestTracker::get_active() {
+    _expire_due_quests();
     Array out;
     for (const auto& pair : instances) {
         if (pair.second.status == "active") out.push_back(_view(pair.first, pair.second));
@@ -693,7 +772,8 @@ Array QuestTracker::get_active() const {
     return out;
 }
 
-Array QuestTracker::get_completed() const {
+Array QuestTracker::get_completed() {
+    _expire_due_quests();
     Array out;
     for (const auto& pair : instances) {
         if (pair.second.status == "completed") out.push_back(_view(pair.first, pair.second));
@@ -701,7 +781,8 @@ Array QuestTracker::get_completed() const {
     return out;
 }
 
-Array QuestTracker::get_offered() const {
+Array QuestTracker::get_offered() {
+    _expire_due_quests();
     Array out;
     for (const auto& pair : instances) {
         if (pair.second.status == "offered") out.push_back(_view(pair.first, pair.second));
@@ -709,18 +790,21 @@ Array QuestTracker::get_offered() const {
     return out;
 }
 
-Dictionary QuestTracker::get_quest(const String& p_quest_id) const {
+Dictionary QuestTracker::get_quest(const String& p_quest_id) {
+    _expire_due_quests();
     auto it = instances.find(p_quest_id);
     if (it == instances.end()) return Dictionary();
     return _view(it->first, it->second);
 }
 
-bool QuestTracker::is_completed(const String& p_quest_id) const {
+bool QuestTracker::is_completed(const String& p_quest_id) {
+    _expire_due_quests();
     auto it = instances.find(p_quest_id);
     return it != instances.end() && it->second.status == "completed";
 }
 
-bool QuestTracker::has_failed(uint32_t p_giver_entity_id, const String& p_quest_ref) const {
+bool QuestTracker::has_failed(uint32_t p_giver_entity_id, const String& p_quest_ref) {
+    _expire_due_quests();
     if (p_quest_ref.is_empty()) return false;
 
     auto instance_it = instances.find(p_quest_ref);
@@ -735,7 +819,8 @@ bool QuestTracker::has_failed(uint32_t p_giver_entity_id, const String& p_quest_
     return false;
 }
 
-bool QuestTracker::can_offer(uint32_t p_giver_entity_id, const String& p_kind) const {
+bool QuestTracker::can_offer(uint32_t p_giver_entity_id, const String& p_kind) {
+    _expire_due_quests();
     if (!db || p_kind.is_empty()) return false;
     if (!_giver_can_offer(p_kind, p_giver_entity_id)) return false;
     for (const auto& pair : instances) {
@@ -805,10 +890,12 @@ void QuestTracker::deserialize(const Dictionary& p_data) {
         q.target           = int(d.get("target", 0));
         q.progress         = int(d.get("progress", 0));
         q.started_turn     = int(d.get("started_turn", -1));
+        q.deadline_turn    = static_cast<float>(static_cast<double>(d.get("deadline_turn", -1.0)));
         q.params           = d.get("params", Dictionary());
         q.rewards          = d.get("rewards", Dictionary());
         instances[id] = q;
     }
+    _expire_due_quests();
 }
 
 }

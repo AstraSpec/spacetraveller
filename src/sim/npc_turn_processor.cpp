@@ -132,6 +132,10 @@ void NpcTurnProcessor::run_turn(
     }
 
     int acquire_radius = director.d.bubble->get_active_radius();
+    if (ai->state == AIState::FOLLOW && ai->follow_leader_id == EntityPool::INVALID_ID) {
+        // Migrate older saves that only stored the follow target.
+        ai->follow_leader_id = ai->target_entity_id;
+    }
     const bool state_requires_target = ai->state == AIState::COMBAT || ai->state == AIState::FOLLOW || ai->state == AIState::FLEE;
     uint32_t target_id = state_requires_target ? ai->target_entity_id : EntityPool::INVALID_ID;
     Entity* target_entity = (target_id != EntityPool::INVALID_ID) ? pool.get_entity(target_id) : nullptr;
@@ -141,13 +145,36 @@ void NpcTurnProcessor::run_turn(
         (ai->state != AIState::COMBAT || director.entity_is_hostile_to(entity_id, target_id));
     if (state_requires_target && !target_is_valid) {
         const bool preserve_follow_target = ai->state == AIState::FOLLOW && target_is_alive;
-        if (!preserve_follow_target) {
+        const bool resume_escort = ai->state == AIState::COMBAT &&
+            ai->follow_leader_id != EntityPool::INVALID_ID &&
+            director.d.ledger->is_alive(ai->follow_leader_id);
+        if (resume_escort) {
+            ai->state = AIState::FOLLOW;
+            ai->target_entity_id = ai->follow_leader_id;
+            target_id = ai->target_entity_id;
+            target_entity = pool.get_entity(target_id);
+        } else if (!preserve_follow_target) {
             ai->target_entity_id = EntityPool::INVALID_ID;
             ai->state = AIState::WANDER;
+            ai->follow_leader_id = EntityPool::INVALID_ID;
             target_id = EntityPool::INVALID_ID;
             target_entity = nullptr;
         }
     }
+
+    if (ai->state == AIState::FOLLOW && target_entity) {
+        const uint32_t hostile_id = director.find_nearest_hostile(entity_id, acquire_radius);
+        if (hostile_id != EntityPool::INVALID_ID) {
+            Entity* hostile = pool.get_entity(hostile_id);
+            if (hostile && director.d.ledger->is_alive(hostile_id) && hostile->z == entity->z) {
+                ai->state = AIState::COMBAT;
+                ai->target_entity_id = hostile_id;
+                target_id = hostile_id;
+                target_entity = hostile;
+            }
+        }
+    }
+
     const bool can_auto_acquire = ai->state == AIState::WANDER || ai->state == AIState::COMBAT || ai->state == AIState::GUARD;
     if (!target_entity && can_auto_acquire) {
         target_id = director.find_nearest_hostile(entity_id, acquire_radius);

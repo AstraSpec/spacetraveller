@@ -96,6 +96,22 @@
       "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 6, "romance": 1 }
     }
   },
+  "mercenary_bandit_extermination": {
+    "objective_kind": "kill",
+    "story": true,
+    "giver_jobs": ["mercenary"],
+    "giver_dialogue_id": "mercenary",
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "target_jobs": ["bandit"],
+    "target_range": [3, 6],
+    "label_template": "Exterminate {count} bandits",
+    "description_template": "Exterminate {count} bandits preying on travelers, then report back to the Mercenary.",
+    "tiers": {
+      "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 6, "romance": 0 },
+      "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 3], "friendship": 8, "romance": 1 }
+    }
+  },
   "adventurer_gather_herb": {
     "objective_kind": "gather",
     "giver_jobs": ["guild_master"],
@@ -122,6 +138,23 @@
     "tiers": {
       "small": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 5, "romance": 0 },
       "medium": { "item_pool": ["bronze_coin", "silver_coin", "golden_coin"], "amount_range": [1, 2], "friendship": 8, "romance": 1 }
+    }
+  },
+  "chief_butler_banquet": {
+    "objective_kind": "gather",
+    "story": true,
+    "giver_jobs": ["chief_butler"],
+    "giver_dialogue_id": "chief_butler",
+    "failure_policy": "cooldown",
+    "failure_cooldown_turns": 86400,
+    "time_limit_turns": 900,
+    "target_item_pool": ["royal_stew"],
+    "target_range": [1, 1],
+    "item_type_filter": ["food"],
+    "label_template": "Prepare {count} {item_name} for the noble banquet",
+    "description_template": "Bring {count} {item_name} to the Chief Butler within fifteen minutes. The chef has been poisoned and the banquet cannot wait.",
+    "tiers": {
+      "single": { "item_pool": ["golden_coin", "silver_coin"], "amount_range": [2, 5], "friendship": 8, "romance": 1 }
     }
   }
 }

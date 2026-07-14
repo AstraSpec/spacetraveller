@@ -162,5 +162,152 @@
       { "none": true, "weight": 50 },
       { "item_id": "faith_necklace", "weight": 1, "amount_min": 1, "amount_max": 1 }
     ]
+  },
+  {
+    "id": "pantry",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": true,
+    "entries": [
+      { "none": true, "weight": 100 },
+      { "item_id": "bread", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "sausage", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "dried_meat", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "mushroom", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cheese", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "egg", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "raw_fish", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "milk", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "butter", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "raw_meat", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "honey", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "apple", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "berry", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "tomato", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "banana", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "blueberries", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "grape", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "pear", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "pumpkin", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "corn", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "carrot", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "potato", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cucumber", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "pepper", "weight": 5, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "onion", "weight": 5, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "desk",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "paper", "weight": 30, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "ink", "weight": 18, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "pen", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "map", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bronze_coin", "weight": 12, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "candle", "weight": 8, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "tattered_book", "weight": 3, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "clerical_documents",
+    "rolls_min": 1,
+    "rolls_max": 3,
+    "allow_duplicates": true,
+    "entries": [
+      { "none": true, "weight": 100 },
+      { "item_id": "paper", "weight": 35, "amount_min": 1, "amount_max": 5 },
+      { "item_id": "ink", "weight": 18, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "map", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "tattered_book", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bronze_coin", "weight": 6, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "silver_coin", "weight": 2, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "candle", "weight": 4, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "art",
+    "rolls_min": 0,
+    "rolls_max": 2,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "palette", "weight": 1, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "brush", "weight": 2, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "instruments",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 40 },
+      { "item_id": "lute", "weight": 20, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flute", "weight": 20, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "horn", "weight": 20, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "gold_ingot_diamond",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "gold_ingot", "weight": 67, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "diamond", "weight": 33, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "command_table",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 150 },
+      { "item_id": "map", "weight": 28, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "paper", "weight": 20, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "ink", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "chess_set", "weight": 2, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "tattered_book", "weight": 2, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bronze_coin", "weight": 3, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "silver_coin", "weight": 1, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "armory_issue",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 5 },
+      { "item_id": "iron_dagger", "weight": 16, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_spear", "weight": 14, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "longsword", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "leather_armor", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "leather_helmet", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "leather_boots", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "leather_arm_guards", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "crude_hammer", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_ingot", "weight": 6, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "armory_secure",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 5 },
+      { "item_id": "steel_armor", "weight": 18, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "steel_helmet", "weight": 18, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "steel_boots", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "steel_arm_guards", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "steel_flail", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "steel_battleaxe", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "longsword", "weight": 8, "amount_min": 1, "amount_max": 1 }
+    ]
   }
 ]

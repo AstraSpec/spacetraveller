@@ -105,7 +105,7 @@
     "description": "A brilliant gemstone prized by craftsmen and collectors.",
     "type": "material",
     "price": 5000,
-    "atlas": [ 1, 21 ],
+    "atlas": [ 1, 22 ],
     "weight": 0.1,
     "tags": []
   },
@@ -116,6 +116,16 @@
     "type": "material",
     "price": 300,
     "atlas": [ 5, 23 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
+    "id": "gold_ingot",
+    "name": "Gold Ingot",
+    "description": "",
+    "type": "material",
+    "price": 1200,
+    "atlas": [ 14, 23 ],
     "weight": 0.4,
     "tags": []
   },
@@ -279,6 +289,106 @@
     "price": 10,
     "atlas": [ 3, 38 ],
     "weight": 1.2,
+    "tags": []
+  },
+  {
+    "id": "paper",
+    "name": "Paper",
+    "description": "Parchment paper for writing.",
+    "type": "material",
+    "price": 5,
+    "atlas": [ 26, 14 ],
+    "weight": 0.01,
+    "tags": []
+  },
+  {
+    "id": "ink",
+    "name": "Ink",
+    "description": "A small pot of dark writing ink.",
+    "type": "material",
+    "price": 25,
+    "atlas": [ 34, 26 ],
+    "weight": 0.05,
+    "tags": []
+  },
+  {
+    "id": "map",
+    "name": "Map",
+    "description": "A folded map marked with roads, landmarks, and boundaries.",
+    "type": "material",
+    "price": 75,
+    "atlas": [ 48, 26 ],
+    "weight": 0.1,
+    "tags": []
+  },
+  {
+    "id": "chess_set",
+    "name": "Chess Set",
+    "description": "A small wooden chess set for passing time or planning battles.",
+    "type": "material",
+    "price": 500,
+    "atlas": [ 33, 26 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
+    "id": "pen",
+    "name": "Pen",
+    "description": "A feather dipped with ink.",
+    "type": "material",
+    "price": 40,
+    "atlas": [ 27, 26 ],
+    "weight": 0.02,
+    "tags": []
+  },
+  {
+    "id": "palette",
+    "name": "Palette",
+    "description": "A surface to mix and arrange paints.",
+    "type": "material",
+    "price": 400,
+    "atlas": [ 31, 26 ],
+    "weight": 2.5,
+    "tags": []
+  },
+  {
+    "id": "brush",
+    "name": "Paint Brush",
+    "description": "A fine brush for applying paint to a canvas.",
+    "type": "material",
+    "price": 100,
+    "atlas": [ 32, 26 ],
+    "weight": 0.05,
+    "tags": []
+  },
+  {
+    "id": "lute",
+    "name": "Lute",
+    "description": "A small stringed instrument with a rounded wooden body.",
+    "type": "material",
+    "price": 1400,
+    "atlas": [ 16, 31 ],
+    "weight": 1.2,
+    "tags": []
+  },
+  {
+    "id": "flute",
+    "name": "Flute",
+    "description": "A simple wooden flute.",
+    "type": "material",
+    "price": 1000,
+    "atlas": [ 17, 31 ],
+    "weight": 0.3,
+    "tags": []
+  },
+  {
+    "id": "horn",
+    "name": "Horn",
+    "description": "A curved horn used for music and ceremonial calls.",
+    "type": "material",
+    "price": 2000,
+    "atlas": [ 18, 31 ],
+    "weight": 0.8,
     "tags": []
   }
 ]

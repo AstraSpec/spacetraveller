@@ -1,5 +1,20 @@
 [
   {
+    "id": "palace_wall",
+    "name": "Palace Wall",
+    "atlas": [ 17, 2 ],
+    "solid": true,
+    "tags": ["SMASHABLE"],
+    "smash_loot_table": "brick_smashed"
+  },
+  {
+    "id": "palace_floor",
+    "name": "Palace Floor",
+    "atlas": [ 60, 1 ],
+    "solid": false,
+    "tags": ["FLOOR"]
+  },
+  {
     "id": "statue_head",
     "name": "Head Statue",
     "atlas": [ 26, 24 ],
@@ -19,6 +34,13 @@
     "atlas": [ 27, 24 ],
     "solid": true,
     "tags": ["TRANSPARENT", "SMASHABLE"]
+  },
+  {
+    "id": "throne",
+    "name": "Statue",
+    "atlas": [ 29, 24 ],
+    "solid": false,
+    "tags": ["SMASHABLE"]
   },
   {
     "id": "banner_church",
@@ -53,7 +75,7 @@
     "name": "Candelabra",
     "atlas": [ 36, 23 ],
     "solid": true,
-    "light": { "strength": 13 },
+    "light": { "strength": 15 },
     "tags": ["TRANSPARENT", "SMASHABLE"]
   },
   {
@@ -79,5 +101,33 @@
     "solid": false,
     "tags": ["CAN_CLOSE"],
     "closes_to": "beaded_curtain_c"
+  },
+  {
+    "id": "harp",
+    "name": "Harp",
+    "atlas": [ 15, 31 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
+  },
+  {
+    "id": "globe",
+    "name": "Globe",
+    "atlas": [ 30, 24 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
+  },
+  {
+    "id": "telescope",
+    "name": "Telescope",
+    "atlas": [ 31, 24 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
+  },
+  {
+    "id": "art_canvas",
+    "name": "Art Canvas",
+    "atlas": [ [ 29, 26 ], [ 30, 26 ] ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"]
   }
 ]

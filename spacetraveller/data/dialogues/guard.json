@@ -5,11 +5,11 @@
   "nodes": {
     "start": {
       "npc": [
-        "\"Keep moving.\"",
-        "The guard checks the road behind you. \"Keep your hands where I can see them.\"",
-        "\"The gates are open, but trouble is not welcome inside.\"",
-        "The guard gives you a quick once-over. \"You look capable. Try not to make me regret letting you pass.\"",
-        "\"If you are looking for work, try the Adventurer's Guild. I only keep people out.\""
+        "Keep moving.",
+        "Keep your hands where I can see them.",
+        "The gates are open, but trouble is not welcome inside.",
+        "You look capable. Try not to make me regret letting you pass.",
+        "If you are looking for work, try the Adventurer's Guild. I only keep people out."
       ],
       "options": []
     }

@@ -188,6 +188,12 @@ class StructureContext extends InputContext:
 		elif event.is_action_pressed("structure_redo"): 
 			manager.structure_key_input.emit("redo")
 			return true
+		elif event.is_action_pressed("structure_toggle_items") and not (event is InputEventKey and event.echo):
+			manager.structure_key_input.emit("toggle_items")
+			return true
+		elif event.is_action_pressed("structure_toggle_npcs") and not (event is InputEventKey and event.echo):
+			manager.structure_key_input.emit("toggle_npcs")
+			return true
 		elif event.is_action_pressed("ascend_level"):
 			manager.structure_key_input.emit("ascend_level")
 			return true

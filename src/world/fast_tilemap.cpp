@@ -56,6 +56,14 @@ void FastTileMap::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_occlusion_enabled", "enabled"), &FastTileMap::set_occlusion_enabled);
     ClassDB::bind_method(D_METHOD("is_occlusion_enabled"), &FastTileMap::is_occlusion_enabled);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "occlusion_enabled"), "set_occlusion_enabled", "is_occlusion_enabled");
+
+    ClassDB::bind_method(D_METHOD("set_show_items", "enabled"), &FastTileMap::set_show_items);
+    ClassDB::bind_method(D_METHOD("get_show_items"), &FastTileMap::get_show_items);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "show_items"), "set_show_items", "get_show_items");
+
+    ClassDB::bind_method(D_METHOD("set_show_entities", "enabled"), &FastTileMap::set_show_entities);
+    ClassDB::bind_method(D_METHOD("get_show_entities"), &FastTileMap::get_show_entities);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "show_entities"), "set_show_entities", "get_show_entities");
 }
 
 FastTileMap::FastTileMap() {
@@ -156,7 +164,7 @@ void FastTileMap::update_visuals(const Vector2i& render_focus, const Vector2i& v
             const WorldBubble::CellVisual& visual = snap_it->second;
             bool used_below_tile = false;
 
-            if (visual.draw_item) {
+            if (visual.draw_item && show_items) {
                 draw_item_at(ox, oy, visual.item_id, rs, texture_rid, item_db, (Layer)l);
             } else if (visual.draw_overlay) {
                 rs->canvas_item_clear(pair.second);
@@ -180,7 +188,7 @@ void FastTileMap::update_visuals(const Vector2i& render_focus, const Vector2i& v
                 rs->canvas_item_clear(pair.second);
             }
 
-            if (l == LAYER_TILE && visual.entity_sprite_id != 0) {
+            if (l == LAYER_TILE && visual.entity_sprite_id != 0 && show_entities) {
                 rs->canvas_item_add_texture_rect_region(
                     pair.second,
                     Rect2(ox * get_cell_size(), oy * get_cell_size(), TILE_SIZE, TILE_SIZE),
