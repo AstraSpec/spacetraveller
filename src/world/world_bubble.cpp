@@ -167,11 +167,13 @@ void WorldBubble::place_tile(int x, int y, const String& tile_id, Layer p_layer)
     IdRegistry* id_reg = IdRegistry::get_singleton();
     if (id_reg) {
         tile_overrides[p_layer][cell_key] = id_reg->get_id(tile_id);
+        if (p_layer == LAYER_TILE) ++traversal_revision;
     }
 }
 
 void WorldBubble::place_tile_id(int x, int y, uint16_t tile_id, Layer p_layer) {
     tile_overrides[p_layer][make_cell_key(x, y)] = tile_id;
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 String WorldBubble::get_tile_at(int x, int y, Layer p_layer) const {
@@ -209,6 +211,8 @@ void WorldBubble::fill_tiles(int x, int y, const String& tile_id, const Vector2i
     target_id = resolve_tile_id(p_layer, start_key, x, y, active_z);
 
     if (new_id == target_id) return;
+
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 
     int radius = active_radius;
     bool has_mask = mask.size.x > 0 && mask.size.y > 0;
@@ -371,6 +375,7 @@ void WorldBubble::invalidate_tile_cache(int world_x, int world_y, Layer p_layer)
     uint64_t key = make_cell_key(world_x, world_y);
     tile_overrides[p_layer].erase(key);
     generated_tile_cache[p_layer].erase(key);
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 void WorldBubble::invalidate_region_cache(const Rect2i& p_rect, Layer p_layer) {
@@ -386,11 +391,13 @@ void WorldBubble::invalidate_region_cache(const Rect2i& p_rect, Layer p_layer) {
     };
     erase_region(tile_overrides[p_layer]);
     erase_region(generated_tile_cache[p_layer]);
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 void WorldBubble::clear_cache(Layer p_layer) {
     tile_overrides[p_layer].clear();
     generated_tile_cache[p_layer].clear();
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 void WorldBubble::clear_all_caches() {
@@ -399,6 +406,7 @@ void WorldBubble::clear_all_caches() {
         generated_tile_cache[l].clear();
     }
     current_light_samples.clear();
+    ++traversal_revision;
 }
 
 bool WorldBubble::set_entity(int x, int y, uint32_t entity_id) {
@@ -498,6 +506,7 @@ Dictionary WorldBubble::get_tile_id_cache(Layer p_layer) const {
 void WorldBubble::set_tile_id_cache(const Dictionary& p_cache, Layer p_layer) {
     tile_overrides[p_layer].clear();
     merge_tile_id_cache(p_cache, p_layer);
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 void WorldBubble::merge_tile_id_cache(const Dictionary& p_cache, Layer p_layer) {
@@ -512,6 +521,7 @@ void WorldBubble::merge_tile_id_cache(const Dictionary& p_cache, Layer p_layer) 
         }
         tile_overrides[p_layer][key] = (uint16_t)((int)p_cache[key_var]);
     }
+    if (p_layer == LAYER_TILE) ++traversal_revision;
 }
 
 Array WorldBubble::get_seen_cells() const {
@@ -885,7 +895,6 @@ void WorldBubble::update_visibility(
                 active_cells.push_back(pos);
             }
         }
-
         auto mark_vertical_cell = [&](int x, int y, int z) {
             const uint64_t cell_key = make_cell_key_at_z(x, y, z);
             visible_cells.insert(cell_key);
@@ -898,18 +907,19 @@ void WorldBubble::update_visibility(
         for (const Vector3i& cell : active_cells) {
             const uint64_t cell_key = make_cell_key_at_z(cell.x, cell.y, cell.z);
             const uint16_t tile_id = resolve_tile_id(LAYER_TILE, cell_key, cell.x, cell.y, cell.z);
-            const bool is_air = tile_is_air(tile_id);
-            for (int direction = is_air ? -1 : 1; direction <= 1; direction += 2) {
-                for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
-                    const int z = cell.z + direction * depth;
-                    const uint64_t vertical_key = make_cell_key_at_z(cell.x, cell.y, z);
-                    const uint16_t vertical_tile = resolve_tile_id(
-                        LAYER_TILE, vertical_key, cell.x, cell.y, z
-                    );
-                    mark_vertical_cell(cell.x, cell.y, z);
-                    if (!tile_is_air(vertical_tile)) {
-                        break;
-                    }
+            if (!tile_is_air(tile_id)) {
+                continue;
+            }
+
+            for (int depth = 1; depth <= VERTICAL_AIR_VISIBILITY_DEPTH; depth++) {
+                const int z = cell.z - depth;
+                const uint64_t vertical_key = make_cell_key_at_z(cell.x, cell.y, z);
+                const uint16_t vertical_tile = resolve_tile_id(
+                    LAYER_TILE, vertical_key, cell.x, cell.y, z
+                );
+                mark_vertical_cell(cell.x, cell.y, z);
+                if (!tile_is_air(vertical_tile)) {
+                    break;
                 }
             }
         }

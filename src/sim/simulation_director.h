@@ -14,6 +14,7 @@
 #include "world/world_bubble.h"
 #include "world/turn_scheduler.h"
 #include "path/a_star_grid.h"
+#include "path/combat_flow_field.h"
 #include "core/rng.h"
 #include "components/ai_controller.h"
 
@@ -66,7 +67,20 @@ public:
     Array get_entity_targetable_body_parts(uint32_t entity_id) const;
 
 private:
+    struct CombatFlowCacheEntry {
+        String profile_id;
+        CombatFlowField field;
+    };
+
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
+    bool get_combat_flow_step(
+        uint32_t entity_id,
+        uint32_t target_id,
+        const Vector2i& target_pos,
+        int target_z,
+        const Vector2i& from,
+        Vector2i& out_step
+    );
     Vector2i entity_chunk(uint32_t entity_id) const;
     CombatOutcome resolve_entity_attack(
         uint32_t attacker_id,
@@ -105,6 +119,8 @@ private:
     const RaceInfo* get_race_info(uint32_t entity_id) const;
     static uint64_t entity_rng_salt(const Entity* entity, uint32_t entity_id);
 
+    bool combat_flow_enabled = false;
+    std::vector<CombatFlowCacheEntry> combat_flow_fields;
     SimulationDirectorDeps d;
 };
 

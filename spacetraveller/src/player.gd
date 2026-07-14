@@ -169,7 +169,6 @@ func _on_movement_triggered(dir: Vector2):
 			World.update_world_bubble(cellPos())
 		else:
 			_submit_move(dir)
-			World.update_world_bubble(cellPos())
 
 func _submit_move(dir: Vector2) -> bool:
 	var pos = Vector2i(cellPos())

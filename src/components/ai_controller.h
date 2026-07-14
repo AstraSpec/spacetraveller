@@ -40,6 +40,9 @@ struct AIData {
     // this transient value being serialized.
     bool has_follow_target_position = false;
     Vector2i follow_target_position;
+    bool has_combat_path_target_position = false;
+    Vector2i combat_path_target_position;
+    int combat_replan_cooldown = 0;
 };
 
 struct AIContext {
@@ -51,6 +54,7 @@ struct AIContext {
     bool has_target = false;
     const std::function<bool(Vector2i)>& can_enter;
     const std::function<PathResult(Vector2i, Vector2i)>& find_path;
+    const std::function<bool(Vector2i, Vector2i&)>& get_flow_step;
     bool target_same_level = true;
 };
 

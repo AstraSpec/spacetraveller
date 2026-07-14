@@ -44,6 +44,7 @@ static int chebyshev_distance(const Vector2i& a, const Vector2i& b) {
 }
 
 static constexpr int FOLLOW_RADIUS = 2;
+static constexpr int COMBAT_PATH_REPLAN_DISTANCE = 3;
 
 static std::vector<Vector2i> follow_candidates(const Vector2i& target) {
     static const Vector2i offsets[] = {
@@ -118,6 +119,11 @@ String AIController::relation_to_string(EntityRelation value) {
 }
 
 Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx) {
+    if (ai.state != AIState::COMBAT) {
+        ai.has_combat_path_target_position = false;
+        ai.combat_replan_cooldown = 0;
+    }
+
     if (ai.state == AIState::IDLE || ai.state == AIState::GUARD) {
         Locomotion::clear_path(loco);
         ai.has_follow_target_position = false;
@@ -152,8 +158,10 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
     if (Locomotion::peek_next_step(loco, next_tile)) {
         bool path_stale = false;
         if ((ai.state == AIState::COMBAT || ai.state == AIState::FOLLOW || ai.state == AIState::FLEE) && ctx.has_target) {
-            if (ai.state == AIState::COMBAT && ctx.perception.player_seen && loco.path_goal != ctx.target_pos) {
-                path_stale = true;
+            if (ai.state == AIState::COMBAT && ctx.perception.player_seen) {
+                const bool target_moved = !ai.has_combat_path_target_position ||
+                    chebyshev_distance(ai.combat_path_target_position, ctx.target_pos) > COMBAT_PATH_REPLAN_DISTANCE;
+                path_stale = target_moved && ai.combat_replan_cooldown == 0;
             } else if (ai.state == AIState::FOLLOW &&
                        (!ctx.target_same_level ||
                         (ai.has_follow_target_position && ai.follow_target_position != ctx.target_pos))) {
@@ -166,6 +174,28 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
             return Intent{IntentType::MOVE, next_tile};
         }
         Locomotion::clear_path(loco);
+    }
+
+    if (ai.state == AIState::COMBAT && ctx.has_target && ctx.target_same_level) {
+        const Vector2i self_pos(ctx.self.x, ctx.self.y);
+        if (is_adjacent(self_pos, ctx.target_pos)) {
+            ai.stuck_counter = 0;
+            return Intent{IntentType::MOVE, ctx.target_pos};
+        }
+
+        Vector2i flow_step;
+        if (ctx.get_flow_step(self_pos, flow_step)) {
+            Locomotion::clear_path(loco);
+            ai.has_combat_path_target_position = true;
+            ai.combat_path_target_position = ctx.target_pos;
+            ai.combat_replan_cooldown = 0;
+            if (ctx.can_enter(flow_step)) {
+                ai.stuck_counter = 0;
+                return Intent{IntentType::MOVE, flow_step};
+            }
+            ai.stuck_counter++;
+            return Intent{IntentType::NONE};
+        }
     }
 
     if (ai.state == AIState::WANDER) {
@@ -290,6 +320,10 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
     if (ai.perception_tier == PerceptionTier::NONE) {
         return Intent{IntentType::NONE};
     }
+    if (ai.combat_replan_cooldown > 0) {
+        --ai.combat_replan_cooldown;
+        return Intent{IntentType::NONE};
+    }
     const Vector2i target_pos = ctx.target_pos;
 
     if (is_adjacent(Vector2i(ctx.self.x, ctx.self.y), target_pos)) {
@@ -300,6 +334,9 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
     PathResult result = ctx.find_path(Vector2i(ctx.self.x, ctx.self.y), target_pos);
     if (result.found && result.waypoints.size() >= 1) {
         Locomotion::set_path(loco, result.waypoints, target_pos);
+        ai.has_combat_path_target_position = true;
+        ai.combat_path_target_position = target_pos;
+        ai.combat_replan_cooldown = 0;
 
         if (Locomotion::peek_next_step(loco, next_tile)) {
             return Intent{IntentType::MOVE, next_tile};
@@ -307,6 +344,7 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
     }
 
     ai.stuck_counter++;
+    ai.combat_replan_cooldown = std::min(3, 1 + ai.stuck_counter);
     return Intent{IntentType::NONE};
 }
 
@@ -346,6 +384,8 @@ Dictionary AIController::serialize(const AIData& data) {
 void AIController::deserialize(AIData& data, const Dictionary& dict) {
     data.state = state_from_string(String(dict.get("state", "wander")));
     data.disposition = normalize_disposition(String(dict.get("disposition", "neutral")));
+    data.has_combat_path_target_position = false;
+    data.combat_replan_cooldown = 0;
     data.target_entity_id = std::numeric_limits<uint32_t>::max();
     const int64_t target_id = static_cast<int64_t>(dict.get("target_entity_id", static_cast<int64_t>(-1)));
     if (target_id >= 0 && target_id <= static_cast<int64_t>(std::numeric_limits<uint32_t>::max())) {

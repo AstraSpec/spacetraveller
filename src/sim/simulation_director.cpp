@@ -13,6 +13,7 @@
 #include "core/faction.h"
 #include "world/entity_lifecycle.h"
 #include "entities/entity_tracker.h"
+#include "world/traversal_rules.h"
 #include "components/action_planner.h"
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
@@ -30,6 +31,12 @@
 #include <vector>
 
 using namespace godot;
+
+namespace {
+
+constexpr int COMBAT_FLOW_MIN_GROUP = 8;
+
+}
 
 void SimulationDirector::configure(const SimulationDirectorDeps& deps) {
     d = deps;
@@ -131,6 +138,8 @@ bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
     ai->follow_leader_id = d.player_entity_id;
     ai->stuck_counter = 0;
     ai->has_follow_target_position = false;
+    ai->has_combat_path_target_position = false;
+    ai->combat_replan_cooldown = 0;
 
     if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
         Locomotion::clear_path(*loco);
@@ -160,6 +169,8 @@ bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& s
         ai->follow_leader_id = EntityPool::INVALID_ID;
     }
     ai->state = next_state;
+    ai->has_combat_path_target_position = false;
+    ai->combat_replan_cooldown = 0;
     if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
         Locomotion::clear_path(*loco);
     }
@@ -861,6 +872,25 @@ void SimulationDirector::process_game_turn(float current_time) {
 
     EntityPool& pool = d.ledger->get_entity_pool();
 
+    combat_flow_enabled = false;
+    const Entity* player = pool.get_entity(d.player_entity_id);
+    if (player) {
+        int combat_flow_candidates = 0;
+        for (uint32_t id : pool.get_live_ids()) {
+            if (id == d.player_entity_id) continue;
+            const Entity* candidate = pool.get_entity(id);
+            const AIData* ai = d.ledger->try_get_ai(id);
+            if (candidate && ai && candidate->z == player->z &&
+                ai->state == AIState::COMBAT && ai->target_entity_id == d.player_entity_id) {
+                ++combat_flow_candidates;
+            }
+        }
+        combat_flow_enabled = combat_flow_candidates >= COMBAT_FLOW_MIN_GROUP;
+    }
+    if (!combat_flow_enabled) {
+        combat_flow_fields.clear();
+    }
+
     while (d.scheduler->peek_time() <= current_time) {
         uint32_t entity_id = d.scheduler->pop();
         if (entity_id == EntityPool::INVALID_ID) break;
@@ -882,6 +912,66 @@ Array SimulationDirector::request_player_path(const Vector2i& start, const Vecto
         return Array();
     }
     return find_path_with_flags(start, goal, PATH_FLAG_ALLOW_DIAGONAL);
+}
+
+bool SimulationDirector::get_combat_flow_step(
+    uint32_t entity_id,
+    uint32_t target_id,
+    const Vector2i& target_pos,
+    int target_z,
+    const Vector2i& from,
+    Vector2i& out_step
+) {
+    if (!combat_flow_enabled || target_id != d.player_entity_id ||
+        !d.ledger || !d.bubble) {
+        return false;
+    }
+
+    const Entity* target = d.ledger->get_entity_pool().get_entity(target_id);
+    if (!target || target->z != target_z) {
+        return false;
+    }
+
+    const String profile_id = TraversalRules::get_entity_profile_id(entity_id, *d.ledger);
+    const bool allow_openable_tiles = TraversalRules::can_profile_open_doors(profile_id);
+    const int radius = d.bubble->get_active_radius();
+    const uint64_t terrain_revision = d.bubble->get_traversal_revision();
+
+    CombatFlowCacheEntry* cache = nullptr;
+    for (CombatFlowCacheEntry& entry : combat_flow_fields) {
+        if (entry.profile_id == profile_id) {
+            cache = &entry;
+            break;
+        }
+    }
+    if (!cache) {
+        combat_flow_fields.push_back(CombatFlowCacheEntry{profile_id, CombatFlowField()});
+        cache = &combat_flow_fields.back();
+    }
+
+    if (!cache->field.matches(
+        target_pos,
+        target_z,
+        radius,
+        profile_id,
+        allow_openable_tiles,
+        terrain_revision
+    )) {
+        const bool built = cache->field.build(
+            *d.bubble,
+            target_pos,
+            target_z,
+            radius,
+            profile_id,
+            allow_openable_tiles,
+            terrain_revision
+        );
+        if (!built) {
+            return false;
+        }
+    }
+
+    return cache->field.get_step(from, out_step);
 }
 
 Array SimulationDirector::find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags) {

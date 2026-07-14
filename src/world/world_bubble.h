@@ -91,6 +91,7 @@ private:
     int vision_radius = 32;
     int player_minimum_light_radius = 2;
     int active_z = 0;
+    uint64_t traversal_revision = 1;
     TileSource tile_source = nullptr;
 
     uint64_t make_cell_key(int world_x, int world_y) const;
@@ -141,6 +142,7 @@ public:
     int get_world_bubble_radius() const { return get_active_radius(); }
     void set_active_z(int p_z) { active_z = p_z; }
     int get_active_z() const { return active_z; }
+    uint64_t get_traversal_revision() const { return traversal_revision; }
     CellArea get_active_area(const Vector2i& center) const { return CellArea::square(center, active_z, active_radius); }
     CellArea get_player_vision_area(const Vector2i& center) const { return CellArea::circle(center, active_z, vision_radius); }
 

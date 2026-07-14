@@ -14,6 +14,7 @@
 #include "core/tag_registry.h"
 #include "entities/entity_tracker.h"
 
+#include <algorithm>
 #include <functional>
 
 using namespace godot;
@@ -62,6 +63,9 @@ float NpcTurnProcessor::resolve_move(
         if (ai.state == AIState::FOLLOW) {
             ai.stuck_counter = 0;
         }
+        if (ai.state == AIState::COMBAT) {
+            ai.combat_replan_cooldown = 0;
+        }
         float cost = director.movement_action_cost(entity_id, move_result.cost, loco);
         for (auto& bp : blocking_positions) {
             Vector2i old_pos(entity.x - (intent.target.x - entity.x),
@@ -76,6 +80,9 @@ float NpcTurnProcessor::resolve_move(
 
     Locomotion::clear_path(loco);
     ai.stuck_counter++;
+    if (ai.state == AIState::COMBAT) {
+        ai.combat_replan_cooldown = std::min(3, 1 + ai.stuck_counter);
+    }
     return 0.0f;
 }
 
@@ -169,6 +176,8 @@ void NpcTurnProcessor::run_turn(
             if (hostile && director.d.ledger->is_alive(hostile_id) && hostile->z == entity->z) {
                 ai->state = AIState::COMBAT;
                 ai->target_entity_id = hostile_id;
+                ai->has_combat_path_target_position = false;
+                ai->combat_replan_cooldown = 0;
                 target_id = hostile_id;
                 target_entity = hostile;
             }
@@ -182,6 +191,8 @@ void NpcTurnProcessor::run_turn(
         if (target_entity) {
             ai->state = AIState::COMBAT;
             ai->target_entity_id = target_id;
+            ai->has_combat_path_target_position = false;
+            ai->combat_replan_cooldown = 0;
         }
     }
     target_same_level = target_entity &&
@@ -231,7 +242,21 @@ void NpcTurnProcessor::run_turn(
             if (blocked == pos) return false;
         }
         uint16_t tile_id = director.d.bubble->query_tile_id(pos.x, pos.y);
-        return TraversalRules::can_enter(entity_id, tile_id, *director.d.ledger);
+        return TraversalRules::can_open_doors(entity_id, *director.d.ledger)
+            ? TraversalRules::can_enter_or_open(entity_id, tile_id, *director.d.ledger)
+            : TraversalRules::can_enter(entity_id, tile_id, *director.d.ledger);
+    };
+
+    std::function<bool(Vector2i, Vector2i&)> flow_step_fn = [&](const Vector2i& from, Vector2i& out_step) -> bool {
+        const bool available = director.get_combat_flow_step(
+            entity_id,
+            target_id,
+            target_pos,
+            entity->z,
+            from,
+            out_step
+        );
+        return available;
     };
 
     AIContext ctx{
@@ -243,6 +268,7 @@ void NpcTurnProcessor::run_turn(
         target_entity != nullptr,
         can_enter_fn,
         find_path_fn,
+        flow_step_fn,
         target_same_level
     };
     Intent intent = AIController::tick(*ai, *loco, ctx);
