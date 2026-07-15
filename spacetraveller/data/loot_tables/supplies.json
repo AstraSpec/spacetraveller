@@ -1,0 +1,110 @@
+[
+  {
+    "id": "medical_basic",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "bandage", "weight": 50, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "medical_herbs", "weight": 25, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cloth_scrap", "weight": 18, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "honey", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bonesaw", "weight": 2, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "tools_common",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stone_knife", "weight": 18, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stone_axe", "weight": 14, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "crude_hammer", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "pickaxe", "weight": 7, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "shovel", "weight": 11, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "saw", "weight": 9, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_hatchet", "weight": 9, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bucket", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "hoe", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "watering_can", "weight": 3, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "broom", "weight": 3, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint_and_steel", "weight": 4, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "lockpick", "weight": 1, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "blacksmith_supplies",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "crude_hammer", "weight": 30, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_ingot", "weight": 35, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "iron_ore", "weight": 25, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "nails", "weight": 25, "amount_min": 4, "amount_max": 12 },
+      { "item_id": "saw", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "leather_scrap", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cloth_scrap", "weight": 5, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "repair_materials",
+    "rolls_min": 1,
+    "rolls_max": 3,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "nails", "weight": 30, "amount_min": 4, "amount_max": 16 },
+      { "item_id": "wooden_plank", "weight": 20, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "rope", "weight": 15, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "cloth_scrap", "weight": 13, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "leather_scrap", "weight": 10, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "iron_ingot", "weight": 7, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "iron_ore", "weight": 5, "amount_min": 1, "amount_max": 3 }
+    ]
+  },
+  {
+    "id": "camp_supplies",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "bedroll", "weight": 16, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "rope", "weight": 14, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "torch", "weight": 11, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "flint_and_steel", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "water", "weight": 14, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "cup", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bowl", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "table_id": "food_preserved", "weight": 15 },
+      { "table_id": "tools_common", "weight": 5 },
+      { "item_id": "candle", "weight": 2, "amount_min": 1, "amount_max": 2 }
+    ]
+  },
+  {
+    "id": "stable_supplies",
+    "rolls_min": 1,
+    "rolls_max": 3,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "hay", "weight": 45, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "water", "weight": 20, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "bucket", "weight": 12, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "watering_can", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "rope", "weight": 10, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "nails", "weight": 5, "amount_min": 3, "amount_max": 10 },
+      { "item_id": "broom", "weight": 3, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "firewood",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "stick", "weight": 65, "amount_min": 2, "amount_max": 6 },
+      { "item_id": "wooden_log", "weight": 35, "amount_min": 1, "amount_max": 3 }
+    ]
+  }
+]

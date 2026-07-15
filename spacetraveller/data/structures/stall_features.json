@@ -262,7 +262,7 @@
                         "type": "spawn_entity"
                     },
                     {
-                        "loot_table": "foraging_drops",
+                        "loot_table": "gathered_food_common",
                         "pos": [
                             2.0,
                             2.0
@@ -270,7 +270,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "foraging_drops",
+                        "loot_table": "gathered_food_common",
                         "pos": [
                             4.0,
                             2.0

@@ -404,11 +404,101 @@
   {
     "id": "bandage",
     "name": "Bandage",
-    "description": "",
+    "description": "A clean strip of cloth for binding wounds.",
     "type": "material",
     "price": 250,
     "atlas": [ 4, 23 ],
     "weight": 0.2,
+    "tags": []
+  },
+  {
+    "id": "bedroll",
+    "name": "Bedroll",
+    "description": "A wool blanket and simple ground mat rolled for travel.",
+    "type": "material",
+    "price": 350,
+    "atlas": [ 5, 47 ],
+    "weight": 1.5,
+    "tags": []
+  },
+  {
+    "id": "cup",
+    "name": "Cup",
+    "description": "A plain cup for drinking.",
+    "type": "material",
+    "price": 35,
+    "atlas": [ 0, 21 ],
+    "weight": 0.15,
+    "tags": []
+  },
+  {
+    "id": "bowl",
+    "name": "Bowl",
+    "description": "A simple wooden bowl.",
+    "type": "material",
+    "price": 45,
+    "atlas": [ 1, 21 ],
+    "weight": 0.25,
+    "tags": []
+  },
+  {
+    "id": "flint_and_steel",
+    "name": "Flint and Steel",
+    "description": "A fire-striking kit.",
+    "type": "tool",
+    "price": 280,
+    "atlas": [ 22, 31 ],
+    "weight": 0.15,
+    "tags": []
+  },
+  {
+    "id": "medical_herbs",
+    "name": "Medical Herbs",
+    "description": "Dried herbs commonly used in medicinal purposes.",
+    "type": "material",
+    "price": 250,
+    "atlas": [ 15, 23 ],
+    "weight": 0.1,
+    "tags": []
+  },
+  {
+    "id": "nails",
+    "name": "Iron Nails",
+    "description": "Nails for carpentry and repairs.",
+    "type": "material",
+    "price": 15,
+    "atlas": [ 4, 31 ],
+    "weight": 0.02,
+    "tags": []
+  },
+  {
+    "id": "hay",
+    "name": "Hay",
+    "description": "A bundle of dried grass used for fodder and bedding.",
+    "type": "material",
+    "price": 10,
+    "atlas": [ 3, 24 ],
+    "weight": 0.1,
+    "tags": []
+  },
+  {
+    "id": "dice",
+    "name": "Dice",
+    "description": "A pair of small bone dice for games of chance.",
+    "type": "material",
+    "price": 60,
+    "atlas": [ 71, 18 ],
+    "weight": 0.05,
+    "tags": []
+  },
+  {
+    "id": "lockpick",
+    "name": "Lockpick",
+    "description": "Made for opening simple locks.",
+    "type": "tool",
+    "price": 150,
+    "atlas": [ 62, 18 ],
+    "weight": 0.03,
     "tags": []
   }
 ]

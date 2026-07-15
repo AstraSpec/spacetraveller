@@ -38,5 +38,85 @@
 	"atlas": [ 1, 31 ],
 	"weight": 1.6,
 	"tags": []
+  },
+  {
+	"id": "shovel",
+	"name": "Shovel",
+	"description": "",
+	"type": "tool",
+	"price": 850,
+	"atlas": [ 0, 31 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "saw",
+	"name": "Saw",
+	"description": "",
+	"type": "tool",
+	"price": 1000,
+	"atlas": [ 11, 31 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "bonesaw",
+	"name": "Bonesaw",
+	"description": "",
+	"type": "tool",
+	"price": 1550,
+	"atlas": [ 11, 31 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "iron_hatchet",
+	"name": "Iron Hatchet",
+	"description": "",
+	"type": "tool",
+	"price": 800,
+	"atlas": [ 28, 9 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "watering_can",
+	"name": "Watering Can",
+	"description": "",
+	"type": "tool",
+	"price": 400,
+	"atlas": [ 12, 31 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "bucket",
+	"name": "Bucket",
+	"description": "",
+	"type": "tool",
+	"price": 250,
+	"atlas": [ 7, 47 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "hoe",
+	"name": "Hoe",
+	"description": "",
+	"type": "tool",
+	"price": 500,
+	"atlas": [ 7, 31 ],
+	"weight": 1.6,
+	"tags": []
+  },
+  {
+	"id": "broom",
+	"name": "Broom",
+	"description": "",
+	"type": "tool",
+	"price": 400,
+	"atlas": [ 10, 31 ],
+	"weight": 1.6,
+	"tags": []
   }
 ]

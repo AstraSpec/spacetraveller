@@ -7,7 +7,6 @@
   "base_damage": 10,
   "base_stamina": 80,
   "corpse_item": "corpse_human",
-  "death_loot_table": "human_death",
   "faction": "unaffiliated",
   "reaction_policy": "defensive",
   "reaction_radius": 12,

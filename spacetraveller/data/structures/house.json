@@ -17,8 +17,7 @@
                     {"tile": "stairs_up"},
                     {"tile": "barrel"},
                     {"tile": "toilet"}
-                ],
-                "rules": []
+                ]
             },
             "0": {
                 "blueprint": "(50x0, 4x1, 1x2, 4x1, 3x2, 1x1, 11x0, 1x1, 1x3, 1x4, 3x5, 1x4, 1x3, 1x1, 1x5, 1x6, 1x7, 1x1, 11x0, 1x2, 7x5, 1x1, 3x5, 1x1, 11x0, 1x1, 1x8, 1x5, 1x7, 1x6, 3x5, 1x9, 3x5, 1x1, 11x0, 9x1, 3x5, 1x1, 11x0, 1x1, 1x6, 2x5, 1x10, 1x5, 1x7, 1x1, 1x11, 3x5, 1x1, 11x0, 1x2, 1x6, 4x5, 1x8, 1x1, 1x6, 3x5, 1x2, 11x0, 1x1, 1x7, 4x5, 1x8, 1x1, 1x11, 3x5, 1x1, 11x0, 3x1, 1x9, 5x1, 3x5, 2x1, 1x2, 5x1, 4x0, 1x2, 15x5, 1x9, 2x5, 1x1, 4x0, 1x2, 15x5, 1x1, 2x5, 1x1, 4x0, 1x2, 1x12, 14x5, 1x1, 1x13, 1x14, 1x1, 4x0, 10x1, 1x9, 9x1, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x11, 2x5, 1x15, 1x16, 1x13, 1x15, 1x1, 4x0, 1x2, 1x6, 1x7, 1x5, 2x6, 2x5, 1x1, 3x5, 1x11, 5x5, 1x15, 1x2, 4x0, 1x1, 1x6, 16x5, 1x15, 1x1, 4x0, 1x1, 1x6, 17x5, 1x1, 4x0, 1x2, 1x6, 2x5, 2x6, 12x5, 1x17, 1x2, 4x0, 1x1, 1x6, 2x5, 2x7, 2x5, 1x1, 3x5, 1x1, 4x5, 2x15, 1x1, 4x0, 4x1, 2x2, 4x1, 1x9, 4x1, 2x2, 3x1, 13x0, 3x18, 21x0, 3x18, 10x0)",
@@ -42,17 +41,6 @@
                     {"tile": "fireplace"},
                     {"tile": "pot"},
                     {"tile": "alley_flagstone"}
-                ],
-                "rules": [
-                    {
-                        "entity": "human",
-                        "job": "scavenger",
-                        "pos": [
-                            7.0,
-                            17.0
-                        ],
-                        "type": "spawn_entity"
-                    }
                 ]
             },
             "1": {
@@ -60,13 +48,12 @@
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_roof"}
-                ],
-                "rules": []
+                ]
             }
         },
         "size": [
-            24.0,
-            24.0
+            24,
+            24
         ],
         "type": "building"
     },

@@ -7,7 +7,6 @@
   "base_damage": 8,
   "base_stamina": 75,
   "corpse_item": "corpse_deepling",
-  "death_loot_table": "human_death",
   "combat_style": "default",
   "faction": "monster",
   "reaction_policy": "aggressive",

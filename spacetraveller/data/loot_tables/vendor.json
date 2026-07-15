@@ -8,6 +8,11 @@
       { "item_id": "iron_ingot", "weight": 30, "amount_min": 1, "amount_max": 5 },
       { "item_id": "iron_ore", "weight": 20, "amount_min": 2, "amount_max": 8 },
       { "item_id": "crude_hammer", "weight": 15, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "nails", "weight": 18, "amount_min": 6, "amount_max": 20 },
+      { "item_id": "saw", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_hatchet", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "shovel", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "pickaxe", "weight": 8, "amount_min": 1, "amount_max": 1 },
       { "item_id": "iron_dagger", "weight": 12, "amount_min": 1, "amount_max": 1 },
       { "item_id": "longsword", "weight": 6, "amount_min": 1, "amount_max": 1 },
       { "item_id": "stone_knife", "weight": 8, "amount_min": 1, "amount_max": 1 },
@@ -20,14 +25,7 @@
     "rolls_max": 9,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "wooden_club", "weight": 22, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "wooden_spear", "weight": 20, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "pitchfork", "weight": 16, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "iron_dagger", "weight": 14, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_flail", "weight": 10, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "iron_spear", "weight": 8, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "longsword", "weight": 6, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_battleaxe", "weight": 4, "amount_min": 1, "amount_max": 1 }
+      { "table_id": "weapons_common", "weight": 1 }
     ]
   },
   {
@@ -36,14 +34,7 @@
     "rolls_max": 7,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "leather_boots", "weight": 18, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "leather_arm_guards", "weight": 16, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "leather_helmet", "weight": 14, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "leather_armor", "weight": 10, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_boots", "weight": 8, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_arm_guards", "weight": 7, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_helmet", "weight": 6, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "steel_armor", "weight": 4, "amount_min": 1, "amount_max": 1 }
+      { "table_id": "armor_common", "weight": 1 }
     ]
   },
   {
@@ -52,16 +43,7 @@
     "rolls_max": 11,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "fiber_tunic", "weight": 18, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "fiber_pants", "weight": 18, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "linen_shirt", "weight": 16, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "linen_trousers", "weight": 16, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "tunic_wool", "weight": 12, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "pants_wool", "weight": 12, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "bra_wool", "weight": 10, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "panties_wool", "weight": 10, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "silver_earrings", "weight": 4, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "gold_ring", "weight": 2, "amount_min": 1, "amount_max": 1 }
+      { "table_id": "clothing_common", "weight": 1 }
     ]
   },
   {
@@ -76,7 +58,13 @@
       { "item_id": "torch", "weight": 14, "amount_min": 1, "amount_max": 3 },
       { "item_id": "cloth_scrap", "weight": 14, "amount_min": 1, "amount_max": 5 },
       { "item_id": "leather_scrap", "weight": 10, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "stone_knife", "weight": 5, "amount_min": 1, "amount_max": 1 }
+      { "item_id": "stone_knife", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bedroll", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint_and_steel", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "water", "weight": 12, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "bucket", "weight": 6, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "shovel", "weight": 4, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "lockpick", "weight": 1, "amount_min": 1, "amount_max": 1 }
     ]
   },
   {
@@ -85,20 +73,7 @@
     "rolls_max": 14,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "apple", "weight": 16, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "berry", "weight": 12, "amount_min": 2, "amount_max": 8 },
-      { "item_id": "tomato", "weight": 14, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "banana", "weight": 10, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "blueberries", "weight": 10, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "grape", "weight": 10, "amount_min": 1, "amount_max": 6 },
-      { "item_id": "pear", "weight": 10, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "pumpkin", "weight": 4, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "corn", "weight": 14, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "carrot", "weight": 16, "amount_min": 1, "amount_max": 6 },
-      { "item_id": "potato", "weight": 16, "amount_min": 2, "amount_max": 8 },
-      { "item_id": "cucumber", "weight": 12, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "pepper", "weight": 10, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "onion", "weight": 12, "amount_min": 1, "amount_max": 6 }
+      { "table_id": "produce_common", "weight": 1 }
     ]
   },
   {
@@ -116,10 +91,7 @@
     "rolls_max": 12,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "sausage", "weight": 20, "amount_min": 1, "amount_max": 5 },
-      { "item_id": "dried_meat", "weight": 18, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "cheese", "weight": 18, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "bread", "weight": 24, "amount_min": 1, "amount_max": 6 }
+      { "table_id": "food_preserved", "weight": 1 }
     ]
   },
   {
@@ -128,12 +100,8 @@
     "rolls_max": 12,
     "allow_duplicates": true,
     "entries": [
-      { "item_id": "honey", "weight": 12, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "egg", "weight": 18, "amount_min": 1, "amount_max": 6 },
-      { "item_id": "milk", "weight": 16, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "berry", "weight": 14, "amount_min": 2, "amount_max": 8 },
-      { "item_id": "blueberries", "weight": 12, "amount_min": 1, "amount_max": 6 },
-      { "item_id": "mushroom", "weight": 16, "amount_min": 1, "amount_max": 6 }
+      { "table_id": "gathered_food_common", "weight": 9 },
+      { "item_id": "medical_herbs", "weight": 1, "amount_min": 1, "amount_max": 3 }
     ]
   },
   {

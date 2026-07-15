@@ -1,0 +1,48 @@
+[
+  {
+    "id": "dungeon_floor_items",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "bone", "weight": 70, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "spider_silk", "weight": 45, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "human_skull", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "tattered_book", "weight": 7, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "candle", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "bronze_coin", "weight": 15, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "silver_coin", "weight": 8, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "diamond", "weight": 1, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "rusty_sword", "weight": 3, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "iron_ore", "weight": 3, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "forest_floor_items",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "none": true, "weight": 50 },
+      { "item_id": "stone", "weight": 30, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "flint", "weight": 1, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "stick", "weight": 5, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "dungeon_remains",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 60 },
+      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "human_skull", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "cloth_scrap", "weight": 12, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "leather_scrap", "weight": 8, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bronze_coin", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "rusty_sword", "weight": 2, "amount_min": 1, "amount_max": 1 }
+    ]
+  }
+]

@@ -52,10 +52,11 @@
     "id": "wooden_furniture_small_smashed",
     "rolls_min": 1,
     "rolls_max": 2,
-    "allow_duplicates": true,
+    "allow_duplicates": false,
     "entries": [
-      { "item_id": "stick", "weight": 1, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "wooden_plank", "weight": 1, "amount_min": 1, "amount_max": 1 }
+      { "item_id": "stick", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "wooden_plank", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "nails", "weight": 1, "amount_min": 1, "amount_max": 3 }
     ]
   },
   {
@@ -64,8 +65,9 @@
     "rolls_max": 2,
     "allow_duplicates": false,
     "entries": [
-      { "item_id": "stick", "weight": 1, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "wooden_plank", "weight": 1, "amount_min": 1, "amount_max": 3 }
+      { "item_id": "stick", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "wooden_plank", "weight": 5, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "nails", "weight": 3, "amount_min": 2, "amount_max": 6 }
     ]
   },
   {

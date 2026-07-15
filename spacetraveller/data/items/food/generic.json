@@ -118,5 +118,15 @@
     "atlas": [ 10, 21 ],
     "weight": 0.3,
     "tags": []
+  },
+  {
+    "id": "water",
+    "name": "Water",
+    "description": "Clean drinking water.",
+    "type": "food",
+    "price": 10,
+    "atlas": [ 2, 21 ],
+    "weight": 0.3,
+    "tags": []
   }
 ]

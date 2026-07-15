@@ -4,31 +4,18 @@
     "rolls_min": 0,
     "rolls_max": 1,
     "entries": [
-      { "item_id": "bone", "weight": 60, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "spider_silk", "weight": 40, "amount_min": 1, "amount_max": 1 }
+      { "item_id": "bone_animal", "weight": 1, "amount_min": 1, "amount_max": 1 }
     ]
   },
   {
     "id": "bear_death",
-    "rolls_min": 1,
-    "rolls_max": 3,
-    "entries": [
-      { "item_id": "bone", "weight": 80, "amount_min": 1, "amount_max": 4 },
-      { "item_id": "rope", "weight": 20, "amount_min": 1, "amount_max": 1 }
-    ]
-  },
-  {
-    "id": "human_death",
-    "rolls_min": 1,
-    "rolls_max": 1,
+    "rolls_min": 2,
+    "rolls_max": 4,
     "allow_duplicates": true,
     "entries": [
-      { "table_id": "adventurer_inventory", "weight": 28 },
-      { "table_id": "miner_inventory", "weight": 24 },
-      { "table_id": "merchant_inventory", "weight": 16 },
-      { "table_id": "hunter_inventory", "weight": 14 },
-      { "table_id": "scholar_inventory", "weight": 10 },
-      { "table_id": "villager_inventory", "weight": 8 }
+      { "item_id": "raw_meat", "weight": 55, "amount_min": 2, "amount_max": 5 },
+      { "item_id": "bone_animal", "weight": 30, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "leather_scrap", "weight": 15, "amount_min": 1, "amount_max": 3 }
     ]
   },
   {
@@ -37,7 +24,7 @@
     "rolls_max": 2,
     "entries": [
       { "item_id": "raw_meat", "weight": 50, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "bone", "weight": 35, "amount_min": 1, "amount_max": 3 },
+      { "item_id": "bone_animal", "weight": 35, "amount_min": 1, "amount_max": 3 },
       { "item_id": "leather_scrap", "weight": 15, "amount_min": 1, "amount_max": 2 }
     ]
   },
@@ -47,7 +34,7 @@
     "rolls_max": 3,
     "entries": [
       { "item_id": "raw_meat", "weight": 50, "amount_min": 2, "amount_max": 4 },
-      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "bone_animal", "weight": 30, "amount_min": 1, "amount_max": 4 },
       { "item_id": "leather_scrap", "weight": 20, "amount_min": 1, "amount_max": 3 }
     ]
   },
@@ -57,7 +44,7 @@
     "rolls_max": 2,
     "entries": [
       { "item_id": "raw_meat", "weight": 40, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bone_animal", "weight": 30, "amount_min": 1, "amount_max": 2 },
       { "item_id": "cloth_scrap", "weight": 30, "amount_min": 1, "amount_max": 2 }
     ]
   },
@@ -67,7 +54,7 @@
     "rolls_max": 2,
     "entries": [
       { "item_id": "raw_meat", "weight": 50, "amount_min": 1, "amount_max": 3 },
-      { "item_id": "bone", "weight": 30, "amount_min": 1, "amount_max": 2 },
+      { "item_id": "bone_animal", "weight": 30, "amount_min": 1, "amount_max": 2 },
       { "item_id": "leather_scrap", "weight": 20, "amount_min": 1, "amount_max": 2 }
     ]
   },
@@ -77,7 +64,7 @@
     "rolls_max": 1,
     "entries": [
       { "item_id": "raw_meat", "weight": 60, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "bone", "weight": 40, "amount_min": 1, "amount_max": 1 }
+      { "item_id": "bone_animal", "weight": 40, "amount_min": 1, "amount_max": 1 }
     ]
   },
   {
@@ -85,8 +72,7 @@
     "rolls_min": 1,
     "rolls_max": 2,
     "entries": [
-      { "item_id": "spider_silk", "weight": 80, "amount_min": 1, "amount_max": 2 },
-      { "item_id": "bone", "weight": 20, "amount_min": 1, "amount_max": 1 }
+      { "item_id": "spider_silk", "weight": 1, "amount_min": 1, "amount_max": 2 }
     ]
   }
 ]

@@ -32,8 +32,8 @@
                 ],
                 "rules": [
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             100,
                             36
@@ -41,8 +41,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             101,
                             29
@@ -51,7 +51,7 @@
                     },
                     {
                         "amount": 3,
-                        "item_id": "golden_coin",
+                        "item_id": "silver_coin",
                         "pos": [
                             101,
                             35
@@ -59,8 +59,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             102,
                             28
@@ -68,8 +68,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             102,
                             29
@@ -77,8 +77,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             102,
                             33
@@ -87,7 +87,7 @@
                     },
                     {
                         "amount": 6,
-                        "item_id": "golden_coin",
+                        "item_id": "silver_coin",
                         "pos": [
                             102,
                             34
@@ -95,8 +95,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             103,
                             31
@@ -104,8 +104,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             103,
                             33
@@ -113,8 +113,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 5,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             104,
                             29
@@ -122,8 +122,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             93,
                             34
@@ -131,8 +131,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             93,
                             35
@@ -140,8 +140,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             94,
                             30
@@ -149,8 +149,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 9,
+                        "item_id": "silver_coin",
                         "pos": [
                             94,
                             35
@@ -158,8 +158,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 5,
-                        "item_id": "golden_coin",
+                        "amount": 9,
+                        "item_id": "silver_coin",
                         "pos": [
                             94,
                             36
@@ -167,8 +167,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             95,
                             29
@@ -176,8 +176,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             95,
                             30
@@ -185,8 +185,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 12,
+                        "item_id": "silver_coin",
                         "pos": [
                             95,
                             35
@@ -195,7 +195,7 @@
                     },
                     {
                         "amount": 3,
-                        "item_id": "golden_coin",
+                        "item_id": "silver_coin",
                         "pos": [
                             96,
                             29
@@ -204,7 +204,7 @@
                     },
                     {
                         "amount": 6,
-                        "item_id": "golden_coin",
+                        "item_id": "silver_coin",
                         "pos": [
                             96,
                             31
@@ -212,8 +212,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 18,
+                        "item_id": "silver_coin",
                         "pos": [
                             96,
                             36
@@ -221,8 +221,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 2,
-                        "item_id": "golden_coin",
+                        "amount": 9,
+                        "item_id": "silver_coin",
                         "pos": [
                             96,
                             37
@@ -230,8 +230,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 4,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             97,
                             28
@@ -239,17 +239,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
-                        "pos": [
-                            97,
-                            30
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             97,
                             31
@@ -257,8 +248,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             97,
                             35
@@ -266,8 +257,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
-                        "item_id": "golden_coin",
+                        "amount": 18,
+                        "item_id": "silver_coin",
                         "pos": [
                             97,
                             36
@@ -275,8 +266,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             98,
                             27
@@ -284,8 +275,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 4,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             98,
                             28
@@ -293,8 +284,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 4,
-                        "item_id": "golden_coin",
+                        "amount": 18,
+                        "item_id": "silver_coin",
                         "pos": [
                             98,
                             31
@@ -302,8 +293,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 8,
-                        "item_id": "golden_coin",
+                        "amount": 18,
+                        "item_id": "silver_coin",
                         "pos": [
                             98,
                             32
@@ -311,8 +302,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "golden_coin",
+                        "amount": 3,
+                        "item_id": "silver_coin",
                         "pos": [
                             99,
                             29
@@ -320,8 +311,8 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 4,
-                        "item_id": "golden_coin",
+                        "amount": 6,
+                        "item_id": "silver_coin",
                         "pos": [
                             99,
                             34
@@ -329,7 +320,7 @@
                         "type": "spawn_item"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             100,
                             27
@@ -337,7 +328,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             101,
                             31
@@ -345,7 +336,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             101,
                             32
@@ -353,7 +344,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             102,
                             30
@@ -361,7 +352,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             102,
                             37
@@ -369,7 +360,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             103,
                             27
@@ -377,7 +368,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             104,
                             30
@@ -385,7 +376,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             104,
                             35
@@ -393,7 +384,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             104,
                             36
@@ -401,7 +392,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             105,
                             32
@@ -409,7 +400,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             105,
                             36
@@ -417,7 +408,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             93,
                             30
@@ -425,7 +416,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             94,
                             34
@@ -433,7 +424,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             95,
                             31
@@ -441,7 +432,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             95,
                             32
@@ -449,7 +440,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             96,
                             30
@@ -457,7 +448,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             97,
                             32
@@ -465,7 +456,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             97,
                             33
@@ -473,7 +464,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             98,
                             29
@@ -481,7 +472,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             98,
                             30
@@ -489,7 +480,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             99,
                             27
@@ -497,7 +488,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "gold_ingot_diamond",
+                        "loot_table": "royal_treasure_rare",
                         "pos": [
                             99,
                             32
@@ -711,7 +702,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             101,
@@ -722,7 +712,6 @@
                     {
                         "dialogue_id": "priest",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "priest",
                         "pos": [
                             21,
@@ -733,7 +722,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             22,
@@ -744,7 +732,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             56,
@@ -755,7 +742,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             56,
@@ -776,7 +762,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             58,
@@ -787,7 +772,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             61,
@@ -798,7 +782,6 @@
                     {
                         "dialogue_id": "mercenary",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "mercenary",
                         "pos": [
                             62,
@@ -809,7 +792,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             63,
@@ -820,7 +802,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             63,
@@ -831,7 +812,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             72,
@@ -842,7 +822,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             76,
@@ -853,7 +832,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             81,
@@ -864,7 +842,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             92,
@@ -875,7 +852,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             92,
@@ -886,7 +862,6 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
-                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             97,
@@ -903,7 +878,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "foraging_drops",
+                        "loot_table": "gathered_food_common",
                         "pos": [
                             100,
                             84
@@ -951,7 +926,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "foraging_drops",
+                        "loot_table": "gathered_food_common",
                         "pos": [
                             101,
                             84
@@ -983,7 +958,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fruit_veg_drops",
+                        "loot_table": "produce_common",
                         "pos": [
                             102,
                             80
@@ -991,7 +966,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fruit_veg_drops",
+                        "loot_table": "produce_common",
                         "pos": [
                             102,
                             82
@@ -999,7 +974,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fruit_veg_drops",
+                        "loot_table": "produce_common",
                         "pos": [
                             102,
                             83
@@ -1007,7 +982,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fruit_veg_drops",
+                        "loot_table": "produce_common",
                         "pos": [
                             102,
                             84
@@ -1047,7 +1022,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "hunter_inventory",
+                        "loot_table": "camp_supplies",
                         "pos": [
                             112,
                             82
@@ -1095,7 +1070,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clothing_drops",
+                        "loot_table": "clothing_common",
                         "pos": [
                             23,
                             74
@@ -1103,7 +1078,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clothing_drops",
+                        "loot_table": "clothing_common",
                         "pos": [
                             24,
                             74
@@ -1111,7 +1086,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             68,
                             82
@@ -1271,7 +1246,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             83,
                             89
@@ -1279,7 +1254,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             83,
                             90
@@ -1303,7 +1278,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             92,
                             84
@@ -1311,7 +1286,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             92,
                             85
@@ -1335,7 +1310,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             94,
                             65
@@ -1399,7 +1374,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             96,
                             89
@@ -1407,7 +1382,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             96,
                             90
@@ -1415,7 +1390,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             97,
                             56
@@ -1439,7 +1414,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             97,
                             90
@@ -1463,7 +1438,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             98,
                             58
@@ -1471,7 +1446,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "cooking_pot_drops",
+                        "loot_table": "cooking_items",
                         "pos": [
                             98,
                             69
@@ -1479,7 +1454,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "cooking_pot_drops",
+                        "loot_table": "cooking_items",
                         "pos": [
                             98,
                             72
@@ -1487,7 +1462,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "cooking_pot_drops",
+                        "loot_table": "cooking_items",
                         "pos": [
                             98,
                             73
@@ -1495,7 +1470,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "cooking_pot_drops",
+                        "loot_table": "cooking_items",
                         "pos": [
                             98,
                             76
@@ -1527,7 +1502,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "clerical_documents",
+                        "loot_table": "desk",
                         "pos": [
                             99,
                             56

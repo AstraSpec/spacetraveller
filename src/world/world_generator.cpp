@@ -1590,6 +1590,10 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
                         int fitting_total_weight = 0;
                         for (const FeatureEntryInfo& pool_entry : pool->entries) {
                             if (pool_entry.structure_id.is_empty() || pool_entry.weight <= 0) continue;
+                            if (spawn.unique &&
+                                std::find(unique_feature_ids.begin(), unique_feature_ids.end(), pool_entry.structure_id) != unique_feature_ids.end()) {
+                                continue;
+                            }
                             const Vector2i pool_source_size = s_db->get_structure_size(pool_entry.structure_id);
                             if (pool_source_size.x <= 0 || pool_source_size.y <= 0) continue;
                             const Vector2i pool_placed_size = get_rotated_surface_feature_size(

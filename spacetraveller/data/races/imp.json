@@ -7,7 +7,6 @@
   "base_damage": 8,
   "base_stamina": 90,
   "corpse_item": "corpse_imp",
-  "death_loot_table": "human_death",
   "combat_style": "default",
   "faction": "unaffiliated",
   "reaction_policy": "defensive",

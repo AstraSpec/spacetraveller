@@ -7,7 +7,6 @@
   "base_damage": 10,
   "base_stamina": 120,
   "corpse_item": "corpse_djinn",
-  "death_loot_table": "human_death",
   "combat_style": "default",
   "faction": "unaffiliated",
   "reaction_policy": "defensive",

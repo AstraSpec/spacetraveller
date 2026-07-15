@@ -7,7 +7,6 @@
   "base_damage": 9,
   "base_stamina": 85,
   "corpse_item": "corpse_goblin",
-  "death_loot_table": "human_death",
   "combat_style": "default",
   "faction": "unaffiliated",
   "reaction_policy": "defensive",

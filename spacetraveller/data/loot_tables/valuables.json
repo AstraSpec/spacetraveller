@@ -1,0 +1,42 @@
+[
+  {
+    "id": "valuables_common",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      { "item_id": "bronze_coin", "weight": 45, "amount_min": 2, "amount_max": 8 },
+      { "item_id": "silver_coin", "weight": 25, "amount_min": 1, "amount_max": 4 },
+      { "item_id": "silver_earrings", "weight": 10, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "gold_ring", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "diamond", "weight": 2, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "royal_treasure_rare",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": false,
+    "entries": [
+      { "item_id": "gold_ingot", "weight": 67, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "diamond", "weight": 33, "amount_min": 1, "amount_max": 1 }
+    ]
+  },
+  {
+    "id": "stolen_goods",
+    "rolls_min": 2,
+    "rolls_max": 4,
+    "allow_duplicates": false,
+    "entries": [
+      { "table_id": "valuables_common", "weight": 28 },
+      { "table_id": "personal_effects_common", "weight": 22 },
+      { "table_id": "tools_common", "weight": 14 },
+      { "table_id": "food_preserved", "weight": 12 },
+      { "table_id": "religious_items", "weight": 8 },
+      { "item_id": "lockpick", "weight": 3, "amount_min": 1, "amount_max": 2 },
+      { "table_id": "weapons_common", "weight": 8 },
+      { "table_id": "armor_common", "weight": 5 },
+      { "table_id": "royal_treasure_rare", "weight": 3 }
+    ]
+  }
+]

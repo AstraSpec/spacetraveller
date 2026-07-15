@@ -58,7 +58,7 @@
                         "type": "spawn_entity"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "recreation_items",
                         "pos": [
                             21.0,
                             26.0
@@ -66,7 +66,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "camp_supplies",
                         "pos": [
                             22.0,
                             23.0
@@ -74,7 +74,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "firewood",
                         "pos": [
                             24.0,
                             22.0
@@ -82,7 +82,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "food_preserved",
                         "pos": [
                             24.0,
                             26.0
@@ -90,7 +90,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "recreation_items",
                         "pos": [
                             26.0,
                             24.0
@@ -98,7 +98,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "fun",
+                        "loot_table": "repair_materials",
                         "pos": [
                             27.0,
                             21.0
@@ -195,6 +195,22 @@
                             4
                         ],
                         "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "stable_supplies",
+                        "pos": [
+                            9,
+                            2
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "repair_materials",
+                        "pos": [
+                            9,
+                            7
+                        ],
+                        "type": "spawn_loot_table"
                     }
                 ]
             },
@@ -240,7 +256,7 @@
                 ],
                 "rules": [
                     {
-                        "loot_table": "pantry",
+                        "loot_table": "food_preserved",
                         "pos": [
                             21.0,
                             3.0
@@ -248,7 +264,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "pantry",
+                        "loot_table": "recreation_items",
                         "pos": [
                             21.0,
                             4.0
@@ -256,10 +272,34 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "pantry",
+                        "loot_table": "medical_basic",
                         "pos": [
                             21.0,
                             5.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "personal_effects_common",
+                        "pos": [
+                            1.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            10.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "weapons_common",
+                        "pos": [
+                            21.0,
+                            1.0
                         ],
                         "type": "spawn_loot_table"
                     }
@@ -325,6 +365,46 @@
                             11.0
                         ],
                         "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "royal_treasure_rare",
+                        "pos": [
+                            1.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "stolen_goods",
+                        "pos": [
+                            3.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "desk",
+                        "pos": [
+                            17.0,
+                            3.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "command_table",
+                        "pos": [
+                            18.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "personal_effects_common",
+                        "pos": [
+                            1.0,
+                            9.0
+                        ],
+                        "type": "spawn_loot_table"
                     }
                 ]
             },
@@ -362,22 +442,6 @@
                             11.0
                         ],
                         "type": "spawn_entity"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            8.0,
-                            9.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            9.0,
-                            8.0
-                        ],
-                        "type": "spawn_loot_table"
                     },
                     {
                         "entity_group": "prisoner",
@@ -418,6 +482,32 @@
                     {"tile": "bar"},
                     {"tile": "chair"},
                     {"tile": "dirt"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            2.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "blacksmith_supplies",
+                        "pos": [
+                            7.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "repair_materials",
+                        "pos": [
+                            8.0,
+                            9.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
                 ]
             },
             "1": {

@@ -241,7 +241,7 @@
                         "type": "spawn_entity"
                     },
                     {
-                        "loot_table": "faith_drops",
+                        "loot_table": "religious_items",
                         "pos": [
                             8.0,
                             10.0
@@ -249,7 +249,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "faith_drops",
+                        "loot_table": "religious_items",
                         "pos": [
                             8.0,
                             14.0
@@ -257,7 +257,7 @@
                         "type": "spawn_loot_table"
                     },
                     {
-                        "loot_table": "faith_drops",
+                        "loot_table": "religious_items",
                         "pos": [
                             8.0,
                             18.0
