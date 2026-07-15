@@ -106,7 +106,6 @@ private:
     struct SurfaceFeatureInstance {
         bool valid = false;
         bool require_source_chunk = false;
-        bool skip_base_validation = false;
         bool unique = false;
         int chunk_x = 0;
         int chunk_y = 0;
@@ -157,7 +156,7 @@ private:
         WorldCoords::NeighborBits p_side,
         int p_world_seed
     ) const;
-    uint16_t get_feature_tile(int x, int y, int z, uint16_t base_tile_id, int world_seed);
+    uint16_t get_feature_tile(int x, int y, int z, int world_seed);
     bool find_feature_at(int x, int y, int z, int world_seed, SurfaceFeatureInstance& r_instance, bool p_include_void_tiles = false);
     uint16_t get_base_tile_without_features(int x, int y, int z, int world_seed);
     uint16_t get_dungeon_tile(int x, int y, int z, int world_seed);
@@ -177,17 +176,14 @@ private:
     );
     void reset_dungeon_cache();
     void rebuild_dungeon_entrance_cache();
-    bool base_allows_feature(uint16_t p_base_tile_id, int p_z) const;
     bool validate_surface_feature_anchor(
         const String& p_feature_id,
         const Vector2i& p_origin,
         const Vector2i& p_source_size,
         const Vector2i& p_placed_size,
         uint8_t p_rotation,
-        int p_z,
         int p_world_seed,
         bool p_require_source_chunk,
-        bool p_skip_base_validation,
         int p_source_chunk_x,
         int p_source_chunk_y
     );

@@ -5,11 +5,31 @@
 
 namespace godot {
 
+enum class FactionRelation {
+    ALLIED,
+    NEUTRAL,
+    HOSTILE
+};
+
 namespace Faction {
-    // Two entities are hostile when they belong to different, non-empty factions.
-    inline bool are_hostile(const String& a, const String& b) {
-        if (a.is_empty() || b.is_empty()) return false;
-        return a != b;
+    inline FactionRelation relation_from_string(const String& value) {
+        const String normalized = value.to_lower();
+        if (normalized == "allied" || normalized == "friendly") return FactionRelation::ALLIED;
+        if (normalized == "hostile") return FactionRelation::HOSTILE;
+        return FactionRelation::NEUTRAL;
+    }
+
+    inline String relation_to_string(FactionRelation value) {
+        switch (value) {
+            case FactionRelation::ALLIED: return "allied";
+            case FactionRelation::HOSTILE: return "hostile";
+            case FactionRelation::NEUTRAL: break;
+        }
+        return "neutral";
+    }
+
+    inline String relation_to_attitude_string(FactionRelation value) {
+        return value == FactionRelation::ALLIED ? String("friendly") : relation_to_string(value);
     }
 }
 

@@ -68,7 +68,9 @@ static bool spawn_npc_at(
     const String& p_race_id,
     const String& p_job,
     const String& p_dialogue_id,
-    const String& p_attitude,
+    const String& p_faction,
+    const String& p_reaction_policy,
+    int p_reaction_radius,
     const String& p_ai_state,
     uint32_t p_world_seed,
     float p_spawn_turn_time,
@@ -83,7 +85,9 @@ static bool spawn_npc_at(
     EntityFactory::SpawnOverrides overrides;
     overrides.job = p_job;
     overrides.dialogue_id = p_dialogue_id;
-    overrides.attitude = p_attitude;
+    overrides.faction = p_faction;
+    overrides.reaction_policy = p_reaction_policy;
+    overrides.reaction_radius = p_reaction_radius;
     overrides.ai_state = p_ai_state;
 
     return EntityFactory::create_npc(
@@ -117,7 +121,9 @@ static bool spawn_with_structure_rule(
         p_rule.entity,
         p_rule.job,
         p_rule.dialogue_id,
-        p_rule.attitude,
+        p_rule.faction,
+        p_rule.reaction_policy,
+        p_rule.reaction_radius,
         p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
@@ -337,7 +343,9 @@ static bool apply_ambient_chunk_entity(
         entry->entity,
         entry->job,
         entry->dialogue_id,
-        entry->attitude,
+        entry->faction,
+        entry->reaction_policy,
+        entry->reaction_radius,
         entry->ai_state,
         p_world_seed,
         p_spawn_turn_time,
@@ -384,7 +392,9 @@ static bool apply_dungeon_ambient_entity(
         entry->entity,
         entry->job,
         entry->dialogue_id,
-        entry->attitude,
+        entry->faction,
+        entry->reaction_policy,
+        entry->reaction_radius,
         entry->ai_state,
         p_world_seed,
         p_spawn_turn_time,
@@ -431,6 +441,8 @@ static bool apply_webbed_floor_spider_spawn(
         "monster",
         "",
         "",
+        "",
+        0,
         "",
         p_world_seed,
         p_spawn_turn_time,
@@ -501,10 +513,12 @@ static bool apply_structure_spawn_group_rule(
 
     if (!spawn_npc_at(
         entry->entity,
-        entry->job,
-        entry->dialogue_id,
-        entry->attitude,
-        entry->ai_state,
+        p_rule.job.is_empty() ? entry->job : p_rule.job,
+        p_rule.dialogue_id.is_empty() ? entry->dialogue_id : p_rule.dialogue_id,
+        p_rule.faction.is_empty() ? entry->faction : p_rule.faction,
+        p_rule.reaction_policy.is_empty() ? entry->reaction_policy : p_rule.reaction_policy,
+        p_rule.reaction_radius > 0 ? p_rule.reaction_radius : entry->reaction_radius,
+        p_rule.ai_state.is_empty() ? entry->ai_state : p_rule.ai_state,
         p_world_seed,
         p_spawn_turn_time,
         p_pos,

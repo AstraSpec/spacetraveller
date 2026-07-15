@@ -38,7 +38,9 @@ struct StructureRuleInfo {
     String entity_group;
     String job;
     String dialogue_id;
-    String attitude;
+    String faction;
+    String reaction_policy;
+    int reaction_radius = 0;
     String ai_state;
     uint16_t loot_table = 0;
     uint16_t item_id = 0;

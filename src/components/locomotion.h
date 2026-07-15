@@ -15,11 +15,12 @@ struct LocomotionData {
     std::vector<Vector2i> path;
     int path_index = 0;
     Vector2i path_goal;
+    int path_goal_radius = 0;
 };
 
 namespace Locomotion {
     void init(LocomotionData& data, float speed);
-    void set_path(LocomotionData& data, const std::vector<Vector2i>& new_path, const Vector2i& goal);
+    void set_path(LocomotionData& data, const std::vector<Vector2i>& new_path, const Vector2i& goal, int goal_radius = 0);
     bool peek_next_step(const LocomotionData& data, Vector2i& out_tile);
     void advance_step(LocomotionData& data);
     bool has_path(const LocomotionData& data);

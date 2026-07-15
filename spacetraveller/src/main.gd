@@ -29,6 +29,7 @@ func _ready() -> void:
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()
 	NameDb.initialize_data()
+	FactionDb.initialize_data()
 	JobDb.initialize_data()
 	SpawnDb.initialize_data()
 	EntityGroupDb.initialize_data()

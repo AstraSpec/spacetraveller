@@ -166,7 +166,9 @@ static void parse_rules(
         rule.entity_group = String(rule_data.get("entity_group", rule_data.get("entity_group_id", "")));
         rule.job = String(rule_data.get("job", ""));
         rule.dialogue_id = String(rule_data.get("dialogue_id", ""));
-        rule.attitude = String(rule_data.get("attitude", ""));
+        rule.faction = String(rule_data.get("faction", ""));
+        rule.reaction_policy = String(rule_data.get("reaction_policy", ""));
+        rule.reaction_radius = static_cast<int>(rule_data.get("reaction_radius", 0));
         rule.ai_state = String(rule_data.get("ai_state", ""));
         rule.params = rule_data;
 

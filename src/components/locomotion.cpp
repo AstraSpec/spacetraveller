@@ -1,6 +1,5 @@
 #include "locomotion.h"
 #include <godot_cpp/variant/variant.hpp>
-#include <godot_cpp/variant/array.hpp>
 #include <cmath>
 
 using namespace godot;
@@ -10,12 +9,14 @@ void Locomotion::init(LocomotionData& data, float speed) {
     data.path.clear();
     data.path_index = 0;
     data.path_goal = Vector2i();
+    data.path_goal_radius = 0;
 }
 
-void Locomotion::set_path(LocomotionData& data, const std::vector<Vector2i>& new_path, const Vector2i& goal) {
+void Locomotion::set_path(LocomotionData& data, const std::vector<Vector2i>& new_path, const Vector2i& goal, int goal_radius) {
     data.path = new_path;
     data.path_index = 0;
     data.path_goal = goal;
+    data.path_goal_radius = std::max(0, goal_radius);
 }
 
 bool Locomotion::peek_next_step(const LocomotionData& data, Vector2i& out_tile) {
@@ -38,6 +39,7 @@ void Locomotion::clear_path(LocomotionData& data) {
     data.path.clear();
     data.path_index = 0;
     data.path_goal = Vector2i();
+    data.path_goal_radius = 0;
 }
 
 float Locomotion::get_step_cost(int from_x, int from_y, int to_x, int to_y) {
@@ -50,19 +52,13 @@ float Locomotion::get_step_cost(int from_x, int from_y, int to_x, int to_y) {
 Dictionary Locomotion::serialize(const LocomotionData& data) {
     Dictionary d;
     d["speed"] = data.speed;
-    Array path_arr;
-    for (const auto& p : data.path) path_arr.push_back(p);
-    d["path"] = path_arr;
-    d["path_index"] = data.path_index;
     return d;
 }
 
 void Locomotion::deserialize(LocomotionData& data, const Dictionary& dict) {
     data.speed = static_cast<float>(static_cast<double>(dict.get("speed", 0.8)));
     data.path.clear();
-    Array path_arr = dict.get("path", Array());
-    for (int i = 0; i < path_arr.size(); i++) {
-        data.path.push_back(path_arr[i]);
-    }
-    data.path_index = static_cast<int>(dict.get("path_index", 0));
+    data.path_index = 0;
+    data.path_goal = Vector2i();
+    data.path_goal_radius = 0;
 }

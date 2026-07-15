@@ -31,6 +31,7 @@ uint32_t EntityLedger::spawn_entity(const Vector2i& pos, int z, uint16_t atlas_x
 
     Equipment::init(equipment_data[id]);
     SocialMemory::init(social_data[id]);
+    allegiance_data[id] = AllegianceData();
     return id;
 }
 
@@ -43,6 +44,9 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Health::init(health_data[id], 10000.0f);
     Stamina::init(stamina_data[id], 80.0f);
     Equipment::init(equipment_data[id]);
+    AllegianceData allegiance;
+    allegiance.faction_id = "player";
+    allegiance_data[id] = allegiance;
     
     return id;
 }
@@ -50,14 +54,19 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
 void EntityLedger::destroy_entity(uint32_t id) {
     for (auto& pair : ai_data) {
         AIData& ai = pair.second;
-        ai.relations.erase(id);
         if (ai.target_entity_id == id) {
             ai.target_entity_id = EntityPool::INVALID_ID;
             if (ai.state == AIState::COMBAT || ai.state == AIState::FOLLOW || ai.state == AIState::FLEE) {
-                ai.state = AIState::WANDER;
+                ai.state = ai.home_state;
+                if (ai.home_state == AIState::FOLLOW && ai.follow_leader_id != id) {
+                    ai.target_entity_id = ai.follow_leader_id;
+                }
             }
+            ai.has_last_known_target_position = false;
+            ai.lost_target_turns = 0;
         }
     }
+    for (auto& pair : allegiance_data) pair.second.personal_relations.erase(id);
     anatomy_data.erase(id);
     clothing_data.erase(id);
     inventory_data.erase(id);
@@ -66,7 +75,6 @@ void EntityLedger::destroy_entity(uint32_t id) {
     effects_data.erase(id);
     equipment_data.erase(id);
     locomotion_data.erase(id);
-    perception_memory.erase(id);
     ai_data.erase(id);
     combat_style.erase(id);
     gender.erase(id);
@@ -75,6 +83,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     romance.erase(id);
     social_data.erase(id);
     social_profiles.erase(id);
+    allegiance_data.erase(id);
     vendor_state.erase(id);
     
     entity_pool.destroy_entity(id);
@@ -164,8 +173,7 @@ bool EntityLedger::validate_npc_actor(uint32_t id) const {
     return id != EntityPool::PLAYER_ID
         && has_core_components(id)
         && try_get_locomotion(id) != nullptr
-        && try_get_ai(id) != nullptr
-        && try_get_perception(id) != nullptr;
+        && try_get_ai(id) != nullptr;
 }
 
 bool EntityLedger::validate_combatant(uint32_t id) const {
@@ -196,10 +204,6 @@ void EntityLedger::init_social_profile(uint32_t id, const String& job, const Str
     profile.job = job.is_empty() ? String("drifter") : job;
     profile.dialogue_id = dialogue_id;
 
-    auto anat_it = anatomy_data.find(id);
-    if (anat_it != anatomy_data.end()) {
-        profile.faction = anat_it->second.race_id;
-    }
 }
 
 bool EntityLedger::has_relationship(uint32_t id) const {
@@ -425,7 +429,6 @@ void EntityLedger::deserialize(const Dictionary& data) {
     effects_data.clear();
     equipment_data.clear();
     locomotion_data.clear();
-    perception_memory.clear();
     ai_data.clear();
     combat_style.clear();
     gender.clear();
@@ -434,6 +437,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     romance.clear();
     social_data.clear();
     social_profiles.clear();
+    allegiance_data.clear();
     vendor_state.clear();
 
     Array entities = data.get("entities", Array());
@@ -495,11 +499,6 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["locomotion"] = Locomotion::serialize(loco_it->second);
     }
 
-    auto mem_it = perception_memory.find(id);
-    if (mem_it != perception_memory.end()) {
-        data["perception"] = Perception::serialize(mem_it->second);
-    }
-
     auto ai_it = ai_data.find(id);
     if (ai_it != ai_data.end()) {
         data["ai"] = AIController::serialize(ai_it->second);
@@ -540,6 +539,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["social_profile"] = SocialProfile::serialize(profile_it->second);
     }
 
+    auto allegiance_it = allegiance_data.find(id);
+    if (allegiance_it != allegiance_data.end()) {
+        data["allegiance"] = Allegiance::serialize(allegiance_it->second);
+    }
+
     auto vendor_it = vendor_state.find(id);
     if (vendor_it != vendor_state.end()) {
         Dictionary vendor;
@@ -572,6 +576,7 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
     uint16_t atlas_y = static_cast<uint16_t>(static_cast<int>(data.get("atlas_y", 0)));
 
     entity_pool.create_entity_with_id(id, x, y, z, atlas_x, atlas_y);
+    allegiance_data[id] = AllegianceData();
 
     Entity* e = entity_pool.get_entity(id);
     if (e) {
@@ -618,10 +623,6 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         Locomotion::deserialize(locomotion_data[id], data["locomotion"]);
     }
 
-    if (data.has("perception")) {
-        Perception::deserialize(perception_memory[id], data["perception"]);
-    }
-
     if (data.has("ai")) {
         AIController::deserialize(ai_data[id], data["ai"]);
     }
@@ -655,6 +656,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         SocialProfileData sp;
         SocialProfile::deserialize(sp, data["social_profile"]);
         social_profiles[id] = sp;
+    }
+
+    if (data.has("allegiance")) {
+        Allegiance::deserialize(allegiance_data[id], data["allegiance"]);
     }
 
     if (data.has("vendor")) {

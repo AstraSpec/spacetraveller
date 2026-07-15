@@ -2,7 +2,6 @@
   "id": "mouse",
   "name": "Mouse",
   "atlas": [3, 14],
-  "perception_tier": "raycast",
   "base_hp": 10,
   "speed": 1.5,
   "base_damage": 4,
@@ -10,7 +9,9 @@
   "corpse_item": "corpse_mouse",
   "death_loot_table": "mouse_death",
   "combat_style": "skitter",
-  "faction": "enemy",
+  "faction": "wildlife",
+  "reaction_policy": "timid",
+  "reaction_radius": 6,
   "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

@@ -7,6 +7,8 @@
 namespace godot {
 
 struct ChunkFeatureAreaInfo {
+    String id;
+    String facing;
     Vector2i origin;
     Vector2i size;
 };
@@ -14,6 +16,7 @@ struct ChunkFeatureAreaInfo {
 struct ChunkFeatureSpawnInfo {
     String pool;
     String placement;
+    String scope = "chunk";
     String rotation_mode;
     float chance = 0.0f;
     int candidates = 0;
@@ -30,6 +33,7 @@ struct ChunkInfo {
     int city_min_count = 0;
     int city_max_count = -1;
     float wilderness_spawn_chance = 0.0f;
+    Vector2i wilderness_footprint = Vector2i(1, 1);
     String structure_type;
     String dungeon_type;
     String tile_group;
@@ -47,6 +51,7 @@ struct CityChunkSpawnInfo {
     float city_zone_max = 1.0f;
     int city_min_count = 0;
     int city_max_count = -1;
+    Vector2i wilderness_footprint = Vector2i(1, 1);
 };
 
 class ChunkDb : public Object, public DataBase<ChunkInfo, ChunkDb> {

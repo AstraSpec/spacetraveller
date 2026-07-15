@@ -209,8 +209,6 @@ public:
     uint16_t query_tile_id_at_z(int x, int y, int z);
     TraversalSnapshot build_traversal_snapshot(
         const Vector2i& start,
-        const Vector2i& goal,
-        const std::vector<Vector2i>& blocking_positions = std::vector<Vector2i>(),
         const EntityLedger* ledger = nullptr,
         uint32_t entity_id = UINT32_MAX,
         const String& traversal_profile = "",

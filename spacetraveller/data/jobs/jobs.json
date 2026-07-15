@@ -2,7 +2,7 @@
   "blacksmith": {
     "display_name": "Blacksmith",
     "dialogues": ["blacksmith"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
     "default_ai_state": "idle",
     "atlas_offset": 1,
     "traits": [],
@@ -16,7 +16,7 @@
   "scavenger": {
     "display_name": "Scavenger",
     "dialogues": ["scavenger"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
     "default_ai_state": "wander",
     "atlas_offset": 42,
     "traits": [],
@@ -30,16 +30,17 @@
   "bandit": {
     "display_name": "Bandit",
     "dialogues": [],
-    "default_attitude": "hostile",
-    "default_ai_state": "wander",
+    "reaction_policy": "aggressive",
+    "default_ai_state": "idle",
     "faction": "bandit",
-    "atlas_offset": 42,
+    "atlas_offset": 46,
     "traits": []
   },
   "adventurer": {
     "display_name": "Adventurer",
     "dialogues": ["adventurer"],
-    "default_attitude": "friendly",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 46,
     "traits": []
@@ -47,7 +48,8 @@
   "guild_master": {
     "display_name": "Guild Master",
     "dialogues": ["guild_master"],
-    "default_attitude": "friendly",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 46,
     "traits": [],
@@ -61,7 +63,7 @@
   "mercenary": {
     "display_name": "Mercenary",
     "dialogues": ["mercenary"],
-    "default_attitude": "neutral",
+    "reaction_policy": "aggressive",
     "default_ai_state": "guard",
     "atlas_offset": 17,
     "traits": [],
@@ -70,7 +72,8 @@
   "chief_butler": {
     "display_name": "Chief Butler",
     "dialogues": ["chief_butler"],
-    "default_attitude": "friendly",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 79,
     "traits": [],
@@ -79,7 +82,7 @@
   "guard": {
     "display_name": "Guard",
     "dialogues": ["guard", "guard_church"],
-    "default_attitude": "neutral",
+    "reaction_policy": "aggressive",
     "default_ai_state": "idle",
     "atlas_offset": 17,
     "traits": []
@@ -87,14 +90,16 @@
   "prisoner": {
     "display_name": "Prisoner",
     "dialogues": ["prisoner"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "prisoner",
     "default_ai_state": "wander",
     "traits": []
   },
   "priest": {
     "display_name": "Priest",
     "dialogues": ["priest"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "church",
     "default_ai_state": "idle",
     "atlas_offset": 79,
     "traits": [],
@@ -107,7 +112,8 @@
   "merchant_church": {
     "display_name": "Faith Merchant",
     "dialogues": ["merchant_church"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "church",
     "default_ai_state": "idle",
     "atlas_offset": 79,
     "traits": [],
@@ -116,7 +122,8 @@
   "church_offering": {
     "display_name": "Church Offering",
     "dialogues": ["church_offering"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "church",
     "default_ai_state": "idle",
     "atlas_offset": 79,
     "traits": [],
@@ -125,7 +132,8 @@
   "merchant_fruit_veg": {
     "display_name": "Fruit and Veg Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -134,7 +142,8 @@
   "merchant_fish": {
     "display_name": "Fish Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -143,7 +152,8 @@
   "merchant_food": {
     "display_name": "Food Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -152,7 +162,8 @@
   "merchant_foraging": {
     "display_name": "Foraging Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -161,7 +172,8 @@
   "merchant_weapons": {
     "display_name": "Weapons Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -170,7 +182,8 @@
   "merchant_armor": {
     "display_name": "Armor Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -179,7 +192,8 @@
   "merchant_clothing": {
     "display_name": "Clothing Merchant",
     "dialogues": ["merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
+    "faction": "settlement",
     "default_ai_state": "idle",
     "atlas_offset": 4,
     "traits": [],
@@ -188,7 +202,7 @@
   "merchant_scavenger": {
     "display_name": "Scavenger",
     "dialogues": ["scavenger_merchant"],
-    "default_attitude": "neutral",
+    "reaction_policy": "defensive",
     "default_ai_state": "idle",
     "atlas_offset": 42,
     "traits": [],
@@ -197,14 +211,15 @@
   "monster": {
     "display_name": "Monster",
     "dialogues": [],
-    "default_attitude": "neutral",
+    "reaction_policy": "aggressive",
+    "reaction_radius": 12,
+    "faction": "monster",
     "default_ai_state": "wander",
     "traits": []
   },
   "animal": {
     "display_name": "Animal",
     "dialogues": [],
-    "default_attitude": "neutral",
     "default_ai_state": "wander",
     "traits": []
   }

@@ -20,7 +20,8 @@ namespace ActionPlanner {
         const Intent& raw_intent,
         WorldBubble& bubble,
         uint32_t player_id,
-        bool target_hostile
+        bool target_auto_attack,
+        bool target_interactable
     );
 }
 

@@ -29,20 +29,29 @@ PathResult AStarGridPathfinder::find_path(const PathRequest& request, const Trav
     const Vector2i& start = request.start;
     const Vector2i& end = request.goal;
 
-    if (start == end) {
+    const int goal_radius = std::max(0, request.goal_radius);
+    auto goal_reached = [goal_radius, &end](const Vector2i& pos) {
+        return std::max(std::abs(pos.x - end.x), std::abs(pos.y - end.y)) <= goal_radius;
+    };
+
+    if (goal_reached(start)) {
+        result.found = true;
         return result;
     }
 
-    if (!traversal.is_walkable(end.x, end.y)) {
+    if (goal_radius == 0 && !traversal.is_walkable(end.x, end.y)) {
         return result;
     }
 
     const bool allow_diagonal = request.allow_diagonal();
 
-    auto heuristic = [allow_diagonal](const Vector2i& a, const Vector2i& b) {
-        const int dx = std::abs(a.x - b.x);
-        const int dy = std::abs(a.y - b.y);
-        return allow_diagonal ? std::max(dx, dy) : dx + dy;
+    auto heuristic = [allow_diagonal, goal_radius](const Vector2i& a, const Vector2i& b) {
+        const int dx = std::max(0, std::abs(a.x - b.x) - goal_radius);
+        const int dy = std::max(0, std::abs(a.y - b.y) - goal_radius);
+        if (!allow_diagonal) return 10 * (dx + dy);
+        const int diagonal = std::min(dx, dy);
+        const int straight = std::max(dx, dy) - diagonal;
+        return 14 * diagonal + 10 * straight;
     };
 
     std::priority_queue<AStarNode, std::vector<AStarNode>, std::greater<AStarNode>> open;
@@ -70,8 +79,8 @@ PathResult AStarGridPathfinder::find_path(const PathRequest& request, const Trav
         AStarNode current = open.top();
         open.pop();
 
-        if (current.pos == end) {
-            Vector2i curr = end;
+        if (goal_reached(current.pos)) {
+            Vector2i curr = current.pos;
             while (curr != start) {
                 result.waypoints.push_back(curr);
                 const uint64_t key = WorldCoords::pack_coords(curr.x, curr.y);
@@ -98,10 +107,17 @@ PathResult AStarGridPathfinder::find_path(const PathRequest& request, const Trav
                 continue;
             }
 
-            const int step_cost = traversal.movement_cost(next.x, next.y);
-            if (step_cost <= 0) {
+            const bool diagonal = d.x != 0 && d.y != 0;
+            if (diagonal && (!traversal.is_walkable(current.pos.x + d.x, current.pos.y) ||
+                             !traversal.is_walkable(current.pos.x, current.pos.y + d.y))) {
                 continue;
             }
+
+            const int terrain_cost = traversal.movement_cost(next.x, next.y);
+            if (terrain_cost <= 0) {
+                continue;
+            }
+            const int step_cost = terrain_cost * (diagonal ? 14 : 10);
 
             const uint64_t next_key = WorldCoords::pack_coords(next.x, next.y);
             const int new_g = current.g + step_cost;

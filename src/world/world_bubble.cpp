@@ -648,14 +648,12 @@ bool WorldBubble::has_timed_overlays() const {
 
 TraversalSnapshot WorldBubble::build_traversal_snapshot(
     const Vector2i& start,
-    const Vector2i& goal,
-    const std::vector<Vector2i>& blocking_positions,
     const EntityLedger* ledger,
     uint32_t entity_id,
     const String& traversal_profile,
     bool allow_openable_tiles
 ) {
-    return TraversalSnapshot(this, start, goal, blocking_positions, ledger, entity_id, traversal_profile, allow_openable_tiles);
+    return TraversalSnapshot(this, start, ledger, entity_id, traversal_profile, allow_openable_tiles);
 }
 
 std::vector<LightEmitter> WorldBubble::collect_light_emitters(

@@ -76,6 +76,25 @@ static Vector2i resolve_surface_feature_source_pos(
     }
 }
 
+static Vector2i resolve_surface_feature_placed_pos(
+    int p_source_x,
+    int p_source_y,
+    const Vector2i& p_source_size,
+    uint8_t p_rotation
+) {
+    switch (p_rotation) {
+        case WorldCoords::ROT_WEST:
+            return Vector2i(p_source_size.y - 1 - p_source_y, p_source_x);
+        case WorldCoords::ROT_EAST:
+            return Vector2i(p_source_y, p_source_size.x - 1 - p_source_x);
+        case WorldCoords::ROT_NORTH:
+            return Vector2i(p_source_size.x - 1 - p_source_x, p_source_size.y - 1 - p_source_y);
+        case WorldCoords::ROT_SOUTH:
+        default:
+            return Vector2i(p_source_x, p_source_y);
+    }
+}
+
 static bool surface_feature_rotation_swaps_size(uint8_t p_rotation) {
     return p_rotation == WorldCoords::ROT_EAST || p_rotation == WorldCoords::ROT_WEST;
 }
@@ -103,21 +122,53 @@ static Vector2i rotate_chunk_local_pos(const Vector2i& p_pos, const Vector2i& p_
     }
 }
 
-static Vector2i rotate_chunk_local_size(const Vector2i& p_size, uint8_t p_rotation) {
-    return get_rotated_surface_feature_size(p_size, p_rotation);
+static Vector2i rotate_layout_pos(
+    const Vector2i& p_pos,
+    const Vector2i& p_size,
+    const Vector2i& p_layout_size,
+    uint8_t p_rotation
+) {
+    switch (p_rotation) {
+        case WorldCoords::ROT_WEST:
+            return Vector2i(p_layout_size.y - p_pos.y - p_size.y, p_pos.x);
+        case WorldCoords::ROT_NORTH:
+            return Vector2i(
+                p_layout_size.x - p_pos.x - p_size.x,
+                p_layout_size.y - p_pos.y - p_size.y
+            );
+        case WorldCoords::ROT_EAST:
+            return Vector2i(p_pos.y, p_layout_size.x - p_pos.x - p_size.x);
+        case WorldCoords::ROT_SOUTH:
+        default:
+            return p_pos;
+    }
 }
 
-static uint8_t get_center_facing_rotation(const Vector2i& p_area_origin, const Vector2i& p_area_size) {
-    const float chunk_center = (static_cast<float>(WorldCoords::CHUNK_SIZE) - 1.0f) * 0.5f;
+static uint8_t get_center_facing_rotation(
+    const Vector2i& p_area_origin,
+    const Vector2i& p_area_size,
+    const Vector2i& p_layout_size
+) {
+    const float layout_center_x = (static_cast<float>(p_layout_size.x) - 1.0f) * 0.5f;
+    const float layout_center_y = (static_cast<float>(p_layout_size.y) - 1.0f) * 0.5f;
     const float area_center_x = static_cast<float>(p_area_origin.x) + (static_cast<float>(p_area_size.x) - 1.0f) * 0.5f;
     const float area_center_y = static_cast<float>(p_area_origin.y) + (static_cast<float>(p_area_size.y) - 1.0f) * 0.5f;
-    const float dx = chunk_center - area_center_x;
-    const float dy = chunk_center - area_center_y;
+    const float dx = layout_center_x - area_center_x;
+    const float dy = layout_center_y - area_center_y;
 
     if (std::abs(dx) > std::abs(dy)) {
         return dx >= 0.0f ? WorldCoords::ROT_EAST : WorldCoords::ROT_WEST;
     }
     return dy >= 0.0f ? WorldCoords::ROT_SOUTH : WorldCoords::ROT_NORTH;
+}
+
+static uint8_t parse_feature_facing(const String& p_facing, uint8_t p_default) {
+    const String facing = p_facing.strip_edges().to_lower();
+    if (facing == "south" || facing == "s") return WorldCoords::ROT_SOUTH;
+    if (facing == "west" || facing == "w") return WorldCoords::ROT_WEST;
+    if (facing == "north" || facing == "n") return WorldCoords::ROT_NORTH;
+    if (facing == "east" || facing == "e") return WorldCoords::ROT_EAST;
+    return p_default;
 }
 
 uint32_t WorldGenerator::get_default_biome_chunk_data(int p_z) const {
@@ -597,6 +648,85 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 }
             }
         }
+
+        // Multi-chunk wilderness structures need to be planned as one instance
+        // before the remaining wilderness cells are filled with forest/plains.
+        // This keeps their footprint contiguous and lets the normal structure
+        // context/rendering and save data handle them just like palace layouts.
+        for (const CityChunkSpawnInfo& rule : city_chunk_db->get_wilderness_spawn_chunks()) {
+            const Vector2i requested_footprint = rule.wilderness_footprint;
+            if (requested_footprint.x <= 1 && requested_footprint.y <= 1) continue;
+
+            const ChunkInfo* chunk_info = city_chunk_db->get_chunk_info(rule.id);
+            if (!chunk_info || chunk_info->structure_type.is_empty() ||
+                chunk_info->wilderness_spawn_chance <= 0.0f) {
+                continue;
+            }
+
+            const std::vector<String>* structures = s_db->get_structure_ids_by_type(chunk_info->structure_type);
+            if (!structures || structures->empty()) continue;
+
+            for (int y = 0; y + requested_footprint.y <= WorldCoords::REGION_SIZE; y += requested_footprint.y) {
+                for (int x = 0; x + requested_footprint.x <= WorldCoords::REGION_SIZE; x += requested_footprint.x) {
+                    const Vector2i global_anchor(
+                        regionPos.x * WorldCoords::REGION_SIZE + x,
+                        regionPos.y * WorldCoords::REGION_SIZE + y
+                    );
+                    Rng::Seeded spawn_rng = Rng::at(
+                        static_cast<uint32_t>(world_seed),
+                        global_anchor,
+                        Rng::BIOME,
+                        0x42414E4449544341ULL + static_cast<uint64_t>(rule.id) // "BANDITCA"
+                    );
+                    if (!spawn_rng.chance(chunk_info->wilderness_spawn_chance)) continue;
+
+                    const uint64_t structure_hash = Rng::hash_pos(
+                        static_cast<uint32_t>(world_seed),
+                        global_anchor,
+                        Rng::BIOME
+                    ) ^ static_cast<uint64_t>(rule.id);
+                    const String structure_id = (*structures)[structure_hash % structures->size()];
+                    const StructureInfo* structure = s_db->get_structure_info(structure_id);
+                    if (!structure || structure->size.x <= 0 || structure->size.y <= 0 ||
+                        structure->placement_rotations.empty()) {
+                        continue;
+                    }
+
+                    const uint8_t rotation = structure->placement_rotations[
+                        structure_hash % structure->placement_rotations.size()
+                    ];
+                    const Vector2i placed_size = get_rotated_surface_feature_size(structure->size, rotation);
+                    const int footprint_width = (placed_size.x + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                    const int footprint_height = (placed_size.y + WorldCoords::CHUNK_SIZE - 1) / WorldCoords::CHUNK_SIZE;
+                    if (footprint_width != requested_footprint.x || footprint_height != requested_footprint.y) {
+                        continue;
+                    }
+
+                    bool open_wilderness = true;
+                    for (int dy = 0; dy < footprint_height && open_wilderness; dy++) {
+                        for (int dx = 0; dx < footprint_width; dx++) {
+                            if (cityGenGrid.getPixel(x + dx, y + dy).id != id_void) {
+                                open_wilderness = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (!open_wilderness) continue;
+
+                    placement_candidates.push_back({
+                        Vector2i(x, y),
+                        Vector2i(x, y),
+                        rule.id,
+                        structure_id,
+                        structure->size,
+                        placed_size,
+                        rotation,
+                        footprint_width * footprint_height,
+                        false
+                    });
+                }
+            }
+        }
     }
 
     std::sort(placement_candidates.begin(), placement_candidates.end(), [](const CityPlacementCandidate& a, const CityPlacementCandidate& b) {
@@ -680,6 +810,7 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
                 ChunkDb* chunk_db = ChunkDb::get_singleton();
                 if (chunk_db) {
                     for (const CityChunkSpawnInfo& spawn_info : chunk_db->get_wilderness_spawn_chunks()) {
+                        if (spawn_info.wilderness_footprint.x > 1 || spawn_info.wilderness_footprint.y > 1) continue;
                         const ChunkInfo* spawn_chunk = chunk_db->get_chunk_info(spawn_info.id);
                         if (!spawn_chunk || spawn_chunk->wilderness_spawn_chance <= 0.0f) continue;
 
@@ -1211,27 +1342,6 @@ uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
     return id_void;
 }
 
-bool WorldGenerator::base_allows_feature(uint16_t p_base_tile_id, int p_z) const {
-    if (p_z == 0) {
-        return p_base_tile_id == id_road_bricks ||
-            p_base_tile_id == id_road_flagstone ||
-            p_base_tile_id == id_alley_bricks ||
-            p_base_tile_id == id_alley_flagstone;
-    }
-
-    TileDb* tile_db = TileDb::get_singleton();
-    TagRegistry* tag_reg = TagRegistry::get_singleton();
-    if (!tile_db || !tag_reg) return false;
-
-    const TileInfo* tile = tile_db->get_tile_info(p_base_tile_id);
-    if (!tile || tile->solid) return false;
-
-    const uint16_t ground_tag_id = tag_reg->get_tag_id("GROUND");
-    const uint16_t floor_tag_id = tag_reg->get_tag_id("FLOOR");
-    return (ground_tag_id != 0 && TagRegistry::has_tag(ground_tag_id, tile->tags)) ||
-        (floor_tag_id != 0 && TagRegistry::has_tag(floor_tag_id, tile->tags));
-}
-
 uint16_t WorldGenerator::get_surface_feature_tile_at(
     const String& p_feature_id,
     int p_local_x,
@@ -1250,10 +1360,8 @@ bool WorldGenerator::validate_surface_feature_anchor(
     const Vector2i& p_source_size,
     const Vector2i& p_placed_size,
     uint8_t p_rotation,
-    int p_z,
     int p_world_seed,
     bool p_require_source_chunk,
-    bool p_skip_base_validation,
     int p_source_chunk_x,
     int p_source_chunk_y
 ) {
@@ -1269,14 +1377,6 @@ bool WorldGenerator::validate_surface_feature_anchor(
                 if (floor_div_chunk(world_x) != p_source_chunk_x || floor_div_chunk(world_y) != p_source_chunk_y) {
                     return false;
                 }
-                if (p_skip_base_validation) {
-                    continue;
-                }
-            }
-
-            const uint16_t base_tile = get_base_tile_without_features(world_x, world_y, p_z, p_world_seed);
-            if (!base_allows_feature(base_tile, p_z)) {
-                return false;
             }
         }
     }
@@ -1326,6 +1426,271 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
         return true;
     };
 
+    auto candidates_overlap = [&](const SurfaceFeatureInstance& p_a, const SurfaceFeatureInstance& p_b) {
+        const int min_x = p_a.origin.x > p_b.origin.x ? p_a.origin.x : p_b.origin.x;
+        const int min_y = p_a.origin.y > p_b.origin.y ? p_a.origin.y : p_b.origin.y;
+        const int max_x_a = p_a.origin.x + p_a.placed_size.x;
+        const int max_y_a = p_a.origin.y + p_a.placed_size.y;
+        const int max_x_b = p_b.origin.x + p_b.placed_size.x;
+        const int max_y_b = p_b.origin.y + p_b.placed_size.y;
+        const int max_x = max_x_a < max_x_b ? max_x_a : max_x_b;
+        const int max_y = max_y_a < max_y_b ? max_y_a : max_y_b;
+
+        if (min_x >= max_x || min_y >= max_y) return false;
+
+        for (int wy = min_y; wy < max_y; wy++) {
+            for (int wx = min_x; wx < max_x; wx++) {
+                const uint16_t tile_a = get_surface_feature_tile_at(
+                    p_a.feature_id,
+                    wx - p_a.origin.x,
+                    wy - p_a.origin.y,
+                    p_a.source_size,
+                    p_a.rotation
+                );
+                if (tile_a == 0 || tile_a == id_void) continue;
+
+                const uint16_t tile_b = get_surface_feature_tile_at(
+                    p_b.feature_id,
+                    wx - p_b.origin.x,
+                    wy - p_b.origin.y,
+                    p_b.source_size,
+                    p_b.rotation
+                );
+                if (tile_b != 0 && tile_b != id_void) return true;
+            }
+        }
+
+        return false;
+    };
+
+    // Structure-scoped features are resolved against the complete authored
+    // structure layout. This allows one feature to cross chunk boundaries
+    // without making the placement rules specific to any one structure type.
+    uint32_t current_packed = 0;
+    uint16_t current_chunk_id = 0;
+    uint8_t current_neighbor_mask = 0;
+    if (z == 0 && get_chunk_data(current_cx, current_cy, current_packed, current_chunk_id, current_neighbor_mask)) {
+        (void)current_neighbor_mask;
+        const ChunkInfo* current_chunk_info = chunk_db->get_chunk_info(current_chunk_id);
+        const CityStructureContext owner_context = get_city_structure_context(x, y, z);
+        const StructureInfo* owner_structure = owner_context.valid
+            ? s_db->get_structure_info(owner_context.structure_id)
+            : nullptr;
+        bool has_structure_scoped_features = false;
+        if (current_chunk_info && owner_structure) {
+            for (const ChunkFeatureSpawnInfo& spawn : current_chunk_info->feature_spawns) {
+                if (spawn.scope == "structure") {
+                    has_structure_scoped_features = true;
+                    break;
+                }
+            }
+        }
+
+        if (has_structure_scoped_features) {
+            const uint8_t owner_rotation = static_cast<uint8_t>(
+                (current_packed >> WorldCoords::ORIENTATION_SHIFT) & WorldCoords::ROTATION_MASK
+            );
+            const Vector2i owner_local_pos = resolve_surface_feature_placed_pos(
+                owner_context.local_pos.x,
+                owner_context.local_pos.y,
+                owner_structure->size,
+                owner_rotation
+            );
+            const Vector2i owner_origin(x - owner_local_pos.x, y - owner_local_pos.y);
+            const Vector2i owner_chunk(floor_div_chunk(owner_origin.x), floor_div_chunk(owner_origin.y));
+            const uint64_t owner_key = WorldCoords::pack_coords(owner_chunk.x, owner_chunk.y) ^
+                static_cast<uint64_t>(owner_context.structure_id.hash());
+            const Vector2i rotated_owner_size = get_rotated_surface_feature_size(owner_structure->size, owner_rotation);
+            auto validate_structure_feature_anchor = [&](const SurfaceFeatureInstance& p_candidate) {
+                for (int ly = 0; ly < p_candidate.placed_size.y; ly++) {
+                    for (int lx = 0; lx < p_candidate.placed_size.x; lx++) {
+                        const uint32_t feature_hash = get_hash(
+                            p_candidate.origin.x + lx,
+                            p_candidate.origin.y + ly,
+                            static_cast<uint32_t>(world_seed)
+                        );
+                        const uint16_t feature_tile = get_surface_feature_tile_at(
+                            p_candidate.feature_id,
+                            lx,
+                            ly,
+                            p_candidate.source_size,
+                            p_candidate.rotation,
+                            feature_hash
+                        );
+                        if (feature_tile == 0 || feature_tile == id_void) continue;
+
+                        const Vector2i owner_local_pos(
+                            p_candidate.origin.x + lx - owner_origin.x,
+                            p_candidate.origin.y + ly - owner_origin.y
+                        );
+                        if (owner_local_pos.x < 0 || owner_local_pos.y < 0 ||
+                            owner_local_pos.x >= rotated_owner_size.x || owner_local_pos.y >= rotated_owner_size.y) {
+                            return false;
+                        }
+
+                        const Vector2i source_pos = resolve_surface_feature_source_pos(
+                            owner_local_pos.x,
+                            owner_local_pos.y,
+                            owner_structure->size,
+                            owner_rotation
+                        );
+                        const uint16_t parent_tile = s_db->get_tile_at(
+                            owner_context.structure_id,
+                            source_pos.x,
+                            source_pos.y,
+                            0,
+                            feature_hash
+                        );
+                        if (parent_tile != 0 && parent_tile != id_void) return false;
+                    }
+                }
+                return true;
+            };
+            std::vector<SurfaceFeatureInstance> structure_candidates;
+            std::vector<String> unique_feature_ids;
+            int structure_candidate_index = 0;
+
+            for (const ChunkFeatureSpawnInfo& spawn : current_chunk_info->feature_spawns) {
+                if (spawn.scope != "structure" || spawn.areas.empty()) continue;
+                const FeaturePoolInfo* pool = feature_db->get_feature_pool(spawn.pool);
+                if (!pool || pool->type != "structure_stamp") continue;
+
+                for (int area_index = 0; area_index < static_cast<int>(spawn.areas.size()); area_index++) {
+                    const ChunkFeatureAreaInfo& area = spawn.areas[area_index];
+                    for (int candidate_index = 0; candidate_index < spawn.candidates; candidate_index++) {
+                        const int rule_index = structure_candidate_index++;
+                        Rng::Seeded rng = Rng::at(
+                            static_cast<uint32_t>(world_seed),
+                            owner_chunk,
+                            Rng::BIOME,
+                            SURFACE_FEATURE_SALT ^ owner_key ^
+                                (static_cast<uint64_t>(rule_index) * 0x9E3779B97F4A7C15ULL)
+                        );
+                        if (!rng.chance(spawn.chance)) continue;
+
+                        const bool follows_structure = spawn.rotation_mode == "structure" || spawn.rotation_mode == "center";
+                        const uint8_t area_rotation = follows_structure ? owner_rotation : WorldCoords::ROT_SOUTH;
+                        const uint8_t local_feature_rotation = !area.facing.is_empty()
+                            ? parse_feature_facing(area.facing, WorldCoords::ROT_SOUTH)
+                            : spawn.rotation_mode == "center"
+                                ? get_center_facing_rotation(
+                                    area.origin,
+                                    area.size,
+                                    owner_structure->size
+                                )
+                                : WorldCoords::ROT_SOUTH;
+                        const uint8_t feature_rotation = follows_structure
+                            ? compose_surface_feature_rotation(local_feature_rotation, owner_rotation)
+                            : WorldCoords::ROT_SOUTH;
+                        const Vector2i rotated_area_size = follows_structure
+                            ? get_rotated_surface_feature_size(area.size, area_rotation)
+                            : area.size;
+
+                        std::vector<const FeatureEntryInfo*> fitting_entries;
+                        int fitting_total_weight = 0;
+                        for (const FeatureEntryInfo& pool_entry : pool->entries) {
+                            if (pool_entry.structure_id.is_empty() || pool_entry.weight <= 0) continue;
+                            const Vector2i pool_source_size = s_db->get_structure_size(pool_entry.structure_id);
+                            if (pool_source_size.x <= 0 || pool_source_size.y <= 0) continue;
+                            const Vector2i pool_placed_size = get_rotated_surface_feature_size(
+                                pool_source_size,
+                                feature_rotation
+                            );
+                            if (pool_placed_size.x > rotated_area_size.x ||
+                                pool_placed_size.y > rotated_area_size.y) {
+                                continue;
+                            }
+                            fitting_entries.push_back(&pool_entry);
+                            fitting_total_weight += pool_entry.weight;
+                        }
+                        if (fitting_entries.empty() || fitting_total_weight <= 0) continue;
+
+                        int fitting_roll = rng.range(1, fitting_total_weight);
+                        const FeatureEntryInfo* entry = nullptr;
+                        for (const FeatureEntryInfo* pool_entry : fitting_entries) {
+                            fitting_roll -= pool_entry->weight;
+                            if (fitting_roll <= 0) {
+                                entry = pool_entry;
+                                break;
+                            }
+                        }
+                        if (!entry) continue;
+
+                        SurfaceFeatureInstance candidate;
+                        candidate.chunk_x = owner_chunk.x;
+                        candidate.chunk_y = owner_chunk.y;
+                        candidate.index = rule_index;
+                        candidate.feature_id = entry->structure_id;
+                        candidate.unique = spawn.unique;
+                        candidate.source_size = s_db->get_structure_size(candidate.feature_id);
+                        if (candidate.source_size.x <= 0 || candidate.source_size.y <= 0) continue;
+
+                        candidate.rotation = feature_rotation;
+                        candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
+                        if (candidate.placed_size.x > rotated_area_size.x ||
+                            candidate.placed_size.y > rotated_area_size.y) {
+                            continue;
+                        }
+                        const Vector2i rotated_area_origin = follows_structure
+                            ? rotate_layout_pos(area.origin, area.size, owner_structure->size, area_rotation)
+                            : area.origin;
+                        candidate.origin = owner_origin + rotated_area_origin;
+                        if (!validate_surface_feature_anchor(
+                                candidate.feature_id,
+                                candidate.origin,
+                                candidate.source_size,
+                                candidate.placed_size,
+                                candidate.rotation,
+                                world_seed,
+                                false,
+                                owner_chunk.x,
+                                owner_chunk.y)) {
+                            continue;
+                        }
+                        if (!validate_structure_feature_anchor(candidate)) continue;
+
+                        if (candidate.unique && std::find(unique_feature_ids.begin(), unique_feature_ids.end(), candidate.feature_id) != unique_feature_ids.end()) {
+                            continue;
+                        }
+                        bool overlaps = false;
+                        for (const SurfaceFeatureInstance& prior : structure_candidates) {
+                            if (candidates_overlap(candidate, prior)) {
+                                overlaps = true;
+                                break;
+                            }
+                        }
+                        if (overlaps) continue;
+
+                        if (candidate.unique) unique_feature_ids.push_back(candidate.feature_id);
+                        structure_candidates.push_back(candidate);
+                    }
+                }
+            }
+
+            for (const SurfaceFeatureInstance& candidate : structure_candidates) {
+                if (x < candidate.origin.x || x >= candidate.origin.x + candidate.placed_size.x ||
+                    y < candidate.origin.y || y >= candidate.origin.y + candidate.placed_size.y) {
+                    continue;
+                }
+                const int local_x = x - candidate.origin.x;
+                const int local_y = y - candidate.origin.y;
+                const uint32_t feature_hash = get_hash(x, y, static_cast<uint32_t>(world_seed));
+                const uint16_t tile_id = get_surface_feature_tile_at(
+                    candidate.feature_id,
+                    local_x,
+                    local_y,
+                    candidate.source_size,
+                    candidate.rotation,
+                    feature_hash
+                );
+                if (p_include_void_tiles || (tile_id != 0 && tile_id != id_void)) {
+                    r_instance = candidate;
+                    return true;
+                }
+            }
+        }
+    }
+
     auto placement_is_available = [&](int p_chunk_x, int p_chunk_y, const String& p_placement, uint16_t p_chunk_id, uint8_t p_neighbor_mask, const ChunkFeatureSpawnInfo& p_spawn) -> bool {
         const bool north_south = (p_neighbor_mask & WorldCoords::NEIGH_NORTH) || (p_neighbor_mask & WorldCoords::NEIGH_SOUTH);
         const bool east_west = (p_neighbor_mask & WorldCoords::NEIGH_EAST) || (p_neighbor_mask & WorldCoords::NEIGH_WEST);
@@ -1342,6 +1707,7 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
     };
 
     auto spawn_expanded_count = [&](int p_chunk_x, int p_chunk_y, uint16_t p_chunk_id, uint8_t p_neighbor_mask, const ChunkFeatureSpawnInfo& p_spawn) -> int {
+        if (p_spawn.scope == "structure") return 0;
         if (!placement_is_available(p_chunk_x, p_chunk_y, p_spawn.placement, p_chunk_id, p_neighbor_mask, p_spawn)) return 0;
         const int area_count = p_spawn.placement == FIXED_AREAS_PLACEMENT ? static_cast<int>(p_spawn.areas.size()) : 1;
         return p_spawn.candidates * area_count;
@@ -1421,24 +1787,32 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
 
             const bool follows_chunk_area = spawn_info->rotation_mode == "chunk" || spawn_info->rotation_mode == "center";
             const uint8_t area_rotation = follows_chunk_area ? chunk_rotation : WorldCoords::ROT_SOUTH;
-            const uint8_t local_feature_rotation = spawn_info->rotation_mode == "center"
-                ? get_center_facing_rotation(area.origin, area.size)
-                : WorldCoords::ROT_SOUTH;
+            const uint8_t local_feature_rotation = !area.facing.is_empty()
+                ? parse_feature_facing(area.facing, WorldCoords::ROT_SOUTH)
+                : spawn_info->rotation_mode == "center"
+                    ? get_center_facing_rotation(
+                        area.origin,
+                        area.size,
+                        Vector2i(WorldCoords::CHUNK_SIZE, WorldCoords::CHUNK_SIZE)
+                    )
+                    : WorldCoords::ROT_SOUTH;
 
             candidate.rotation = compose_surface_feature_rotation(local_feature_rotation, area_rotation);
             const Vector2i rotated_area_origin = follows_chunk_area
                 ? rotate_chunk_local_pos(area.origin, area.size, area_rotation)
                 : area.origin;
-            const Vector2i rotated_area_size = follows_chunk_area
-                ? rotate_chunk_local_size(area.size, area_rotation)
-                : area.size;
             candidate.placed_size = get_rotated_surface_feature_size(candidate.source_size, candidate.rotation);
-            if (candidate.placed_size.x > rotated_area_size.x || candidate.placed_size.y > rotated_area_size.y) return candidate;
+            const Vector2i rotated_area_size = follows_chunk_area
+                ? get_rotated_surface_feature_size(area.size, area_rotation)
+                : area.size;
+            if (candidate.placed_size.x > rotated_area_size.x ||
+                candidate.placed_size.y > rotated_area_size.y) {
+                return candidate;
+            }
 
             anchor_x += rotated_area_origin.x;
             anchor_y += rotated_area_origin.y;
             candidate.require_source_chunk = true;
-            candidate.skip_base_validation = z == 0 && chunk_info->dungeon_type.is_empty();
         } else {
             const bool north_south = (neighbor_mask & WorldCoords::NEIGH_NORTH) || (neighbor_mask & WorldCoords::NEIGH_SOUTH);
             const bool east_west = (neighbor_mask & WorldCoords::NEIGH_EAST) || (neighbor_mask & WorldCoords::NEIGH_WEST);
@@ -1483,7 +1857,6 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
                         : ALLEY_GARDEN_START + centered_offset;
                 }
                 candidate.require_source_chunk = true;
-                candidate.skip_base_validation = true;
             } else {
                 const int shoulder_nudge = rng.range(-1, 1);
                 if (!place_horizontal) {
@@ -1513,45 +1886,6 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
         return p_a.index < p_b.index;
     };
 
-    auto candidates_overlap = [&](const SurfaceFeatureInstance& p_a, const SurfaceFeatureInstance& p_b) -> bool {
-        const int min_x = p_a.origin.x > p_b.origin.x ? p_a.origin.x : p_b.origin.x;
-        const int min_y = p_a.origin.y > p_b.origin.y ? p_a.origin.y : p_b.origin.y;
-        const int max_x_a = p_a.origin.x + p_a.placed_size.x;
-        const int max_y_a = p_a.origin.y + p_a.placed_size.y;
-        const int max_x_b = p_b.origin.x + p_b.placed_size.x;
-        const int max_y_b = p_b.origin.y + p_b.placed_size.y;
-        const int max_x = max_x_a < max_x_b ? max_x_a : max_x_b;
-        const int max_y = max_y_a < max_y_b ? max_y_a : max_y_b;
-
-        if (min_x >= max_x || min_y >= max_y) return false;
-
-        for (int wy = min_y; wy < max_y; wy++) {
-            for (int wx = min_x; wx < max_x; wx++) {
-                const uint16_t tile_a = get_surface_feature_tile_at(
-                    p_a.feature_id,
-                    wx - p_a.origin.x,
-                    wy - p_a.origin.y,
-                    p_a.source_size,
-                    p_a.rotation
-                );
-                if (tile_a == 0 || tile_a == id_void) continue;
-
-                const uint16_t tile_b = get_surface_feature_tile_at(
-                    p_b.feature_id,
-                    wx - p_b.origin.x,
-                    wy - p_b.origin.y,
-                    p_b.source_size,
-                    p_b.rotation
-                );
-                if (tile_b != 0 && tile_b != id_void) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
     auto is_blocked_by_prior_candidate = [&](const SurfaceFeatureInstance& p_candidate) -> bool {
         for (int cy = p_candidate.chunk_y - 1; cy <= p_candidate.chunk_y + 1; cy++) {
             for (int cx = p_candidate.chunk_x - 1; cx <= p_candidate.chunk_x + 1; cx++) {
@@ -1559,7 +1893,7 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
                 for (int index = 0; index < candidate_count; index++) {
                     SurfaceFeatureInstance prior = build_candidate(cx, cy, index);
                     if (!prior.valid || !candidate_has_priority(prior, p_candidate)) continue;
-                    if (!validate_surface_feature_anchor(prior.feature_id, prior.origin, prior.source_size, prior.placed_size, prior.rotation, z, world_seed, prior.require_source_chunk, prior.skip_base_validation, prior.chunk_x, prior.chunk_y)) continue;
+                    if (!validate_surface_feature_anchor(prior.feature_id, prior.origin, prior.source_size, prior.placed_size, prior.rotation, world_seed, prior.require_source_chunk, prior.chunk_x, prior.chunk_y)) continue;
                     if (p_candidate.unique &&
                         prior.chunk_x == p_candidate.chunk_x &&
                         prior.chunk_y == p_candidate.chunk_y &&
@@ -1588,7 +1922,7 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
 
                 if (x >= placed.origin.x && x < placed.origin.x + placed.placed_size.x &&
                     y >= placed.origin.y && y < placed.origin.y + placed.placed_size.y) {
-                    if (!validate_surface_feature_anchor(placed.feature_id, placed.origin, placed.source_size, placed.placed_size, placed.rotation, z, world_seed, placed.require_source_chunk, placed.skip_base_validation, placed.chunk_x, placed.chunk_y)) {
+                    if (!validate_surface_feature_anchor(placed.feature_id, placed.origin, placed.source_size, placed.placed_size, placed.rotation, world_seed, placed.require_source_chunk, placed.chunk_x, placed.chunk_y)) {
                         continue;
                     }
                     if (is_blocked_by_prior_candidate(placed)) {
@@ -1611,9 +1945,7 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
     return false;
 }
 
-uint16_t WorldGenerator::get_feature_tile(int x, int y, int z, uint16_t base_tile_id, int world_seed) {
-    if (base_tile_id == id_void || base_tile_id == 0) return id_void;
-
+uint16_t WorldGenerator::get_feature_tile(int x, int y, int z, int world_seed) {
     SurfaceFeatureInstance instance;
     if (!find_feature_at(x, y, z, world_seed, instance)) {
         return id_void;
@@ -2226,7 +2558,7 @@ bool WorldGenerator::is_stone_brick_floor_loot_candidate(int x, int y, int z, in
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     uint16_t base_tile_id = get_base_surface_tile(x, y, world_seed);
-    uint16_t feature_tile_id = get_feature_tile(x, y, 0, base_tile_id, world_seed);
+    uint16_t feature_tile_id = get_feature_tile(x, y, 0, world_seed);
     return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
 }
 
@@ -2247,7 +2579,7 @@ uint16_t WorldGenerator::get_tile(int x, int y, int z, int world_seed) {
     }
 
     uint16_t base_tile_id = get_base_tile_without_features(x, y, z, world_seed);
-    uint16_t feature_tile_id = get_feature_tile(x, y, z, base_tile_id, world_seed);
+    uint16_t feature_tile_id = get_feature_tile(x, y, z, world_seed);
     return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
 }
 

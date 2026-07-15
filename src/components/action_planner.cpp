@@ -6,7 +6,8 @@ ActionPlan ActionPlanner::plan_player_intent(
     const Intent& raw_intent,
     WorldBubble& bubble,
     uint32_t player_id,
-    bool target_hostile
+    bool target_auto_attack,
+    bool target_interactable
 ) {
     ActionPlan plan;
     plan.intent = raw_intent;
@@ -17,11 +18,13 @@ ActionPlan ActionPlanner::plan_player_intent(
 
     const WorldBubble::CellEntity* occupant = bubble.get_entity_at(raw_intent.target.x, raw_intent.target.y);
     if (occupant && occupant->entity_id != player_id) {
-        if (target_hostile) {
+        if (target_auto_attack) {
             plan.intent.type = IntentType::ATTACK;
-        } else {
+        } else if (target_interactable) {
             plan.should_interact = true;
             plan.interact_target = occupant->entity_id;
+        } else {
+            plan.intent.type = IntentType::NONE;
         }
         return plan;
     }

@@ -2,7 +2,6 @@
   "id": "cow",
   "name": "Cow",
   "atlas": [1, 16],
-  "perception_tier": "raycast",
   "base_hp": 200,
   "speed": 0.6,
   "base_damage": 5,
@@ -10,7 +9,9 @@
   "corpse_item": "",
   "death_loot_table": "cow_death",
   "combat_style": "default",
-  "faction": "enemy",
+  "faction": "livestock",
+  "reaction_policy": "timid",
+  "reaction_radius": 8,
   "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

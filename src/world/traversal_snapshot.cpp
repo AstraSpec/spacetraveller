@@ -1,16 +1,14 @@
 #include "traversal_snapshot.h"
 #include "world_bubble.h"
-#include "core/world_coords.h"
 #include "entities/entity_ledger.h"
 #include "world/traversal_rules.h"
+#include "core/world_coords.h"
 
 using namespace godot;
 
 TraversalSnapshot::TraversalSnapshot(
     WorldBubble* p_bubble,
     const Vector2i& p_start,
-    const Vector2i& p_goal,
-    const std::vector<Vector2i>& p_blocking_positions,
     const EntityLedger* p_ledger,
     uint32_t p_entity_id,
     const String& p_traversal_profile,
@@ -20,19 +18,10 @@ TraversalSnapshot::TraversalSnapshot(
     entity_id(p_entity_id),
     traversal_profile(p_traversal_profile),
     allow_openable_tiles(p_allow_openable_tiles),
-    start(p_start),
-    goal(p_goal) {
-    for (const Vector2i& pos : p_blocking_positions) {
-        if (pos == start || pos == goal) continue;
-        blocking_cells.insert(WorldCoords::pack_coords(pos.x, pos.y));
-    }
-}
+    start(p_start) {}
 
 bool TraversalSnapshot::compute_walkable(int x, int y) const {
     if (!bubble) return false;
-
-    const uint64_t cell_key = WorldCoords::pack_coords(x, y);
-    if (blocking_cells.count(cell_key) > 0) return false;
 
     const uint16_t tile_id = bubble->query_tile_id(x, y);
     if (ledger && entity_id != INVALID_ENTITY_ID) {

@@ -19,6 +19,7 @@
 #include "data/name_db.h"
 #include "data/quest_db.h"
 #include "data/job_db.h"
+#include "data/faction_db.h"
 #include "data/spawn_db.h"
 #include "data/entity_group_db.h"
 #include "data/loot_db.h"
@@ -58,6 +59,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(NameDb);
 	GDREGISTER_CLASS(QuestDb);
 	GDREGISTER_CLASS(JobDb);
+	GDREGISTER_CLASS(FactionDb);
 	GDREGISTER_CLASS(SpawnDb);
 	GDREGISTER_CLASS(EntityGroupDb);
 	GDREGISTER_CLASS(LootDb);
@@ -110,6 +112,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	JobDb::create_singleton();
 	Engine::get_singleton()->register_singleton("JobDb", JobDb::get_singleton());
+
+	FactionDb::create_singleton();
+	Engine::get_singleton()->register_singleton("FactionDb", FactionDb::get_singleton());
 
 	SpawnDb::create_singleton();
 	Engine::get_singleton()->register_singleton("SpawnDb", SpawnDb::get_singleton());
@@ -182,6 +187,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("JobDb");
 	JobDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("FactionDb");
+	FactionDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("SpawnDb");
 	SpawnDb::delete_singleton();

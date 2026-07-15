@@ -646,24 +646,16 @@ func _update_npc_options_for_race(race_id: String) -> void:
 		NpcDialogueContainer.visible = sapient
 	if NpcJobText:
 		var job := NpcJobText.text.strip_edges().to_lower()
-		if sapient:
-			if job.is_empty() or job == "monster" or job == "animal":
-				NpcJobText.text = "scavenger"
-		elif job.is_empty() or (job != "monster" and job != "animal"):
-			NpcJobText.text = "monster"
+		if ((sapient and (job == "monster" or job == "animal")) or
+			(!sapient and !job.is_empty() and job != "monster" and job != "animal")):
+			NpcJobText.text = ""
 	if !sapient:
 		if NpcDialogueText:
 			NpcDialogueText.text = ""
 	_refresh_npc_dialogue_menu()
 
-func _npc_job_for_race(race_id: String) -> String:
-	var job := NpcJobText.text.strip_edges().to_lower() if NpcJobText else ""
-	if job.is_empty():
-		return _default_job_for_race(race_id)
-	return job
-
-func _default_job_for_race(race_id: String) -> String:
-	return "scavenger" if _is_sapient_race(race_id) else "monster"
+func _npc_job_for_race(_race_id: String) -> String:
+	return NpcJobText.text.strip_edges().to_lower() if NpcJobText else ""
 
 func place_at(pos: Vector2i, id: String, type: String = "tile"):
 	if !is_inside_bubble(pos): return
@@ -699,7 +691,7 @@ func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount:
 				World.remove_ground_item(world_pos, id, erase_amount)
 				_remove_item_rule(world_pos, id, erase_amount)
 		"npc":
-			if place_npc(world_pos, id):
+			if place_npc(world_pos, id, _npc_job_for_race(id)):
 				_set_npc_rule(world_pos, id)
 		"npc_erase":
 			erase_npc(world_pos)
@@ -719,13 +711,18 @@ func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount:
 		_:
 			World.place_tile(world_pos.x, world_pos.y, id)
 
-func place_npc(world_pos: Vector2i, race_id: String) -> bool:
+func place_npc(world_pos: Vector2i, race_id: String, job_id: String = "") -> bool:
 	if !World or race_id.is_empty():
 		return false
 	erase_npc(world_pos)
 	if World.has_entity_at_cell(world_pos.x, world_pos.y):
 		return false
-	var entity_id: int = World.spawn_entity(world_pos.x, world_pos.y, race_id)
+	var normalized_job := job_id.strip_edges().to_lower()
+	var entity_id: int = (
+		World.spawn_entity(world_pos.x, world_pos.y, race_id)
+		if normalized_job.is_empty()
+		else World.spawn_entity_with_job(world_pos.x, world_pos.y, race_id, normalized_job)
+	)
 	if entity_id >= 0 and entity_id != 4294967295:
 		editor_npc_entities[_npc_key(world_pos)] = entity_id
 		return true
@@ -792,9 +789,10 @@ func _set_npc_rule(world_pos: Vector2i, race_id: String) -> void:
 	var rule := {
 		"type": "spawn_entity",
 		"entity": race_id,
-		"pos": _rule_pos_array(local_pos),
-		"job": job
+		"pos": _rule_pos_array(local_pos)
 	}
+	if !job.is_empty():
+		rule["job"] = job
 	if _is_sapient_race(race_id):
 		var dialogue_id := _selected_dialogue_id_for_job(job)
 		if !dialogue_id.is_empty():
@@ -1027,8 +1025,7 @@ func _apply_selected_content_options(type: String, rule: Dictionary, is_primary:
 	if type == "npc":
 		if NpcJobText:
 			var job := str(rule.get("job", "")).strip_edges()
-			if !job.is_empty():
-				NpcJobText.text = job
+			NpcJobText.text = job
 		_refresh_npc_dialogue_menu()
 		if NpcDialogueText:
 			NpcDialogueText.text = str(rule.get("dialogue_id", "")).strip_edges()
@@ -1170,7 +1167,7 @@ func _store_npc_content(local_pos: Vector2i, rule: Dictionary) -> void:
 	if race_id.is_empty():
 		return
 	var world_pos := _world_pos_from_local(local_pos)
-	if !place_npc(world_pos, race_id):
+	if !place_npc(world_pos, race_id, str(rule.get("job", ""))):
 		return
 	var stored_rule := rule.duplicate(true)
 	stored_rule["type"] = "spawn_entity"
@@ -1788,14 +1785,14 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 					var stored_rule := {
 						"type": "spawn_entity",
 						"entity": race_id,
-						"pos": _rule_pos_array(pos),
-						"job": str(rule.get("job", "")).strip_edges()
+						"pos": _rule_pos_array(pos)
 					}
-					if str(stored_rule["job"]).is_empty():
-						stored_rule["job"] = _default_job_for_race(race_id)
+					var stored_job := str(rule.get("job", "")).strip_edges()
+					if !stored_job.is_empty():
+						stored_rule["job"] = stored_job
 					if _is_sapient_race(race_id):
 						var dialogue_id := str(rule.get("dialogue_id", "")).strip_edges()
-						if !dialogue_id.is_empty() and _job_allows_dialogue(str(stored_rule["job"]), dialogue_id):
+						if !dialogue_id.is_empty() and _job_allows_dialogue(stored_job, dialogue_id):
 							stored_rule["dialogue_id"] = dialogue_id
 					rules[_pos_key(pos)] = stored_rule
 					continue
@@ -1963,7 +1960,11 @@ func _apply_editor_rules_for_level(z: int) -> void:
 		var race_id := str(rule.get("entity", rule.get("race_id", "")))
 		if race_id.is_empty():
 			continue
-		place_npc(_world_pos_from_local(_rule_pos_from_variant(rule.get("pos", []))), race_id)
+		place_npc(
+			_world_pos_from_local(_rule_pos_from_variant(rule.get("pos", []))),
+			race_id,
+			str(rule.get("job", ""))
+		)
 	var item_rules: Dictionary = editor_item_rules_by_level.get(key, {})
 	var item_keys: Array = item_rules.keys()
 	item_keys.sort()

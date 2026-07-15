@@ -20,7 +20,9 @@ struct SpawnRuleInfo {
     std::vector<uint16_t> tile_tags;
     String job;
     String dialogue_id;
-    String attitude;
+    String faction;
+    String reaction_policy;
+    int reaction_radius = 0;
     String ai_state;
 };
 

@@ -20,6 +20,7 @@ enum class IntentType { NONE, MOVE, ATTACK, SMASH, PICKUP, CLOSE, OPEN, CHANGE_Z
 struct Intent {
     IntentType type = IntentType::NONE;
     Vector2i target;
+    uint32_t entity_target_id = UINT32_MAX;
     String param;
     int amount = 0;
     String attack_ability;

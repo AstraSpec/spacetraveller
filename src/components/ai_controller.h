@@ -6,56 +6,47 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
-#include <unordered_map>
 #include "action_resolver.h"
-#include "perception.h"
 
 namespace godot {
 
 struct LocomotionData;
-struct PerceptionMemory;
-class WorldBubble;
-class TileDb;
 struct PathResult;
 struct Entity;
 
 enum class AIState { WANDER, COMBAT, IDLE, FOLLOW, FLEE, GUARD };
-enum class EntityRelation { NEUTRAL, FRIENDLY, HOSTILE };
+enum class ReactionPolicy { PASSIVE, TIMID, DEFENSIVE, AGGRESSIVE, PREDATORY };
 
 struct AIData {
     AIState state = AIState::WANDER;
-    String disposition = "neutral";
-    std::unordered_map<uint32_t, EntityRelation> relations;
+    AIState home_state = AIState::WANDER;
+    ReactionPolicy reaction_policy = ReactionPolicy::DEFENSIVE;
+    int reaction_radius = 12;
+    Vector2i home_position;
     uint32_t target_entity_id = std::numeric_limits<uint32_t>::max();
     // The leader remains separate from target_entity_id so an escort can
     // temporarily enter combat and then resume following afterward.
     uint32_t follow_leader_id = std::numeric_limits<uint32_t>::max();
-    PerceptionTier perception_tier = PerceptionTier::RAYCAST;
-    Vector2i wander_center;
+    bool has_last_known_target_position = false;
+    Vector2i last_known_target_position;
+    int lost_target_turns = 0;
     float wander_radius = 4.0f;
-    int wander_cooldown = 0;
-    int stuck_counter = 0;
-    // Runtime-only tracking used to invalidate a follower's path when its
-    // leader moves.  The path is rebuilt after loading rather than relying on
-    // this transient value being serialized.
-    bool has_follow_target_position = false;
-    Vector2i follow_target_position;
-    bool has_combat_path_target_position = false;
-    Vector2i combat_path_target_position;
-    int combat_replan_cooldown = 0;
+    int calm_scan_countdown = 0;
+    int wait_turns = 0;
+    int blocked_move_count = 0;
+    int path_retry_countdown = 0;
+    bool forced_reaction = false;
 };
 
 struct AIContext {
     const Entity& self;
-    WorldBubble& bubble;
-    const TileDb& tile_db;
-    const PerceptionMemory& perception;
     const Vector2i& target_pos;
+    uint32_t target_entity_id = std::numeric_limits<uint32_t>::max();
     bool has_target = false;
-    const std::function<bool(Vector2i)>& can_enter;
-    const std::function<PathResult(Vector2i, Vector2i)>& find_path;
-    const std::function<bool(Vector2i, Vector2i&)>& get_flow_step;
+    bool target_visible = false;
     bool target_same_level = true;
+    const std::function<bool(Vector2i)>& can_enter_terrain;
+    const std::function<PathResult(Vector2i, Vector2i, int)>& find_path;
 };
 
 namespace AIController {
@@ -63,9 +54,8 @@ namespace AIController {
     AIState state_from_string(const String& value);
     String state_to_string(AIState value);
     bool is_valid_state_name(const String& value);
-    String normalize_disposition(const String& value);
-    EntityRelation relation_from_string(const String& value);
-    String relation_to_string(EntityRelation value);
+    ReactionPolicy reaction_policy_from_string(const String& value);
+    String reaction_policy_to_string(ReactionPolicy value);
     Dictionary serialize(const AIData& data);
     void deserialize(AIData& data, const Dictionary& dict);
 }

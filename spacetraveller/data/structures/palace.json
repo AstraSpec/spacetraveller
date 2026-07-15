@@ -711,6 +711,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             101,
@@ -721,6 +722,7 @@
                     {
                         "dialogue_id": "priest",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "priest",
                         "pos": [
                             21,
@@ -731,6 +733,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             22,
@@ -741,6 +744,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             56,
@@ -751,6 +755,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             56,
@@ -771,6 +776,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             58,
@@ -781,6 +787,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             61,
@@ -791,6 +798,7 @@
                     {
                         "dialogue_id": "mercenary",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "mercenary",
                         "pos": [
                             62,
@@ -801,6 +809,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             63,
@@ -811,6 +820,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             63,
@@ -821,6 +831,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             72,
@@ -831,6 +842,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             76,
@@ -841,6 +853,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             81,
@@ -851,6 +864,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             92,
@@ -861,6 +875,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             92,
@@ -871,6 +886,7 @@
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
+                        "faction": "settlement",
                         "job": "guard",
                         "pos": [
                             97,

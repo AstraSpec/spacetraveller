@@ -13,6 +13,7 @@ enum PathRequestFlags : uint32_t {
 struct PathRequest {
     Vector2i start;
     Vector2i goal;
+    int goal_radius = 0;
     uint32_t flags = 0;
 
     bool allow_diagonal() const {

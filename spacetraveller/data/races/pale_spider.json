@@ -2,7 +2,6 @@
   "id": "pale_spider",
   "name": "Pale Spider",
   "atlas": [2, 15],
-  "perception_tier": "raycast",
   "base_hp": 35,
   "speed": 1.2,
   "base_damage": 6,
@@ -10,7 +9,9 @@
   "corpse_item": "corpse_pale_spider",
   "death_loot_table": "pale_spider_death",
   "combat_style": "skitter",
-  "faction": "enemy",
+  "faction": "monster",
+  "reaction_policy": "aggressive",
+  "reaction_radius": 12,
   "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

@@ -18,7 +18,6 @@ struct RacePartDefinition {
 struct RaceInfo {
     String name;
     Vector2i atlas;
-    String perception_tier;
     float base_hp = 100.0f;
     float speed = 1.0f;
     float base_damage = 10.0f;
@@ -27,6 +26,8 @@ struct RaceInfo {
     uint16_t death_loot_table = 0;
     String combat_style = "default";
     String faction;
+    String reaction_policy = "defensive";
+    int reaction_radius = 12;
     String traversal_profile = "walker";
     std::vector<uint16_t> tags;
     std::vector<RacePartDefinition> parts;

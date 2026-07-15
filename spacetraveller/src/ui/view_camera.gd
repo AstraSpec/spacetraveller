@@ -70,7 +70,7 @@ func _update_camera_pos(newPos: Vector2):
 		newPos.x = clamp(newPos.x, limits.position.x, limits.end.x)
 		newPos.y = clamp(newPos.y, limits.position.y, limits.end.y)
 
-	position = newPos.round()
+	position = newPos
 	
 	if viewport:
 		viewport.render_target_update_mode = SubViewport.UPDATE_ONCE

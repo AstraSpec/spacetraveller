@@ -19,6 +19,7 @@ func _ready() -> void:
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
 	RaceDb.initialize_data()
+	FactionDb.initialize_data()
 	JobDb.initialize_data()
 	EntityGroupDb.initialize_data()
 

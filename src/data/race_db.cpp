@@ -22,7 +22,6 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     RaceInfo info;
     info.name = p_data.get("name", "");
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
-    info.perception_tier = p_data.get("perception_tier", "raycast");
     info.base_hp = static_cast<float>(static_cast<double>(p_data.get("base_hp", 100.0)));
     info.speed = static_cast<float>(static_cast<double>(p_data.get("speed", 1.0)));
     info.base_damage = static_cast<float>(static_cast<double>(p_data.get("base_damage", 10.0)));
@@ -33,7 +32,9 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
         info.death_loot_table = IdRegistry::get_singleton()->register_string(death_loot_table);
     }
     info.combat_style = p_data.get("combat_style", "default");
-    info.faction = p_data.get("faction", "");
+    info.faction = String(p_data.get("faction", "unaffiliated")).to_lower();
+    info.reaction_policy = String(p_data.get("reaction_policy", "defensive")).to_lower();
+    info.reaction_radius = static_cast<int>(p_data.get("reaction_radius", 12));
     info.traversal_profile = String(p_data.get("traversal_profile", "walker")).to_lower();
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.light = parse_light_emission(p_data.get("light", Variant()));

@@ -44,7 +44,15 @@ void ChunkDb::initialize_data() {
         }
 
         if (info.wilderness_spawn_chance > 0.0f) {
-            wilderness_spawn_chunks.push_back({ id, static_cast<int>(info.wilderness_spawn_chance * 1000000.0f) });
+            wilderness_spawn_chunks.push_back({
+                id,
+                static_cast<int>(info.wilderness_spawn_chance * 1000000.0f),
+                0.0f,
+                1.0f,
+                0,
+                -1,
+                info.wilderness_footprint
+            });
         }
     }
 
@@ -74,6 +82,13 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     info.wilderness_spawn_chance = static_cast<float>(static_cast<double>(p_data.get("wilderness_spawn_chance", 0.0)));
     if (info.wilderness_spawn_chance < 0.0f) info.wilderness_spawn_chance = 0.0f;
     if (info.wilderness_spawn_chance > 1.0f) info.wilderness_spawn_chance = 1.0f;
+    info.wilderness_footprint = variant_to_vector2i(
+        p_data.get("wilderness_footprint", Array()),
+        Vector2i(1, 1)
+    );
+    if (info.wilderness_footprint.x <= 0 || info.wilderness_footprint.y <= 0) {
+        info.wilderness_footprint = Vector2i(1, 1);
+    }
     
     info.structure_type = String(p_data.get("structure_type", ""));
     info.dungeon_type = String(p_data.get("dungeon_type", ""));
@@ -103,6 +118,8 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
             ChunkFeatureSpawnInfo spawn;
             spawn.pool = String(spawn_data.get("pool", ""));
             spawn.placement = String(spawn_data.get("placement", ""));
+            spawn.scope = String(spawn_data.get("scope", "chunk"));
+            if (spawn.scope.is_empty()) spawn.scope = "chunk";
             spawn.rotation_mode = String(spawn_data.get("rotation", "fixed"));
             spawn.chance = static_cast<float>(static_cast<double>(spawn_data.get("chance", 0.0)));
             spawn.candidates = static_cast<int>(spawn_data.get("candidates", Variant(1)));
@@ -116,6 +133,8 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
 
                     Dictionary area_data = areas[area_idx];
                     ChunkFeatureAreaInfo area;
+                    area.id = String(area_data.get("id", ""));
+                    area.facing = String(area_data.get("facing", ""));
                     area.origin = variant_to_vector2i(area_data.get("origin", Array()));
                     area.size = variant_to_vector2i(area_data.get("size", Array()));
                     if (area.origin.x < 0 || area.origin.y < 0) continue;

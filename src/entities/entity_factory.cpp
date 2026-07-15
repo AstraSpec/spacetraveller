@@ -9,12 +9,11 @@
 #include "data/job_db.h"
 #include "data/name_db.h"
 #include "core/rng.h"
-#include "core/faction.h"
 #include "components/locomotion.h"
-#include "components/perception.h"
 #include "components/ai_controller.h"
 
 #include <cstdlib>
+#include <algorithm>
 
 using namespace godot;
 
@@ -62,13 +61,12 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
     JobDb* job_db = JobDb::get_singleton();
     const JobInfo* job_info = nullptr;
-    String default_job = sapient ? String("scavenger") : String("monster");
-    if (job_db) {
-        job_info = job_db->get_job_info(overrides.job.is_empty() ? default_job : overrides.job);
+    if (job_db && !overrides.job.is_empty()) {
+        job_info = job_db->get_job_info(overrides.job);
     }
-    String job = !overrides.job.is_empty() ? overrides.job : (job_info ? job_info->id : default_job);
+    String job = overrides.job;
     if (!job_info && job_db) {
-        job_info = job_db->get_job_info(job);
+        if (!job.is_empty()) job_info = job_db->get_job_info(job);
     }
 
     int atlas_x = race->atlas.x + (job_info ? job_info->atlas_offset : 0);
@@ -101,9 +99,6 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
         ledger.init_social_profile(id, job, overrides.dialogue_id);
 
         SocialProfileData& profile = ledger.social_profiles[id];
-        if (job_info && !job_info->faction.is_empty()) {
-            profile.faction = job_info->faction;
-        }
         if (!overrides.traits.is_empty()) {
             for (int i = 0; i < overrides.traits.size(); i++) {
                 profile.traits.push_back(String(overrides.traits[i]));
@@ -130,37 +125,33 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     }
 
     AIData& ai = ledger.ai_data[id];
-    String default_disposition = race->faction.is_empty()
-        ? String("neutral")
-        : String("hostile");
+    String faction = race->faction.is_empty() ? String("unaffiliated") : race->faction;
+    String reaction_policy = race->reaction_policy;
+    int reaction_radius = race->reaction_radius;
     String default_ai_state = "wander";
 
     if (job_info) {
-        if (!job_info->default_attitude.is_empty()) {
-            default_disposition = job_info->default_attitude;
-        }
+        if (!job_info->faction.is_empty()) faction = job_info->faction;
+        if (!job_info->reaction_policy.is_empty()) reaction_policy = job_info->reaction_policy;
+        if (job_info->reaction_radius > 0) reaction_radius = job_info->reaction_radius;
         if (!job_info->default_ai_state.is_empty()) {
             default_ai_state = job_info->default_ai_state;
         }
     }
 
-    ai.disposition = AIController::normalize_disposition(
-        overrides.attitude.is_empty() ? default_disposition : overrides.attitude
-    );
+    if (!overrides.faction.is_empty()) faction = overrides.faction;
+    if (!overrides.reaction_policy.is_empty()) reaction_policy = overrides.reaction_policy;
+    if (overrides.reaction_radius > 0) reaction_radius = overrides.reaction_radius;
+    ledger.allegiance_data[id].faction_id = faction.to_lower();
+    ai.reaction_policy = AIController::reaction_policy_from_string(reaction_policy);
+    ai.reaction_radius = std::max(1, reaction_radius);
     ai.state = AIController::state_from_string(
         overrides.ai_state.is_empty() ? default_ai_state : overrides.ai_state
     );
-    ai.wander_center = pos;
+    ai.home_state = ai.state;
+    ai.home_position = pos;
     ai.wander_radius = 4.0f;
-    ai.stuck_counter = 0;
-
-    if (race->perception_tier == "full_occlusion") {
-        ai.perception_tier = PerceptionTier::FULL_OCCLUSION;
-    } else {
-        ai.perception_tier = PerceptionTier::RAYCAST;
-    }
-
-    ledger.perception_memory[id] = PerceptionMemory{};
+    ai.calm_scan_countdown = 0;
 
     if (!EntityLifecycle::activate_entity(id, pos, p_initial_turn_time, ledger, tracker, bubble, scheduler)) {
         ledger.destroy_entity(id);

@@ -18,7 +18,6 @@ func save_game(slot_name: String = "") -> void:
 	var full_path = App.save_path.path_join(slot_name + ".json")
 	
 	var data = {
-		"version": 1,
 		"time": TimeManager.total_turns,
 		"world": _GameWorld.get_save_data(),
 	}

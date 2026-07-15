@@ -10,11 +10,11 @@
 #include "components/effects.h"
 #include "components/equipment.h"
 #include "components/locomotion.h"
-#include "components/perception.h"
 #include "components/ai_controller.h"
 #include "components/relationship_tuning.h"
 #include "components/social_memory.h"
 #include "components/social_profile.h"
+#include "components/allegiance.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -59,7 +59,6 @@ public:
     std::unordered_map<uint32_t, EffectsData> effects_data;
     std::unordered_map<uint32_t, EquipmentData> equipment_data;
     std::unordered_map<uint32_t, LocomotionData> locomotion_data;
-    std::unordered_map<uint32_t, PerceptionMemory> perception_memory;
     std::unordered_map<uint32_t, AIData> ai_data;
     std::unordered_map<uint32_t, String> combat_style;
     std::unordered_map<uint32_t, String> gender;
@@ -68,6 +67,7 @@ public:
     std::unordered_map<uint32_t, int> romance;
     std::unordered_map<uint32_t, SocialMemoryData> social_data;
     std::unordered_map<uint32_t, SocialProfileData> social_profiles;
+    std::unordered_map<uint32_t, AllegianceData> allegiance_data;
     std::unordered_map<uint32_t, VendorState> vendor_state;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
@@ -93,8 +93,6 @@ public:
     const InventoryData* try_get_inventory(uint32_t id) const { return try_get_ptr(inventory_data, id); }
     EffectsData* try_get_effects(uint32_t id) { return try_get_ptr(effects_data, id); }
     const EffectsData* try_get_effects(uint32_t id) const { return try_get_ptr(effects_data, id); }
-    PerceptionMemory* try_get_perception(uint32_t id) { return try_get_ptr(perception_memory, id); }
-    const PerceptionMemory* try_get_perception(uint32_t id) const { return try_get_ptr(perception_memory, id); }
     AIData* try_get_ai(uint32_t id) { return try_get_ptr(ai_data, id); }
     const AIData* try_get_ai(uint32_t id) const { return try_get_ptr(ai_data, id); }
     String* try_get_combat_style(uint32_t id) { return try_get_ptr(combat_style, id); }
@@ -107,6 +105,8 @@ public:
     const SocialMemoryData* try_get_social_memory(uint32_t id) const { return try_get_ptr(social_data, id); }
     SocialProfileData* try_get_social_profile(uint32_t id) { return try_get_ptr(social_profiles, id); }
     const SocialProfileData* try_get_social_profile(uint32_t id) const { return try_get_ptr(social_profiles, id); }
+    AllegianceData* try_get_allegiance(uint32_t id) { return try_get_ptr(allegiance_data, id); }
+    const AllegianceData* try_get_allegiance(uint32_t id) const { return try_get_ptr(allegiance_data, id); }
     VendorState* try_get_vendor_state(uint32_t id) { return try_get_ptr(vendor_state, id); }
     const VendorState* try_get_vendor_state(uint32_t id) const { return try_get_ptr(vendor_state, id); }
 

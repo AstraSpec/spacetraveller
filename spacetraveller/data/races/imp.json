@@ -2,7 +2,6 @@
   "id": "imp",
   "name": "Imp",
   "atlas": [104, 6],
-  "perception_tier": "raycast",
   "base_hp": 70,
   "speed": 1.15,
   "base_damage": 8,
@@ -10,7 +9,9 @@
   "corpse_item": "corpse_imp",
   "death_loot_table": "human_death",
   "combat_style": "default",
-  "faction": "human",
+  "faction": "unaffiliated",
+  "reaction_policy": "defensive",
+  "reaction_radius": 12,
   "traversal_profile": "smart_walker",
   "tags": ["GENDER", "SAPIENT"],
   "parts": [

@@ -1,0 +1,46 @@
+{
+  "player": {
+    "display_name": "Player",
+    "relations": {
+      "church": "allied",
+      "settlement": "allied",
+      "livestock": "allied",
+      "bandit": "hostile",
+      "monster": "hostile"
+    }
+  },
+  "church": {
+    "display_name": "Church",
+    "relations": {
+      "settlement": "allied",
+      "livestock": "allied",
+      "bandit": "hostile",
+      "monster": "hostile"
+    }
+  },
+  "settlement": {
+    "display_name": "Settlement",
+    "relations": {
+      "livestock": "allied",
+      "bandit": "hostile",
+      "monster": "hostile"
+    }
+  },
+  "bandit": {
+    "display_name": "Bandit",
+    "relations": { "monster": "hostile" }
+  },
+  "monster": {
+    "display_name": "Monster",
+    "relations": {
+      "livestock": "hostile",
+      "prisoner": "hostile",
+      "wildlife": "hostile"
+    }
+  },
+  "predator": { "display_name": "Predator" },
+  "wildlife": { "display_name": "Wildlife" },
+  "livestock": { "display_name": "Livestock" },
+  "prisoner": { "display_name": "Prisoner" },
+  "unaffiliated": { "display_name": "Unaffiliated" }
+}

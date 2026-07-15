@@ -14,7 +14,8 @@ struct JobInfo {
     String id;
     String display_name;
     std::vector<String> dialogues;
-    String default_attitude;
+    String reaction_policy;
+    int reaction_radius = 0;
     String default_ai_state;
     String faction;
     int atlas_offset = 0;
@@ -43,7 +44,8 @@ public:
 
     String get_display_name(const String &p_id) const;
     Array get_dialogues(const String &p_id) const;
-    String get_default_attitude(const String &p_id) const;
+    String get_reaction_policy(const String &p_id) const;
+    int get_reaction_radius(const String &p_id) const;
     String get_default_ai_state(const String &p_id) const;
     String get_faction(const String &p_id) const;
     int get_atlas_offset(const String &p_id) const;

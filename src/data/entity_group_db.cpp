@@ -42,7 +42,9 @@ EntityGroupInfo EntityGroupDb::_parse_row(const Dictionary &p_data) {
 
         entry.job = String(entry_data.get("job", ""));
         entry.dialogue_id = String(entry_data.get("dialogue_id", ""));
-        entry.attitude = String(entry_data.get("attitude", ""));
+        entry.faction = String(entry_data.get("faction", "")).to_lower();
+        entry.reaction_policy = String(entry_data.get("reaction_policy", "")).to_lower();
+        entry.reaction_radius = static_cast<int>(entry_data.get("reaction_radius", 0));
         entry.ai_state = String(entry_data.get("ai_state", ""));
 
         info.total_weight += entry.weight;

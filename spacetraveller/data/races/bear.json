@@ -2,7 +2,6 @@
   "id": "bear",
   "name": "Bear",
   "atlas": [15, 14],
-  "perception_tier": "full_occlusion",
   "base_hp": 300,
   "speed": 0.8,
   "base_damage": 20,
@@ -10,7 +9,9 @@
   "corpse_item": "corpse_bear",
   "death_loot_table": "bear_death",
   "combat_style": "maul",
-  "faction": "enemy",
+  "faction": "predator",
+  "reaction_policy": "predatory",
+  "reaction_radius": 12,
   "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },

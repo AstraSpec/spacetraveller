@@ -5,6 +5,7 @@
 #include "path/path_result.h"
 #include "data/tile_db.h"
 #include "data/race_db.h"
+#include "data/faction_db.h"
 #include "data/style_db.h"
 #include "data/loot_db.h"
 #include "core/world_coords.h"
@@ -32,12 +33,6 @@
 
 using namespace godot;
 
-namespace {
-
-constexpr int COMBAT_FLOW_MIN_GROUP = 8;
-
-}
-
 void SimulationDirector::configure(const SimulationDirectorDeps& deps) {
     d = deps;
 }
@@ -51,37 +46,23 @@ const RaceInfo* SimulationDirector::get_race_info(uint32_t entity_id) const {
 }
 
 String SimulationDirector::entity_faction(uint32_t entity_id) const {
-    if (const SocialProfileData* profile = d.ledger->try_get_social_profile(entity_id)) {
-        if (!profile->faction.is_empty()) {
-            return profile->faction;
-        }
-        if (profile->job == "monster") {
-            return "enemy";
-        }
-    }
-
-    const RaceInfo* race = get_race_info(entity_id);
-    return race ? race->faction : String();
+    const AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
+    return allegiance ? allegiance->faction_id : String("unaffiliated");
 }
 
 bool SimulationDirector::entity_is_hostile_to(uint32_t entity_id, uint32_t target_id) const {
     if (entity_id == target_id) return false;
     if (!d.ledger->is_alive(entity_id) || !d.ledger->is_alive(target_id)) return false;
 
-    if (const AIData* ai = d.ledger->try_get_ai(entity_id)) {
-        auto relation_it = ai->relations.find(target_id);
-        if (relation_it != ai->relations.end()) {
-            if (relation_it->second == EntityRelation::HOSTILE) return true;
-            if (relation_it->second == EntityRelation::FRIENDLY) return false;
-        }
-
-        const String disposition = AIController::normalize_disposition(ai->disposition);
-        if (disposition == "friendly" || disposition == "fearful" || disposition == "passive") {
-            return false;
+    const AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
+    if (allegiance) {
+        auto personal = allegiance->personal_relations.find(target_id);
+        if (personal != allegiance->personal_relations.end()) {
+            return personal->second == EntityRelation::HOSTILE;
         }
     }
-
-    return Faction::are_hostile(entity_faction(entity_id), entity_faction(target_id));
+    FactionDb* factions = FactionDb::get_singleton();
+    return factions && factions->get_relation_value(entity_faction(entity_id), entity_faction(target_id)) == FactionRelation::HOSTILE;
 }
 
 bool SimulationDirector::can_interact_with_entity(uint32_t entity_id) const {
@@ -91,8 +72,7 @@ bool SimulationDirector::can_interact_with_entity(uint32_t entity_id) const {
     if (entity_is_hostile_to(d.player_entity_id, entity_id) || entity_is_hostile_to(entity_id, d.player_entity_id)) {
         return false;
     }
-    const AIData* ai = d.ledger->try_get_ai(entity_id);
-    return !ai || ai->state != AIState::COMBAT;
+    return true;
 }
 
 bool SimulationDirector::set_entity_relation(uint32_t entity_id, uint32_t target_id, const String& relation) {
@@ -100,23 +80,29 @@ bool SimulationDirector::set_entity_relation(uint32_t entity_id, uint32_t target
         !d.ledger->get_entity_pool().contains(target_id)) {
         return false;
     }
-    AIData* ai = d.ledger->try_get_ai(entity_id);
-    if (!ai) return false;
+    AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
+    if (!allegiance) return false;
 
-    const EntityRelation value = AIController::relation_from_string(relation);
+    const EntityRelation value = Allegiance::relation_from_string(relation);
     if (value == EntityRelation::NEUTRAL) {
-        ai->relations.erase(target_id);
+        allegiance->personal_relations.erase(target_id);
     } else {
-        ai->relations[target_id] = value;
+        allegiance->personal_relations[target_id] = value;
     }
     return true;
 }
 
 String SimulationDirector::get_entity_relation(uint32_t entity_id, uint32_t target_id) const {
-    const AIData* ai = d.ledger->try_get_ai(entity_id);
-    if (!ai) return "neutral";
-    auto relation_it = ai->relations.find(target_id);
-    return relation_it == ai->relations.end() ? String("neutral") : AIController::relation_to_string(relation_it->second);
+    const AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
+    if (allegiance) {
+        auto personal = allegiance->personal_relations.find(target_id);
+        if (personal != allegiance->personal_relations.end()) return Allegiance::relation_to_string(personal->second);
+    }
+    FactionDb* factions = FactionDb::get_singleton();
+    const FactionRelation relation = factions
+        ? factions->get_relation_value(entity_faction(entity_id), entity_faction(target_id))
+        : FactionRelation::NEUTRAL;
+    return Faction::relation_to_attitude_string(relation);
 }
 
 bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
@@ -132,14 +118,18 @@ bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
 
     // Keep the relationship and behavior change together so the UI cannot
     // leave an NPC friendly without also assigning its follow order.
-    ai->relations[d.player_entity_id] = EntityRelation::FRIENDLY;
+    AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
+    if (!allegiance) return false;
+    allegiance->faction_id = "player";
+    allegiance->personal_relations[d.player_entity_id] = EntityRelation::FRIENDLY;
     ai->state = AIState::FOLLOW;
+    ai->home_state = AIState::FOLLOW;
     ai->target_entity_id = d.player_entity_id;
     ai->follow_leader_id = d.player_entity_id;
-    ai->stuck_counter = 0;
-    ai->has_follow_target_position = false;
-    ai->has_combat_path_target_position = false;
-    ai->combat_replan_cooldown = 0;
+    ai->blocked_move_count = 0;
+    ai->path_retry_countdown = 0;
+    ai->wait_turns = 0;
+    ai->forced_reaction = false;
 
     if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
         Locomotion::clear_path(*loco);
@@ -165,12 +155,27 @@ bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& s
     }
     if (next_state == AIState::FOLLOW) {
         ai->follow_leader_id = target_id;
-    } else {
+    } else if (next_state != AIState::COMBAT && next_state != AIState::FLEE) {
         ai->follow_leader_id = EntityPool::INVALID_ID;
     }
     ai->state = next_state;
-    ai->has_combat_path_target_position = false;
-    ai->combat_replan_cooldown = 0;
+    ai->forced_reaction = next_state == AIState::COMBAT || next_state == AIState::FLEE;
+    if (next_state == AIState::COMBAT || next_state == AIState::FLEE) {
+        if (const Entity* target = d.ledger->get_entity_pool().get_entity(target_id)) {
+            ai->last_known_target_position = Vector2i(target->x, target->y);
+            ai->has_last_known_target_position = true;
+            ai->lost_target_turns = 0;
+        }
+    }
+    if (next_state != AIState::COMBAT && next_state != AIState::FLEE) {
+        ai->home_state = next_state;
+        if (const Entity* entity = d.ledger->get_entity_pool().get_entity(entity_id)) {
+            ai->home_position = Vector2i(entity->x, entity->y);
+        }
+    }
+    ai->blocked_move_count = 0;
+    ai->path_retry_countdown = 0;
+    ai->wait_turns = 0;
     if (LocomotionData* loco = d.ledger->try_get_locomotion(entity_id)) {
         Locomotion::clear_path(*loco);
     }
@@ -227,41 +232,6 @@ Array SimulationDirector::get_entity_targetable_body_parts(uint32_t entity_id) c
     if (!anatomy) return Array();
     Dictionary functional = Anatomy::get_functional_list(*anatomy);
     return functional.get("parts", Array());
-}
-
-uint32_t SimulationDirector::find_nearest_hostile(uint32_t entity_id, int radius) const {
-    const Entity* self = d.ledger->get_entity_pool().get_entity(entity_id);
-    if (!self) return EntityPool::INVALID_ID;
-
-    uint32_t best_id = EntityPool::INVALID_ID;
-    long best_dist_sq = -1;
-
-    std::vector<uint32_t> candidates;
-    if (d.tracker) {
-        d.tracker->query_radius(Vector2i(self->x, self->y), radius, candidates, self->z);
-    } else {
-        candidates = d.ledger->get_entity_pool().get_live_ids();
-    }
-
-    for (uint32_t other_id : candidates) {
-        if (other_id == entity_id) continue;
-        const Entity* other = d.ledger->get_entity_pool().get_entity(other_id);
-        if (!other) continue;
-
-        // Cheap bounding-box reject before any distance math.
-        int dx = other->x - self->x;
-        int dy = other->y - self->y;
-        if (dx > radius || dx < -radius || dy > radius || dy < -radius) continue;
-
-        if (!entity_is_hostile_to(entity_id, other_id)) continue;
-
-        long dist_sq = static_cast<long>(dx) * dx + static_cast<long>(dy) * dy;
-        if (best_dist_sq < 0 || dist_sq < best_dist_sq) {
-            best_dist_sq = dist_sq;
-            best_id = other_id;
-        }
-    }
-    return best_id;
 }
 
 float SimulationDirector::entity_base_damage(uint32_t entity_id) const {
@@ -533,11 +503,18 @@ bool SimulationDirector::plan_player_intent(Intent& intent) {
     if (occupant && !target_hostile) {
         target_hostile = entity_is_hostile_to(occupant->entity_id, d.player_entity_id);
     }
+    const bool target_interactable = occupant && can_interact_with_entity(occupant->entity_id);
+    bool target_auto_attack = target_hostile;
+    if (occupant && !target_interactable) {
+        const AIData* target_ai = d.ledger->try_get_ai(occupant->entity_id);
+        target_auto_attack = target_auto_attack || (target_ai && target_ai->state == AIState::COMBAT);
+    }
     ActionPlan plan = ActionPlanner::plan_player_intent(
         intent,
         *d.bubble,
         d.player_entity_id,
-        target_hostile
+        target_auto_attack,
+        target_interactable
     );
     if (plan.should_interact) {
         d.sink->on_interact_event(d.player_entity_id, plan.interact_target);
@@ -590,10 +567,6 @@ ActionResult SimulationDirector::resolve_player_attack(const Intent& intent) {
         }
     }
 
-    // Attacking establishes a directional personal relationship and a concrete
-    // combat target, rather than relying on a temporary player-specific flag.
-    set_entity_relation(defender_id, d.player_entity_id, "hostile");
-    set_entity_behavior(defender_id, "combat", d.player_entity_id);
     float cost = resolve_attack(
         d.player_entity_id,
         defender_id,
@@ -817,6 +790,56 @@ float SimulationDirector::submit_player_change_z(int delta) {
     return result.success ? result.cost : 0.0f;
 }
 
+void SimulationDirector::notify_attack(uint32_t attacker_id, uint32_t defender_id) {
+    const Entity* attacker = d.ledger->get_entity_pool().get_entity(attacker_id);
+    const Entity* defender = d.ledger->get_entity_pool().get_entity(defender_id);
+    if (!attacker || !defender || attacker->z != defender->z) return;
+    set_entity_relation(defender_id, attacker_id, "hostile");
+
+    std::vector<uint32_t> observers;
+    const int radius = d.bubble->get_active_radius();
+    if (d.tracker) {
+        d.tracker->query_rect(
+            Vector2i(defender->x - radius, defender->y - radius),
+            Vector2i(defender->x + radius, defender->y + radius),
+            observers,
+            defender->z
+        );
+    } else {
+        observers = d.ledger->get_entity_pool().get_live_ids();
+    }
+
+    TileDb* tile_db = TileDb::get_singleton();
+    for (uint32_t observer_id : observers) {
+        if (observer_id == attacker_id || !d.ledger->is_alive(observer_id)) continue;
+        AIData* ai = d.ledger->try_get_ai(observer_id);
+        Entity* observer = d.ledger->get_entity_pool().get_entity(observer_id);
+        if (!ai || !observer || observer->z != attacker->z) continue;
+        const bool is_defender = observer_id == defender_id;
+        if (!is_defender && get_entity_relation(observer_id, defender_id) != "friendly") continue;
+        const int distance = std::max(abs(observer->x - attacker->x), abs(observer->y - attacker->y));
+        if (!is_defender && distance > ai->reaction_radius) continue;
+        if (!is_defender && tile_db &&
+            (!Perception::has_line_of_sight(observer->x, observer->y, attacker->x, attacker->y, *d.bubble, *tile_db) ||
+             !Perception::has_line_of_sight(observer->x, observer->y, defender->x, defender->y, *d.bubble, *tile_db))) {
+            continue;
+        }
+
+        set_entity_relation(observer_id, attacker_id, "hostile");
+        if (ai->reaction_policy == ReactionPolicy::PASSIVE) continue;
+        ai->target_entity_id = attacker_id;
+        ai->last_known_target_position = Vector2i(attacker->x, attacker->y);
+        ai->has_last_known_target_position = true;
+        ai->lost_target_turns = 0;
+        ai->state = ai->reaction_policy == ReactionPolicy::TIMID ? AIState::FLEE : AIState::COMBAT;
+        ai->forced_reaction = false;
+        ai->blocked_move_count = 0;
+        ai->path_retry_countdown = 0;
+        ai->wait_turns = 0;
+        if (LocomotionData* loco = d.ledger->try_get_locomotion(observer_id)) Locomotion::clear_path(*loco);
+    }
+}
+
 float SimulationDirector::resolve_attack(
     uint32_t attacker_id,
     uint32_t defender_id,
@@ -834,15 +857,15 @@ float SimulationDirector::resolve_attack(
         return 0.0f;
     }
 
+    notify_attack(attacker_id, defender_id);
+
     if (atk.no_limbs) {
         d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "no_limbs", atk.verb, "");
         return ActionCost::ATTACK;
     }
 
     if (atk.exhausted) {
-        if (is_player) {
-            d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "exhausted", atk.verb, "");
-        }
+        d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "exhausted", atk.verb, "");
         return ActionCost::ATTACK;
     }
 
@@ -872,25 +895,6 @@ void SimulationDirector::process_game_turn(float current_time) {
 
     EntityPool& pool = d.ledger->get_entity_pool();
 
-    combat_flow_enabled = false;
-    const Entity* player = pool.get_entity(d.player_entity_id);
-    if (player) {
-        int combat_flow_candidates = 0;
-        for (uint32_t id : pool.get_live_ids()) {
-            if (id == d.player_entity_id) continue;
-            const Entity* candidate = pool.get_entity(id);
-            const AIData* ai = d.ledger->try_get_ai(id);
-            if (candidate && ai && candidate->z == player->z &&
-                ai->state == AIState::COMBAT && ai->target_entity_id == d.player_entity_id) {
-                ++combat_flow_candidates;
-            }
-        }
-        combat_flow_enabled = combat_flow_candidates >= COMBAT_FLOW_MIN_GROUP;
-    }
-    if (!combat_flow_enabled) {
-        combat_flow_fields.clear();
-    }
-
     while (d.scheduler->peek_time() <= current_time) {
         uint32_t entity_id = d.scheduler->pop();
         if (entity_id == EntityPool::INVALID_ID) break;
@@ -914,78 +918,13 @@ Array SimulationDirector::request_player_path(const Vector2i& start, const Vecto
     return find_path_with_flags(start, goal, PATH_FLAG_ALLOW_DIAGONAL);
 }
 
-bool SimulationDirector::get_combat_flow_step(
-    uint32_t entity_id,
-    uint32_t target_id,
-    const Vector2i& target_pos,
-    int target_z,
-    const Vector2i& from,
-    Vector2i& out_step
-) {
-    if (!combat_flow_enabled || target_id != d.player_entity_id ||
-        !d.ledger || !d.bubble) {
-        return false;
-    }
-
-    const Entity* target = d.ledger->get_entity_pool().get_entity(target_id);
-    if (!target || target->z != target_z) {
-        return false;
-    }
-
-    const String profile_id = TraversalRules::get_entity_profile_id(entity_id, *d.ledger);
-    const bool allow_openable_tiles = TraversalRules::can_profile_open_doors(profile_id);
-    const int radius = d.bubble->get_active_radius();
-    const uint64_t terrain_revision = d.bubble->get_traversal_revision();
-
-    CombatFlowCacheEntry* cache = nullptr;
-    for (CombatFlowCacheEntry& entry : combat_flow_fields) {
-        if (entry.profile_id == profile_id) {
-            cache = &entry;
-            break;
-        }
-    }
-    if (!cache) {
-        combat_flow_fields.push_back(CombatFlowCacheEntry{profile_id, CombatFlowField()});
-        cache = &combat_flow_fields.back();
-    }
-
-    if (!cache->field.matches(
-        target_pos,
-        target_z,
-        radius,
-        profile_id,
-        allow_openable_tiles,
-        terrain_revision
-    )) {
-        const bool built = cache->field.build(
-            *d.bubble,
-            target_pos,
-            target_z,
-            radius,
-            profile_id,
-            allow_openable_tiles,
-            terrain_revision
-        );
-        if (!built) {
-            return false;
-        }
-    }
-
-    return cache->field.get_step(from, out_step);
-}
-
 Array SimulationDirector::find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags) {
     if (!d.pathfinder) {
         return Array();
     }
 
-    std::vector<Vector2i> blocking;
-    blocking.push_back(start);
-
     TraversalSnapshot traversal = d.bubble->build_traversal_snapshot(
         start,
-        goal,
-        blocking,
         d.ledger,
         d.player_entity_id
     );

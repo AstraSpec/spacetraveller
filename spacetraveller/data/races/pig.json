@@ -2,7 +2,6 @@
   "id": "pig",
   "name": "Pig",
   "atlas": [2, 16],
-  "perception_tier": "raycast",
   "base_hp": 60,
   "speed": 0.8,
   "base_damage": 3,
@@ -10,7 +9,9 @@
   "corpse_item": "",
   "death_loot_table": "pig_death",
   "combat_style": "default",
-  "faction": "enemy",
+  "faction": "livestock",
+  "reaction_policy": "timid",
+  "reaction_radius": 8,
   "traversal_profile": "walker",
   "parts": [
     { "id": "torso", "parent": "", "count": 1, "height": "MID" },
