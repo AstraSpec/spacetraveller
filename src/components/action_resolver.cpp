@@ -7,6 +7,7 @@
 #include "locomotion.h"
 #include "data/tile_db.h"
 #include "core/tag_registry.h"
+#include "core/debug_flags.h"
 #include "entities/entity_ledger.h"
 #include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
@@ -69,16 +70,18 @@ MovePreview ActionResolver::preview_move(const Intent& intent, const Entity& ent
         return preview;
     }
 
-    uint16_t tile_id = bubble.query_tile_id_at_z(intent.target.x, intent.target.y, entity.z);
     int target_z = entity.z;
-    if (tile_is_air(tile_id)) {
-        if (!find_fall_landing(entity.id, intent.target.x, intent.target.y, entity.z, bubble, ledger, target_z)) {
+    if (!(DebugFlags::is_debug_mode_enabled() && entity.id == PLAYER_ENTITY_ID)) {
+        uint16_t tile_id = bubble.query_tile_id_at_z(intent.target.x, intent.target.y, entity.z);
+        if (tile_is_air(tile_id)) {
+            if (!find_fall_landing(entity.id, intent.target.x, intent.target.y, entity.z, bubble, ledger, target_z)) {
+                preview.failure = ActionFailure::BLOCKED_TILE;
+                return preview;
+            }
+        } else if (!can_enter_tile(entity.id, tile_id, ledger)) {
             preview.failure = ActionFailure::BLOCKED_TILE;
             return preview;
         }
-    } else if (!can_enter_tile(entity.id, tile_id, ledger)) {
-        preview.failure = ActionFailure::BLOCKED_TILE;
-        return preview;
     }
 
     if (target_z != entity.z && !tracker) {
@@ -169,7 +172,17 @@ ActionResult ActionResolver::resolve_smash(const Intent& intent, Entity& entity,
         return ActionResult::make_failure(ActionFailure::INVALID_TARGET);
     }
 
-    bubble.place_tile(intent.target.x, intent.target.y, "dirt", WorldBubble::LAYER_TILE);
+    TileDb* tile_db = TileDb::get_singleton();
+    IdRegistry* id_reg = IdRegistry::get_singleton();
+    const uint16_t tile_id = bubble.query_tile_id(intent.target.x, intent.target.y);
+    const TileInfo* tile = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+    const uint16_t fallback = id_reg ? id_reg->get_id("dirt") : 0;
+    bubble.place_tile_id(
+        intent.target.x,
+        intent.target.y,
+        tile && tile->destroyed_to != 0 ? tile->destroyed_to : fallback,
+        WorldBubble::LAYER_TILE
+    );
 
     return ActionResult::make_success(ActionCost::SMASH);
 }
@@ -233,16 +246,19 @@ ActionResult ActionResolver::resolve_change_z(const Intent& intent, Entity& enti
         return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
     }
 
-    TileDb* tile_db = TileDb::get_singleton();
-    TagRegistry* tag_reg = TagRegistry::get_singleton();
-    if (!tile_db || !tag_reg) {
-        return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
-    }
+    const bool player_noclip = DebugFlags::is_debug_mode_enabled() && entity.id == PLAYER_ENTITY_ID;
+    if (!player_noclip) {
+        TileDb* tile_db = TileDb::get_singleton();
+        TagRegistry* tag_reg = TagRegistry::get_singleton();
+        if (!tile_db || !tag_reg) {
+            return ActionResult::make_failure(ActionFailure::MISSING_COMPONENT);
+        }
 
-    const uint16_t tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, entity.z);
-    const uint16_t required_tag = tag_reg->get_tag_id(delta > 0 ? "ASCEND_LEVEL" : "DESCENT_LEVEL");
-    if (required_tag == 0 || !tile_db->has_tag(tile_id, required_tag)) {
-        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+        const uint16_t tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, entity.z);
+        const uint16_t required_tag = tag_reg->get_tag_id(delta > 0 ? "ASCEND_LEVEL" : "DESCENT_LEVEL");
+        if (required_tag == 0 || !tile_db->has_tag(tile_id, required_tag)) {
+            return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+        }
     }
 
     const int old_z = entity.z;
@@ -254,9 +270,11 @@ ActionResult ActionResolver::resolve_change_z(const Intent& intent, Entity& enti
         return ActionResult::make_failure(ActionFailure::OCCUPIED);
     }
 
-    const uint16_t destination_tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, new_z);
-    if (destination_tile_id == 0 || !TraversalRules::can_enter(entity.id, destination_tile_id, *ledger)) {
-        return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+    if (!player_noclip) {
+        const uint16_t destination_tile_id = bubble.query_tile_id_at_z(entity.x, entity.y, new_z);
+        if (destination_tile_id == 0 || !TraversalRules::can_enter(entity.id, destination_tile_id, *ledger)) {
+            return ActionResult::make_failure(ActionFailure::BLOCKED_TILE);
+        }
     }
 
     if (!tracker->move(entity.id, old_pos, new_pos)) {

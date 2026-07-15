@@ -95,7 +95,7 @@
     "description": "A raw iron that can be smelted into an ingot.",
     "type": "material",
     "price": 100,
-    "atlas": [ 7, 21 ],
+    "atlas": [ 26, 31 ],
     "weight": 0.4,
     "tags": []
   },
@@ -499,6 +499,46 @@
     "price": 150,
     "atlas": [ 62, 18 ],
     "weight": 0.03,
+    "tags": []
+  },
+  {
+    "id": "gold_ore",
+    "name": "Gold Ore",
+    "description": "Gold-bearing rock ready for future processing.",
+    "type": "material",
+    "price": 400,
+    "atlas": [ 28, 31 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
+    "id": "copper_ore",
+    "name": "Copper Ore",
+    "description": "Chalcopyrite ore containing copper.",
+    "type": "material",
+    "price": 75,
+    "atlas": [ 27, 31 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
+    "id": "coal",
+    "name": "Coal",
+    "description": "A dense piece of combustible coal.",
+    "type": "material",
+    "price": 30,
+    "atlas": [ 29, 31 ],
+    "weight": 0.2,
+    "tags": []
+  },
+  {
+    "id": "salt",
+    "name": "Salt",
+    "description": "Crystals of mineral salt broken from a halite deposit.",
+    "type": "material",
+    "price": 20,
+    "atlas": [ 30, 31 ],
+    "weight": 0.2,
     "tags": []
   }
 ]

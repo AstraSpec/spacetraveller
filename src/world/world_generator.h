@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cstdint>
+#include <memory>
 #include "core/world_coords.h"
 #include "core/rng.h"
 #include "world/dungeon_generator.h"
@@ -56,6 +57,7 @@ struct CityStructureContext {
 
 class WorldGenerator {
 private:
+    std::unique_ptr<class OreGenerator> ore_generator;
     std::unordered_map<int, BiomeLayer> biome_layers;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
     BiomeInfo alley_gap_tiles;
@@ -217,6 +219,8 @@ public:
     CityStructureContext get_city_structure_context(int x, int y, int z) const;
     String get_dungeon_type_for_cell(int x, int y, int z, int world_seed);
     bool is_stone_brick_floor_loot_candidate(int x, int y, int z, int world_seed);
+    Dictionary get_ore_debug_info(int x, int y, int z, int world_seed);
+    Array get_ore_candidates_for_chunk(int chunk_x, int chunk_y, int world_seed);
     
     void apply_auto_tiling(const Vector2i& p_region_pos);
     uint16_t pick_weighted_tile(const BiomeInfo& info, uint32_t hash);
@@ -233,7 +237,7 @@ public:
     void clear_region_chunks();
     Dictionary serialize_city_structures() const;
     void deserialize_city_structures(const Array& p_data);
-    void invalidate_cache() { last_chunk_valid = false; reset_dungeon_cache(); }
+    void invalidate_cache();
 };
 
 }

@@ -62,6 +62,10 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     if (!spawn_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.spawn_loot_table = IdRegistry::get_singleton()->register_string(spawn_loot_table);
     }
+    String destroyed_to = String(p_data.get("destroyed_to", ""));
+    if (!destroyed_to.is_empty() && IdRegistry::get_singleton()) {
+        info.destroyed_to = IdRegistry::get_singleton()->register_string(destroyed_to);
+    }
     String opens_to = String(p_data.get("opens_to", ""));
     if (!opens_to.is_empty() && IdRegistry::get_singleton()) {
         info.opens_to = IdRegistry::get_singleton()->register_string(opens_to);

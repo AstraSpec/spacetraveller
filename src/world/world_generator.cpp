@@ -11,6 +11,7 @@
 #include "cave_generator.h"
 #include "dungeon_generator.h"
 #include "gen_grid.h"
+#include "ore_generator.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
 #include <cmath>
@@ -50,7 +51,7 @@ static bool city_spawn_zone_contains(
     return p_city_zone_min <= 0.0f;
 }
 
-WorldGenerator::WorldGenerator() {}
+WorldGenerator::WorldGenerator() : ore_generator(std::make_unique<OreGenerator>()) {}
 WorldGenerator::~WorldGenerator() = default;
 
 static uint64_t dungeon_dynamic_cell_key(int p_x, int p_y) {
@@ -2622,9 +2623,37 @@ uint16_t WorldGenerator::get_base_tile_without_features(int x, int y, int z, int
     uint16_t dungeon_tile_id = get_dungeon_tile(x, y, z, world_seed);
     if (dungeon_tile_id != id_void) return dungeon_tile_id;
 
-    if (z == -1) return id_underground_earth;
-    if (z < -1) return id_solid_rock;
+    const uint16_t natural_host = z == -1 ? id_underground_earth : (z < -1 ? id_solid_rock : id_air);
+    if (z < 0 && ore_generator) {
+        const uint16_t ore_tile = ore_generator->get_ore_tile(x, y, z, world_seed);
+        if (ore_tile != id_void) return ore_tile;
+    }
+    if (z < 0) return natural_host;
     return id_air;
+}
+
+Dictionary WorldGenerator::get_ore_debug_info(int x, int y, int z, int world_seed) {
+    setup_biome_rules();
+    if (!ore_generator || z >= 0) {
+        Dictionary result;
+        result["present"] = false;
+        return result;
+    }
+    Dictionary result = ore_generator->get_debug_info(x, y, z, world_seed);
+    if (static_cast<bool>(result.get("present", false))) {
+        IdRegistry* registry = IdRegistry::get_singleton();
+        const uint16_t final_tile = get_tile(x, y, z, world_seed);
+        const String final_tile_name = registry ? registry->get_string(final_tile) : String();
+        if (final_tile_name != String(result.get("mineral_tile", ""))) {
+            result["present"] = false;
+            result["blocked_by"] = final_tile_name;
+        }
+    }
+    return result;
+}
+
+Array WorldGenerator::get_ore_candidates_for_chunk(int chunk_x, int chunk_y, int world_seed) {
+    return ore_generator ? ore_generator->get_candidates_for_chunk(chunk_x, chunk_y, world_seed) : Array();
 }
 
 const std::unordered_map<uint64_t, uint32_t>& WorldGenerator::get_region_chunks() const {
@@ -2704,6 +2733,11 @@ void WorldGenerator::clear_region_chunks() {
     biome_layers.clear();
     city_structure_instances.clear();
     city_structure_by_chunk.clear();
+    invalidate_cache();
+}
+
+void WorldGenerator::invalidate_cache() {
     last_chunk_valid = false;
     reset_dungeon_cache();
+    if (ore_generator) ore_generator->clear_cache();
 }

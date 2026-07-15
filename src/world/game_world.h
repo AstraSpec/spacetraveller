@@ -77,6 +77,8 @@ public:
     ~GameWorld();
 
     void setup_renderer();
+    void set_debug_mode_enabled(bool p_enabled);
+    bool is_debug_mode_enabled() const;
     FastTileMap* get_renderer() const { return renderer; }
     WorldBubble* get_bubble() { return &bubble; }
     const WorldBubble* get_bubble() const { return &bubble; }
@@ -109,6 +111,8 @@ public:
     void fill_tiles(int x, int y, const String& tile_id, const Vector2i& player_pos, const Rect2i& mask = Rect2i(), bool invert_mask = false, bool contiguous = true, BubbleLayer p_layer = LAYER_TILE);
     void clear_cache(BubbleLayer p_layer = LAYER_TILE);
     void clear_all_caches();
+    Dictionary get_ore_debug_info(int x, int y, int z);
+    Array get_ore_candidates_for_chunk(int chunk_x, int chunk_y);
     Dictionary get_tile_id_cache(BubbleLayer p_layer = LAYER_TILE) const;
     void set_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_layer = LAYER_TILE);
     void merge_tile_id_cache(const Dictionary& p_cache, BubbleLayer p_layer = LAYER_TILE);

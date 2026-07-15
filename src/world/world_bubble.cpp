@@ -879,7 +879,7 @@ void WorldBubble::update_visibility(
         }
 
         visible_cells.insert(cell_key);
-        if (light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
+        if (occlusion_enabled && light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
             newly_seen_cells.push_back(cell_key);
         }
     };
@@ -897,7 +897,7 @@ void WorldBubble::update_visibility(
             const uint64_t cell_key = make_cell_key_at_z(x, y, z);
             visible_cells.insert(cell_key);
             const LightLevel light_level = get_apparent_light_level(player_pos, x, y, z);
-            if (light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
+            if (occlusion_enabled && light_reveals_detail(light_level) && seen_cells.insert(cell_key).second) {
                 newly_seen_cells.push_back(cell_key);
             }
         };

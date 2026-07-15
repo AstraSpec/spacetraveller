@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_RNG_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 #include <cstdint>
 
 namespace godot {
@@ -25,6 +26,9 @@ namespace Rng {
         QUEST_LOOT = 13,
         COMBAT = 14,
         ACTION = 15,
+        ORE_PROVINCE = 16,
+        ORE_FORMATION = 17,
+        ORE_CELL = 18,
     };
 
     inline uint64_t mix64(uint64_t z) {
@@ -71,6 +75,22 @@ namespace Rng {
     }
 
     inline Seeded at(uint32_t world_seed, const Vector2i& pos, Stream stream, uint64_t salt) {
+        return Seeded{ mix64(hash_pos(world_seed, pos, stream) ^ salt) };
+    }
+
+    inline uint64_t hash_pos(uint32_t world_seed, const Vector3i& pos, Stream stream) {
+        uint64_t h = mix64(static_cast<uint64_t>(world_seed) ^ (static_cast<uint64_t>(stream) << 56));
+        h = mix64(h ^ static_cast<uint64_t>(static_cast<uint32_t>(pos.x)));
+        h = mix64(h ^ (static_cast<uint64_t>(static_cast<uint32_t>(pos.y)) << 32));
+        h = mix64(h ^ static_cast<uint64_t>(static_cast<uint32_t>(pos.z)));
+        return h;
+    }
+
+    inline Seeded at(uint32_t world_seed, const Vector3i& pos, Stream stream) {
+        return Seeded{ hash_pos(world_seed, pos, stream) };
+    }
+
+    inline Seeded at(uint32_t world_seed, const Vector3i& pos, Stream stream, uint64_t salt) {
         return Seeded{ mix64(hash_pos(world_seed, pos, stream) ^ salt) };
     }
 

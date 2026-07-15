@@ -14,6 +14,7 @@ struct TileInfo {
     std::vector<uint16_t> tags;
     uint16_t smash_loot_table = 0;
     uint16_t spawn_loot_table = 0;
+    uint16_t destroyed_to = 0;
     uint16_t opens_to = 0;
     uint16_t closes_to = 0;
     bool hides_items = false;

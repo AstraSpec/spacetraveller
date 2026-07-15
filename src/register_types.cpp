@@ -23,6 +23,7 @@
 #include "data/spawn_db.h"
 #include "data/entity_group_db.h"
 #include "data/loot_db.h"
+#include "data/ore_db.h"
 #include "data/feature_db.h"
 #include "data/dungeon_db.h"
 #include "data/traversal_profile_db.h"
@@ -63,6 +64,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(SpawnDb);
 	GDREGISTER_CLASS(EntityGroupDb);
 	GDREGISTER_CLASS(LootDb);
+	GDREGISTER_CLASS(OreDb);
 	GDREGISTER_CLASS(FeatureDb);
 	GDREGISTER_CLASS(DungeonDb);
 	GDREGISTER_CLASS(TraversalProfileDb);
@@ -124,6 +126,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	LootDb::create_singleton();
 	Engine::get_singleton()->register_singleton("LootDb", LootDb::get_singleton());
+
+	OreDb::create_singleton();
+	Engine::get_singleton()->register_singleton("OreDb", OreDb::get_singleton());
 
 	FeatureDb::create_singleton();
 	Engine::get_singleton()->register_singleton("FeatureDb", FeatureDb::get_singleton());
@@ -199,6 +204,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("LootDb");
 	LootDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("OreDb");
+	OreDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("FeatureDb");
 	FeatureDb::delete_singleton();

@@ -10,6 +10,7 @@
 #include "world_save_serializer.h"
 #include "core/id_registry.h"
 #include "core/tag_registry.h"
+#include "core/debug_flags.h"
 #include "entities/entity_factory.h"
 #include "world/traversal_rules.h"
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -53,6 +54,8 @@ void GameWorld::_bind_methods() {
     BIND_ENUM_CONSTANT(INTENT_CHANGE_Z);
 
     ClassDB::bind_method(D_METHOD("setup_renderer"), &GameWorld::setup_renderer);
+    ClassDB::bind_method(D_METHOD("set_debug_mode_enabled", "enabled"), &GameWorld::set_debug_mode_enabled);
+    ClassDB::bind_method(D_METHOD("is_debug_mode_enabled"), &GameWorld::is_debug_mode_enabled);
     ClassDB::bind_method(D_METHOD("get_renderer"), &GameWorld::get_renderer);
 
     ClassDB::bind_method(D_METHOD("init_world_bubble", "player_pos", "is_square"), &GameWorld::init_world_bubble, DEFVAL(true));
@@ -67,6 +70,8 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("fill_tiles", "x", "y", "tile_id", "player_pos", "mask", "invert_mask", "contiguous", "layer"), &GameWorld::fill_tiles, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(true), DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("clear_cache", "layer"), &GameWorld::clear_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("clear_all_caches"), &GameWorld::clear_all_caches);
+    ClassDB::bind_method(D_METHOD("get_ore_debug_info", "x", "y", "z"), &GameWorld::get_ore_debug_info);
+    ClassDB::bind_method(D_METHOD("get_ore_candidates_for_chunk", "chunk_x", "chunk_y"), &GameWorld::get_ore_candidates_for_chunk);
     ClassDB::bind_method(D_METHOD("get_tile_id_cache", "layer"), &GameWorld::get_tile_id_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("set_tile_id_cache", "cache", "layer"), &GameWorld::set_tile_id_cache, DEFVAL(LAYER_TILE));
     ClassDB::bind_method(D_METHOD("merge_tile_id_cache", "cache", "layer"), &GameWorld::merge_tile_id_cache, DEFVAL(LAYER_TILE));
@@ -286,7 +291,18 @@ void GameWorld::setup_renderer() {
         return generator->get_tile(x, y, z, world_seed);
     });
     renderer->set_bubble(&bubble);
-    renderer->set_occlusion_enabled(true);
+    renderer->set_occlusion_enabled(!DebugFlags::is_debug_mode_enabled());
+}
+
+void GameWorld::set_debug_mode_enabled(bool p_enabled) {
+    DebugFlags::set_debug_mode_enabled(p_enabled);
+    if (renderer) {
+        renderer->set_occlusion_enabled(!p_enabled);
+    }
+}
+
+bool GameWorld::is_debug_mode_enabled() const {
+    return DebugFlags::is_debug_mode_enabled();
 }
 
 void GameWorld::set_biome_noise(const Ref<FastNoiseLite>& noise) {
@@ -389,6 +405,25 @@ void GameWorld::clear_cache(BubbleLayer p_layer) {
 
 void GameWorld::clear_all_caches() {
     bubble.clear_all_caches();
+    if (generator) generator->invalidate_cache();
+}
+
+Dictionary GameWorld::get_ore_debug_info(int x, int y, int z) {
+    if (!generator) return Dictionary();
+    Dictionary result = generator->get_ore_debug_info(x, y, z, world_seed);
+    if (renderer && static_cast<bool>(result.get("present", false))) {
+        IdRegistry* registry = IdRegistry::get_singleton();
+        const String actual_tile = registry ? registry->get_string(bubble.query_tile_id_at_z(x, y, z)) : String();
+        if (actual_tile != String(result.get("mineral_tile", ""))) {
+            result["present"] = false;
+            result["blocked_by"] = actual_tile;
+        }
+    }
+    return result;
+}
+
+Array GameWorld::get_ore_candidates_for_chunk(int chunk_x, int chunk_y) {
+    return generator ? generator->get_ore_candidates_for_chunk(chunk_x, chunk_y, world_seed) : Array();
 }
 
 Dictionary GameWorld::get_tile_id_cache(BubbleLayer p_layer) const {
@@ -948,6 +983,12 @@ bool GameWorld::can_change_z(uint32_t entity_id, int delta) {
     const Entity* entity = entity_ledger.get_entity_pool().get_entity(entity_id);
     if (!entity) return false;
 
+    const int target_z = entity->z + delta;
+    uint32_t occupant = entity_tracker.get_at(Vector3i(entity->x, entity->y, target_z));
+    if (occupant != INVALID_ENTITY_ID && occupant != entity_id) return false;
+
+    if (DebugFlags::is_debug_mode_enabled() && entity_id == player_entity_id) return true;
+
     TileDb* tile_db = TileDb::get_singleton();
     TagRegistry* tag_reg = TagRegistry::get_singleton();
     if (!tile_db || !tag_reg) return false;
@@ -955,10 +996,6 @@ bool GameWorld::can_change_z(uint32_t entity_id, int delta) {
     const uint16_t tile_id = bubble.query_tile_id_at_z(entity->x, entity->y, entity->z);
     const uint16_t required_tag = tag_reg->get_tag_id(delta > 0 ? "ASCEND_LEVEL" : "DESCENT_LEVEL");
     if (required_tag == 0 || !tile_db->has_tag(tile_id, required_tag)) return false;
-
-    const int target_z = entity->z + delta;
-    uint32_t occupant = entity_tracker.get_at(Vector3i(entity->x, entity->y, target_z));
-    if (occupant != INVALID_ENTITY_ID && occupant != entity_id) return false;
 
     const uint16_t destination_tile_id = bubble.query_tile_id_at_z(entity->x, entity->y, target_z);
     return destination_tile_id != 0 && TraversalRules::can_enter(entity_id, destination_tile_id, entity_ledger);

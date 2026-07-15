@@ -235,7 +235,8 @@
     "atlas": [ 8, 2 ],
     "solid": true,
     "tags": ["GROUND", "SMASHABLE"],
-    "smash_loot_table": "dirt_smashed"
+    "smash_loot_table": "dirt_smashed",
+    "destroyed_to": "dirt"
   },
   {
     "id": "solid_rock",
@@ -243,7 +244,8 @@
     "atlas": [ 1, 2 ],
     "solid": true,
     "tags": ["SMASHABLE"],
-    "smash_loot_table": "rock_smashed"
+    "smash_loot_table": "rock_smashed",
+    "destroyed_to": "solid_rock_floor"
   },
   {
     "id": "solid_rock_floor",

@@ -28,6 +28,7 @@
 #include "data/body_part_db.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 #include <cmath>
 #include <vector>
 
@@ -607,7 +608,11 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
         LootDb* loot_db = LootDb::get_singleton();
         if (smashed_tile && smashed_tile->smash_loot_table != 0 && loot_db) {
             uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
-            Rng::Seeded loot_rng = Rng::at(seed, intent.target, Rng::TILE_LOOT);
+            Rng::Seeded loot_rng = Rng::at(
+                seed,
+                Vector3i(intent.target.x, intent.target.y, entity.z),
+                Rng::TILE_LOOT
+            );
             std::vector<LootStack> stacks;
             loot_db->roll_table(smashed_tile->smash_loot_table, loot_rng, stacks);
             for (const LootStack& stack : stacks) {

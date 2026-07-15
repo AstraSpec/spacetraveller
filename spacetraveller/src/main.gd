@@ -23,6 +23,7 @@ func _ready() -> void:
 	DungeonDb.initialize_data()
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
+	OreDb.initialize_data()
 	RecipeDb.initialize_data()
 	TraversalProfileDb.initialize_data()
 	StructureDb.initialize_data()
@@ -54,9 +55,11 @@ func _ready() -> void:
 		_initialize_new_game(new_game_scenario_id)
 
 	InputManager.reset_stack(InputManager.InputMode.EXPLORATION)
+	InputManager.debug_toggled.connect(_on_debug_toggled)
 	InputManager.structure_editor_toggled.connect(_on_structure_editor_toggled)
 	InputManager.look_mode_changed.connect(_on_look_mode_changed)
 	InputManager.look_directional_input.connect(_on_look_directional_input)
+	_apply_debug_mode(InputManager.debug_mode_enabled)
 	_initialize_windows()
 	QuestService.bind_game_world(_GameWorld)
 
@@ -140,6 +143,15 @@ func _initialize_windows():
 		if window is BaseWindow:
 			window.Player = Player
 
+func _on_debug_toggled(enabled: bool) -> void:
+	_apply_debug_mode(enabled)
+
+func _apply_debug_mode(enabled: bool) -> void:
+	_GameWorld.set_debug_mode_enabled(enabled)
+	if structure_editor_instance != null:
+		_GameWorld.get_renderer().set_occlusion_enabled(false)
+	_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+
 func _on_structure_editor_toggled(active: bool):
 	if active:
 		structure_editor_instance = structure_editor_scene.instantiate()
@@ -164,7 +176,7 @@ func _on_structure_editor_toggled(active: bool):
 
 		_GameWorld.get_renderer().set_show_items(true)
 		_GameWorld.get_renderer().set_show_entities(true)
-		_GameWorld.get_renderer().set_occlusion_enabled(true)
+		_GameWorld.get_renderer().set_occlusion_enabled(not _GameWorld.is_debug_mode_enabled())
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 
 func _on_look_mode_changed(active: bool) -> void:

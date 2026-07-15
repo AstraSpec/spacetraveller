@@ -1,0 +1,74 @@
+[
+  {
+    "id": "hematite_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "iron_ore", "weight": 1, "amount_min": 1, "amount_max": 2}
+    ]
+  },
+  {
+    "id": "magnetite_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "iron_ore", "weight": 1, "amount_min": 1, "amount_max": 2}
+    ]
+  },
+  {
+    "id": "gold_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "gold_ore", "weight": 1, "amount_min": 1, "amount_max": 1}
+    ]
+  },
+  {
+    "id": "chalcopyrite_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "copper_ore", "weight": 1, "amount_min": 1, "amount_max": 2}
+    ]
+  },
+  {
+    "id": "bornite_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "copper_ore", "weight": 1, "amount_min": 1, "amount_max": 2}
+    ]
+  },
+  {
+    "id": "coal_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "coal", "weight": 1, "amount_min": 1, "amount_max": 2}
+    ]
+  },
+  {
+    "id": "rock_salt_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "salt", "weight": 1, "amount_min": 1, "amount_max": 4}
+    ]
+  },
+  {
+    "id": "diamond_ore_smashed",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": true,
+    "entries": [
+      {"item_id": "diamond", "weight": 1, "amount_min": 1, "amount_max": 1}
+    ]
+  }
+]

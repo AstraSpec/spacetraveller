@@ -18,6 +18,7 @@ func _ready() -> void:
 	StructureDb.initialize_data()
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
+	OreDb.initialize_data()
 	RaceDb.initialize_data()
 	FactionDb.initialize_data()
 	JobDb.initialize_data()

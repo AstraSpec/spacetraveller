@@ -5,7 +5,7 @@ signal view_panned(relative: Vector2)
 signal view_zoomed(zoom: int)
 signal view_centered
 
-signal debug_toggled
+signal debug_toggled(enabled: bool)
 signal directional_input(direction: Vector2)
 signal look_directional_input(direction: Vector2)
 signal ui_directional_input(direction: Vector2)
@@ -49,6 +49,7 @@ var active_menu_id: String = ""
 var is_shift_pressed = false
 var is_ctrl_pressed = false
 var is_capturing: bool = false
+var debug_mode_enabled: bool = false
 
 var default_mappings: Dictionary = {}
 
@@ -115,7 +116,8 @@ func _unhandled_input(event: InputEvent):
 
 	# Global inputs
 	if event.is_action_pressed("debug_mode"):
-		debug_toggled.emit()
+		debug_mode_enabled = not debug_mode_enabled
+		debug_toggled.emit(debug_mode_enabled)
 		get_viewport().set_input_as_handled()
 		return
 

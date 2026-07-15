@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ore_hematite_rock",
+    "name": "Hematite-Bearing Rock",
+    "atlas": [26, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "hematite_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "ore_magnetite_rock",
+    "name": "Magnetite-Bearing Rock",
+    "atlas": [27, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "magnetite_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "ore_gold_quartz",
+    "name": "Gold-Bearing Quartz",
+    "atlas": [28, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "gold_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "ore_chalcopyrite_rock",
+    "name": "Chalcopyrite-Bearing Rock",
+    "atlas": [29, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "chalcopyrite_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "ore_bornite_rock",
+    "name": "Bornite-Bearing Rock",
+    "atlas": [33, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "bornite_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "coal_seam",
+    "name": "Bituminous Coal",
+    "atlas": [30, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "coal_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "rock_salt",
+    "name": "Rock Salt",
+    "atlas": [31, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "rock_salt_smashed",
+    "destroyed_to": "solid_rock_floor"
+  },
+  {
+    "id": "ore_diamond",
+    "name": "Diamond Ore",
+    "atlas": [32, 30],
+    "solid": true,
+    "tags": ["SMASHABLE", "ORE"],
+    "smash_loot_table": "diamond_ore_smashed",
+    "destroyed_to": "solid_rock_floor"
+  }
+]
