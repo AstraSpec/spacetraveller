@@ -3,21 +3,21 @@
     "id": "prisoner",
     "entries": [
       { "none": true, "weight": 4 },
-      { "entity": "human", "weight": 9, "job": "prisoner" },
-      { "entity": "goblin", "weight": 1, "job": "prisoner" }
+      { "entity": "human", "weight": 9, "job": "prisoner", "faction": "prisoner" },
+      { "entity": "goblin", "weight": 1, "job": "prisoner", "faction": "prisoner" }
     ]
   },
   {
     "id": "crypt_prisoner_goblin",
     "entries": [
       { "none": true, "weight": 3 },
-      { "entity": "goblin", "weight": 1, "job": "prisoner" }
+      { "entity": "goblin", "weight": 1, "job": "prisoner", "faction": "prisoner" }
     ]
   },
   {
     "id": "carriage_prisoner_goblin",
     "entries": [
-      { "entity": "goblin", "weight": 1, "job": "prisoner" }
+      { "entity": "goblin", "weight": 1, "job": "prisoner", "faction": "prisoner" }
     ]
   }
 ]

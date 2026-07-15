@@ -108,5 +108,15 @@
     "atlas": [ 19, 20 ],
     "weight": 0.2,
     "tags": []
+  },
+  {
+    "id": "wine",
+    "name": "Wine",
+    "description": "",
+    "type": "food",
+    "price": 300,
+    "atlas": [ 10, 21 ],
+    "weight": 0.3,
+    "tags": []
   }
 ]

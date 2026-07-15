@@ -309,5 +309,16 @@
       { "item_id": "steel_battleaxe", "weight": 10, "amount_min": 1, "amount_max": 1 },
       { "item_id": "longsword", "weight": 8, "amount_min": 1, "amount_max": 1 }
     ]
+  },
+  {
+    "id": "fun",
+    "rolls_min": 1,
+    "rolls_max": 1,
+    "allow_duplicates": false,
+    "entries": [
+      { "none": true, "weight": 5 },
+      { "item_id": "wine", "weight": 5, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "playing_cards", "weight": 2, "amount_min": 1, "amount_max": 1 }
+    ]
   }
 ]

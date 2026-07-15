@@ -1,0 +1,437 @@
+[
+    {
+        "id": "bandit_camp",
+        "levels": {
+            "0": {
+                "blueprint": "(49x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 46x1, 2x0, 22x1, 5x2, 19x1, 2x0, 20x1, 8x2, 18x1, 2x0, 5x1, 6x2, 7x1, 4x2, 1x3, 6x2, 17x1, 2x0, 3x1, 11x2, 1x1, 10x2, 1x3, 3x2, 17x1, 2x0, 1x1, 20x2, 1x3, 1x2, 1x4, 4x2, 18x1, 2x0, 1x1, 17x2, 1x1, 9x2, 18x1, 2x0, 2x1, 7x2, 3x1, 12x2, 1x3, 3x2, 18x1, 2x0, 17x1, 10x2, 19x1, 2x0, 21x1, 6x2, 19x1, 2x0, 21x1, 6x2, 19x1, 2x0, 22x1, 5x2, 19x1, 2x0, 22x1, 4x2, 20x1, 2x0, 21x1, 5x2, 20x1, 2x0, 21x1, 5x2, 20x1, 2x0, 21x1, 4x2, 21x1, 2x0, 21x1, 4x2, 21x1, 2x0, 21x1, 4x2, 21x1, 2x0, 22x1, 3x2, 21x1, 2x0, 22x1, 3x2, 21x1, 2x0, 22x1, 3x2, 21x1, 2x0, 22x1, 3x2, 21x1, 2x0, 21x1, 4x2, 21x1, 2x0, 21x1, 4x2, 21x1, 2x0, 21x1, 3x2, 22x1, 2x0, 21x1, 3x2, 22x1, 2x0, 21x1, 4x2, 21x1, 23x0, 4x2, 22x0, 23x1, 2x2, 23x1)",
+                "palette": [
+                    {"tile": "palisade"},
+                    {"tile": "void"},
+                    {"tile": "dirt"},
+                    {"tile": "chair"},
+                    {"tile": "campfire"}
+                ],
+                "rules": [
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            20.0,
+                            47.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            22.0,
+                            24.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            23.0,
+                            22.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            25.0,
+                            26.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            27.0,
+                            47.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            21.0,
+                            26.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            22.0,
+                            23.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            24.0,
+                            22.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            24.0,
+                            26.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            26.0,
+                            24.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "fun",
+                        "pos": [
+                            27.0,
+                            21.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            48.0,
+            48.0
+        ],
+        "type": "bandit_camp"
+    },
+    {
+        "id": "bandit_camp_1",
+        "levels": {
+            "0": {
+                "blueprint": "(29x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 9x0, 5x1, 8x0, 3x1, 10x0, 1x1, 18x0)",
+                "palette": [
+                    {"tile": "alley_bricks"},
+                    {"tile": "gate_floor"}
+                ]
+            }
+        },
+        "size": [
+            12.0,
+            12.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_2",
+        "levels": {
+            "0": {
+                "blueprint": "(59x0, 1x1, 23x0, 1x1, 23x0, 1x1, 23x0, 1x1, 23x0, 1x1, 21x0, 5x1, 20x0, 3x1, 22x0, 1x1, 60x0)",
+                "palette": [
+                    {"tile": "alley_bricks"},
+                    {"tile": "gate_floor"}
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            12.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_stable",
+        "levels": {
+            "0": {
+                "blueprint": "(13x0, 10x1, 2x0, 1x1, 1x2, 1x3, 1x4, 1x5, 1x6, 1x4, 1x6, 1x7, 1x1, 2x0, 1x1, 1x3, 1x2, 1x4, 2x3, 1x4, 1x3, 1x5, 1x1, 2x0, 1x1, 1x5, 1x3, 1x4, 2x3, 1x4, 2x3, 1x1, 2x0, 1x1, 2x3, 1x4, 2x3, 1x4, 2x3, 1x1, 2x0, 1x1, 1x8, 2x4, 1x8, 2x4, 1x8, 1x4, 1x1, 2x0, 1x1, 4x3, 1x7, 1x9, 1x3, 1x7, 1x1, 2x0, 1x1, 5x3, 1x9, 1x3, 1x7, 1x1, 2x0, 1x1, 1x3, 2x0, 3x3, 1x0, 1x3, 1x1, 25x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_wall"},
+                    {"tile": "crop_wheat"},
+                    {"tile": "dirt"},
+                    {"tile": "w_fence"},
+                    {"tile": "water"},
+                    {"tile": "haybale"},
+                    {"tile": "w_crate"},
+                    {"tile": "w_gate"},
+                    {"tile": "barrel"}
+                ],
+                "rules": [
+                    {
+                        "entity": "horse",
+                        "faction": "bandit",
+                        "job": "animal",
+                        "pos": [
+                            2,
+                            3
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "horse",
+                        "faction": "bandit",
+                        "job": "animal",
+                        "pos": [
+                            5,
+                            3
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "horse",
+                        "faction": "bandit",
+                        "job": "animal",
+                        "pos": [
+                            9,
+                            4
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
+            },
+            "1": {
+                "blueprint": "(13x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 61x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_roof"}
+                ]
+            }
+        },
+        "size": [
+            12,
+            12
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_barracks",
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 1x1, 2x0, 1x1, 2x0, 1x1, 2x0, 1x1, 12x0, 1x2, 1x3, 1x4, 1x2, 1x3, 1x4, 1x2, 1x3, 1x4, 1x2, 1x3, 9x4, 2x5, 2x0, 1x4, 1x3, 2x4, 1x3, 2x4, 1x3, 2x4, 1x3, 5x4, 1x6, 2x7, 1x4, 1x8, 1x4, 2x0, 16x4, 1x6, 2x7, 1x4, 1x9, 1x4, 1x1, 1x0, 1x2, 1x3, 1x4, 1x2, 1x3, 1x4, 1x2, 1x3, 1x4, 1x2, 1x3, 5x4, 1x6, 2x7, 1x4, 1x9, 1x10, 1x1, 1x0, 1x4, 1x3, 2x4, 1x3, 2x4, 1x3, 2x4, 1x3, 5x4, 1x6, 2x7, 1x4, 1x9, 1x4, 1x1, 1x0, 20x4, 1x11, 1x4, 1x1, 1x0, 20x4, 1x12, 1x4, 1x1, 1x0, 22x4, 2x0, 1x13, 1x14, 2x4, 1x14, 2x4, 1x14, 2x4, 1x14, 6x4, 1x15, 3x4, 1x13, 14x0, 3x1, 1x0, 1x16, 6x0, 16x17, 3x18, 5x17)",
+                "palette": [
+                    {"tile": "w_wall"},
+                    {"tile_group": "window"},
+                    {"tile": "dresser"},
+                    {"tile": "bed"},
+                    {"tile": "w_floor"},
+                    {"tile": "shelf_small"},
+                    {"tile": "chair"},
+                    {"tile": "table"},
+                    {"tile": "fireplace"},
+                    {"tile": "bar"},
+                    {"tile": "dining_chair"},
+                    {"tile": "cooking_pot"},
+                    {"tile": "barrel_wine"},
+                    {"tile": "candelabra"},
+                    {"tile": "wardrobe"},
+                    {"tile": "coat_rack"},
+                    {"tile": "w_door_c"},
+                    {"tile": "void"},
+                    {"tile": "dirt"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "pantry",
+                        "pos": [
+                            21.0,
+                            3.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "pantry",
+                        "pos": [
+                            21.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "pantry",
+                        "pos": [
+                            21.0,
+                            5.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            },
+            "1": {
+                "blueprint": "(264x0, 24x1)",
+                "palette": [
+                    {"tile": "w_roof"},
+                    {"tile": "void"}
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            12.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_leader",
+        "levels": {
+            "0": {
+                "blueprint": "(16x0, 5x1, 4x0, 1x2, 1x3, 1x4, 1x5, 4x3, 1x5, 1x4, 1x0, 2x6, 8x3, 1x7, 2x0, 1x5, 3x3, 1x4, 1x3, 1x4, 2x3, 1x5, 1x0, 5x3, 3x8, 3x3, 1x1, 1x0, 2x5, 1x4, 1x3, 3x0, 1x9, 3x0, 3x3, 1x8, 5x10, 2x3, 1x1, 1x0, 1x3, 1x2, 1x11, 1x3, 1x0, 9x3, 1x8, 5x10, 1x8, 1x3, 1x1, 6x0, 1x9, 4x0, 1x9, 2x0, 3x3, 2x8, 4x3, 2x0, 1x6, 2x3, 1x7, 2x3, 1x0, 1x2, 1x3, 1x5, 1x3, 1x4, 1x0, 2x12, 6x3, 1x12, 1x0, 1x1, 4x3, 2x13, 1x0, 1x5, 1x3, 1x4, 2x3, 6x0, 2x3, 3x0, 1x1, 1x3, 2x14, 1x3, 2x13, 1x0, 1x4, 2x3, 1x5, 1x3, 1x0, 1x15, 1x0, 1x16, 5x3, 1x4, 2x0, 1x17, 2x14, 1x3, 1x18, 1x10, 1x0, 1x3, 1x2, 2x5, 1x4, 1x0, 1x3, 1x9, 6x3, 1x4, 3x0, 4x1, 4x0, 2x1, 5x0, 1x9, 1x0, 3x1, 2x0, 16x19, 3x20, 5x19)",
+                "palette": [
+                    {"tile": "w_wall"},
+                    {"tile_group": "window"},
+                    {"tile": "chest"},
+                    {"tile": "w_floor"},
+                    {"tile": "shelf_small"},
+                    {"tile": "barrel"},
+                    {"tile": "bookcase"},
+                    {"tile": "candelabra"},
+                    {"tile": "chair"},
+                    {"tile": "w_door_c"},
+                    {"tile": "table"},
+                    {"tile": "dog_house"},
+                    {"tile": "bar"},
+                    {"tile": "carpet_red"},
+                    {"tile": "bed_double"},
+                    {"tile": "toilet"},
+                    {"tile": "coat_rack"},
+                    {"tile": "dresser"},
+                    {"tile": "dining_chair"},
+                    {"tile": "void"},
+                    {"tile": "dirt"}
+                ],
+                "rules": [
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            14.0,
+                            11.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            20.0,
+                            11.0
+                        ],
+                        "type": "spawn_entity"
+                    }
+                ]
+            },
+            "1": {
+                "blueprint": "(264x0, 24x1)",
+                "palette": [
+                    {"tile": "w_roof"},
+                    {"tile": "void"}
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            12.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_prisoner",
+        "levels": {
+            "0": {
+                "blueprint": "(13x0, 10x1, 2x0, 1x1, 8x0, 1x1, 2x0, 1x1, 2x0, 2x2, 1x0, 1x2, 2x0, 1x1, 2x0, 1x1, 1x0, 5x2, 2x0, 1x1, 2x0, 1x1, 1x0, 6x2, 1x0, 1x1, 2x0, 1x1, 2x0, 5x2, 1x0, 1x1, 2x0, 1x1, 2x0, 4x2, 2x0, 1x1, 2x0, 1x1, 3x0, 2x2, 3x0, 1x1, 2x0, 1x1, 3x0, 2x2, 3x0, 1x1, 2x0, 4x1, 2x3, 4x1, 6x0, 3x2, 4x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "iron_bars"},
+                    {"tile": "dirt"},
+                    {"tile": "iron_gate"}
+                ],
+                "rules": [
+                    {
+                        "entity": "human",
+                        "job": "bandit",
+                        "pos": [
+                            8.0,
+                            11.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "pantry",
+                        "pos": [
+                            8.0,
+                            9.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "pantry",
+                        "pos": [
+                            9.0,
+                            8.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "entity_group": "prisoner",
+                        "pos": [
+                            5.0,
+                            5.0
+                        ],
+                        "type": "spawn_entity_group"
+                    }
+                ]
+            },
+            "1": {
+                "blueprint": "(13x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 13x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_roof"}
+                ]
+            }
+        },
+        "size": [
+            12.0,
+            12.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "bandit_camp_workshop",
+        "levels": {
+            "0": {
+                "blueprint": "(13x0, 10x1, 2x0, 1x1, 3x2, 1x1, 1x3, 3x2, 1x1, 2x0, 1x1, 1x2, 6x1, 1x3, 1x1, 2x0, 6x1, 1x4, 3x1, 2x0, 2x1, 1x5, 4x6, 1x5, 2x1, 2x0, 4x1, 1x7, 5x1, 2x0, 10x1, 2x0, 8x1, 1x3, 1x1, 2x0, 7x1, 2x3, 1x1, 2x0, 10x1, 6x0, 3x8, 4x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_floor"},
+                    {"tile": "bookcase"},
+                    {"tile": "barrel"},
+                    {"tile": "dining_chair"},
+                    {"tile": "w_wall"},
+                    {"tile": "bar"},
+                    {"tile": "chair"},
+                    {"tile": "dirt"}
+                ]
+            },
+            "1": {
+                "blueprint": "(13x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 2x0, 10x1, 13x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_roof"}
+                ]
+            }
+        },
+        "size": [
+            12.0,
+            12.0
+        ],
+        "type": "feature"
+    }
+]

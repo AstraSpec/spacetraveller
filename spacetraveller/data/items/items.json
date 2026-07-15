@@ -390,5 +390,25 @@
     "atlas": [ 18, 31 ],
     "weight": 0.8,
     "tags": []
+  },
+  {
+    "id": "playing_cards",
+    "name": "Playing Cards",
+    "description": "",
+    "type": "material",
+    "price": 250,
+    "atlas": [ 78, 28 ],
+    "weight": 0.2,
+    "tags": []
+  },
+  {
+    "id": "bandage",
+    "name": "Bandage",
+    "description": "",
+    "type": "material",
+    "price": 250,
+    "atlas": [ 4, 23 ],
+    "weight": 0.2,
+    "tags": []
   }
 ]

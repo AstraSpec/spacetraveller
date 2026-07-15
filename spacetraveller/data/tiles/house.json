@@ -195,5 +195,21 @@
     "solid": true,
     "tags": ["SMASHABLE", "TRANSPARENT"],
     "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "w_gate",
+    "name": "Wooden Gate",
+    "atlas": [ 5, 40 ],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "palisade",
+    "name": "Palisade",
+    "atlas": [ 34, 0 ],
+    "solid": true,
+    "tags": [ "SMASHABLE", "WALL" ],
+    "smash_loot_table": "w_smashed"
   }
 ]

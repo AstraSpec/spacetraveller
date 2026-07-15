@@ -4,7 +4,7 @@
     "atlas": [ 0, 34 ],
     "tile_group": "forest_floor",
     "ambient_entity_group": "forest_animals",
-    "ambient_entity_chance": 0.0006,
+    "ambient_entity_chance": 0.0001,
     "ambient_loot_table": "forest_floor_items",
     "ambient_loot_chance": 0.0061
   },
@@ -17,7 +17,7 @@
     "id": "crypt_entrance",
     "atlas": [ 40, 2 ],
     "tile_group": "grass_dirt",
-    "wilderness_spawn_chance": 0.001,
+    "wilderness_spawn_chance": 0.0005,
     "structure_type": "crypt_entrance",
     "dungeon_type": "crypt",
     "feature_spawns": [
@@ -45,7 +45,7 @@
     "id": "spider_cave_entrance",
     "atlas": [ 34, 3 ],
     "tile_group": "grass_dirt",
-    "wilderness_spawn_chance": 0.0006,
+    "wilderness_spawn_chance": 0.0003,
     "structure_type": "cave_entrance",
     "dungeon_type": "spider_cave"
   },
@@ -53,7 +53,7 @@
     "id": "goblin_cave_entrance",
     "atlas": [ 33, 3 ],
     "tile_group": "grass_dirt",
-    "wilderness_spawn_chance": 0.0005,
+    "wilderness_spawn_chance": 0.00025,
     "structure_type": "cave_entrance",
     "dungeon_type": "goblin_cave"
   },
@@ -61,7 +61,7 @@
     "id": "bear_cave_entrance",
     "atlas": [ 30, 3 ],
     "tile_group": "grass_dirt",
-    "wilderness_spawn_chance": 0.00035,
+    "wilderness_spawn_chance": 0.00017,
     "structure_type": "cave_entrance",
     "dungeon_type": "bear_cave"
   },
@@ -259,5 +259,32 @@
     "id": "dungeon",
     "atlas": [ 72, 18 ],
     "tile_group": "stone_brick_floor"
+  },
+  {
+    "id": "bandit_camp",
+    "atlas": [ 34, 0 ],
+    "tile_group": "grass_dirt",
+    "wilderness_spawn_chance": 0.0008,
+    "wilderness_footprint": [ 2, 2 ],
+    "structure_type": "bandit_camp",
+    "feature_spawns": [
+      {
+        "pool": "bandit_camp_features",
+        "chance": 1.0,
+        "candidates": 1,
+        "scope": "structure",
+        "placement": "structure_areas",
+        "rotation": "structure",
+        "unique": true,
+        "areas": [
+          { "id": "top_left", "origin": [ 5, 3 ], "size": [ 24, 12 ], "facing": "south" },
+          { "id": "bottom_left", "origin": [ 5, 32 ], "size": [ 12, 12 ], "facing": "east" },
+          { "id": "top_mid", "origin": [ 18, 3 ], "size": [ 24, 12 ], "facing": "south" },
+          { "id": "top_right", "origin": [ 31, 3 ], "size": [ 12, 24 ], "facing": "west" },
+          { "id": "mid_right", "origin": [ 31, 19 ], "size": [ 12, 24 ], "facing": "west" },
+          { "id": "bottom_right", "origin": [ 31, 32 ], "size": [ 12, 12 ], "facing": "west" }
+        ]
+      }
+    ]
   }
 ]
