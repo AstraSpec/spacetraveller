@@ -2,6 +2,7 @@ extends Window
 
 @export var structureEditor :Node2D
 @export var Editor :StructureEditor
+@export var SearchInput :LineEdit
 @export var LoadContainer :ButtonListContainer
 @export var LoadButton :Button
 @export var DeleteButton :Button
@@ -13,6 +14,7 @@ var selectedID : String = ""
 var _menu_mode_pushed: bool = false
 var _last_click_id: String = ""
 var _last_click_msec: int = 0
+var _all_structures: Array = []
 const DOUBLE_CLICK_MSEC := 350
 
 func _ready() -> void:
@@ -31,6 +33,7 @@ func _ready() -> void:
 	list_actions.delete_requested.connect(func(_data): _on_delete_pressed())
 	list_actions.selection_changed.connect(_on_structure_selected)
 	LoadContainer.item_clicked.connect(_on_structure_clicked)
+	SearchInput.text_changed.connect(_on_search_text_changed)
 	InputManager.ui_cancel.connect(_on_cancel_input)
 	
 	_update_buttons()
@@ -60,15 +63,32 @@ func open() -> void:
 		InputManager.push_mode(InputManager.InputMode.MENU)
 		_menu_mode_pushed = true
 	
-	var structures = StructureDb.get_ids()
-	if LoadContainer:
-		LoadContainer.set_data(structures)
-		if LoadContainer.get_button_count() > 0:
-			LoadContainer.selected_index = 0
-			var data = LoadContainer._get_data_for_button_index(0)
-			_on_structure_selected(data)
-		else:
-			_update_buttons()
+	_all_structures = StructureDb.get_ids()
+	_refresh_structure_list(SearchInput.text)
+	SearchInput.call_deferred("grab_focus")
+
+func _on_search_text_changed(query: String) -> void:
+	_refresh_structure_list(query)
+	SearchInput.call_deferred("grab_focus")
+
+func _refresh_structure_list(query: String) -> void:
+	var normalized_query := _normalize_search(query)
+	var structures: Array = _all_structures.filter(func(id):
+		return normalized_query.is_empty() or _normalize_search(str(id)).contains(normalized_query)
+	)
+	selectedID = ""
+	_last_click_id = ""
+	_last_click_msec = 0
+	LoadContainer.set_data(structures)
+	if LoadContainer.get_button_count() > 0:
+		LoadContainer.selected_index = 0
+		LoadContainer._update_selection_visuals()
+		_on_structure_selected(LoadContainer._get_data_for_button_index(0))
+	else:
+		_update_buttons()
+
+func _normalize_search(value: String) -> String:
+	return value.to_lower().replace("_", " ").replace("-", " ").strip_edges()
 
 func _update_buttons() -> void:
 	var hasSelection = selectedID != ""
@@ -110,15 +130,8 @@ func _on_delete_pressed() -> void:
 	selectedID = ""
 	_last_click_id = ""
 	_last_click_msec = 0
-	var structures = StructureDb.get_ids()
-	if LoadContainer:
-		LoadContainer.set_data(structures)
-		if LoadContainer.get_button_count() > 0:
-			LoadContainer.selected_index = 0
-			var data = LoadContainer._get_data_for_button_index(0)
-			_on_structure_selected(data)
-		else:
-			_update_buttons()
+	_all_structures = StructureDb.get_ids()
+	_refresh_structure_list(SearchInput.text)
 
 func _on_close_pressed() -> void:
 	_close_window()

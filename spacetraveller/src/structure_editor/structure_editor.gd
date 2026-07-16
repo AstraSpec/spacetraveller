@@ -50,6 +50,15 @@ var tools = {}
 var active_tool
 var active_selection : Rect2i = Rect2i()
 
+enum WorkspaceMode {
+	LIVE_WORLD,
+	DOCUMENT
+}
+
+var workspace_mode :WorkspaceMode = WorkspaceMode.DOCUMENT
+var selected_chunk_origin :Vector2i = Vector2i.ZERO
+var is_selecting_chunk :bool = false
+
 var tileID1 :String
 var tileID2 :String
 var tileType1 :String = "tile"
@@ -168,7 +177,14 @@ func update_editor_visuals():
 	_refresh_entity_group_markers()
 	_refresh_tile_group_markers()
 
-func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
+func start_live_world_editor(offset :Vector2 = Vector2.ZERO) -> void:
+	start_editor(offset, WorkspaceMode.LIVE_WORLD)
+
+func start_document_editor(offset :Vector2 = Vector2.ZERO) -> void:
+	start_editor(offset, WorkspaceMode.DOCUMENT)
+
+func start_editor(offset :Vector2 = Vector2.ZERO, mode :WorkspaceMode = WorkspaceMode.DOCUMENT) -> void:
+	workspace_mode = mode
 	InputManager.structure_mode_changed.connect(_on_mode_changed)
 	InputManager.structure_mouse_input.connect(_on_mouse_input)
 	InputManager.structure_key_input.connect(_on_key_input)
@@ -182,9 +198,13 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	LoadWindow.FastTilemap = FastTilemap
 	if World:
 		Editor.set_world(World)
+		if _is_live_world_workspace():
+			active_z = World.get_player_z()
+			selected_chunk_origin = Vector2i(World.get_player_chunk()) * CHUNK_SIZE
 		World.set_active_z(active_z)
 	Editor.set_tilemap(FastTilemap)
 	BUBBLE_SIZE = FastTilemap.get_world_bubble_size()
+	_configure_workspace_origin()
 	
 	setup_tools()
 	if ContentTabs and !ContentTabs.tab_changed.is_connected(_on_content_tab_changed):
@@ -199,7 +219,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 	
 	if !chunkMenu.index_pressed.is_connected(_on_chunk_index_pressed):
 		chunkMenu.index_pressed.connect(_on_chunk_index_pressed)
-	chunkMenu.set_item_disabled(0, true)
+	chunkMenu.set_item_disabled(0, !_is_live_world_workspace())
 	_update_chunk_visual()
 	_update_z_label()
 	
@@ -240,6 +260,8 @@ func start_editor(offset :Vector2 = Vector2.ZERO) -> void:
 
 func _exit_tree() -> void:
 	Input.set_custom_mouse_cursor(null)
+	if _is_live_world_workspace() and World:
+		World.set_active_z(World.get_player_z())
 	show_item_content = true
 	show_npc_content = true
 	_apply_content_visibility()
@@ -274,8 +296,16 @@ func _process(_delta: float) -> void:
 	var global_pos = mousePos + Vector2i(playerOffset)
 	CoordsLabel.update_text(global_pos, selection_size)
 
+	if is_selecting_chunk and _is_live_world_workspace():
+		var hovered_chunk_origin := _chunk_origin_for_world_cell(global_pos)
+		if hovered_chunk_origin != selected_chunk_origin:
+			selected_chunk_origin = hovered_chunk_origin
+			_configure_workspace_origin()
+			_update_chunk_visual()
+
 func _on_mode_changed(m :String):
 	if tools.has(m):
+		is_selecting_chunk = false
 		if active_tool:
 			active_tool.on_deactivate()
 		active_tool = tools[m]
@@ -304,6 +334,12 @@ func _update_tool_options():
 		)
 
 func _on_mouse_input(button: String, action: InputManager.MouseAction):
+	if is_selecting_chunk:
+		if action == InputManager.MouseAction.PRESS and button == "left":
+			is_selecting_chunk = false
+			_on_mode_changed("pencil")
+		return
+
 	match action:
 		InputManager.MouseAction.PRESS:
 			active_tool.on_press(button, mousePos)
@@ -767,6 +803,21 @@ func _world_pos_from_local(local_pos: Vector2i) -> Vector2i:
 
 func _editor_world_origin() -> Vector2i:
 	return Vector2i(playerOffset) + editor_area_origin
+
+func _is_live_world_workspace() -> bool:
+	return workspace_mode == WorkspaceMode.LIVE_WORLD
+
+func _chunk_origin_for_world_cell(world_pos: Vector2i) -> Vector2i:
+	return Vector2i(
+		int(floor(float(world_pos.x) / CHUNK_SIZE)),
+		int(floor(float(world_pos.y) / CHUNK_SIZE))
+	) * CHUNK_SIZE
+
+func _configure_workspace_origin() -> void:
+	if _is_live_world_workspace():
+		editor_area_origin = selected_chunk_origin - Vector2i(playerOffset)
+	else:
+		editor_area_origin = Vector2i(-int(BUBBLE_SIZE / 2), -int(BUBBLE_SIZE / 2))
 
 func _pos_key(pos: Vector2i) -> String:
 	return "%d,%d" % [pos.x, pos.y]
@@ -1477,7 +1528,17 @@ func _on_edit_index_pressed(index: int) -> void:
 		_on_mode_changed(names[index])
 
 func _on_chunk_index_pressed(index: int) -> void:
-	if index == 1:
+	if index == 0 and _is_live_world_workspace():
+		is_selecting_chunk = !is_selecting_chunk
+		if is_selecting_chunk:
+			if active_tool:
+				active_tool.on_deactivate()
+			active_tool = null
+			Input.set_custom_mouse_cursor(null)
+			Editor.clear_preview_tiles()
+		else:
+			_on_mode_changed("pencil")
+	elif index == 1:
 		SetTypeWindow.call("open")
 
 func is_feature_structure() -> bool:
@@ -1508,7 +1569,7 @@ func set_structure_type_mode(feature_selected: bool, size: Vector2i) -> void:
 	elif current_structure_type == "feature":
 		current_structure_type = "building"
 	_set_editor_area(normalized_size)
-	if size_changed:
+	if size_changed and !_is_live_world_workspace():
 		_apply_level(active_z)
 
 func _set_editor_area(size: Vector2i) -> void:
@@ -1519,9 +1580,9 @@ func _set_editor_area(size: Vector2i) -> void:
 	var area_changed := new_area_size != editor_area_size or new_bubble_size != BUBBLE_SIZE
 	editor_area_size = new_area_size
 	BUBBLE_SIZE = new_bubble_size
-	# The editor footprint is anchored at world cell (0, 0), so resizing grows
-	# or shrinks from its top-left corner rather than its centre.
-	editor_area_origin = Vector2i(-int(BUBBLE_SIZE / 2), -int(BUBBLE_SIZE / 2))
+	# Documents remain centred in their scratch bubble. Live-world footprints
+	# grow from the selected chunk's top-left corner.
+	_configure_workspace_origin()
 	_update_chunk_visual()
 	if area_changed:
 		editor_area_changed.emit(editor_area_size)
@@ -2065,7 +2126,18 @@ func change_z(delta: int) -> void:
 	if delta == 0 or !World:
 		return
 	_capture_active_level()
-	_apply_level(active_z + delta)
+	var target_z := active_z + delta
+	if _is_live_world_workspace():
+		_show_live_world_level(target_z)
+	else:
+		_apply_level(target_z)
+
+func _show_live_world_level(z: int) -> void:
+	World.set_active_z(z)
+	active_z = z
+	_reset_level_edit_state()
+	_update_z_label()
+	update_editor_visuals()
 
 func new_structure() -> void:
 	if !World:

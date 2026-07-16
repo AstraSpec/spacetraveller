@@ -45,7 +45,7 @@ func _ready() -> void:
 	_StructureEditor.World = World
 	_StructureEditor.FastTilemap = renderer
 	_StructureEditor.spacing = CUSTOM_SPACING
-	_StructureEditor.start_editor(Vector2(editor_offset))
+	_StructureEditor.start_document_editor(Vector2(editor_offset))
 	_StructureEditor.editor_area_changed.connect(_on_editor_area_changed)
 	_configure_editor_area(_StructureEditor.editor_area_size)
 	InputManager.reset_stack(InputManager.InputMode.STRUCTURE)

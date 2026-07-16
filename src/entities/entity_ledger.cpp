@@ -41,7 +41,7 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Anatomy::init(anatomy_data[id], "human");
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
-    Health::init(health_data[id], 10000.0f);
+    Health::init(health_data[id], 100.0f);
     Stamina::init(stamina_data[id], 80.0f);
     Equipment::init(equipment_data[id]);
     AllegianceData allegiance;

@@ -162,7 +162,7 @@ func _on_structure_editor_toggled(active: bool):
 		_GameWorld.get_renderer().set_show_items(true)
 		_GameWorld.get_renderer().set_show_entities(true)
 		structure_editor_instance.spacing = 1
-		structure_editor_instance.start_editor(_GameWorld.get_player_position())
+		structure_editor_instance.start_live_world_editor(_GameWorld.get_player_position())
 		Player.Camera.locked = false
 		Canvas.visible = false
 	else:
