@@ -115,40 +115,6 @@
         "type": "bandit_camp"
     },
     {
-        "id": "bandit_camp_1",
-        "levels": {
-            "0": {
-                "blueprint": "(29x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 11x0, 1x1, 9x0, 5x1, 8x0, 3x1, 10x0, 1x1, 18x0)",
-                "palette": [
-                    {"tile": "alley_bricks"},
-                    {"tile": "gate_floor"}
-                ]
-            }
-        },
-        "size": [
-            12.0,
-            12.0
-        ],
-        "type": "feature"
-    },
-    {
-        "id": "bandit_camp_2",
-        "levels": {
-            "0": {
-                "blueprint": "(59x0, 1x1, 23x0, 1x1, 23x0, 1x1, 23x0, 1x1, 23x0, 1x1, 21x0, 5x1, 20x0, 3x1, 22x0, 1x1, 60x0)",
-                "palette": [
-                    {"tile": "alley_bricks"},
-                    {"tile": "gate_floor"}
-                ]
-            }
-        },
-        "size": [
-            24.0,
-            12.0
-        ],
-        "type": "feature"
-    },
-    {
         "id": "bandit_camp_stable",
         "levels": {
             "0": {
@@ -171,8 +137,8 @@
                         "faction": "bandit",
                         "job": "animal",
                         "pos": [
-                            2,
-                            3
+                            2.0,
+                            3.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -181,8 +147,8 @@
                         "faction": "bandit",
                         "job": "animal",
                         "pos": [
-                            5,
-                            3
+                            5.0,
+                            3.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -191,24 +157,24 @@
                         "faction": "bandit",
                         "job": "animal",
                         "pos": [
-                            9,
-                            4
+                            9.0,
+                            4.0
                         ],
                         "type": "spawn_entity"
                     },
                     {
                         "loot_table": "stable_supplies",
                         "pos": [
-                            9,
-                            2
+                            9.0,
+                            2.0
                         ],
                         "type": "spawn_loot_table"
                     },
                     {
                         "loot_table": "repair_materials",
                         "pos": [
-                            9,
-                            7
+                            9.0,
+                            7.0
                         ],
                         "type": "spawn_loot_table"
                     }
@@ -223,8 +189,8 @@
             }
         },
         "size": [
-            12,
-            12
+            12.0,
+            12.0
         ],
         "type": "feature"
     },

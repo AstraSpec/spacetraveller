@@ -1985,10 +1985,15 @@ uint16_t WorldGenerator::get_dungeon_layout_tile(const DungeonLayout& p_layout, 
             return id_dungeon_door;
         }
         if (!room.structure_id.is_empty()) {
-            const int local_x = x - room.bounds.origin.x;
-            const int local_y = y - room.bounds.origin.y;
             StructureDb* structure_db = s_db ? s_db : StructureDb::get_singleton();
-            const uint16_t tile_id = structure_db ? structure_db->get_tile_at(room.structure_id, local_x, local_y, 0) : 0;
+            const Vector2i source_size = structure_db ? structure_db->get_structure_size(room.structure_id) : room.bounds.size;
+            const Vector2i source_pos = resolve_surface_feature_source_pos(
+                x - room.bounds.origin.x,
+                y - room.bounds.origin.y,
+                source_size,
+                room.rotation
+            );
+            const uint16_t tile_id = structure_db ? structure_db->get_tile_at(room.structure_id, source_pos.x, source_pos.y, 0) : 0;
             return (tile_id != 0 && tile_id != id_void) ? tile_id : id_void;
         }
         if (DungeonGenerator::room_boundary_has_point(room.bounds, x, y)) {
@@ -2001,7 +2006,7 @@ uint16_t WorldGenerator::get_dungeon_layout_tile(const DungeonLayout& p_layout, 
         return floor_tile;
     }
     if (p_layout.has_corridor_wall(x, y)) {
-        return wall_tile;
+        return p_layout.natural_walls ? id_void : wall_tile;
     }
     return id_void;
 }
@@ -2266,7 +2271,7 @@ bool WorldGenerator::try_place_spider_nest(
                 if (dx * dx + dy * dy <= SPIDER_NEST_EGG_RADIUS * SPIDER_NEST_EGG_RADIUS) {
                     area.center_floor_cells.push_back(cell);
                 }
-            } else if (tile_id == wall_tile) {
+            } else if (tile_id == wall_tile || (r_layout.natural_walls && r_layout.has_corridor_wall(x, y))) {
                 const bool near_center = dx * dx + dy * dy <= SPIDER_NEST_CENTER_RADIUS * SPIDER_NEST_CENTER_RADIUS;
                 if (near_center && rng.chance(SPIDER_NEST_CENTER_WALL_ERODE_CHANCE)) {
                     Vector2i cell(x, y);
@@ -2428,7 +2433,14 @@ DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int
 
             context.valid = true;
             context.structure_id = room.structure_id;
-            context.local_pos = Vector2i(x - room.bounds.origin.x, y - room.bounds.origin.y);
+            StructureDb* structure_db = s_db ? s_db : StructureDb::get_singleton();
+            const Vector2i source_size = structure_db ? structure_db->get_structure_size(room.structure_id) : room.bounds.size;
+            context.local_pos = resolve_surface_feature_source_pos(
+                x - room.bounds.origin.x,
+                y - room.bounds.origin.y,
+                source_size,
+                room.rotation
+            );
             context.local_z = 0;
             return context;
         }

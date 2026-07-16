@@ -1,130 +1,94 @@
 [
     {
         "id": "cave_entrance",
-        "type": "cave_entrance",
-        "size": [
-            24,
-            24
-        ],
         "levels": {
             "-1": {
-                "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 9x1, 14x0, 10x1, 13x0, 12x1, 12x0, 6x1, 1x2, 5x1, 12x0, 12x1, 13x0, 11x1, 13x0, 11x1, 14x0, 9x1, 15x0, 8x1, 19x0, 2x1, 131x0)",
+                "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 9x1, 14x0, 10x1, 13x0, 12x1, 12x0, 6x1, 1x2, 1x3, 4x1, 12x0, 12x1, 13x0, 11x1, 13x0, 11x1, 14x0, 9x1, 15x0, 8x1, 19x0, 2x1, 131x0)",
                 "palette": [
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "solid_rock_floor"
-                    },
-                    {
-                        "tile": "stairs_up"
-                    }
+                    {"tile": "void"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "stairs_up"},
+                    {"tile": "stairs_down"}
+                ],
+                "rules": []
+            },
+            "-2": {
+                "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 9x1, 14x0, 10x1, 13x0, 12x1, 12x0, 7x1, 1x2, 4x1, 12x0, 12x1, 13x0, 11x1, 13x0, 11x1, 14x0, 9x1, 15x0, 8x1, 19x0, 2x1, 131x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "stairs_up"}
                 ],
                 "rules": []
             },
             "0": {
                 "blueprint": "(179x0, 3x1, 18x0, 8x1, 16x0, 2x1, 3x2, 4x1, 14x0, 2x1, 7x2, 1x1, 13x0, 3x1, 7x2, 2x1, 12x0, 2x1, 4x2, 1x3, 3x2, 2x1, 12x0, 2x1, 8x2, 2x1, 13x0, 2x1, 7x2, 2x1, 13x0, 2x1, 6x2, 3x1, 14x0, 2x1, 4x2, 3x1, 15x0, 2x1, 4x2, 2x1, 19x0, 2x2, 131x0)",
                 "palette": [
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "solid_rock"
-                    },
-                    {
-                        "tile": "solid_rock_floor"
-                    },
-                    {
-                        "tile": "stairs_down"
-                    }
+                    {"tile": "void"},
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "stairs_down"}
                 ],
                 "rules": []
             }
-        }
+        },
+        "size": [
+            24.0,
+            24.0
+        ],
+        "type": "cave_entrance"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "south"
+            ]
+        },
         "id": "cave_spider",
-        "type": "spider_cave_end",
-        "size": [
-            13,
-            13
-        ],
         "levels": {
             "0": {
-                "blueprint": "(169x0)",
+                "blueprint": "(17x0, 1x1, 4x2, 7x0, 1x2, 1x1, 4x2, 2x1, 4x0, 1x1, 7x2, 1x1, 3x0, 1x1, 6x2, 2x0, 1x2, 1x1, 2x0, 2x2, 2x0, 3x2, 2x0, 1x2, 1x1, 2x0, 2x2, 2x0, 7x2, 2x0, 3x2, 1x0, 7x2, 2x0, 1x1, 9x2, 1x1, 3x0, 1x1, 6x2, 2x1, 5x0, 6x2, 1x1, 7x0, 1x1, 4x2, 10x0, 1x2, 6x0)",
                 "palette": [
-                    {
-                        "tile": "solid_rock_floor"
-                    }
-                ],
-                "rules": [
-                    {
-                        "entity": "pale_spider",
-                        "job": "monster",
-                        "pos": [
-                            5.0,
-                            5.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "pale_spider",
-                        "job": "monster",
-                        "pos": [
-                            7.0,
-                            7.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "loot_table": "dungeon_floor_items",
-                        "pos": [
-                            6.0,
-                            6.0
-                        ],
-                        "type": "spawn_loot_table"
-                    }
+                    {"tile": "solid_rock"},
+                    {"tile": "stone_brick_floor_web_thick"},
+                    {"tile": "solid_rock_floor"}
                 ]
             }
-        }
-    },
-    {
-        "id": "cave_goblin",
-        "type": "goblin_cave_end",
+        },
         "size": [
             13,
             13
         ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "south"
+            ]
+        },
+        "id": "cave_goblin",
         "levels": {
             "0": {
-                "blueprint": "(16x0, 2x1, 10x0, 3x1, 4x0, 2x2, 4x0, 3x1, 4x0, 2x2, 21x0, 1x3, 11x0, 1x3, 1x4, 1x3, 11x0, 1x3, 3x0, 2x1, 3x0, 1x5, 7x0, 3x1, 9x0, 1x5, 3x1, 11x0, 2x1, 26x0)",
+                "blueprint": "(55x0, 6x1, 16x0, 1x1, 1x2, 5x1, 1x2, 1x0, 2x1, 10x0, 5x1, 1x3, 1x1, 1x3, 6x1, 8x0, 2x1, 1x0, 8x1, 1x0, 3x1, 8x0, 1x1, 2x0, 2x1, 1x2, 3x1, 1x2, 1x1, 2x0, 2x1, 8x0, 1x1, 3x0, 6x1, 3x0, 2x1, 6x0, 3x1, 6x0, 1x1, 6x0, 1x1, 5x0, 5x1, 2x0, 2x4, 5x1, 3x0, 2x1, 4x0, 3x1, 1x2, 1x1, 1x0, 5x1, 1x2, 2x1, 2x0, 3x1, 3x0, 1x5, 1x1, 1x6, 3x1, 1x0, 8x1, 1x0, 5x1, 2x0, 2x1, 2x0, 8x1, 1x3, 8x1, 2x0, 1x1, 1x6, 3x0, 4x1, 1x3, 1x1, 1x7, 3x1, 1x0, 4x1, 4x0, 1x1, 3x0, 1x1, 1x0, 1x1, 1x2, 6x1, 1x0, 4x1, 4x0, 1x1, 1x8, 1x5, 2x1, 2x0, 5x1, 1x2, 1x1, 2x0, 3x1, 4x0, 4x1, 3x0, 7x1, 2x0, 2x1, 5x0, 1x5, 1x1, 1x4, 5x0, 5x1, 19x0, 2x1, 10x0)",
                 "palette": [
-                    {
-                        "tile": "solid_rock_floor"
-                    },
-                    {
-                        "tile": "solid_rock"
-                    },
-                    {
-                        "tile": "w_crate"
-                    },
-                    {
-                        "tile": "chair"
-                    },
-                    {
-                        "tile": "campfire"
-                    },
-                    {
-                        "tile": "barrel"
-                    }
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "skull_pike"},
+                    {"tile": "chair"},
+                    {"tile": "shelf_small"},
+                    {"tile": "w_crate"},
+                    {"tile": "haybale"},
+                    {"tile": "campfire"},
+                    {"tile": "barrel"}
                 ],
                 "rules": [
                     {
                         "entity": "goblin",
                         "job": "monster",
                         "pos": [
-                            5.0,
-                            5.0
+                            11.0,
+                            11.0
                         ],
                         "type": "spawn_entity"
                     },
@@ -132,63 +96,215 @@
                         "entity": "goblin",
                         "job": "monster",
                         "pos": [
-                            8.0,
-                            7.0
+                            11.0,
+                            15.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "goblin",
+                        "job": "monster",
+                        "pos": [
+                            15.0,
+                            12.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "goblin",
+                        "job": "monster",
+                        "pos": [
+                            9.0,
+                            12.0
                         ],
                         "type": "spawn_entity"
                     },
                     {
                         "amount": 1.0,
-                        "item_id": "corpse_human",
+                        "item_id": "bedroll",
                         "pos": [
-                            1.0,
-                            5.0
+                            10.0,
+                            2.0
                         ],
                         "type": "spawn_item"
                     },
                     {
-                        "loot_table": "dungeon_remains",
+                        "amount": 1.0,
+                        "item_id": "bedroll",
                         "pos": [
-                            1.0,
-                            5.0
+                            10.0,
+                            7.0
                         ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 6.0,
+                        "item_id": "raw_meat",
+                        "pos": [
+                            11.0,
+                            12.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 4.0,
+                        "item_id": "raw_meat",
+                        "pos": [
+                            12.0,
+                            14.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "bedroll",
+                        "pos": [
+                            13.0,
+                            2.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 2.0,
+                        "item_id": "sausage",
+                        "pos": [
+                            14.0,
+                            13.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            18.0,
+                            12.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            18.0,
+                            15.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 5.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            19.0,
+                            11.0
+                        ],
+                        "type": "spawn_item"
                     },
                     {
                         "amount": 2.0,
                         "item_id": "corpse_human",
                         "pos": [
-                            7.0,
-                            10.0
+                            20.0,
+                            14.0
                         ],
                         "type": "spawn_item"
                     },
                     {
-                        "loot_table": "dungeon_remains",
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
                         "pos": [
-                            7.0,
+                            21.0,
+                            12.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "bedroll",
+                        "pos": [
+                            8.0,
+                            4.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "loot_table": "firewood",
+                        "pos": [
+                            10.0,
+                            9.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            18.0,
+                            13.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            19.0,
                             10.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "valuables_common",
+                        "pos": [
+                            19.0,
+                            16.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            20.0,
+                            12.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            4.0,
+                            17.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "firewood",
+                        "pos": [
+                            9.0,
+                            9.0
                         ],
                         "type": "spawn_loot_table"
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            23.0,
+            19.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "south"
+            ]
+        },
         "id": "cave_bear_1",
-        "type": "bear_cave_end",
-        "size": [
-            13,
-            13
-        ],
         "levels": {
             "0": {
-                "blueprint": "(169x0)",
+                "blueprint": "(18x0, 3x1, 8x0, 7x1, 5x0, 1x1, 1x0, 7x1, 4x0, 7x1, 1x0, 1x1, 3x0, 11x1, 2x0, 11x1, 2x0, 11x1, 3x0, 1x1, 1x0, 7x1, 4x0, 7x1, 1x0, 1x1, 5x0, 7x1, 8x0, 3x1, 11x0, 1x1, 6x0)",
                 "palette": [
-                    {
-                        "tile": "solid_rock_floor"
-                    }
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"}
                 ],
                 "rules": [
                     {
@@ -199,15 +315,6 @@
                             6.0
                         ],
                         "type": "spawn_entity"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "bone",
-                        "pos": [
-                            10.0,
-                            3.0
-                        ],
-                        "type": "spawn_item"
                     },
                     {
                         "amount": 6.0,
@@ -228,67 +335,12 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1.0,
-                        "item_id": "bone",
+                        "loot_table": "dungeon_remains",
                         "pos": [
-                            4.0,
-                            3.0
+                            3.0,
+                            4.0
                         ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "stick",
-                        "pos": [
-                            4.0,
-                            7.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "stick",
-                        "pos": [
-                            5.0,
-                            6.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6.0,
-                        "item_id": "stick",
-                        "pos": [
-                            6.0,
-                            5.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "stick",
-                        "pos": [
-                            6.0,
-                            6.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 4.0,
-                        "item_id": "stick",
-                        "pos": [
-                            6.0,
-                            7.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "stick",
-                        "pos": [
-                            7.0,
-                            6.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_loot_table"
                     },
                     {
                         "amount": 1.0,
@@ -300,115 +352,131 @@
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1.0,
-                        "item_id": "stick",
-                        "pos": [
-                            8.0,
-                            6.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "loot_table": "dungeon_remains",
-                        "pos": [
-                            3.0,
-                            4.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
                         "loot_table": "dungeon_remains",
                         "pos": [
                             8.0,
                             2.0
                         ],
                         "type": "spawn_loot_table"
+                    },
+                    {
+                        "amount": 6.0,
+                        "item_id": "stick",
+                        "pos": [
+                            6.0,
+                            5.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 4.0,
+                        "item_id": "stick",
+                        "pos": [
+                            6.0,
+                            7.0
+                        ],
+                        "type": "spawn_item"
                     }
                 ]
             }
-        }
+        },
+        "placement": {
+            "rotations": [
+                0.0,
+                1.0,
+                2.0,
+                3.0
+            ]
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "south"
+            ]
+        },
         "id": "cave_bear_2",
-        "type": "bear_cave_end",
-        "size": [
-            13,
-            13
-        ],
         "levels": {
             "0": {
-                "blueprint": "(169x0)",
+                "blueprint": "(17x0, 5x1, 7x0, 7x1, 5x0, 3x1, 1x0, 2x1, 1x0, 2x1, 4x0, 9x1, 3x0, 11x1, 2x0, 2x1, 1x0, 8x1, 2x0, 8x1, 1x0, 2x1, 3x0, 9x1, 4x0, 3x1, 1x0, 5x1, 5x0, 7x1, 7x0, 5x1, 10x0, 1x1, 6x0)",
                 "palette": [
-                    {
-                        "tile": "solid_rock_floor"
-                    }
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"}
                 ],
                 "rules": [
                     {
                         "entity": "bear",
                         "job": "animal",
                         "pos": [
-                            6,
-                            6
+                            6.0,
+                            6.0
                         ],
                         "type": "spawn_entity"
                     },
                     {
-                        "amount": 1,
+                        "amount": 3.0,
                         "item_id": "bone",
                         "pos": [
-                            10,
-                            7
+                            5.0,
+                            5.0
                         ],
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
+                        "amount": 2.0,
                         "item_id": "bone",
                         "pos": [
-                            5,
-                            5
+                            6.0,
+                            3.0
                         ],
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "bone_animal",
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
                         "pos": [
-                            6,
-                            3
+                            9.0,
+                            4.0
                         ],
                         "type": "spawn_item"
                     },
                     {
-                        "amount": 4,
-                        "item_id": "bone",
+                        "loot_table": "dungeon_remains",
                         "pos": [
-                            7,
-                            8
+                            9.0,
+                            4.0
                         ],
-                        "type": "spawn_item"
+                        "type": "spawn_loot_table"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "human_skull",
+                        "amount": 4.0,
+                        "item_id": "stick",
                         "pos": [
-                            8,
-                            9
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 5,
-                        "item_id": "bone_animal",
-                        "pos": [
-                            9,
-                            4
+                            7.0,
+                            8.0
                         ],
                         "type": "spawn_item"
                     }
                 ]
             }
-        }
+        },
+        "placement": {
+            "rotations": [
+                0.0,
+                1.0,
+                2.0,
+                3.0
+            ]
+        },
+        "size": [
+            13.0,
+            13.0
+        ],
+        "type": "feature"
     }
 ]

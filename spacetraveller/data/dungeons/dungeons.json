@@ -32,14 +32,14 @@
     "ambient_entity_chance": 0.0008,
     "ambient_loot_table": "forest_floor_items",
     "ambient_loot_chance": 0.0061,
-    "start_z": -1,
+    "start_z": -2,
     "floor_tile": "solid_rock_floor",
     "wall_tile": "solid_rock",
     "radius_chunks": 3,
     "room_count_min": 8,
     "room_count_max": 12,
-    "corridor_width": 2,
-    "end_structure_type": "spider_cave_end",
+    "corridor_width": 1,
+    "end_feature_pool": "spider_cave_end_features",
     "dynamic_features": [
       {
         "type": "spider_nest",
@@ -70,14 +70,14 @@
     "ambient_entity_chance": 0.0006,
     "ambient_loot_table": "forest_floor_items",
     "ambient_loot_chance": 0.0061,
-    "start_z": -1,
+    "start_z": -2,
     "floor_tile": "solid_rock_floor",
     "wall_tile": "solid_rock",
-    "radius_chunks": 8,
-    "room_count_min": 28,
-    "room_count_max": 45,
-    "corridor_width": 1,
-    "end_structure_type": "goblin_cave_end"
+    "radius_chunks": 4,
+    "room_count_min": 14,
+    "room_count_max": 20,
+    "corridor_width": 2,
+    "end_feature_pool": "goblin_cave_end_features"
   },
   {
     "id": "bear_cave",
@@ -86,13 +86,13 @@
     "ambient_entity_chance": 0.0006,
     "ambient_loot_table": "forest_floor_items",
     "ambient_loot_chance": 0.0061,
-    "start_z": -1,
+    "start_z": -2,
     "floor_tile": "solid_rock_floor",
     "wall_tile": "solid_rock",
     "radius_chunks": 2,
     "room_count_min": 5,
     "room_count_max": 8,
-    "corridor_width": 2,
-    "end_structure_type": "bear_cave_end"
+    "corridor_width": 1,
+    "end_feature_pool": "bear_cave_end_features"
   }
 ]

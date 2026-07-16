@@ -8,7 +8,7 @@
       { "item_id": "bronze_coin", "weight": 45, "amount_min": 2, "amount_max": 8 },
       { "item_id": "silver_coin", "weight": 25, "amount_min": 1, "amount_max": 4 },
       { "item_id": "silver_earrings", "weight": 10, "amount_min": 1, "amount_max": 1 },
-      { "item_id": "gold_ring", "weight": 8, "amount_min": 1, "amount_max": 1 },
+      { "item_id": "gold_ring", "weight": 1, "amount_min": 1, "amount_max": 1 },
       { "item_id": "diamond", "weight": 2, "amount_min": 1, "amount_max": 1 }
     ]
   },

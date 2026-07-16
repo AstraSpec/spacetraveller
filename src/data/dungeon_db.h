@@ -23,6 +23,7 @@ struct DungeonDynamicFeatureInfo {
 struct DungeonInfo {
     String id;
     String generator = "room_graph";
+    String end_feature_pool;
     String end_structure_type;
     String ambient_entity_group;
     float ambient_entity_chance = 0.0f;

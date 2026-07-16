@@ -30,6 +30,7 @@ DungeonInfo DungeonDb::_parse_row(const Dictionary &p_data) {
     DungeonInfo info;
     info.id = String(p_data.get("id", ""));
     info.generator = String(p_data.get("generator", "room_graph"));
+    info.end_feature_pool = String(p_data.get("end_feature_pool", ""));
     info.end_structure_type = String(p_data.get("end_structure_type", ""));
     IdRegistry* id_reg = IdRegistry::get_singleton();
     info.ambient_entity_group = String(p_data.get("ambient_entity_group", ""));

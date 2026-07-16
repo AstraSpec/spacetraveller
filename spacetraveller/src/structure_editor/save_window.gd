@@ -48,7 +48,7 @@ func _on_save_pressed() -> void:
 		return
 	var structure_type := _read_structure_type()
 	structure_data["type"] = structure_type
-	if structure_type == "crypt_room":
+	if structure_type == "crypt_room" or !structureEditor.current_dungeon_room_entrances.is_empty():
 		structure_data["dungeon_room"] = {
 			"entrances": _read_entrance_dirs()
 		}

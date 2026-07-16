@@ -2,8 +2,10 @@
 #include "core/rng.h"
 #include "core/world_coords.h"
 #include "data/dungeon_db.h"
+#include "data/feature_db.h"
 #include "data/structure_db.h"
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 
 namespace godot {
@@ -15,8 +17,11 @@ static constexpr int CAVE_ATTEMPTS_PER_CHAMBER = 28;
 
 struct CaveChamber {
     Vector2i center;
-    int radius_x = 4;
-    int radius_y = 4;
+    int radius_x = 3;
+    int radius_y = 3;
+    int parent_index = -1;
+    int child_count = 0;
+    int path_distance = 0;
 };
 
 static uint64_t cave_cell_key(int p_x, int p_y) {
@@ -69,33 +74,142 @@ static void carve_blob(DungeonLayout& r_layout, Rng::Seeded& r_rng, const Vector
     }
 }
 
-static void carve_tunnel(DungeonLayout& r_layout, Rng::Seeded& r_rng, const Vector2i& p_from, const Vector2i& p_to, int p_width) {
+static int manhattan_distance(const Vector2i& p_a, const Vector2i& p_b) {
+    return std::abs(p_a.x - p_b.x) + std::abs(p_a.y - p_b.y);
+}
+
+static void carve_corridor_brush(DungeonLayout& r_layout, const Vector2i& p_center, int p_width) {
+    const int width = max_int(1, p_width);
+    const int first_offset = -((width - 1) / 2);
+    for (int dy = 0; dy < width; dy++) {
+        for (int dx = 0; dx < width; dx++) {
+            add_floor(r_layout, p_center + Vector2i(first_offset + dx, first_offset + dy));
+        }
+    }
+}
+
+static void carve_winding_tunnel(DungeonLayout& r_layout, Rng::Seeded& r_rng, const Vector2i& p_from, const Vector2i& p_to, int p_width) {
     Vector2i pos = p_from;
-    const int tunnel_radius = max_int(1, p_width);
-    carve_disk(r_layout, pos, tunnel_radius);
+    Vector2i previous_step;
+    carve_corridor_brush(r_layout, pos, p_width);
 
     int guard = 0;
-    while (pos != p_to && guard < 512) {
+    const int direct_distance = manhattan_distance(p_from, p_to);
+    const int max_steps = direct_distance * 5 + 64;
+    static const Vector2i steps[4] = {
+        Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+    };
+
+    while (pos != p_to && guard < max_steps) {
         guard++;
+        const int current_distance = manhattan_distance(pos, p_to);
+        int best_score = -1000000;
+        Vector2i best_step;
 
-        const int dx = p_to.x - pos.x;
-        const int dy = p_to.y - pos.y;
-        const bool step_x = dx != 0 && (dy == 0 || std::abs(dx) >= std::abs(dy) || r_rng.chance(0.45f));
-        if (step_x) {
-            pos.x += dx > 0 ? 1 : -1;
-        } else if (dy != 0) {
-            pos.y += dy > 0 ? 1 : -1;
-        }
-
-        if (r_rng.chance(0.12f)) {
-            if (step_x) {
-                pos.y += r_rng.range(-1, 1);
-            } else {
-                pos.x += r_rng.range(-1, 1);
+        for (const Vector2i& step : steps) {
+            const Vector2i next = pos + step;
+            const int next_distance = manhattan_distance(next, p_to);
+            int score = (current_distance - next_distance) * 12 + r_rng.range(0, 12);
+            if (step == previous_step) score += 5;
+            if (previous_step != Vector2i() && step == Vector2i(-previous_step.x, -previous_step.y)) score -= 18;
+            if (next_distance > current_distance + 1) score -= 12;
+            if (score > best_score) {
+                best_score = score;
+                best_step = step;
             }
         }
 
-        carve_disk(r_layout, pos, tunnel_radius);
+        // Sustained perpendicular detours create bends without breaking
+        // four-directional connectivity or allowing an unbounded walk.
+        if (previous_step != Vector2i() && guard < direct_distance * 3 && r_rng.chance(0.22f)) {
+            const Vector2i left(-previous_step.y, previous_step.x);
+            const Vector2i right(previous_step.y, -previous_step.x);
+            const Vector2i detour = r_rng.chance(0.5f) ? left : right;
+            if (manhattan_distance(pos + detour, p_to) <= current_distance + 1) {
+                best_step = detour;
+            }
+        }
+
+        pos += best_step;
+        previous_step = best_step;
+        carve_corridor_brush(r_layout, pos, p_width);
+    }
+
+    // Guaranteed deterministic completion if the winding budget is exhausted.
+    while (pos != p_to) {
+        if (pos.x != p_to.x) {
+            pos.x += p_to.x > pos.x ? 1 : -1;
+        } else {
+            pos.y += p_to.y > pos.y ? 1 : -1;
+        }
+        carve_corridor_brush(r_layout, pos, p_width);
+    }
+}
+
+static Vector2i cardinal_direction(const Vector2i& p_delta) {
+    if (std::abs(p_delta.x) >= std::abs(p_delta.y) && p_delta.x != 0) {
+        return Vector2i(p_delta.x > 0 ? 1 : -1, 0);
+    }
+    if (p_delta.y != 0) {
+        return Vector2i(0, p_delta.y > 0 ? 1 : -1);
+    }
+    return Vector2i(0, -1);
+}
+
+static uint8_t rotation_for_room_interior_direction(const Vector2i& p_direction) {
+    if (p_direction.x > 0) return WorldCoords::ROT_WEST;
+    if (p_direction.x < 0) return WorldCoords::ROT_EAST;
+    if (p_direction.y > 0) return WorldCoords::ROT_NORTH;
+    return WorldCoords::ROT_SOUTH;
+}
+
+static Vector2i rotated_size(const Vector2i& p_size, uint8_t p_rotation) {
+    return (p_rotation == WorldCoords::ROT_WEST || p_rotation == WorldCoords::ROT_EAST)
+        ? Vector2i(p_size.y, p_size.x)
+        : p_size;
+}
+
+static Vector2i source_to_placed(const Vector2i& p_source, const Vector2i& p_size, uint8_t p_rotation) {
+    switch (p_rotation) {
+        case WorldCoords::ROT_WEST:
+            return Vector2i(p_size.y - 1 - p_source.y, p_source.x);
+        case WorldCoords::ROT_NORTH:
+            return Vector2i(p_size.x - 1 - p_source.x, p_size.y - 1 - p_source.y);
+        case WorldCoords::ROT_EAST:
+            return Vector2i(p_source.y, p_size.x - 1 - p_source.x);
+        case WorldCoords::ROT_SOUTH:
+        default:
+            return p_source;
+    }
+}
+
+static bool room_within_cave_radius(const DungeonRect& p_bounds, const Vector2i& p_entrance_center, int p_max_offset) {
+    return p_bounds.origin.x >= p_entrance_center.x - p_max_offset
+        && p_bounds.origin.y >= p_entrance_center.y - p_max_offset
+        && p_bounds.origin.x + p_bounds.size.x - 1 <= p_entrance_center.x + p_max_offset
+        && p_bounds.origin.y + p_bounds.size.y - 1 <= p_entrance_center.y + p_max_offset;
+}
+
+static bool room_overlaps_carved_cave(const DungeonLayout& p_layout, const DungeonRect& p_bounds, const Vector2i& p_allowed_entrance) {
+    for (int y = p_bounds.origin.y; y < p_bounds.origin.y + p_bounds.size.y; y++) {
+        for (int x = p_bounds.origin.x; x < p_bounds.origin.x + p_bounds.size.x; x++) {
+            if (Vector2i(x, y) == p_allowed_entrance) continue;
+            if (has_floor(p_layout, x, y)) return true;
+        }
+    }
+    return false;
+}
+
+static void carve_straight_connector(DungeonLayout& r_layout, const Vector2i& p_from, const Vector2i& p_to) {
+    Vector2i pos = p_from;
+    add_floor(r_layout, pos);
+    while (pos != p_to) {
+        if (pos.x != p_to.x) {
+            pos.x += p_to.x > pos.x ? 1 : -1;
+        } else {
+            pos.y += p_to.y > pos.y ? 1 : -1;
+        }
+        add_floor(r_layout, pos);
     }
 }
 
@@ -162,6 +276,15 @@ static String pick_structure_by_type(const String& p_type, Rng::Seeded& r_rng) {
     return (*structures)[r_rng.range(0, static_cast<int>(structures->size()) - 1)];
 }
 
+static String pick_structure_from_feature_pool(const String& p_pool_id, Rng::Seeded& r_rng) {
+    if (p_pool_id.is_empty()) return "";
+
+    FeatureDb* feature_db = FeatureDb::get_singleton();
+    const FeaturePoolInfo* pool = feature_db ? feature_db->get_feature_pool(p_pool_id) : nullptr;
+    const FeatureEntryInfo* entry = pool ? feature_db->pick_weighted_entry(*pool, r_rng) : nullptr;
+    return entry ? entry->structure_id : String();
+}
+
 static Vector2i structure_size(const String& p_structure_id) {
     StructureDb* structure_db = StructureDb::get_singleton();
     return structure_db ? structure_db->get_structure_size(p_structure_id) : Vector2i();
@@ -179,6 +302,7 @@ DungeonLayout CaveGenerator::build_layout(
     layout.z = p_info.start_z;
     layout.floor_tile_id = p_info.floor_tile;
     layout.wall_tile_id = p_info.wall_tile;
+    layout.natural_walls = true;
     layout.entrance_chunk = p_entrance_chunk;
 
     Rng::Seeded rng = Rng::at(static_cast<uint32_t>(p_world_seed), p_entrance_chunk, Rng::BIOME, CAVE_LAYOUT_SALT);
@@ -191,13 +315,14 @@ DungeonLayout CaveGenerator::build_layout(
     std::vector<CaveChamber> chambers;
     chambers.reserve(p_info.room_count_max + 1);
 
-    auto add_chamber = [&](const Vector2i& p_center, int p_radius_x, int p_radius_y) {
-        chambers.push_back(CaveChamber{p_center, p_radius_x, p_radius_y});
+    auto add_chamber = [&](const Vector2i& p_center, int p_radius_x, int p_radius_y, int p_parent_index, int p_path_distance) {
+        chambers.push_back(CaveChamber{p_center, p_radius_x, p_radius_y, p_parent_index, 0, p_path_distance});
         layout.cave_chamber_centers.push_back(p_center);
         carve_blob(layout, rng, p_center, p_radius_x, p_radius_y);
+        return static_cast<int>(chambers.size()) - 1;
     };
 
-    add_chamber(entrance_center, 5, 4);
+    add_chamber(entrance_center, 3, 3, -1, 0);
 
     static const Vector2i directions[8] = {
         Vector2i(1, 0),
@@ -215,13 +340,18 @@ DungeonLayout CaveGenerator::build_layout(
     int attempts = 0;
     while (static_cast<int>(chambers.size()) < target_chambers && attempts < target_chambers * CAVE_ATTEMPTS_PER_CHAMBER) {
         attempts++;
-        const CaveChamber& parent = chambers[rng.range(0, static_cast<int>(chambers.size()) - 1)];
+        const int chamber_count = static_cast<int>(chambers.size());
+        const int recent_start = std::max(0, chamber_count - 4);
+        const int parent_index = rng.chance(0.75f)
+            ? rng.range(recent_start, chamber_count - 1)
+            : rng.range(0, chamber_count - 1);
+        const CaveChamber parent = chambers[parent_index];
         const Vector2i dir = directions[rng.range(0, 7)];
         const Vector2i perp(-dir.y, dir.x);
-        const int radius_x = rng.range(4, 8);
-        const int radius_y = rng.range(3, 7);
-        const int distance = rng.range(12, 22) + max_int(parent.radius_x, parent.radius_y);
-        const int lateral = rng.range(-7, 7);
+        const int radius_x = rng.range(2, 4);
+        const int radius_y = rng.range(2, 4);
+        const int distance = rng.range(9, 16) + max_int(parent.radius_x, parent.radius_y);
+        const int lateral = rng.range(-5, 5);
         const Vector2i center = parent.center + Vector2i(dir.x * distance, dir.y * distance) + Vector2i(perp.x * lateral, perp.y * lateral);
 
         if (std::abs(center.x - entrance_center.x) > max_offset || std::abs(center.y - entrance_center.y) > max_offset) {
@@ -230,41 +360,83 @@ DungeonLayout CaveGenerator::build_layout(
 
         bool too_close = false;
         for (const CaveChamber& existing : chambers) {
-            if (distance_sq(existing.center, center) < 64) {
+            const int separation = max_int(existing.radius_x, existing.radius_y) + max_int(radius_x, radius_y) + 4;
+            if (distance_sq(existing.center, center) < separation * separation) {
                 too_close = true;
                 break;
             }
         }
         if (too_close) continue;
 
-        carve_tunnel(layout, rng, parent.center, center, max_int(1, p_info.corridor_width));
-        add_chamber(center, radius_x, radius_y);
+        carve_winding_tunnel(layout, rng, parent.center, center, p_info.corridor_width);
+        const int path_distance = parent.path_distance + manhattan_distance(parent.center, center);
+        add_chamber(center, radius_x, radius_y, parent_index, path_distance);
+        chambers[parent_index].child_count++;
     }
 
-    const String end_structure_id = pick_structure_by_type(p_info.end_structure_type, rng);
+    String end_structure_id = pick_structure_from_feature_pool(p_info.end_feature_pool, rng);
+    if (end_structure_id.is_empty()) {
+        end_structure_id = pick_structure_by_type(p_info.end_structure_type, rng);
+    }
     const Vector2i end_size = structure_size(end_structure_id);
     if (!end_structure_id.is_empty() && end_size.x > 0 && end_size.y > 0 && !chambers.empty()) {
-        int farthest_index = 0;
-        int farthest_distance = -1;
-        for (int i = 0; i < static_cast<int>(chambers.size()); i++) {
-            const int d = distance_sq(chambers[i].center, entrance_center);
-            if (d > farthest_distance) {
-                farthest_distance = d;
-                farthest_index = i;
-            }
+        std::vector<int> candidate_indices;
+        candidate_indices.reserve(chambers.size());
+        for (int i = 1; i < static_cast<int>(chambers.size()); i++) {
+            if (chambers[i].child_count == 0) candidate_indices.push_back(i);
         }
+        for (int i = 1; i < static_cast<int>(chambers.size()); i++) {
+            if (chambers[i].child_count != 0) candidate_indices.push_back(i);
+        }
+        if (candidate_indices.empty()) candidate_indices.push_back(0);
 
-        const Vector2i end_center = chambers[farthest_index].center;
-        carve_blob(layout, rng, end_center, end_size.x / 2 + 3, end_size.y / 2 + 3);
-        carve_tunnel(layout, rng, chambers[farthest_index].center, end_center, max_int(1, p_info.corridor_width));
+        std::stable_sort(candidate_indices.begin(), candidate_indices.end(), [&](int p_a, int p_b) {
+            const bool a_is_terminal = chambers[p_a].child_count == 0;
+            const bool b_is_terminal = chambers[p_b].child_count == 0;
+            if (a_is_terminal != b_is_terminal) return a_is_terminal;
+            return chambers[p_a].path_distance > chambers[p_b].path_distance;
+        });
 
-        PlacedDungeonRoom room;
-        room.bounds = DungeonRect{
-            Vector2i(end_center.x - end_size.x / 2, end_center.y - end_size.y / 2),
-            end_size
-        };
-        room.structure_id = end_structure_id;
-        layout.rooms.push_back(room);
+        bool placed_end = false;
+        for (int chamber_index : candidate_indices) {
+            const CaveChamber& chamber = chambers[chamber_index];
+            const Vector2i parent_center = chamber.parent_index >= 0
+                ? chambers[chamber.parent_index].center
+                : entrance_center + Vector2i(0, 1);
+            const Vector2i preferred = cardinal_direction(chamber.center - parent_center);
+            const std::array<Vector2i, 4> placement_directions = {
+                preferred,
+                Vector2i(-preferred.y, preferred.x),
+                Vector2i(preferred.y, -preferred.x),
+                Vector2i(-preferred.x, -preferred.y)
+            };
+
+            for (const Vector2i& outward : placement_directions) {
+                const uint8_t rotation = rotation_for_room_interior_direction(outward);
+                const Vector2i placed_size = rotated_size(end_size, rotation);
+                const Vector2i source_entrance(end_size.x / 2, end_size.y - 1);
+                const Vector2i placed_entrance = source_to_placed(source_entrance, end_size, rotation);
+                const int chamber_extent = outward.x != 0 ? chamber.radius_x : chamber.radius_y;
+
+                for (int extra_distance = 3; extra_distance <= std::max(end_size.x, end_size.y) + 8; extra_distance++) {
+                    const Vector2i world_entrance = chamber.center + outward * (chamber_extent + extra_distance);
+                    const DungeonRect bounds{world_entrance - placed_entrance, placed_size};
+                    if (!room_within_cave_radius(bounds, entrance_center, max_offset)) continue;
+                    if (room_overlaps_carved_cave(layout, bounds, world_entrance)) continue;
+
+                    PlacedDungeonRoom room;
+                    room.bounds = bounds;
+                    room.structure_id = end_structure_id;
+                    room.rotation = rotation;
+                    layout.rooms.push_back(room);
+                    carve_straight_connector(layout, chamber.center, world_entrance);
+                    placed_end = true;
+                    break;
+                }
+                if (placed_end) break;
+            }
+            if (placed_end) break;
+        }
     }
 
     finalize_cave_layout(layout);

@@ -20,6 +20,7 @@ struct DungeonRect {
 struct PlacedDungeonRoom {
     DungeonRect bounds;
     String structure_id;
+    uint8_t rotation = 0;
 };
 
 struct DungeonCorridor {
@@ -31,6 +32,7 @@ struct DungeonLayout {
     int z = -1;
     uint16_t floor_tile_id = 0;
     uint16_t wall_tile_id = 0;
+    bool natural_walls = false;
     Vector2i entrance_chunk;
     DungeonRect bounds;
     std::vector<PlacedDungeonRoom> rooms;
