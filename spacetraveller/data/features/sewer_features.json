@@ -1,0 +1,22 @@
+[
+  {
+    "id": "sewer_room_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "sewer_room_storage", "weight": 3 },
+      { "structure": "sewer_room_camp", "weight": 3 },
+      { "structure": "sewer_room_shelter", "weight": 3 },
+      { "structure": "sewer_room_sewage", "weight": 3 },
+      { "structure": "sewer_room_crates", "weight": 3 },
+      { "structure": "sewer_room_bodies", "weight": 2 },
+      { "structure": "sewer_room_mouse", "weight": 1 }
+    ]
+  },
+  {
+    "id": "sewer_pathway_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "sewer_pathway_iron_gate", "weight": 1 }
+    ]
+  }
+]

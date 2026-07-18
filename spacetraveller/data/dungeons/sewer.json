@@ -1,0 +1,13 @@
+[
+  {
+    "id": "sewer",
+    "generator": "sewer_network",
+    "ambient_entity_group": "sewer_entities",
+    "ambient_entity_chance": 0.0008,
+    "ambient_loot_table": "dungeon_remains",
+    "ambient_loot_chance": 0.003,
+    "start_z": -2,
+    "floor_tile": "stone_brick_floor",
+    "wall_tile": "stone_brick_wall"
+  }
+]

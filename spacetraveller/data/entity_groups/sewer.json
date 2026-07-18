@@ -1,0 +1,11 @@
+[
+  {
+    "id": "sewer_entities",
+    "entries": [
+      { "entity": "mouse", "weight": 1000, "job": "animal" },
+      { "entity": "deepling", "weight": 100, "job": "monster" },
+      { "entity": "giant_leech", "weight": 10, "job": "monster" },
+      { "entity": "dark_wyrm", "weight": 1, "job": "monster" }
+    ]
+  }
+]

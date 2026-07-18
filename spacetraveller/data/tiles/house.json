@@ -24,6 +24,13 @@
     "smash_loot_table": "wooden_furniture_small_smashed"
   },
   {
+    "id": "bedroll",
+    "name": "Bedroll",
+    "atlas": [ 2, 23 ],
+    "solid": false,
+    "tags": []
+  },
+  {
     "id": "bed_double",
     "name": "Double Bed",
     "atlas": [ 1, 36 ],

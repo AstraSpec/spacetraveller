@@ -1,0 +1,22 @@
+{
+  "id": "dark_wyrm",
+  "name": "Dark Wyrm",
+  "atlas": [112, 42],
+  "base_hp": 350,
+  "speed": 0.9,
+  "base_damage": 28,
+  "base_stamina": 220,
+  "combat_style": "maul",
+  "faction": "monster",
+  "reaction_policy": "aggressive",
+  "reaction_radius": 16,
+  "traversal_profile": "smart_walker",
+  "parts": [
+    { "id": "torso", "parent": "", "count": 1, "height": "MID" },
+    { "id": "head", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "neck", "parent": "torso", "count": 1, "height": "HIGH" },
+    { "id": "eye", "parent": "head", "count": 2, "height": "HIGH" },
+    { "id": "mouth", "parent": "head", "count": 1, "height": "HIGH" },
+    { "id": "tail", "parent": "torso", "count": 1, "height": "LOW" }
+  ]
+}

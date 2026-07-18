@@ -12,6 +12,8 @@
 #include "core/world_coords.h"
 #include "core/rng.h"
 #include "world/dungeon_generator.h"
+#include "world/sewer_generator.h"
+#include "world/sewer_generator.h"
 
 namespace godot {
 
@@ -58,6 +60,7 @@ struct CityStructureContext {
 class WorldGenerator {
 private:
     std::unique_ptr<class OreGenerator> ore_generator;
+    std::unique_ptr<class SewerGenerator> sewer_generator;
     std::unordered_map<int, BiomeLayer> biome_layers;
     std::unordered_map<uint16_t, BiomeInfo> biome_rules;
     BiomeInfo alley_gap_tiles;
@@ -75,6 +78,7 @@ private:
     uint16_t id_air = 0;
     uint16_t id_building = 0;
     uint16_t id_road = 0;
+    uint16_t id_gate = 0;
     uint16_t id_alley = 0;
     uint16_t id_forest = 0;
     uint16_t id_plains = 0;
@@ -96,6 +100,18 @@ private:
     uint16_t id_stone_brick_floor_web = 0;
     uint16_t id_stone_brick_floor_web_thick = 0;
     uint16_t tag_road = 0;
+
+    std::unordered_map<uint64_t, SewerChunkDescriptor> sewer_chunk_cache;
+    struct SewerFeatureInstance {
+        String structure_id;
+        Vector2i origin;
+        Vector2i source_size;
+        Vector2i placed_size;
+        uint8_t rotation = WorldCoords::ROT_SOUTH;
+    };
+    std::unordered_map<uint64_t, std::vector<SewerFeatureInstance>> sewer_feature_cache;
+    int sewer_cache_seed = 0;
+    bool sewer_cache_seed_valid = false;
 
     std::unordered_map<uint64_t, DungeonLayout> dungeon_layout_cache;
     int dungeon_layout_cache_seed = 0;
@@ -177,6 +193,10 @@ private:
         int& r_placed_radius
     );
     void reset_dungeon_cache();
+    void rebuild_sewer_network(int p_world_seed);
+    const SewerChunkDescriptor* get_sewer_chunk_descriptor(int p_chunk_x, int p_chunk_y, int p_world_seed);
+    const SewerFeatureInstance* get_sewer_feature_instance(int x, int y, int z, int world_seed);
+    uint16_t get_sewer_tile(int x, int y, int z, int world_seed);
     void rebuild_dungeon_entrance_cache();
     bool validate_surface_feature_anchor(
         const String& p_feature_id,

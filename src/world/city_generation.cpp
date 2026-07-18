@@ -279,9 +279,6 @@ void CityGeneration::generateCity(
         for (size_t rIdx = 0; rIdx < computedRingRadii.size(); ++rIdx) {
             uint16_t ringId = (rIdx == computedRingRadii.size() - 1) ? id_wall : id_road;
             canvas.drawCircle(centerX, centerY, computedRingRadii[rIdx], ringId);
-            if (rIdx == computedRingRadii.size() - 1) {
-                for (const auto& g : gateCoords) canvas.fillRect(g.x - 1, g.y - 1, 3, 3, id_gate);
-            }
         }
         for (int i = 0; i < gateCount; ++i) {
             double a1 = gateCoords[i].angle, a2 = gateCoords[(i + 1) % gateCount].angle;
@@ -299,12 +296,36 @@ void CityGeneration::generateCity(
 
     generateOuterDistricts(centerX, centerY, gateCoords, outerReach, outerComp);
 
-    // Central Palace
-    if (!showInner) {
-        canvas.fillRect(static_cast<int>(centerX - 2), static_cast<int>(centerY - 2), 5, 5, id_palace);
-    } else {
-        canvas.fillRect(static_cast<int>(std::round(centerX - 3)), static_cast<int>(std::round(centerY - 3)), 7, 7, id_palace);
+    if (showInner) {
+        for (const CityNode& gate : gateCoords) {
+            canvas.setPixel(gate.x, gate.y, id_gate);
+        }
     }
+
+    // Central Palace
+    const int palace_center_x = static_cast<int>(std::round(centerX));
+    const int palace_center_y = static_cast<int>(std::round(centerY));
+    const int palace_half_extent = showInner ? 3 : 2;
+    const int palace_min_x = palace_center_x - palace_half_extent;
+    const int palace_min_y = palace_center_y - palace_half_extent;
+    const int palace_max_x = palace_center_x + palace_half_extent;
+    const int palace_max_y = palace_center_y + palace_half_extent;
+    canvas.fillRect(
+        palace_min_x,
+        palace_min_y,
+        palace_half_extent * 2 + 1,
+        palace_half_extent * 2 + 1,
+        id_palace
+    );
+
+    const int road_min_x = palace_min_x - 1;
+    const int road_min_y = palace_min_y - 1;
+    const int road_max_x = palace_max_x + 1;
+    const int road_max_y = palace_max_y + 1;
+    canvas.drawLine(road_min_x, road_min_y, road_max_x, road_min_y, id_road);
+    canvas.drawLine(road_max_x, road_min_y, road_max_x, road_max_y, id_road);
+    canvas.drawLine(road_max_x, road_max_y, road_min_x, road_max_y, id_road);
+    canvas.drawLine(road_min_x, road_max_y, road_min_x, road_min_y, id_road);
 
     // Special Districts
     if (showInner && useSpecial) {

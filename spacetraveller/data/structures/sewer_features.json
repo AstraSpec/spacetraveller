@@ -1,0 +1,439 @@
+[
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_storage",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 4x0, 2x2, 1x1, 31x0, 3x2, 4x0, 1x3, 2x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "shelf_small"},
+                    {"tile": "w_crate"},
+                    {"tile": "barrel"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            1.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            7.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            8.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_camp",
+        "levels": {
+            "0": {
+                "blueprint": "(8x0, 1x1, 5x0, 1x2, 1x0, 1x2, 4x0, 1x3, 3x0, 1x4, 4x0, 1x1, 2x0, 1x3, 4x0, 3x5, 1x1, 5x0, 1x1, 2x5)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "barrel"},
+                    {"tile": "chair"},
+                    {"tile": "bedroll"},
+                    {"tile": "campfire"},
+                    {"tile": "w_crate"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            0.0,
+                            3.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            1.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            7.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            8.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_shelter",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 3x0, 3x1, 2x0, 30x1, 1x0, 7x1, 1x2, 1x3)",
+                "palette": [
+                    {"tile": "shelf_small"},
+                    {"tile": "void"},
+                    {"tile": "chair"},
+                    {"tile": "table"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            0.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            0.0,
+                            4.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            3.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "medical_basic",
+                        "pos": [
+                            4.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            9.0,
+                            0.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "sewer_pathway_iron_gate",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 4x0)",
+                "palette": [
+                    {"tile": "iron_bars"},
+                    {"tile": "iron_gate"}
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            1.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_sewage",
+        "levels": {
+            "0": {
+                "blueprint": "(11x0, 2x1, 7x0, 3x1, 8x0, 1x1, 18x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "sewage_shallow"}
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_bodies",
+        "levels": {
+            "0": {
+                "blueprint": "(17x0, 2x1, 8x0, 2x1, 9x0, 1x1, 11x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "upturned_dirt"}
+                ],
+                "rules": [
+                    {
+                        "amount": 3.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            1.0,
+                            1.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 7.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            1.0,
+                            3.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 1.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            2.0,
+                            1.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 3.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            6.0,
+                            2.0
+                        ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "amount": 3.0,
+                        "item_id": "corpse_human",
+                        "pos": [
+                            7.0,
+                            3.0
+                        ],
+                        "type": "spawn_item"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_mouse",
+        "levels": {
+            "0": {
+                "blueprint": "(3x0, 4x1, 6x0, 5x1, 5x0, 5x1, 4x0, 7x1, 5x0, 4x1, 2x0)",
+                "palette": [
+                    {"tile": "sewage_contaminated_heavy"},
+                    {"tile": "void"}
+                ],
+                "rules": [
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            1.0,
+                            2.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            1.0,
+                            4.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            2.0,
+                            0.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            4.0,
+                            2.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            7.0,
+                            0.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity": "mouse",
+                        "job": "animal",
+                        "pos": [
+                            9.0,
+                            3.0
+                        ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "loot_table": "gathered_food_common",
+                        "pos": [
+                            3.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "gathered_food_common",
+                        "pos": [
+                            4.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "gathered_food_common",
+                        "pos": [
+                            6.0,
+                            3.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "gathered_food_common",
+                        "pos": [
+                            7.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            5.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "sewer_room_crates",
+        "levels": {
+            "0": {
+                "blueprint": "(7x0, 1x1, 8x0, 3x1, 2x0, 1x1, 5x0, 2x1, 1x0, 2x1, 8x0, 2x1, 8x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_crate"}
+                ]
+            }
+        },
+        "size": [
+            10,
+            5
+        ],
+        "type": "feature"
+    }
+]

@@ -12,9 +12,12 @@
 #include "dungeon_generator.h"
 #include "gen_grid.h"
 #include "ore_generator.h"
+#include "sewer_generator.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
 #include <cmath>
+#include <queue>
+#include <unordered_set>
 
 using namespace godot;
 
@@ -51,7 +54,9 @@ static bool city_spawn_zone_contains(
     return p_city_zone_min <= 0.0f;
 }
 
-WorldGenerator::WorldGenerator() : ore_generator(std::make_unique<OreGenerator>()) {}
+WorldGenerator::WorldGenerator() :
+    ore_generator(std::make_unique<OreGenerator>()),
+    sewer_generator(std::make_unique<SewerGenerator>()) {}
 WorldGenerator::~WorldGenerator() = default;
 
 static uint64_t dungeon_dynamic_cell_key(int p_x, int p_y) {
@@ -299,6 +304,346 @@ void WorldGenerator::reset_dungeon_cache() {
     dungeon_entrance_cache_valid = false;
 }
 
+void WorldGenerator::rebuild_sewer_network(int p_world_seed) {
+    static constexpr uint64_t SEWER_CHUNK_SALT = 0x534557455243484BULL; // "SEWERCHK"
+    static constexpr uint64_t SEWER_FEATURE_SALT = 0x5345574645415455ULL; // "SEWFEATU"
+    static constexpr uint64_t SEWER_GATE_SALT = 0x5345574741544553ULL; // "SEWGATES"
+
+    sewer_chunk_cache.clear();
+    sewer_feature_cache.clear();
+    sewer_cache_seed = p_world_seed;
+    sewer_cache_seed_valid = true;
+
+    const BiomeLayer* surface_layer = get_biome_layer(0);
+    if (!surface_layer || id_road == 0) return;
+
+    FeatureDb* feature_db = FeatureDb::get_singleton();
+    const FeaturePoolInfo* room_feature_pool = feature_db
+        ? feature_db->get_feature_pool("sewer_room_features")
+        : nullptr;
+    const FeaturePoolInfo* pathway_feature_pool = feature_db
+        ? feature_db->get_feature_pool("sewer_pathway_features")
+        : nullptr;
+
+    auto is_sewer_route_chunk = [&](int p_x, int p_y) {
+        const auto it = surface_layer->overrides.find(WorldCoords::pack_coords(p_x, p_y));
+        if (it == surface_layer->overrides.end()) return false;
+        const uint16_t chunk_id = static_cast<uint16_t>(it->second & WorldCoords::ID_MASK);
+        return chunk_id == id_road || chunk_id == id_gate;
+    };
+
+    for (const auto& pair : surface_layer->overrides) {
+        const uint16_t chunk_id = static_cast<uint16_t>(pair.second & WorldCoords::ID_MASK);
+        if (chunk_id != id_road && chunk_id != id_gate) continue;
+
+        const Vector2i pos = WorldCoords::unpack_coords(pair.first);
+        SewerChunkDescriptor descriptor;
+        if (is_sewer_route_chunk(pos.x, pos.y - 1)) descriptor.connections |= WorldCoords::NEIGH_NORTH;
+        if (is_sewer_route_chunk(pos.x + 1, pos.y)) descriptor.connections |= WorldCoords::NEIGH_EAST;
+        if (is_sewer_route_chunk(pos.x, pos.y + 1)) descriptor.connections |= WorldCoords::NEIGH_SOUTH;
+        if (is_sewer_route_chunk(pos.x - 1, pos.y)) descriptor.connections |= WorldCoords::NEIGH_WEST;
+
+        descriptor.variant = Rng::at(
+            static_cast<uint32_t>(p_world_seed),
+            pos,
+            Rng::BIOME,
+            SEWER_CHUNK_SALT
+        ).state;
+
+        int degree = 0;
+        for (int bit = 0; bit < 4; bit++) {
+            if ((descriptor.connections & (1 << bit)) != 0) degree++;
+        }
+        const uint64_t manhole_divisor = degree >= 2 ? 11ULL : 20ULL;
+        descriptor.manhole = chunk_id == id_road && degree >= 1 && degree <= 2 && descriptor.variant % manhole_divisor == 0;
+        sewer_chunk_cache.emplace(pair.first, descriptor);
+    }
+
+    auto append_neighbors = [&](uint64_t p_key, std::vector<uint64_t>& r_neighbors) {
+        r_neighbors.clear();
+        const auto it = sewer_chunk_cache.find(p_key);
+        if (it == sewer_chunk_cache.end()) return;
+        const Vector2i pos = WorldCoords::unpack_coords(p_key);
+        const uint8_t connections = it->second.connections;
+        if ((connections & WorldCoords::NEIGH_NORTH) != 0) r_neighbors.push_back(WorldCoords::pack_coords(pos.x, pos.y - 1));
+        if ((connections & WorldCoords::NEIGH_EAST) != 0) r_neighbors.push_back(WorldCoords::pack_coords(pos.x + 1, pos.y));
+        if ((connections & WorldCoords::NEIGH_SOUTH) != 0) r_neighbors.push_back(WorldCoords::pack_coords(pos.x, pos.y + 1));
+        if ((connections & WorldCoords::NEIGH_WEST) != 0) r_neighbors.push_back(WorldCoords::pack_coords(pos.x - 1, pos.y));
+    };
+
+    std::unordered_set<uint64_t> visited;
+    std::vector<uint64_t> neighbors;
+    for (auto& pair : sewer_chunk_cache) {
+        if (!visited.insert(pair.first).second) continue;
+
+        std::vector<uint64_t> component;
+        std::queue<uint64_t> component_queue;
+        component_queue.push(pair.first);
+        while (!component_queue.empty()) {
+            const uint64_t current = component_queue.front();
+            component_queue.pop();
+            component.push_back(current);
+            append_neighbors(current, neighbors);
+            for (uint64_t next : neighbors) {
+                if (sewer_chunk_cache.find(next) != sewer_chunk_cache.end() && visited.insert(next).second) {
+                    component_queue.push(next);
+                }
+            }
+        }
+
+        std::vector<uint64_t> sources;
+        for (uint64_t key : component) {
+            if (sewer_chunk_cache[key].manhole) sources.push_back(key);
+        }
+        if (sources.empty() && !component.empty()) {
+            uint64_t selected = component.front();
+            int selected_rank = -1;
+            for (uint64_t key : component) {
+                const auto surface_it = surface_layer->overrides.find(key);
+                const bool is_road = surface_it != surface_layer->overrides.end() &&
+                    static_cast<uint16_t>(surface_it->second & WorldCoords::ID_MASK) == id_road;
+                int degree = 0;
+                for (int bit = 0; bit < 4; bit++) {
+                    if ((sewer_chunk_cache[key].connections & (1 << bit)) != 0) degree++;
+                }
+                const bool supports_edge_access = degree >= 1 && degree <= 2;
+                const int rank = is_road ? (supports_edge_access ? 2 : 1) : 0;
+                if (rank > selected_rank ||
+                    (rank == selected_rank && sewer_chunk_cache[key].variant < sewer_chunk_cache[selected].variant)) {
+                    selected = key;
+                    selected_rank = rank;
+                }
+            }
+            sewer_chunk_cache[selected].manhole = true;
+            sources.push_back(selected);
+        }
+
+        std::unordered_map<uint64_t, int> distances;
+        std::queue<uint64_t> distance_queue;
+        for (uint64_t source : sources) {
+            distances[source] = 0;
+            distance_queue.push(source);
+        }
+        int max_distance = 0;
+        while (!distance_queue.empty()) {
+            const uint64_t current = distance_queue.front();
+            distance_queue.pop();
+            const int next_distance = distances[current] + 1;
+            append_neighbors(current, neighbors);
+            for (uint64_t next : neighbors) {
+                if (distances.find(next) != distances.end()) continue;
+                distances[next] = next_distance;
+                max_distance = std::max(max_distance, next_distance);
+                distance_queue.push(next);
+            }
+        }
+
+        uint64_t endpoint = component.front();
+        bool endpoint_prefers_low_degree = false;
+        for (uint64_t key : component) {
+            SewerChunkDescriptor& descriptor = sewer_chunk_cache[key];
+            const int distance = distances[key];
+            descriptor.danger = max_distance > 0
+                ? static_cast<uint8_t>((distance * 100) / max_distance)
+                : 0;
+
+            int degree = 0;
+            for (int bit = 0; bit < 4; bit++) {
+                if ((descriptor.connections & (1 << bit)) != 0) degree++;
+            }
+            const bool low_degree = degree <= 2;
+            const int endpoint_distance = distances[endpoint];
+            if ((low_degree && !endpoint_prefers_low_degree) ||
+                (low_degree == endpoint_prefers_low_degree && distance > endpoint_distance) ||
+                (low_degree == endpoint_prefers_low_degree && distance == endpoint_distance &&
+                    descriptor.variant < sewer_chunk_cache[endpoint].variant)) {
+                endpoint = key;
+                endpoint_prefers_low_degree = low_degree;
+            }
+        }
+        sewer_chunk_cache[endpoint].endpoint = true;
+
+        if (sewer_generator && feature_db) {
+            StructureDb* structure_db = s_db ? s_db : StructureDb::get_singleton();
+            auto add_feature = [&](uint64_t p_key,
+                                   const FeaturePoolInfo* p_pool,
+                                   Rng::Seeded& r_rng,
+                                   const Vector2i& p_origin,
+                                   const Vector2i& p_expected_size,
+                                   uint8_t p_rotation,
+                                   const char* p_kind) {
+                if (!p_pool || !structure_db) return;
+
+                const FeatureEntryInfo* entry = feature_db->pick_weighted_entry(*p_pool, r_rng);
+                if (!entry || entry->structure_id.is_empty()) return;
+
+                const StructureInfo* structure = structure_db->get_structure_info(entry->structure_id);
+                if (!structure || structure->type != "feature") {
+                    UtilityFunctions::push_error(
+                        "[WorldGenerator] Sewer ", p_kind, " feature is missing or not type feature: ", entry->structure_id
+                    );
+                    return;
+                }
+
+                const Vector2i placed_size = get_rotated_surface_feature_size(structure->size, p_rotation);
+                if (placed_size != p_expected_size) {
+                    UtilityFunctions::push_error(
+                        "[WorldGenerator] Sewer ", p_kind, " feature must fit ", p_expected_size,
+                        ": ", entry->structure_id, " places as ", placed_size
+                    );
+                    return;
+                }
+
+                SewerFeatureInstance instance;
+                instance.structure_id = entry->structure_id;
+                instance.origin = p_origin;
+                instance.source_size = structure->size;
+                instance.placed_size = placed_size;
+                instance.rotation = p_rotation;
+                sewer_feature_cache[p_key].push_back(instance);
+            };
+
+            for (uint64_t key : component) {
+                const SewerChunkDescriptor& descriptor = sewer_chunk_cache[key];
+                const Vector2i chunk_pos = WorldCoords::unpack_coords(key);
+                const Vector2i chunk_origin = chunk_pos * WorldCoords::CHUNK_SIZE;
+
+                const SewerRoomPlacement room = sewer_generator->get_room_placement(descriptor);
+                if (room.valid) {
+                    Rng::Seeded room_rng = Rng::at(
+                        static_cast<uint32_t>(p_world_seed), chunk_pos, Rng::BIOME, SEWER_FEATURE_SALT
+                    );
+                    add_feature(
+                        key,
+                        room_feature_pool,
+                        room_rng,
+                        chunk_origin + Vector2i(room.interior_x, room.interior_y),
+                        Vector2i(room.interior_width, room.interior_height),
+                        room.rotation,
+                        "room"
+                    );
+                }
+
+                WorldCoords::NeighborBits connected_sides[4];
+                int connected_count = 0;
+                const WorldCoords::NeighborBits sides[4] = {
+                    WorldCoords::NEIGH_NORTH,
+                    WorldCoords::NEIGH_EAST,
+                    WorldCoords::NEIGH_SOUTH,
+                    WorldCoords::NEIGH_WEST
+                };
+                for (WorldCoords::NeighborBits side : sides) {
+                    if ((descriptor.connections & side) != 0) connected_sides[connected_count++] = side;
+                }
+
+                Rng::Seeded gate_rng = Rng::at(
+                    static_cast<uint32_t>(p_world_seed), chunk_pos, Rng::BIOME, SEWER_GATE_SALT
+                );
+                if (!pathway_feature_pool || connected_count < 1 || connected_count > 2 || !gate_rng.chance(0.02f)) {
+                    continue;
+                }
+
+                const WorldCoords::NeighborBits side = connected_sides[gate_rng.range(0, connected_count - 1)];
+                Vector2i local_origin;
+                Vector2i placed_size;
+                uint8_t rotation = WorldCoords::ROT_SOUTH;
+                switch (side) {
+                    case WorldCoords::NEIGH_NORTH:
+                        local_origin = Vector2i(7, 5);
+                        placed_size = Vector2i(10, 1);
+                        break;
+                    case WorldCoords::NEIGH_EAST:
+                        local_origin = Vector2i(18, 7);
+                        placed_size = Vector2i(1, 10);
+                        rotation = WorldCoords::ROT_WEST;
+                        break;
+                    case WorldCoords::NEIGH_SOUTH:
+                        local_origin = Vector2i(7, 18);
+                        placed_size = Vector2i(10, 1);
+                        break;
+                    case WorldCoords::NEIGH_WEST:
+                        local_origin = Vector2i(5, 7);
+                        placed_size = Vector2i(1, 10);
+                        rotation = WorldCoords::ROT_WEST;
+                        break;
+                }
+                add_feature(
+                    key,
+                    pathway_feature_pool,
+                    gate_rng,
+                    chunk_origin + local_origin,
+                    placed_size,
+                    rotation,
+                    "pathway"
+                );
+            }
+        }
+    }
+}
+
+const SewerChunkDescriptor* WorldGenerator::get_sewer_chunk_descriptor(
+    int p_chunk_x,
+    int p_chunk_y,
+    int p_world_seed
+) {
+    if (!sewer_cache_seed_valid || sewer_cache_seed != p_world_seed) {
+        rebuild_sewer_network(p_world_seed);
+    }
+    const auto it = sewer_chunk_cache.find(WorldCoords::pack_coords(p_chunk_x, p_chunk_y));
+    return it != sewer_chunk_cache.end() ? &it->second : nullptr;
+}
+
+const WorldGenerator::SewerFeatureInstance* WorldGenerator::get_sewer_feature_instance(
+    int x,
+    int y,
+    int z,
+    int world_seed
+) {
+    if (z != -2) return nullptr;
+    get_sewer_chunk_descriptor(floor_div_chunk(x), floor_div_chunk(y), world_seed);
+    const auto it = sewer_feature_cache.find(WorldCoords::pack_coords(floor_div_chunk(x), floor_div_chunk(y)));
+    if (it == sewer_feature_cache.end()) return nullptr;
+
+    for (const SewerFeatureInstance& instance : it->second) {
+        const int local_x = x - instance.origin.x;
+        const int local_y = y - instance.origin.y;
+        if (local_x >= 0 && local_y >= 0 && local_x < instance.placed_size.x && local_y < instance.placed_size.y) {
+            return &instance;
+        }
+    }
+    return nullptr;
+}
+
+uint16_t WorldGenerator::get_sewer_tile(int x, int y, int z, int world_seed) {
+    if (!sewer_generator || (z != 0 && z != -1 && z != -2)) return id_void;
+    const SewerChunkDescriptor* descriptor = get_sewer_chunk_descriptor(
+        floor_div_chunk(x),
+        floor_div_chunk(y),
+        world_seed
+    );
+    if (!descriptor) return id_void;
+
+    const uint16_t base_tile = sewer_generator->get_tile(x, y, z, world_seed, *descriptor);
+    const SewerFeatureInstance* feature = get_sewer_feature_instance(x, y, z, world_seed);
+    if (feature && s_db) {
+        const Vector2i source_pos = resolve_surface_feature_source_pos(
+            x - feature->origin.x,
+            y - feature->origin.y,
+            feature->source_size,
+            feature->rotation
+        );
+        const uint16_t feature_tile = s_db->get_tile_at(
+            feature->structure_id,
+            source_pos.x,
+            source_pos.y,
+            0,
+            get_hash(x, y, static_cast<uint32_t>(world_seed))
+        );
+        if (feature_tile != id_void) return feature_tile;
+    }
+    return base_tile;
+}
+
 void WorldGenerator::rebuild_dungeon_entrance_cache() {
     dungeon_entrance_cache.clear();
     dungeon_entrance_cache_valid = true;
@@ -335,6 +680,7 @@ void WorldGenerator::setup_biome_rules() {
     id_air = id_reg->register_string("air");
     id_building = id_reg->register_string("building");
     id_road = id_reg->register_string("road");
+    id_gate = id_reg->register_string("gate");
     id_alley = id_reg->register_string("alley");
     id_forest = id_reg->register_string("forest");
     id_plains = id_reg->register_string("plains");
@@ -355,6 +701,21 @@ void WorldGenerator::setup_biome_rules() {
     id_stone_brick_wall_web_thick = id_reg->register_string("stone_brick_wall_web_thick");
     id_stone_brick_floor_web = id_reg->register_string("stone_brick_floor_web");
     id_stone_brick_floor_web_thick = id_reg->register_string("stone_brick_floor_web_thick");
+
+    if (sewer_generator) {
+        SewerTileSet sewer_tiles;
+        sewer_tiles.void_tile = id_void;
+        sewer_tiles.wall = id_stone_brick_wall;
+        sewer_tiles.floor = id_stone_brick_floor;
+        sewer_tiles.sewage = id_reg->register_string("sewage_shallow");
+        sewer_tiles.contaminated_floor = id_reg->register_string("sewage_contaminated");
+        sewer_tiles.contaminated_sewage = id_reg->register_string("sewage_contaminated_heavy");
+        sewer_tiles.bridge = id_reg->register_string("bridge");
+        sewer_tiles.manhole = id_reg->register_string("manhole");
+        sewer_tiles.stairs_up = id_reg->register_string("stairs_up");
+        sewer_tiles.stairs_down = id_reg->register_string("stairs_down");
+        sewer_generator->setup(sewer_tiles);
+    }
 
     TagRegistry* tag_reg = TagRegistry::get_singleton();
     tag_road = tag_reg ? tag_reg->get_tag_id("ROAD") : 0;
@@ -859,6 +1220,7 @@ Dictionary WorldGenerator::init_region(const Vector2i& regionPos, int world_seed
     }
 
     apply_auto_tiling(regionPos);
+    rebuild_sewer_network(world_seed);
     return result;
 }
 
@@ -913,6 +1275,9 @@ void WorldGenerator::apply_auto_tiling(const Vector2i& p_region_pos) {
                 bool neighbor_connects = false;
                 if (current_is_alley && chunk_db && road_tag_id != 0) {
                     if (chunk_db->has_tag(n_id, road_tag_id)) neighbor_connects = true;
+                }
+                if (!neighbor_connects && chunk_id == id_road && n_id == id_gate) {
+                    neighbor_connects = true;
                 }
                 if (!neighbor_connects && n_id == chunk_id) neighbor_connects = true;
                 if (neighbor_connects) mask |= bit;
@@ -2415,6 +2780,20 @@ uint16_t WorldGenerator::get_dungeon_tile(int x, int y, int z, int world_seed) {
 DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int y, int z, int world_seed) {
     setup_biome_rules();
 
+    if (const SewerFeatureInstance* feature = get_sewer_feature_instance(x, y, z, world_seed)) {
+        DungeonStructureContext context;
+        context.valid = true;
+        context.structure_id = feature->structure_id;
+        context.local_pos = resolve_surface_feature_source_pos(
+            x - feature->origin.x,
+            y - feature->origin.y,
+            feature->source_size,
+            feature->rotation
+        );
+        context.local_z = 0;
+        return context;
+    }
+
     if (!dungeon_layout_cache_seed_valid || dungeon_layout_cache_seed != world_seed) {
         dungeon_layout_cache.clear();
         dungeon_layout_cache_seed = world_seed;
@@ -2529,6 +2908,10 @@ CityStructureContext WorldGenerator::get_city_structure_context(int x, int y, in
 String WorldGenerator::get_dungeon_type_for_cell(int x, int y, int z, int world_seed) {
     setup_biome_rules();
 
+    if (z == -2 && get_sewer_tile(x, y, z, world_seed) != id_void) {
+        return "sewer";
+    }
+
     if (!dungeon_layout_cache_seed_valid || dungeon_layout_cache_seed != world_seed) {
         dungeon_layout_cache.clear();
         dungeon_layout_cache_seed = world_seed;
@@ -2575,6 +2958,8 @@ bool WorldGenerator::is_stone_brick_floor_loot_candidate(int x, int y, int z, in
 
 uint16_t WorldGenerator::get_tile(int x, int y, int world_seed) {
     uint16_t base_tile_id = get_base_surface_tile(x, y, world_seed);
+    uint16_t sewer_tile_id = get_sewer_tile(x, y, 0, world_seed);
+    if (sewer_tile_id != id_void) base_tile_id = sewer_tile_id;
     uint16_t feature_tile_id = get_feature_tile(x, y, 0, world_seed);
     return feature_tile_id != id_void ? feature_tile_id : base_tile_id;
 }
@@ -2632,6 +3017,9 @@ uint16_t WorldGenerator::get_base_tile_without_features(int x, int y, int z, int
         }
     }
 
+    uint16_t sewer_tile_id = get_sewer_tile(x, y, z, world_seed);
+    if (sewer_tile_id != id_void) return sewer_tile_id;
+
     uint16_t dungeon_tile_id = get_dungeon_tile(x, y, z, world_seed);
     if (dungeon_tile_id != id_void) return dungeon_tile_id;
 
@@ -2685,6 +3073,9 @@ void WorldGenerator::set_region_chunks(const std::unordered_map<uint64_t, uint32
     city_structure_instances.clear();
     city_structure_by_chunk.clear();
     last_chunk_valid = false;
+    sewer_chunk_cache.clear();
+    sewer_feature_cache.clear();
+    sewer_cache_seed_valid = false;
     reset_dungeon_cache();
 }
 
@@ -2694,6 +3085,9 @@ void WorldGenerator::set_biome_layers(const std::unordered_map<int, BiomeLayer>&
     city_structure_instances.clear();
     city_structure_by_chunk.clear();
     last_chunk_valid = false;
+    sewer_chunk_cache.clear();
+    sewer_feature_cache.clear();
+    sewer_cache_seed_valid = false;
     reset_dungeon_cache();
 }
 
@@ -2750,6 +3144,9 @@ void WorldGenerator::clear_region_chunks() {
 
 void WorldGenerator::invalidate_cache() {
     last_chunk_valid = false;
+    sewer_chunk_cache.clear();
+    sewer_feature_cache.clear();
+    sewer_cache_seed_valid = false;
     reset_dungeon_cache();
     if (ore_generator) ore_generator->clear_cache();
 }

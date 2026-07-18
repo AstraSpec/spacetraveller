@@ -1,0 +1,20 @@
+{
+  "id": "giant_leech",
+  "name": "Giant Leech",
+  "atlas": [116, 42],
+  "base_hp": 110,
+  "speed": 0.75,
+  "base_damage": 12,
+  "base_stamina": 100,
+  "combat_style": "skitter",
+  "faction": "monster",
+  "reaction_policy": "aggressive",
+  "reaction_radius": 10,
+  "traversal_profile": "walker",
+  "parts": [
+    { "id": "torso", "parent": "", "count": 1, "height": "LOW" },
+    { "id": "head", "parent": "torso", "count": 1, "height": "LOW" },
+    { "id": "eye", "parent": "head", "count": 2, "height": "LOW" },
+    { "id": "mouth", "parent": "head", "count": 1, "height": "LOW" }
+  ]
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sewage_shallow",
+    "name": "Shallow Sewage",
+    "atlas": [11, 34],
+    "solid": false,
+    "tags": ["FLOOR", "NATURAL_DARK"]
+  },
+  {
+    "id": "sewage_contaminated",
+    "name": "Contaminated Sewage",
+    "atlas": [20, 6],
+    "solid": false,
+    "tags": ["GROUND", "FLOOR", "NATURAL_DARK"]
+  },
+  {
+    "id": "sewage_contaminated_heavy",
+    "name": "Heavily Contaminated Sewage",
+    "atlas": [19, 6],
+    "solid": false,
+    "tags": ["FLOOR", "NATURAL_DARK"]
+  },
+  {
+    "id": "manhole",
+    "name": "Manhole",
+    "atlas": [2, 40],
+    "solid": false,
+    "tags": ["GROUND", "DESCENT_LEVEL"]
+  }
+]
