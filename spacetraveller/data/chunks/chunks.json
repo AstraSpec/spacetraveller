@@ -66,6 +66,14 @@
     "dungeon_type": "bear_cave"
   },
   {
+    "id": "mine_entrance",
+    "atlas": [ 48, 1 ],
+    "tile_group": "grass_dirt",
+    "wilderness_spawn_chance": 0.00014,
+    "structure_type": "mine_entrance",
+    "dungeon_type": "mine"
+  },
+  {
     "id": "road",
     "atlas": [ 53, 0 ],
     "tags": ["ROAD"],
@@ -264,7 +272,7 @@
     "id": "bandit_camp",
     "atlas": [ 34, 0 ],
     "tile_group": "grass_dirt",
-    "wilderness_spawn_chance": 0.0008,
+    "wilderness_spawn_chance": 0.0007,
     "wilderness_footprint": [ 2, 2 ],
     "structure_type": "bandit_camp",
     "feature_spawns": [

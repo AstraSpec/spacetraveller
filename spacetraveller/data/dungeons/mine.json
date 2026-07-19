@@ -1,0 +1,31 @@
+[
+  {
+    "id": "mine",
+    "generator": "mine_graph",
+    "ambient_entity_group": "mine_entities",
+    "ambient_entity_chance": 0.0007,
+    "ambient_loot_table": "dungeon_remains",
+    "ambient_loot_chance": 0.004,
+    "start_z": -2,
+    "depth_min": 1,
+    "depth_max": 1,
+    "floor_tile": "solid_rock_floor",
+    "wall_tile": "solid_rock",
+    "radius_chunks": 4,
+    "segment_count_min": 12,
+    "segment_count_max": 18,
+    "segment_length_min": 12,
+    "segment_length_max": 30,
+    "main_width": 3,
+    "branch_width": 2,
+    "branch_chance": 0.35,
+    "loop_chance": 0.18,
+    "support_spacing_min": 6,
+    "support_spacing_max": 9,
+    "feature_room_count_min": 3,
+    "feature_room_count_max": 5,
+    "room_feature_pool": "mine_room_features",
+    "support_feature_pool": "mine_support_features",
+    "end_feature_pool": "mine_end_features"
+  }
+]

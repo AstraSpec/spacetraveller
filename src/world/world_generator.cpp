@@ -11,6 +11,7 @@
 #include "cave_generator.h"
 #include "dungeon_generator.h"
 #include "gen_grid.h"
+#include "mine_generator.h"
 #include "ore_generator.h"
 #include "sewer_generator.h"
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -2728,6 +2729,8 @@ DungeonLayout* WorldGenerator::get_or_create_dungeon_layout(
         layout = DungeonGenerator::build_layout(*info, p_entrance_chunk, p_world_seed);
     } else if (info->generator == "cave_graph") {
         layout = CaveGenerator::build_layout(*info, p_entrance_chunk, p_world_seed);
+    } else if (info->generator == "mine_graph") {
+        layout = MineGenerator::build_layout(*info, p_entrance_chunk, p_world_seed);
     } else {
         return nullptr;
     }

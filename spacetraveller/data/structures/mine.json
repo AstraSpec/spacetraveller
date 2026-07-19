@@ -1,0 +1,331 @@
+[
+    {
+        "id": "mine_entrance",
+        "levels": {
+            "-1": {
+                "blueprint": "(225x0, 7x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 2x2, 1x3, 1x4, 1x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 7x1, 200x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "stairs_up"},
+                    {"tile": "stairs_down"}
+                ]
+            },
+            "-2": {
+                "blueprint": "(225x0, 7x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 3x2, 1x3, 1x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 1x1, 5x2, 1x1, 17x0, 2x1, 3x2, 2x1, 200x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "stairs_up"}
+                ]
+            },
+            "0": {
+                "blueprint": "(125x0, 14x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 1x2, 1x5, 8x2, 1x6, 1x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 6x2, 1x4, 5x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 1x1, 1x2, 1x7, 10x2, 1x1, 10x0, 1x1, 12x2, 1x1, 10x0, 6x1, 2x3, 6x1, 125x0)",
+                "palette": [
+                    {"tile": "void"},
+                    {"tile": "w_wall"},
+                    {"tile": "w_floor"},
+                    {"tile": "w_door_c"},
+                    {"tile": "stairs_down"},
+                    {"tile": "w_crate"},
+                    {"tile": "barrel"},
+                    {"tile": "shelf_small"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            7.0,
+                            7.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            16.0,
+                            7.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            24.0,
+            24.0
+        ],
+        "type": "mine_entrance"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "mine_room_storage",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 5x0, 3x2, 3x1, 2x3, 1x0, 1x1, 1x2, 1x4, 4x1, 1x2, 1x4, 21x1, 1x0, 1x3, 4x1, 1x4, 1x3, 1x1, 5x0, 2x1, 4x0)",
+                "palette": [
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "w_crate"},
+                    {"tile": "barrel"},
+                    {"tile": "shelf_small"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            1.0,
+                            5.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            2.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            6.0,
+                            5.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            7.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            8.0,
+                            2.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            7.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "mine_room_workshop",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 5x0, 2x2, 6x1, 1x0, 6x1, 2x3, 8x1, 2x3, 4x1, 1x3, 4x1, 1x3, 2x1, 1x0, 3x3, 5x1, 5x0, 2x1, 4x0)",
+                "palette": [
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "shelf_small"},
+                    {"tile": "barrel"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            1.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            2.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            7.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "mine_room_bunks",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 5x0, 1x2, 7x1, 1x0, 2x1, 1x3, 4x1, 1x3, 14x1, 1x3, 4x1, 1x3, 2x1, 1x0, 2x4, 6x1, 5x0, 2x1, 4x0)",
+                "palette": [
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "w_crate"},
+                    {"tile": "bedroll"},
+                    {"tile": "barrel"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "camp_supplies",
+                        "pos": [
+                            1.0,
+                            1.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10.0,
+            7.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "mine_end_working_face",
+        "levels": {
+            "0": {
+                "blueprint": "(5x0, 2x1, 6x0, 10x1, 2x0, 1x1, 1x2, 6x1, 1x2, 1x1, 1x0, 36x1, 1x0, 10x1, 2x0, 2x3, 8x1, 6x0, 2x1, 5x0)",
+                "palette": [
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "mine_support"},
+                    {"tile": "w_crate"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "tools_common",
+                        "pos": [
+                            1.0,
+                            7.0
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "storage_common",
+                        "pos": [
+                            2.0,
+                            7.0
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            12.0,
+            9.0
+        ],
+        "type": "feature"
+    },
+    {
+        "id": "mine_support_frame",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x0)",
+                "palette": [
+                    {"tile": "mine_support"},
+                    {"tile": "solid_rock_floor"}
+                ]
+            }
+        },
+        "size": [
+            3.0,
+            1.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "mine_room_shelf",
+        "levels": {
+            "0": {
+                "blueprint": "(4x0, 2x1, 5x0, 7x1, 1x2, 1x0, 2x1, 2x3, 8x1, 2x3, 3x1, 1x4, 8x1, 2x4, 2x1, 1x0, 5x1, 2x4, 1x1, 5x0, 2x1, 4x0)",
+                "palette": [
+                    {"tile": "solid_rock"},
+                    {"tile": "solid_rock_floor"},
+                    {"tile": "shelf_small"},
+                    {"tile": "barrel"},
+                    {"tile": "w_crate"}
+                ],
+                "rules": [
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            2,
+                            3
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "ores_common",
+                        "pos": [
+                            3,
+                            2
+                        ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "loot_table": "repair_materials",
+                        "pos": [
+                            8,
+                            1
+                        ],
+                        "type": "spawn_loot_table"
+                    }
+                ]
+            }
+        },
+        "size": [
+            10,
+            7
+        ],
+        "type": "feature"
+    }
+]

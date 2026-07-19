@@ -32,6 +32,8 @@ DungeonInfo DungeonDb::_parse_row(const Dictionary &p_data) {
     info.generator = String(p_data.get("generator", "room_graph"));
     info.end_feature_pool = String(p_data.get("end_feature_pool", ""));
     info.end_structure_type = String(p_data.get("end_structure_type", ""));
+    info.room_feature_pool = String(p_data.get("room_feature_pool", ""));
+    info.support_feature_pool = String(p_data.get("support_feature_pool", ""));
     IdRegistry* id_reg = IdRegistry::get_singleton();
     info.ambient_entity_group = String(p_data.get("ambient_entity_group", ""));
     info.ambient_entity_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_entity_chance", 0.0)));
@@ -59,6 +61,18 @@ DungeonInfo DungeonDb::_parse_row(const Dictionary &p_data) {
     info.room_count_min = static_cast<int>(p_data.get("room_count_min", Variant(12)));
     info.room_count_max = static_cast<int>(p_data.get("room_count_max", Variant(info.room_count_min)));
     info.corridor_width = static_cast<int>(p_data.get("corridor_width", Variant(1)));
+    info.segment_count_min = static_cast<int>(p_data.get("segment_count_min", Variant(info.segment_count_min)));
+    info.segment_count_max = static_cast<int>(p_data.get("segment_count_max", Variant(info.segment_count_max)));
+    info.segment_length_min = static_cast<int>(p_data.get("segment_length_min", Variant(info.segment_length_min)));
+    info.segment_length_max = static_cast<int>(p_data.get("segment_length_max", Variant(info.segment_length_max)));
+    info.main_width = static_cast<int>(p_data.get("main_width", Variant(info.main_width)));
+    info.branch_width = static_cast<int>(p_data.get("branch_width", Variant(info.branch_width)));
+    info.branch_chance = clamp_unit_float(static_cast<float>(static_cast<double>(p_data.get("branch_chance", info.branch_chance))));
+    info.loop_chance = clamp_unit_float(static_cast<float>(static_cast<double>(p_data.get("loop_chance", info.loop_chance))));
+    info.support_spacing_min = static_cast<int>(p_data.get("support_spacing_min", Variant(info.support_spacing_min)));
+    info.support_spacing_max = static_cast<int>(p_data.get("support_spacing_max", Variant(info.support_spacing_max)));
+    info.feature_room_count_min = static_cast<int>(p_data.get("feature_room_count_min", Variant(info.feature_room_count_min)));
+    info.feature_room_count_max = static_cast<int>(p_data.get("feature_room_count_max", Variant(info.feature_room_count_max)));
 
     if (info.depth_min < 1) info.depth_min = 1;
     if (info.depth_max < info.depth_min) info.depth_max = info.depth_min;
@@ -66,6 +80,12 @@ DungeonInfo DungeonDb::_parse_row(const Dictionary &p_data) {
     if (info.room_count_min < 1) info.room_count_min = 1;
     if (info.room_count_max < info.room_count_min) info.room_count_max = info.room_count_min;
     if (info.corridor_width < 1) info.corridor_width = 1;
+    normalize_range(info.segment_count_min, info.segment_count_max, 1);
+    normalize_range(info.segment_length_min, info.segment_length_max, 4);
+    if (info.main_width < 1) info.main_width = 1;
+    if (info.branch_width < 1) info.branch_width = 1;
+    normalize_range(info.support_spacing_min, info.support_spacing_max, 2);
+    normalize_range(info.feature_room_count_min, info.feature_room_count_max, 0);
 
     Variant dynamic_features_var = p_data.get("dynamic_features", Array());
     if (dynamic_features_var.get_type() == Variant::ARRAY) {

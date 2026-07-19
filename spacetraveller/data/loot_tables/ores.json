@@ -1,5 +1,18 @@
 [
   {
+    "id": "ores_common",
+    "rolls_min": 1,
+    "rolls_max": 2,
+    "allow_duplicates": false,
+    "entries": [
+      {"item_id": "iron_ore", "weight": 40, "amount_min": 1, "amount_max": 3},
+      {"item_id": "copper_ore", "weight": 28, "amount_min": 1, "amount_max": 3},
+      {"item_id": "coal", "weight": 22, "amount_min": 1, "amount_max": 4},
+      {"item_id": "salt", "weight": 8, "amount_min": 1, "amount_max": 3},
+      {"item_id": "gold_ore", "weight": 2, "amount_min": 1, "amount_max": 1}
+    ]
+  },
+  {
     "id": "hematite_ore_smashed",
     "rolls_min": 1,
     "rolls_max": 1,

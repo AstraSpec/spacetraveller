@@ -1,0 +1,25 @@
+[
+  {
+    "id": "mine_room_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "mine_room_storage", "weight": 3 },
+      { "structure": "mine_room_workshop", "weight": 3 },
+      { "structure": "mine_room_bunks", "weight": 1 }
+    ]
+  },
+  {
+    "id": "mine_support_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "mine_support_frame", "weight": 1 }
+    ]
+  },
+  {
+    "id": "mine_end_features",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "mine_end_working_face", "weight": 1 }
+    ]
+  }
+]

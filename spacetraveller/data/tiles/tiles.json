@@ -332,5 +332,13 @@
     "solid": false,
     "light": { "strength": 13 },
     "tags": []
+  },
+  {
+    "id": "mine_support",
+    "name": "Mine Support",
+    "atlas": [26, 0],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   }
 ]

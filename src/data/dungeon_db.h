@@ -25,6 +25,8 @@ struct DungeonInfo {
     String generator = "room_graph";
     String end_feature_pool;
     String end_structure_type;
+    String room_feature_pool;
+    String support_feature_pool;
     String ambient_entity_group;
     float ambient_entity_chance = 0.0f;
     uint16_t ambient_loot_table = 0;
@@ -38,6 +40,18 @@ struct DungeonInfo {
     int room_count_min = 12;
     int room_count_max = 20;
     int corridor_width = 1;
+    int segment_count_min = 10;
+    int segment_count_max = 18;
+    int segment_length_min = 12;
+    int segment_length_max = 30;
+    int main_width = 3;
+    int branch_width = 2;
+    float branch_chance = 0.35f;
+    float loop_chance = 0.15f;
+    int support_spacing_min = 5;
+    int support_spacing_max = 8;
+    int feature_room_count_min = 3;
+    int feature_room_count_max = 6;
     std::vector<DungeonDynamicFeatureInfo> dynamic_features;
 };
 
