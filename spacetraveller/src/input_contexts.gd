@@ -101,7 +101,13 @@ class ExplorationContext extends InputContext:
 	var move_processor = DirectionalProcessor.new()
 
 	func handle_input(event: InputEvent) -> bool:
-		if event.is_action_pressed("action_smash"):
+		if event.is_action_pressed("ui_focus_next"):
+			if manager.is_shift_pressed:
+				manager.ui_prev_tab.emit()
+			else:
+				manager.ui_next_tab.emit()
+			return true
+		elif event.is_action_pressed("action_smash"):
 			manager.action_smash_requested.emit()
 			return true
 		elif event.is_action_pressed("action_close"):
@@ -136,6 +142,12 @@ class LookContext extends InputContext:
 	func handle_input(event: InputEvent) -> bool:
 		if event.is_action_pressed("ui_cancel"):
 			manager.pop_mode()
+			return true
+		elif event.is_action_pressed("ui_focus_next"):
+			if manager.is_shift_pressed:
+				manager.ui_prev_tab.emit()
+			else:
+				manager.ui_next_tab.emit()
 			return true
 		return false
 

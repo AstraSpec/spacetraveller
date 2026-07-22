@@ -153,6 +153,7 @@ public:
     bool can_offer_quest(int giver_entity_id, const String& kind) const;
 
     bool is_cell_seen(const Vector2i& pos) const;
+    Dictionary inspect_cell(const Vector2i& pos) const;
     bool has_entity_at_cell(int x, int y) const;
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
     Array find_path(const Vector2i& start, const Vector2i& goal);
@@ -248,7 +249,7 @@ public:
     Dictionary get_player_effects() const;
     Dictionary get_entity_social_profile(uint32_t entity_id) const;
 
-    void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime);
+    void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime, bool always_visible);
     void remove_overlay(int x, int y);
     void clear_overlays();
 

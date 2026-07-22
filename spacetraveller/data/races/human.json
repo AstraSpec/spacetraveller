@@ -5,7 +5,7 @@
   "base_hp": 100,
   "speed": 0.0,
   "base_damage": 10,
-  "base_stamina": 80,
+  "base_stamina": 100,
   "corpse_item": "corpse_human",
   "faction": "unaffiliated",
   "reaction_policy": "defensive",

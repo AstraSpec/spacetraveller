@@ -560,6 +560,11 @@ bool WorldBubble::is_cell_seen(int x, int y) const {
     return seen_cells.count(cell_key) > 0;
 }
 
+bool WorldBubble::is_cell_visible(int x, int y) const {
+    uint64_t cell_key = make_cell_key(x, y);
+    return visible_cells.count(cell_key) > 0;
+}
+
 std::vector<uint64_t> WorldBubble::consume_newly_seen_cells() {
     std::vector<uint64_t> out = newly_seen_cells;
     newly_seen_cells.clear();
@@ -603,7 +608,7 @@ uint16_t WorldBubble::query_tile_id_at_z(int x, int y, int z) {
     return resolve_tile_id(LAYER_TILE, cell_key, x, y, z);
 }
 
-void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime) {
+void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime, bool always_visible) {
     uint64_t key = make_cell_key(x, y);
     Overlay ov;
     ov.atlas_x = atlas_x;
@@ -611,6 +616,7 @@ void WorldBubble::add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, 
     ov.color = color;
     ov.lifetime = lifetime;
     ov.age = 0.0f;
+    ov.always_visible = always_visible;
     overlays[key] = ov;
 }
 
@@ -843,6 +849,10 @@ LightLevel WorldBubble::get_current_light_level(uint64_t p_cell_key) const {
     return LightMap::get_level(current_light_samples, p_cell_key);
 }
 
+LightLevel WorldBubble::get_light_level_at(int x, int y) const {
+    return get_current_light_level(make_cell_key(x, y));
+}
+
 LightStrength WorldBubble::get_apparent_light_strength(const Vector2i& p_view_origin, int p_world_x, int p_world_y, int p_world_z) {
     const uint64_t cell_key = make_cell_key_at_z(p_world_x, p_world_y, p_world_z);
     const LightSample sample = LightMap::get_sample(current_light_samples, cell_key);
@@ -978,11 +988,19 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
             uint64_t cell_key = make_cell_key(cx, cy);
 
             CellVisual visual;
+            const Overlay* overlay = nullptr;
+            if (l == LAYER_INDICATOR) {
+                auto ov_it = overlays.find(cell_key);
+                if (ov_it != overlays.end()) {
+                    overlay = &ov_it->second;
+                }
+            }
+            const bool force_overlay_visible = overlay && overlay->always_visible;
 
             if (occlusion_enabled) {
                 visual.occluded = visible_cells.find(cell_key) == visible_cells.end();
                 visual.seen = seen_cells.count(cell_key) > 0;
-                if (visual.occluded && !visual.seen) {
+                if (visual.occluded && !visual.seen && !force_overlay_visible) {
                     snapshot.cells[l][offset_key] = visual;
                     continue;
                 }
@@ -1054,19 +1072,15 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 }
             }
 
-            if (draw_dynamic && l == LAYER_INDICATOR) {
-                auto ov_it = overlays.find(cell_key);
-                if (ov_it != overlays.end()) {
-                    const Overlay& ov = ov_it->second;
-                    visual.draw_overlay = true;
-                    visual.overlay_atlas_x = ov.atlas_x;
-                    visual.overlay_atlas_y = ov.atlas_y;
-                    visual.overlay_color = ov.color;
-                    if (ov.lifetime > 0.0f) {
-                        float remaining = 1.0f - (ov.age / ov.lifetime);
-                        if (remaining < 0.0f) remaining = 0.0f;
-                        visual.overlay_color.a *= remaining;
-                    }
+            if ((draw_dynamic || force_overlay_visible) && overlay) {
+                visual.draw_overlay = true;
+                visual.overlay_atlas_x = overlay->atlas_x;
+                visual.overlay_atlas_y = overlay->atlas_y;
+                visual.overlay_color = overlay->color;
+                if (overlay->lifetime > 0.0f) {
+                    float remaining = 1.0f - (overlay->age / overlay->lifetime);
+                    if (remaining < 0.0f) remaining = 0.0f;
+                    visual.overlay_color.a *= remaining;
                 }
             }
 

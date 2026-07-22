@@ -1,11 +1,15 @@
 extends Node2D
 
+signal inspection_focus_changed(cell_pos: Vector2i)
+
 @export var _GameWorld :GameWorld
 @export var Player :PlayerController
 @export var Canvas :CanvasLayer
 
 var structure_editor_scene = preload("res://src/structure_editor/structure_editor.tscn")
 var structure_editor_instance = null
+
+const LOOK_INDICATOR_ATLAS := Vector2i(20, 0)
 
 var DEFAULT_ZOOM_LVL :int = 3
 var look_focus: Vector2i = Vector2i.ZERO
@@ -62,6 +66,7 @@ func _ready() -> void:
 	_apply_debug_mode(InputManager.debug_mode_enabled)
 	_initialize_windows()
 	QuestService.bind_game_world(_GameWorld)
+	inspection_focus_changed.emit(_GameWorld.get_player_position())
 
 func _resolve_scenario_id(options: Dictionary = {}) -> String:
 	var scenario_id := str(options.get("scenario_id", "")).to_lower()
@@ -185,15 +190,36 @@ func _on_look_mode_changed(active: bool) -> void:
 		if Player and Player.has_method("cancel_navigation"):
 			Player.cancel_navigation()
 		look_focus = _GameWorld.get_player_position()
+		_show_look_indicator()
 		_update_look_view()
+		inspection_focus_changed.emit(look_focus)
 	else:
+		_clear_look_indicator()
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+		inspection_focus_changed.emit(_GameWorld.get_player_position())
 
 func _on_look_directional_input(direction: Vector2) -> void:
 	if not _look_mode_active:
 		return
+	_clear_look_indicator()
 	look_focus += Vector2i(direction)
+	_show_look_indicator()
 	_update_look_view()
+	inspection_focus_changed.emit(look_focus)
+
+func _show_look_indicator() -> void:
+	_GameWorld.add_overlay(
+		look_focus.x,
+		look_focus.y,
+		LOOK_INDICATOR_ATLAS.x,
+		LOOK_INDICATOR_ATLAS.y,
+		Color(1.0, 1.0, 1.0, 1.0),
+		-1.0,
+		true
+	)
+
+func _clear_look_indicator() -> void:
+	_GameWorld.remove_overlay(look_focus.x, look_focus.y)
 
 func _update_look_view() -> void:
 	_GameWorld.update_world_view(

@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=40 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -36,6 +36,31 @@
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_tab_selected"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.16965726, 0.16965726, 0.171875, 1)
+border_width_bottom = 2
+border_color = Color(0.88, 0.9, 0.91, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_tab_unselected"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 7.0
+bg_color = Color(0.1164, 0.1164, 0.12, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_resource_bar_background"]
+bg_color = Color(0.078, 0.078, 0.082, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_bar_fill"]
+bg_color = Color(0.909804, 0.313725, 0.313725, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stamina_bar_fill"]
+bg_color = Color(0.298039, 0.811765, 0.415686, 1)
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("_GameWorld", "Player", "Canvas")]
 script = ExtResource("1_14wn1")
@@ -978,21 +1003,30 @@ size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI/RightPanel" node_paths=PackedStringArray("_GameWorld", "DayLabel", "TimeLabel", "SunLabel", "HealthLabel", "StaminaLabel")]
+[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI/RightPanel" node_paths=PackedStringArray("_GameWorld", "DayLabel", "TimeLabel", "SunLabel", "HealthValue", "StaminaValue", "HealthBar", "StaminaBar", "LookController")]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 3.0
 mouse_filter = 2
+theme_override_colors/font_selected_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_colors/font_unselected_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_colors/font_hovered_color = Color(0.88, 0.9, 0.91, 1)
 theme_override_constants/side_margin = 0
 theme_override_styles/panel = ExtResource("15_yaehf")
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_sidebar_tab_selected")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_sidebar_tab_unselected")
+theme_override_styles/tab_hovered = SubResource("StyleBoxFlat_sidebar_tab_unselected")
 current_tab = 0
 script = ExtResource("15_2cqfq")
 _GameWorld = NodePath("../../../../GameWorld")
 DayLabel = NodePath("Vitals/VBoxContainer/DayLabel")
 TimeLabel = NodePath("Vitals/VBoxContainer/TimeLabel")
 SunLabel = NodePath("Vitals/VBoxContainer/SunLabel")
-HealthLabel = NodePath("Vitals/VBoxContainer/HealthLabel")
-StaminaLabel = NodePath("Vitals/VBoxContainer/StaminaLabel")
+HealthValue = NodePath("Vitals/VBoxContainer/HealthResource/HealthValue")
+StaminaValue = NodePath("Vitals/VBoxContainer/StaminaResource/StaminaValue")
+HealthBar = NodePath("Vitals/VBoxContainer/HealthResource/HealthBar")
+StaminaBar = NodePath("Vitals/VBoxContainer/StaminaResource/StaminaBar")
+LookController = NodePath("../../../..")
 
 [node name="Vitals" type="MarginContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI"]
 layout_mode = 2
@@ -1006,45 +1040,313 @@ metadata/_tab_index = 0
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="WorldTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "WORLD"
+
 [node name="DayLabel" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
 layout_mode = 2
-label1_color = Color(0.62352943, 0.62352943, 0.62352943, 1)
+label1_color = Color(0.54, 0.58, 0.62, 1)
 label1_font_size = 12
 label1_text = "Day:"
+label2_color = Color(0.88, 0.9, 0.91, 1)
 label2_font_size = 12
 
 [node name="TimeLabel" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
 layout_mode = 2
-label1_color = Color(0.625, 0.625, 0.625, 1)
+label1_color = Color(0.54, 0.58, 0.62, 1)
 label1_font_size = 12
 label1_text = "Time:"
+label2_color = Color(0.88, 0.9, 0.91, 1)
 label2_font_size = 12
 
 [node name="SunLabel" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
 layout_mode = 2
-label1_color = Color(0.625, 0.625, 0.625, 1)
+label1_color = Color(0.54, 0.58, 0.62, 1)
 label1_font_size = 12
 label1_text = "Sun:"
+label2_color = Color(0.88, 0.9, 0.91, 1)
 label2_font_size = 12
 
-[node name="HealthLabel" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+[node name="ConditionSeparator" type="HSeparator" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+modulate = Color(0.42, 0.45, 0.48, 1)
 layout_mode = 2
-label1_color = Color(0.85, 0.4, 0.4, 1)
-label1_font_size = 12
-label1_text = "Health:"
-label2_font_size = 12
 
-[node name="StaminaLabel" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer" instance=ExtResource("17_074og")]
+[node name="ConditionTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
 layout_mode = 2
-label1_color = Color(0.4, 0.7, 0.45, 1)
-label1_font_size = 12
-label1_text = "Stamina:"
-label2_font_size = 12
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "CONDITION"
 
-[node name="Log" type="Control" parent="Canvas/ScreenUI/RightPanel/ScreenUI"]
+[node name="HealthResource" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HealthLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Health:"
+vertical_alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
+visible = false
+custom_minimum_size = Vector2(84, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="HealthValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "--"
+vertical_alignment = 1
+
+[node name="StaminaResource" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StaminaLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/StaminaResource"]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Stamina:"
+vertical_alignment = 1
+
+[node name="StaminaBar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/StaminaResource"]
+visible = false
+custom_minimum_size = Vector2(84, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_stamina_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="StaminaValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/StaminaResource"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "--"
+vertical_alignment = 1
+
+[node name="Look" type="MarginContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI"]
 visible = false
 layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Header" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 13
+text = "LOOK — Here"
+
+[node name="Spacer" type="Control" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Coordinates" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 11
+text = "0, 0 · Z 0"
+
+[node name="HeaderSeparator" type="HSeparator" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+modulate = Color(0.42, 0.45, 0.48, 1)
+layout_mode = 2
+
+[node name="VisibilityLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Unseen area"
+autowrap_mode = 2
+
+[node name="TileSection" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="SectionTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "TILE"
+
+[node name="Grid" type="GridContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="TerrainLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Terrain"
+
+[node name="TerrainValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "Unknown"
+autowrap_mode = 2
+
+[node name="MovementLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Movement"
+
+[node name="MovementValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "Unknown"
+
+[node name="LightLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Light"
+
+[node name="LightValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "Unknown"
+
+[node name="DarknessNoteMargin" type="MarginContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_top = 6
+
+[node name="DarknessNote" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TileSection/DarknessNoteMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 11
+text = "Too dark to see creatures or items."
+autowrap_mode = 2
+
+[node name="CreatureSection" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Separator" type="HSeparator" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection"]
+modulate = Color(0.42, 0.45, 0.48, 1)
+layout_mode = 2
+
+[node name="SectionTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "CREATURE"
+
+[node name="Grid" type="GridContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="NameLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection/Grid"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Name"
+
+[node name="NameValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "Creature"
+autowrap_mode = 2
+
+[node name="AttitudeLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection/Grid"]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 12
+text = "Attitude"
+
+[node name="AttitudeValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/CreatureSection/Grid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "Neutral"
+
+[node name="ItemsSection" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Separator" type="HSeparator" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/ItemsSection"]
+modulate = Color(0.42, 0.45, 0.48, 1)
+layout_mode = 2
+
+[node name="SectionTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/ItemsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "ITEMS"
+
+[node name="ItemsList" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/ItemsSection"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="TextSection" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Separator" type="HSeparator" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TextSection"]
+modulate = Color(0.42, 0.45, 0.48, 1)
+layout_mode = 2
+
+[node name="SectionTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TextSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 11
+text = "TEXT"
+
+[node name="Text" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Look/VBoxContainer/TextSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_font_sizes/font_size = 12
+text = "“Text”"
+autowrap_mode = 2
 
 [node name="EventLog" parent="Canvas/ScreenUI/RightPanel" instance=ExtResource("26_evlog")]
 layout_mode = 2

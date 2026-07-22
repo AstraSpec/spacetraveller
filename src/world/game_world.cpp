@@ -117,6 +117,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("has_item", "pos"), &GameWorld::has_item);
 
     ClassDB::bind_method(D_METHOD("is_cell_seen", "pos"), &GameWorld::is_cell_seen);
+    ClassDB::bind_method(D_METHOD("inspect_cell", "pos"), &GameWorld::inspect_cell);
     ClassDB::bind_method(D_METHOD("has_entity_at_cell", "x", "y"), &GameWorld::has_entity_at_cell);
     ClassDB::bind_method(D_METHOD("request_player_path", "start", "goal"), &GameWorld::request_player_path);
     ClassDB::bind_method(D_METHOD("find_path", "start", "goal"), &GameWorld::find_path);
@@ -162,7 +163,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_player_effects"), &GameWorld::get_player_effects);
     ClassDB::bind_method(D_METHOD("get_entity_social_profile", "entity_id"), &GameWorld::get_entity_social_profile);
 
-    ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime"), &GameWorld::add_overlay, DEFVAL(-1.0f));
+    ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime", "always_visible"), &GameWorld::add_overlay, DEFVAL(-1.0f), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
     ClassDB::bind_method(D_METHOD("clear_overlays"), &GameWorld::clear_overlays);
 
@@ -596,6 +597,107 @@ bool GameWorld::can_offer_quest(int giver_entity_id, const String& kind) const {
 
 bool GameWorld::is_cell_seen(const Vector2i& pos) const {
     return bubble.is_cell_seen(pos.x, pos.y);
+}
+
+Dictionary GameWorld::inspect_cell(const Vector2i& pos) const {
+    Dictionary result;
+    result["position"] = pos;
+    result["z"] = bubble.get_active_z();
+
+    const bool visible = bubble.is_cell_visible(pos.x, pos.y);
+    const bool seen = visible || bubble.is_cell_seen(pos.x, pos.y);
+    result["visibility"] = visible ? "visible" : (seen ? "remembered" : "unseen");
+    if (!seen) return result;
+
+    TileDb* tile_db = TileDb::get_singleton();
+    const String tile_id = get_tile_at(pos.x, pos.y, LAYER_TILE);
+    const TileInfo* tile = tile_db ? tile_db->get_tile_info(tile_id) : nullptr;
+    Dictionary terrain;
+    terrain["id"] = tile_id;
+    terrain["name"] = tile && !tile->name.is_empty() ? tile->name : tile_id;
+    terrain["solid"] = tile ? tile->solid : false;
+
+    Array properties;
+    properties.push_back(String(tile && tile->solid ? "Blocked" : "Walkable"));
+    TagRegistry* tags = TagRegistry::get_singleton();
+    auto add_property = [&](const char* tag, const char* label) {
+        if (!tile || !tags) return;
+        const uint16_t tag_id = tags->get_tag_id(tag);
+        if (TagRegistry::has_tag(tag_id, tile->tags)) properties.push_back(String(label));
+    };
+    add_property("SMASHABLE", "Smashable");
+    add_property("CAN_OPEN", "Openable");
+    add_property("CAN_CLOSE", "Closable");
+    add_property("ASCEND_LEVEL", "Stairs up");
+    add_property("DESCENT_LEVEL", "Stairs down");
+    add_property("CONTAINER", "Container");
+    terrain["properties"] = properties;
+    result["terrain"] = terrain;
+
+    if (!visible) return result;
+
+    const LightLevel light_level = bubble.get_light_level_at(pos.x, pos.y);
+    switch (light_level) {
+        case LightLevel::Bright: result["light"] = "Bright"; break;
+        case LightLevel::Lit: result["light"] = "Lit"; break;
+        case LightLevel::Low: result["light"] = "Dim"; break;
+        case LightLevel::Blank:
+        default: result["light"] = "Dark"; break;
+    }
+
+    if (light_reveals_detail(light_level)) {
+        result["metadata"] = bubble.get_tile_metadata(pos);
+    }
+    if (!light_reveals_dynamics(light_level)) return result;
+
+    ItemDb* item_db = ItemDb::get_singleton();
+    Array items = bubble.get_items_at(pos);
+    Array item_views;
+    const Vector2i player_pos = get_player_position();
+    const bool adjacent_to_player = MAX(Math::abs(pos.x - player_pos.x), Math::abs(pos.y - player_pos.y)) <= 1;
+    if (!tile || !tile->hides_items || adjacent_to_player) {
+        for (int i = 0; i < items.size(); i++) {
+            Dictionary item = items[i];
+            const String item_id = item.get("id", "");
+            String item_name = item_db ? item_db->get_item_name(item_id) : item_id;
+            Dictionary view;
+            view["id"] = item_id;
+            view["name"] = item_name.is_empty() ? item_id : item_name;
+            view["amount"] = item.get("amount", 1);
+            item_views.push_back(view);
+        }
+    }
+    result["items"] = item_views;
+
+    const uint32_t entity_id = entity_tracker.get_at(Vector3i(pos.x, pos.y, bubble.get_active_z()));
+    if (entity_id != INVALID_ENTITY_ID) {
+        Dictionary entity_view;
+        entity_view["id"] = static_cast<int64_t>(entity_id);
+
+        String entity_name = entity_id == player_entity_id ? String("You") : get_entity_name(entity_id);
+        const AnatomyData* anatomy = entity_ledger.try_get_anatomy(entity_id);
+        if (entity_name.is_empty() && anatomy) {
+            RaceDb* race_db = RaceDb::get_singleton();
+            const RaceInfo* race = race_db ? race_db->get_race_info(anatomy->race_id) : nullptr;
+            entity_name = race && !race->name.is_empty() ? race->name : anatomy->race_id.capitalize();
+        }
+        entity_view["name"] = entity_name.is_empty() ? String("Creature") : entity_name;
+        entity_view["relation"] = entity_id == player_entity_id
+            ? String("you")
+            : get_entity_relation(static_cast<int>(entity_id), static_cast<int>(player_entity_id));
+
+        const HealthData* health = entity_ledger.try_get_health(entity_id);
+        if (health && health->max_hp > 0.0f) {
+            const float fraction = health->current_hp / health->max_hp;
+            if (fraction >= 0.9f) entity_view["health"] = "Uninjured";
+            else if (fraction >= 0.65f) entity_view["health"] = "Lightly wounded";
+            else if (fraction >= 0.35f) entity_view["health"] = "Wounded";
+            else entity_view["health"] = "Badly wounded";
+        }
+        result["entity"] = entity_view;
+    }
+
+    return result;
 }
 
 bool GameWorld::has_entity_at_cell(int x, int y) const {
@@ -1077,8 +1179,8 @@ Dictionary GameWorld::get_entity_social_profile(uint32_t entity_id) const {
     return entity_ledger.get_social_profile(entity_id);
 }
 
-void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime) {
-    bubble.add_overlay(x, y, (uint16_t)atlas_x, (uint16_t)atlas_y, color, lifetime);
+void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime, bool always_visible) {
+    bubble.add_overlay(x, y, (uint16_t)atlas_x, (uint16_t)atlas_y, color, lifetime, always_visible);
 }
 
 void GameWorld::remove_overlay(int x, int y) {

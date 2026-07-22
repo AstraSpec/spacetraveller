@@ -69,6 +69,7 @@ public:
         Color color = Color(1, 1, 1, 1);
         float lifetime = -1.0f; // seconds; < 0 = persistent until removed
         float age = 0.0f;
+        bool always_visible = false;
     };
 
 private:
@@ -185,6 +186,7 @@ public:
     Array get_seen_cells_at_z(int z) const;
     void set_seen_cells(const Array& p_seen);
     bool is_cell_seen(int x, int y) const;
+    bool is_cell_visible(int x, int y) const;
     std::vector<uint64_t> consume_newly_seen_cells();
     void update_active_area(const CellArea& area);
     std::vector<uint64_t> consume_newly_active_cells();
@@ -199,7 +201,7 @@ public:
     void rebuild_from_pool();
     const CellEntity* get_entity_at(int x, int y) const;
 
-    void add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime = -1.0f);
+    void add_overlay(int x, int y, uint16_t atlas_x, uint16_t atlas_y, const Color& color, float lifetime = -1.0f, bool always_visible = false);
     void remove_overlay(int x, int y);
     void clear_overlays();
     bool tick_overlays(float delta);
@@ -226,6 +228,7 @@ public:
         const EntityLedger* p_ledger = nullptr
     );
     LightLevel get_current_light_level(uint64_t p_cell_key) const;
+    LightLevel get_light_level_at(int x, int y) const;
 
     void update_visibility(
         const Vector2i& player_pos,
