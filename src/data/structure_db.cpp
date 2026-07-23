@@ -5,7 +5,9 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <limits>
 
 namespace godot {
 
@@ -148,11 +150,54 @@ static std::vector<int> parse_structure_entrances(const Dictionary& p_data, cons
     return entrances;
 }
 
+static bool variant_to_rule_coordinate(const Variant& p_value, int& r_coordinate) {
+    int64_t value = 0;
+    if (p_value.get_type() == Variant::INT) {
+        value = static_cast<int64_t>(p_value);
+    } else if (p_value.get_type() == Variant::FLOAT) {
+        const double float_value = static_cast<double>(p_value);
+        if (!std::isfinite(float_value) || std::floor(float_value) != float_value) {
+            return false;
+        }
+        if (float_value < static_cast<double>(std::numeric_limits<int>::min())
+            || float_value > static_cast<double>(std::numeric_limits<int>::max())) {
+            return false;
+        }
+        value = static_cast<int64_t>(float_value);
+    } else {
+        return false;
+    }
+
+    if (value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max()) {
+        return false;
+    }
+    r_coordinate = static_cast<int>(value);
+    return true;
+}
+
+static bool variant_to_rule_position(const Variant& p_value, Vector2i& r_position) {
+    if (p_value.get_type() != Variant::ARRAY) {
+        return false;
+    }
+    Array position_data = p_value;
+    if (position_data.size() != 2) {
+        return false;
+    }
+
+    int x = 0;
+    int y = 0;
+    if (!variant_to_rule_coordinate(position_data[0], x)
+        || !variant_to_rule_coordinate(position_data[1], y)) {
+        return false;
+    }
+    r_position = Vector2i(x, y);
+    return true;
+}
+
 static void parse_rules(
     const Array& p_rules,
     const String& p_structure_id,
     StructureLevelInfo& r_level,
-    const StructureDb* p_db,
     IdRegistry* p_id_reg,
     const Vector2i& p_size
 ) {
@@ -160,8 +205,32 @@ static void parse_rules(
         if (p_rules[i].get_type() != Variant::DICTIONARY) continue;
         Dictionary rule_data = p_rules[i];
 
+        if (rule_data.has("pos")) {
+            UtilityFunctions::push_error(
+                "[StructureDb] Rule ", i, " in structure ", p_structure_id,
+                " uses removed 'pos'; use a non-empty 'positions' array."
+            );
+            continue;
+        }
+
+        Variant positions_var = rule_data.get("positions", Variant());
+        if (positions_var.get_type() != Variant::ARRAY) {
+            UtilityFunctions::push_error(
+                "[StructureDb] Rule ", i, " in structure ", p_structure_id,
+                " is missing a valid 'positions' array."
+            );
+            continue;
+        }
+        Array positions_data = positions_var;
+        if (positions_data.is_empty()) {
+            UtilityFunctions::push_error(
+                "[StructureDb] Rule ", i, " in structure ", p_structure_id,
+                " has an empty 'positions' array."
+            );
+            continue;
+        }
+
         StructureRuleInfo rule;
-        rule.pos = p_db->variant_to_vector2i(rule_data.get("pos", Array()), Vector2i());
         rule.entity = String(rule_data.get("entity", rule_data.get("race_id", "")));
         rule.entity_group = String(rule_data.get("entity_group", rule_data.get("entity_group_id", "")));
         rule.job = String(rule_data.get("job", ""));
@@ -170,7 +239,6 @@ static void parse_rules(
         rule.reaction_policy = String(rule_data.get("reaction_policy", ""));
         rule.reaction_radius = static_cast<int>(rule_data.get("reaction_radius", 0));
         rule.ai_state = String(rule_data.get("ai_state", ""));
-        rule.params = rule_data;
 
         String type_str = String(rule_data.get("type", ""));
         if (!parse_rule_type(type_str, rule.type)) {
@@ -189,18 +257,51 @@ static void parse_rules(
         }
         rule.amount = static_cast<int>(rule_data.get("amount", Variant(0)));
 
-        if (rule.pos.x < 0 || rule.pos.x >= p_size.x || rule.pos.y < 0 || rule.pos.y >= p_size.y) {
-            UtilityFunctions::push_error("[StructureDb] Rule in structure ", p_structure_id, " has out-of-bounds pos: ", rule.pos);
+        std::vector<Vector2i> positions;
+        positions.reserve(positions_data.size());
+        bool positions_valid = true;
+        for (int position_index = 0; position_index < positions_data.size(); position_index++) {
+            Vector2i position;
+            if (!variant_to_rule_position(positions_data[position_index], position)) {
+                UtilityFunctions::push_error(
+                    "[StructureDb] Rule ", i, " in structure ", p_structure_id,
+                    " has invalid position at index ", position_index, "."
+                );
+                positions_valid = false;
+                break;
+            }
+            if (position.x < 0 || position.x >= p_size.x || position.y < 0 || position.y >= p_size.y) {
+                UtilityFunctions::push_error(
+                    "[StructureDb] Rule ", i, " in structure ", p_structure_id,
+                    " has out-of-bounds position: ", position
+                );
+                positions_valid = false;
+                break;
+            }
+            positions.push_back(position);
+        }
+        if (!positions_valid) {
+            continue;
         }
 
-        r_level.rules.push_back(rule);
+        r_level.rule_groups.push_back(rule_data.duplicate(true));
+        for (const Vector2i& position : positions) {
+            StructureRuleInfo positioned_rule = rule;
+            positioned_rule.pos = position;
+            positioned_rule.params = rule_data.duplicate(true);
+            positioned_rule.params.erase("positions");
+            Array position_data;
+            position_data.push_back(position.x);
+            position_data.push_back(position.y);
+            positioned_rule.params["pos"] = position_data;
+            r_level.rules.push_back(std::move(positioned_rule));
+        }
     }
 }
 
 static StructureLevelInfo parse_level(
     const Dictionary& p_data,
     const String& p_structure_id,
-    const StructureDb* p_db,
     IdRegistry* p_id_reg,
     const Vector2i& p_size
 ) {
@@ -208,7 +309,7 @@ static StructureLevelInfo parse_level(
     level.blueprint = p_data.get("blueprint", "");
     level.palette = p_data.get("palette", Array());
     level.size = p_size;
-    parse_rules(p_data.get("rules", Array()), p_structure_id, level, p_db, p_id_reg, p_size);
+    parse_rules(p_data.get("rules", Array()), p_structure_id, level, p_id_reg, p_size);
 
     std::vector<uint16_t> palette_ids;
     std::vector<uint16_t> palette_tile_group_ids;
@@ -348,7 +449,7 @@ StructureInfo StructureDb::_parse_row(const Dictionary &p_data) {
         }
         int z = variant_to_level(key_var);
         Dictionary level_data = value;
-        StructureLevelInfo level = parse_level(level_data, structure_id, this, id_reg, info.size);
+        StructureLevelInfo level = parse_level(level_data, structure_id, id_reg, info.size);
         if (level.data.empty()) {
             return StructureInfo();
         }
@@ -389,12 +490,8 @@ Dictionary StructureDb::get_levels(const String &p_id) const {
         level_data["blueprint"] = level.blueprint;
         level_data["palette"] = level.palette;
 
-        Array rules;
-        for (const StructureRuleInfo& rule : level.rules) {
-            rules.push_back(rule.params);
-        }
-        if (!rules.is_empty()) {
-            level_data["rules"] = rules;
+        if (!level.rule_groups.is_empty()) {
+            level_data["rules"] = level.rule_groups.duplicate(true);
         }
 
         result[String::num_int64(z)] = level_data;

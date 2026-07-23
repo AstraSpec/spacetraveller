@@ -106,11 +106,8 @@
                 "rules": [
                     {
                         "entity_group": "carriage_prisoner_goblin",
-                        "pos": [
-                            1,
-                            1
-                        ],
-                        "type": "spawn_entity_group"
+                        "type": "spawn_entity_group",
+                        "positions": [ [ 1, 1 ] ]
                     }
                 ]
             }

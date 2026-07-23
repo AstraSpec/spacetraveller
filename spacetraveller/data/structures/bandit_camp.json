@@ -15,95 +15,33 @@
                     {
                         "entity": "human",
                         "job": "bandit",
-                        "pos": [
-                            20.0,
-                            47.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "human",
-                        "job": "bandit",
-                        "pos": [
-                            22.0,
-                            24.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "human",
-                        "job": "bandit",
-                        "pos": [
-                            23.0,
-                            22.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "human",
-                        "job": "bandit",
-                        "pos": [
-                            25.0,
-                            26.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "human",
-                        "job": "bandit",
-                        "pos": [
-                            27.0,
-                            47.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 20, 47 ], [ 22, 24 ], [ 23, 22 ], [ 25, 26 ], [ 27, 47 ] ]
                     },
                     {
                         "loot_table": "recreation_items",
-                        "pos": [
-                            21.0,
-                            26.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 21, 26 ], [ 26, 24 ] ]
                     },
                     {
                         "loot_table": "camp_supplies",
-                        "pos": [
-                            22.0,
-                            23.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 22, 23 ] ]
                     },
                     {
                         "loot_table": "firewood",
-                        "pos": [
-                            24.0,
-                            22.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 24, 22 ] ]
                     },
                     {
                         "loot_table": "food_preserved",
-                        "pos": [
-                            24.0,
-                            26.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "recreation_items",
-                        "pos": [
-                            26.0,
-                            24.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 24, 26 ] ]
                     },
                     {
                         "loot_table": "repair_materials",
-                        "pos": [
-                            27.0,
-                            21.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 27, 21 ] ]
                     }
                 ]
             }
@@ -136,47 +74,18 @@
                         "entity": "horse",
                         "faction": "bandit",
                         "job": "animal",
-                        "pos": [
-                            2.0,
-                            3.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "horse",
-                        "faction": "bandit",
-                        "job": "animal",
-                        "pos": [
-                            5.0,
-                            3.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "horse",
-                        "faction": "bandit",
-                        "job": "animal",
-                        "pos": [
-                            9.0,
-                            4.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 2, 3 ], [ 5, 3 ], [ 9, 4 ] ]
                     },
                     {
                         "loot_table": "stable_supplies",
-                        "pos": [
-                            9.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 9, 2 ] ]
                     },
                     {
                         "loot_table": "repair_materials",
-                        "pos": [
-                            9.0,
-                            7.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 9, 7 ] ]
                     }
                 ]
             },
@@ -223,51 +132,33 @@
                 "rules": [
                     {
                         "loot_table": "food_preserved",
-                        "pos": [
-                            21.0,
-                            3.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 21, 3 ] ]
                     },
                     {
                         "loot_table": "recreation_items",
-                        "pos": [
-                            21.0,
-                            4.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 21, 4 ] ]
                     },
                     {
                         "loot_table": "medical_basic",
-                        "pos": [
-                            21.0,
-                            5.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 21, 5 ] ]
                     },
                     {
                         "loot_table": "personal_effects_common",
-                        "pos": [
-                            1.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 1 ] ]
                     },
                     {
                         "loot_table": "storage_common",
-                        "pos": [
-                            10.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 10, 1 ] ]
                     },
                     {
                         "loot_table": "weapons_common",
-                        "pos": [
-                            21.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 21, 1 ] ]
                     }
                 ]
             },
@@ -317,60 +208,33 @@
                     {
                         "entity": "human",
                         "job": "bandit",
-                        "pos": [
-                            14.0,
-                            11.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "human",
-                        "job": "bandit",
-                        "pos": [
-                            20.0,
-                            11.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 14, 11 ], [ 20, 11 ] ]
                     },
                     {
                         "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            1.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 1 ] ]
                     },
                     {
                         "loot_table": "stolen_goods",
-                        "pos": [
-                            3.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 3, 1 ] ]
                     },
                     {
                         "loot_table": "desk",
-                        "pos": [
-                            17.0,
-                            3.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 17, 3 ] ]
                     },
                     {
                         "loot_table": "command_table",
-                        "pos": [
-                            18.0,
-                            4.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 18, 4 ] ]
                     },
                     {
                         "loot_table": "personal_effects_common",
-                        "pos": [
-                            1.0,
-                            9.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 9 ] ]
                     }
                 ]
             },
@@ -403,19 +267,13 @@
                     {
                         "entity": "human",
                         "job": "bandit",
-                        "pos": [
-                            8.0,
-                            11.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 8, 11 ] ]
                     },
                     {
                         "entity_group": "prisoner",
-                        "pos": [
-                            5.0,
-                            5.0
-                        ],
-                        "type": "spawn_entity_group"
+                        "type": "spawn_entity_group",
+                        "positions": [ [ 5, 5 ] ]
                     }
                 ]
             },
@@ -452,27 +310,18 @@
                 "rules": [
                     {
                         "loot_table": "tools_common",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 2, 2 ] ]
                     },
                     {
                         "loot_table": "blacksmith_supplies",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "loot_table": "repair_materials",
-                        "pos": [
-                            8.0,
-                            9.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 8, 9 ] ]
                     }
                 ]
             },

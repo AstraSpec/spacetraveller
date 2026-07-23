@@ -36,19 +36,13 @@
                 "rules": [
                     {
                         "loot_table": "storage_common",
-                        "pos": [
-                            7.0,
-                            7.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 7, 7 ] ]
                     },
                     {
                         "loot_table": "tools_common",
-                        "pos": [
-                            16.0,
-                            7.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 16, 7 ] ]
                     }
                 ]
             }
@@ -82,43 +76,8 @@
                 "rules": [
                     {
                         "loot_table": "ores_common",
-                        "pos": [
-                            1.0,
-                            5.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            6.0,
-                            5.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            7.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            8.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 5 ], [ 2, 2 ], [ 6, 5 ], [ 7, 1 ], [ 8, 2 ] ]
                     }
                 ]
             }
@@ -151,19 +110,8 @@
                 "rules": [
                     {
                         "loot_table": "ores_common",
-                        "pos": [
-                            1.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            2.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 1 ], [ 2, 1 ] ]
                     }
                 ]
             }
@@ -197,11 +145,8 @@
                 "rules": [
                     {
                         "loot_table": "camp_supplies",
-                        "pos": [
-                            1.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 1 ] ]
                     }
                 ]
             }
@@ -234,19 +179,13 @@
                 "rules": [
                     {
                         "loot_table": "tools_common",
-                        "pos": [
-                            1.0,
-                            7.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 1, 7 ] ]
                     },
                     {
                         "loot_table": "storage_common",
-                        "pos": [
-                            2.0,
-                            7.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 2, 7 ] ]
                     }
                 ]
             }
@@ -297,27 +236,13 @@
                 "rules": [
                     {
                         "loot_table": "ores_common",
-                        "pos": [
-                            2,
-                            3
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "ores_common",
-                        "pos": [
-                            3,
-                            2
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 2, 3 ], [ 3, 2 ] ]
                     },
                     {
                         "loot_table": "repair_materials",
-                        "pos": [
-                            8,
-                            1
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 8, 1 ] ]
                     }
                 ]
             }

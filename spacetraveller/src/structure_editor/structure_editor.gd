@@ -1801,6 +1801,91 @@ func _rule_pos_from_variant(value: Variant) -> Vector2i:
 		return Vector2i(int(value[0]), int(value[1]))
 	return Vector2i.ZERO
 
+func _is_valid_group_rule_position(value: Variant, size: Vector2i) -> bool:
+	if !(value is Array) or value.size() != 2:
+		return false
+	for coordinate_variant in value:
+		if !(coordinate_variant is int) and !(coordinate_variant is float):
+			return false
+		var coordinate := float(coordinate_variant)
+		if coordinate != floor(coordinate):
+			return false
+	var pos := Vector2i(int(value[0]), int(value[1]))
+	return pos.x >= 0 and pos.x < size.x and pos.y >= 0 and pos.y < size.y
+
+func _validate_grouped_structure_rules(levels_to_validate: Dictionary, size: Vector2i, structure_id: String) -> bool:
+	for key in levels_to_validate.keys():
+		var level: Dictionary = levels_to_validate[key]
+		var raw_rules: Variant = level.get("rules", [])
+		if !(raw_rules is Array):
+			push_error("Invalid rules for structure '" + structure_id + "' at z=" + str(key) + ": rules must be an array.")
+			return false
+		for rule_index in range(raw_rules.size()):
+			var rule_variant: Variant = raw_rules[rule_index]
+			if !(rule_variant is Dictionary):
+				push_error("Invalid rule " + str(rule_index) + " for structure '" + structure_id + "' at z=" + str(key) + ".")
+				return false
+			var rule: Dictionary = rule_variant
+			if rule.has("pos"):
+				push_error("Rule " + str(rule_index) + " for structure '" + structure_id + "' at z=" + str(key) + " uses removed 'pos'; use 'positions'.")
+				return false
+			var positions_variant: Variant = rule.get("positions", null)
+			if !(positions_variant is Array) or positions_variant.is_empty():
+				push_error("Rule " + str(rule_index) + " for structure '" + structure_id + "' at z=" + str(key) + " requires a non-empty 'positions' array.")
+				return false
+			for position_index in range(positions_variant.size()):
+				if !_is_valid_group_rule_position(positions_variant[position_index], size):
+					push_error("Rule " + str(rule_index) + " for structure '" + structure_id + "' at z=" + str(key) + " has an invalid position at index " + str(position_index) + ".")
+					return false
+	return true
+
+func _expand_grouped_rules(rules: Array) -> Array:
+	var expanded: Array = []
+	for rule_variant in rules:
+		if !(rule_variant is Dictionary):
+			continue
+		var grouped_rule: Dictionary = rule_variant
+		var positions: Array = grouped_rule.get("positions", [])
+		var base_rule := grouped_rule.duplicate(true)
+		base_rule.erase("positions")
+		for position_variant in positions:
+			var position := _rule_pos_from_variant(position_variant)
+			var positioned_rule := base_rule.duplicate(true)
+			positioned_rule["pos"] = _rule_pos_array(position)
+			expanded.append(positioned_rule)
+	return expanded
+
+func _group_position_rules(rules: Array) -> Array:
+	var grouped_rules: Array = []
+	var payloads: Array = []
+	for rule_variant in rules:
+		if !(rule_variant is Dictionary):
+			continue
+		var rule: Dictionary = rule_variant
+		if !rule.has("pos"):
+			push_error("Cannot export structure rule without an internal position.")
+			continue
+		var position := _rule_pos_from_variant(rule["pos"])
+		var payload := rule.duplicate(true)
+		payload.erase("pos")
+		payload.erase("positions")
+		var group_index := -1
+		for existing_index in range(payloads.size()):
+			var existing_payload: Dictionary = payloads[existing_index]
+			if payload.recursive_equal(existing_payload, 32):
+				group_index = existing_index
+				break
+		if group_index < 0:
+			var grouped_rule := payload.duplicate(true)
+			grouped_rule["positions"] = [_rule_pos_array(position)]
+			payloads.append(payload)
+			grouped_rules.append(grouped_rule)
+		else:
+			var grouped_rule: Dictionary = grouped_rules[group_index]
+			var grouped_positions: Array = grouped_rule["positions"]
+			grouped_positions.append(_rule_pos_array(position))
+	return grouped_rules
+
 func _filter_rules_for_size(rules: Array, size: Vector2i) -> Array:
 	var filtered: Array = []
 	for rule_variant in rules:
@@ -1830,11 +1915,14 @@ func _is_spawn_entity_group_rule(rule: Dictionary) -> bool:
 func _is_spawn_tile_group_rule(rule: Dictionary) -> bool:
 	return str(rule.get("type", "")) == "tile_group_ref"
 
-func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
+func _split_editor_rules_for_level(key: String, level_data: Dictionary, grouped_input: bool = false) -> void:
 	var unmanaged: Array = []
 	var raw_rules: Variant = level_data.get("rules", [])
 	if raw_rules is Array:
-		for rule_variant in raw_rules:
+		var position_rules: Array = raw_rules
+		if grouped_input:
+			position_rules = _expand_grouped_rules(raw_rules)
+		for rule_variant in position_rules:
 			if !(rule_variant is Dictionary):
 				continue
 			var rule: Dictionary = rule_variant
@@ -1899,11 +1987,11 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary) -> void:
 		level_data["rules"] = unmanaged
 	editor_other_rules_by_level[key] = unmanaged
 
-func _split_editor_rules_from_levels(imported_levels: Dictionary, root_size: Vector2i = Vector2i(24, 24)) -> void:
+func _split_editor_rules_from_levels(imported_levels: Dictionary, root_size: Vector2i = Vector2i(24, 24), grouped_input: bool = false) -> void:
 	for key in imported_levels.keys():
 		var value: Variant = imported_levels[key]
 		if value is Dictionary:
-			_split_editor_rules_for_level(str(key), value)
+			_split_editor_rules_for_level(str(key), value, grouped_input)
 			_create_tile_group_rules_from_palette(str(key), value, root_size)
 
 func _create_tile_group_rules_from_palette(key: String, level_data: Dictionary, size: Vector2i) -> void:
@@ -2178,6 +2266,8 @@ func import_structure(structure_data: Dictionary) -> void:
 	var structure_id := str(structure_data.get("id", ""))
 	if !_validate_levels(imported_levels, root_size, structure_id):
 		return
+	if !_validate_grouped_structure_rules(imported_levels, root_size, structure_id):
+		return
 	var placement: Dictionary = {}
 	var placement_var: Variant = structure_data.get("placement", {})
 	if placement_var is Dictionary:
@@ -2207,7 +2297,7 @@ func import_structure(structure_data: Dictionary) -> void:
 		str(structure_data.get("filepath", "res://data/structures/structures.json"))
 	)
 	current_placement = placement
-	_split_editor_rules_from_levels(imported_levels, root_size)
+	_split_editor_rules_from_levels(imported_levels, root_size, true)
 	var levels_to_clear: Array = levels.keys()
 	for key in imported_levels.keys():
 		if !levels_to_clear.has(key):
@@ -2259,6 +2349,8 @@ func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dic
 	for key in sorted_keys:
 		var level_data: Dictionary = levels[key]
 		var compact_level := _compact_level_to_size(level_data, source_size, footprint, str(key))
+		if compact_level.has("rules"):
+			compact_level["rules"] = _group_position_rules(compact_level["rules"])
 		if _level_has_non_void(compact_level) or _level_has_rules(compact_level):
 			result_levels[str(key)] = compact_level
 	if result_levels.is_empty():

@@ -32,36 +32,19 @@
                             "text": "Fruit and Vegetables Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_fruit_veg",
-                        "pos": [
-                            3,
-                            1
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 3, 1 ] ]
                     },
                     {
                         "loot_table": "fruit_veg_vendor_stock",
-                        "pos": [
-                            0,
-                            2
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "fruit_veg_vendor_stock",
-                        "pos": [
-                            1,
-                            2
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 0, 2 ], [ 1, 2 ] ]
                     }
                 ]
             }
@@ -103,47 +86,32 @@
                             "text": "Fishmonger Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_fish",
-                        "pos": [
-                            3.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 3, 1 ] ]
                     },
                     {
-                        "amount": 4.0,
+                        "amount": 4,
                         "item_id": "raw_fish",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 2, 2 ] ]
                     },
                     {
-                        "amount": 3.0,
+                        "amount": 3,
                         "item_id": "raw_fish",
-                        "pos": [
-                            3.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 3, 2 ] ]
                     },
                     {
-                        "amount": 1.0,
+                        "amount": 1,
                         "item_id": "raw_fish",
-                        "pos": [
-                            6.0,
-                            1.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 6, 1 ] ]
                     }
                 ]
             }
@@ -185,29 +153,20 @@
                             "text": "Prepared Food Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_food",
-                        "pos": [
-                            2.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 2, 1 ] ]
                     },
                     {
-                        "amount": 3.0,
+                        "amount": 3,
                         "item_id": "bread",
-                        "pos": [
-                            4.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 4, 2 ] ]
                     }
                 ]
             }
@@ -246,36 +205,19 @@
                             "text": "Foraging Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_foraging",
-                        "pos": [
-                            3.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 3, 1 ] ]
                     },
                     {
                         "loot_table": "gathered_food_common",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "gathered_food_common",
-                        "pos": [
-                            4.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 2, 2 ], [ 4, 2 ] ]
                     }
                 ]
             }
@@ -314,28 +256,19 @@
                             "text": "Weapons Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_weapons",
-                        "pos": [
-                            2.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 2, 1 ] ]
                     },
                     {
                         "loot_table": "weapon_vendor_stock",
-                        "pos": [
-                            4.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 4, 2 ] ]
                     }
                 ]
             }
@@ -377,28 +310,19 @@
                             "text": "Clothing Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_clothing",
-                        "pos": [
-                            4.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 4, 1 ] ]
                     },
                     {
                         "loot_table": "clothing_vendor_stock",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 2, 2 ] ]
                     }
                 ]
             }
@@ -440,28 +364,19 @@
                             "text": "Armor Market"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            7.0,
-                            2.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 7, 2 ] ]
                     },
                     {
                         "entity": "human",
                         "job": "merchant_armor",
-                        "pos": [
-                            3.0,
-                            1.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 3, 1 ] ]
                     },
                     {
                         "loot_table": "armor_vendor_stock",
-                        "pos": [
-                            4.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 4, 2 ] ]
                     }
                 ]
             }

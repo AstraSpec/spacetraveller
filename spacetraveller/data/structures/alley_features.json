@@ -183,83 +183,8 @@
                 "rules": [
                     {
                         "loot_table": "cooking_items",
-                        "pos": [
-                            0.0,
-                            0.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            0.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            0.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            1.0,
-                            0.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            1.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            2.0,
-                            0.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            2.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            2.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            3.0,
-                            1.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            3.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 0, 0 ], [ 0, 1 ], [ 0, 2 ], [ 1, 0 ], [ 1, 2 ], [ 2, 0 ], [ 2, 1 ], [ 2, 2 ], [ 3, 1 ], [ 3, 2 ] ]
                     }
                 ]
             }

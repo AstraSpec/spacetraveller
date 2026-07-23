@@ -53,6 +53,7 @@ struct StructureLevelInfo {
     std::vector<uint16_t> tile_group_ids;
     String blueprint;
     Array palette;
+    Array rule_groups;
     std::vector<StructureRuleInfo> rules;
     Vector2i size = Vector2i(24, 24);
 };

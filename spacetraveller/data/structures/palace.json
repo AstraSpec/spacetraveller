@@ -34,466 +34,37 @@
                     {
                         "amount": 3,
                         "item_id": "silver_coin",
-                        "pos": [
-                            100,
-                            36
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 100, 36 ], [ 101, 35 ], [ 102, 28 ], [ 102, 29 ], [ 102, 33 ], [ 103, 31 ], [ 103, 33 ], [ 104, 29 ], [ 94, 30 ], [ 95, 29 ], [ 95, 30 ], [ 96, 29 ], [ 97, 28 ], [ 98, 27 ], [ 98, 28 ], [ 99, 29 ] ]
                     },
                     {
                         "amount": 6,
                         "item_id": "silver_coin",
-                        "pos": [
-                            101,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            101,
-                            35
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            102,
-                            28
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            102,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            102,
-                            33
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            102,
-                            34
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            103,
-                            31
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            103,
-                            33
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            104,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            93,
-                            34
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            93,
-                            35
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            94,
-                            30
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 101, 29 ], [ 102, 34 ], [ 93, 34 ], [ 93, 35 ], [ 96, 31 ], [ 97, 31 ], [ 97, 35 ], [ 99, 34 ] ]
                     },
                     {
                         "amount": 9,
                         "item_id": "silver_coin",
-                        "pos": [
-                            94,
-                            35
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 9,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            94,
-                            36
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            95,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            95,
-                            30
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 94, 35 ], [ 94, 36 ], [ 96, 37 ] ]
                     },
                     {
                         "amount": 12,
                         "item_id": "silver_coin",
-                        "pos": [
-                            95,
-                            35
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            96,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            96,
-                            31
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 95, 35 ] ]
                     },
                     {
                         "amount": 18,
                         "item_id": "silver_coin",
-                        "pos": [
-                            96,
-                            36
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 9,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            96,
-                            37
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            97,
-                            28
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            97,
-                            31
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            97,
-                            35
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 18,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            97,
-                            36
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            98,
-                            27
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            98,
-                            28
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 18,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            98,
-                            31
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 18,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            98,
-                            32
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 3,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            99,
-                            29
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6,
-                        "item_id": "silver_coin",
-                        "pos": [
-                            99,
-                            34
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 96, 36 ], [ 97, 36 ], [ 98, 31 ], [ 98, 32 ] ]
                     },
                     {
                         "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            100,
-                            27
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            101,
-                            31
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            101,
-                            32
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            102,
-                            30
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            102,
-                            37
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            103,
-                            27
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            104,
-                            30
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            104,
-                            35
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            104,
-                            36
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            105,
-                            32
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            105,
-                            36
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            93,
-                            30
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            94,
-                            34
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            95,
-                            31
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            95,
-                            32
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            96,
-                            30
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            97,
-                            32
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            97,
-                            33
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            98,
-                            29
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            98,
-                            30
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            99,
-                            27
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "royal_treasure_rare",
-                        "pos": [
-                            99,
-                            32
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 100, 27 ], [ 101, 31 ], [ 101, 32 ], [ 102, 30 ], [ 102, 37 ], [ 103, 27 ], [ 104, 30 ], [ 104, 35 ], [ 104, 36 ], [ 105, 32 ], [ 105, 36 ], [ 93, 30 ], [ 94, 34 ], [ 95, 31 ], [ 95, 32 ], [ 96, 30 ], [ 97, 32 ], [ 97, 33 ], [ 98, 29 ], [ 98, 30 ], [ 99, 27 ], [ 99, 32 ] ]
                     }
                 ]
             },
@@ -561,969 +132,207 @@
                             "text": "Guard Room"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            75.0,
-                            80.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 75, 80 ] ]
                     },
                     {
                         "data": {
                             "text": "Service Office"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            87.0,
-                            80.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 87, 80 ] ]
                     },
                     {
                         "data": {
                             "text": "Kitchen"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            92.0,
-                            77.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 92, 77 ] ]
                     },
                     {
                         "data": {
                             "text": "Council Chamber"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            92.0,
-                            62.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 92, 62 ] ]
                     },
                     {
                         "data": {
                             "text": "Treasury"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            92.0,
-                            48.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 92, 48 ] ]
                     },
                     {
                         "data": {
                             "text": "Audience Room"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            44.0,
-                            80.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 44, 80 ] ]
                     },
                     {
                         "data": {
                             "text": "Bathhouse"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            92.0,
-                            48.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 92, 48 ] ]
                     },
                     {
                         "data": {
                             "text": "Art Room"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            27.0,
-                            70.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 27, 70 ] ]
                     },
                     {
                         "data": {
                             "text": "Music Room"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            27.0,
-                            59.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 27, 59 ] ]
                     },
                     {
                         "data": {
                             "text": "Chapel"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            27.0,
-                            52.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 27, 52 ] ]
                     },
                     {
                         "data": {
                             "text": "Sauna"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            27.0,
-                            34.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 27, 34 ] ]
                     },
                     {
                         "data": {
                             "text": "Dining Room"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            44.0,
-                            76.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 44, 76 ] ]
                     },
                     {
                         "data": {
                             "text": "Ballroom"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            31.0,
-                            52.0
-                        ],
-                        "type": "set_metadata"
+                        "type": "set_metadata",
+                        "positions": [ [ 31, 52 ] ]
                     },
                     {
                         "dialogue_id": "guard",
                         "entity": "human",
                         "job": "guard",
-                        "pos": [
-                            101,
-                            44
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 101, 44 ], [ 22, 80 ], [ 56, 38 ], [ 56, 61 ], [ 58, 63 ], [ 61, 63 ], [ 63, 38 ], [ 63, 61 ], [ 72, 80 ], [ 76, 80 ], [ 81, 89 ], [ 92, 47 ], [ 92, 51 ], [ 97, 44 ] ]
                     },
                     {
                         "dialogue_id": "priest",
                         "entity": "human",
                         "job": "priest",
-                        "pos": [
-                            21,
-                            41
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            22,
-                            80
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            56,
-                            38
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            56,
-                            61
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 21, 41 ] ]
                     },
                     {
                         "dialogue_id": "chief_butler",
                         "entity": "human",
                         "job": "chief_butler",
-                        "pos": [
-                            57,
-                            87
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            58,
-                            63
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            61,
-                            63
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 57, 87 ] ]
                     },
                     {
                         "dialogue_id": "mercenary",
                         "entity": "human",
                         "job": "mercenary",
-                        "pos": [
-                            62,
-                            87
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            63,
-                            38
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            63,
-                            61
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            72,
-                            80
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            76,
-                            80
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            81,
-                            89
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            92,
-                            47
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            92,
-                            51
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard",
-                        "entity": "human",
-                        "job": "guard",
-                        "pos": [
-                            97,
-                            44
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 62, 87 ] ]
                     },
                     {
                         "loot_table": "desk",
-                        "pos": [
-                            100,
-                            64
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 100, 64 ], [ 102, 64 ], [ 68, 82 ], [ 69, 89 ], [ 71, 89 ], [ 83, 89 ], [ 83, 90 ], [ 85, 89 ], [ 87, 89 ], [ 92, 84 ], [ 92, 85 ], [ 94, 60 ], [ 94, 61 ], [ 94, 65 ], [ 96, 89 ], [ 96, 90 ], [ 97, 56 ], [ 97, 90 ], [ 98, 58 ], [ 99, 56 ] ]
                     },
                     {
                         "loot_table": "gathered_food_common",
-                        "pos": [
-                            100,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 100, 84 ], [ 101, 84 ] ]
                     },
                     {
                         "loot_table": "pantry",
-                        "pos": [
-                            100,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            100,
-                            88
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            100,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            100,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 100, 86 ], [ 100, 88 ], [ 100, 89 ], [ 100, 90 ], [ 101, 86 ], [ 102, 86 ], [ 102, 88 ], [ 102, 89 ], [ 102, 90 ], [ 98, 88 ], [ 98, 89 ], [ 98, 90 ] ]
                     },
                     {
                         "loot_table": "foraging_vendor_stock",
-                        "pos": [
-                            101,
-                            67
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "gathered_food_common",
-                        "pos": [
-                            101,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            101,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            102,
-                            64
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "foraging_vendor_stock",
-                        "pos": [
-                            102,
-                            67
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 101, 67 ], [ 102, 67 ] ]
                     },
                     {
                         "loot_table": "produce_common",
-                        "pos": [
-                            102,
-                            80
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "produce_common",
-                        "pos": [
-                            102,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "produce_common",
-                        "pos": [
-                            102,
-                            83
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "produce_common",
-                        "pos": [
-                            102,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            102,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            102,
-                            88
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            102,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            102,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 102, 80 ], [ 102, 82 ], [ 102, 83 ], [ 102, 84 ] ]
                     },
                     {
                         "loot_table": "camp_supplies",
-                        "pos": [
-                            112,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 112, 82 ] ]
                     },
                     {
                         "loot_table": "instruments",
-                        "pos": [
-                            17,
-                            56
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 17, 56 ], [ 18, 56 ] ]
                     },
                     {
                         "loot_table": "blacksmith_vendor_stock",
-                        "pos": [
-                            17,
-                            74
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "instruments",
-                        "pos": [
-                            18,
-                            56
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "blacksmith_vendor_stock",
-                        "pos": [
-                            18,
-                            74
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "blacksmith_vendor_stock",
-                        "pos": [
-                            19,
-                            74
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 17, 74 ], [ 18, 74 ], [ 19, 74 ] ]
                     },
                     {
                         "loot_table": "clothing_common",
-                        "pos": [
-                            23,
-                            74
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "clothing_common",
-                        "pos": [
-                            24,
-                            74
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            68,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            69,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 23, 74 ], [ 24, 74 ] ]
                     },
                     {
                         "loot_table": "armory_issue",
-                        "pos": [
-                            70,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            71,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 70, 82 ], [ 79, 84 ], [ 79, 86 ], [ 80, 84 ], [ 80, 86 ], [ 81, 82 ], [ 96, 65 ] ]
                     },
                     {
                         "loot_table": "command_table",
-                        "pos": [
-                            73,
-                            85
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            73,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            73,
-                            87
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            74,
-                            85
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            74,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            74,
-                            87
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            75,
-                            85
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            75,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            75,
-                            87
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 73, 85 ], [ 73, 86 ], [ 73, 87 ], [ 74, 85 ], [ 74, 86 ], [ 74, 87 ], [ 75, 85 ], [ 75, 86 ], [ 75, 87 ], [ 97, 57 ], [ 97, 58 ], [ 98, 56 ], [ 98, 57 ], [ 99, 57 ], [ 99, 58 ] ]
                     },
                     {
                         "loot_table": "armory_secure",
-                        "pos": [
-                            79,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            79,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            79,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_secure",
-                        "pos": [
-                            80,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            80,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            80,
-                            86
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            81,
-                            82
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            83,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            83,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            85,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            87,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            92,
-                            84
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            92,
-                            85
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            94,
-                            60
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            94,
-                            61
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            94,
-                            65
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 79, 82 ], [ 80, 82 ] ]
                     },
                     {
                         "loot_table": "fish_vendor_stock",
-                        "pos": [
-                            94,
-                            67
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "fish_vendor_stock",
-                        "pos": [
-                            94,
-                            68
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "fish_vendor_stock",
-                        "pos": [
-                            94,
-                            69
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "fish_vendor_stock",
-                        "pos": [
-                            94,
-                            70
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 94, 67 ], [ 94, 68 ], [ 94, 69 ], [ 94, 70 ] ]
                     },
                     {
                         "loot_table": "food_vendor_stock",
-                        "pos": [
-                            94,
-                            73
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "food_vendor_stock",
-                        "pos": [
-                            94,
-                            75
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "armory_issue",
-                        "pos": [
-                            96,
-                            65
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            96,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            96,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            97,
-                            56
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            97,
-                            57
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            97,
-                            58
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            97,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            98,
-                            56
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            98,
-                            57
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            98,
-                            58
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 94, 73 ], [ 94, 75 ] ]
                     },
                     {
                         "loot_table": "cooking_items",
-                        "pos": [
-                            98,
-                            69
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            98,
-                            72
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            98,
-                            73
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "cooking_items",
-                        "pos": [
-                            98,
-                            76
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            98,
-                            88
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            98,
-                            89
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "pantry",
-                        "pos": [
-                            98,
-                            90
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "desk",
-                        "pos": [
-                            99,
-                            56
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            99,
-                            57
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "command_table",
-                        "pos": [
-                            99,
-                            58
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 98, 69 ], [ 98, 72 ], [ 98, 73 ], [ 98, 76 ] ]
                     }
                 ]
             },

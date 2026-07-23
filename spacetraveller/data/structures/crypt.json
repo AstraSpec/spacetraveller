@@ -114,19 +114,8 @@
                 "rules": [
                     {
                         "entity_group": "crypt_prisoner_goblin",
-                        "pos": [
-                            3.0,
-                            2.0
-                        ],
-                        "type": "spawn_entity_group"
-                    },
-                    {
-                        "entity_group": "crypt_prisoner_goblin",
-                        "pos": [
-                            8.0,
-                            9.0
-                        ],
-                        "type": "spawn_entity_group"
+                        "type": "spawn_entity_group",
+                        "positions": [ [ 3, 2 ], [ 8, 9 ] ]
                     }
                 ]
             }

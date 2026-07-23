@@ -86,202 +86,70 @@
                     {
                         "entity": "goblin",
                         "job": "monster",
-                        "pos": [
-                            11.0,
-                            11.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 11, 11 ], [ 11, 15 ], [ 15, 12 ], [ 9, 12 ] ]
                     },
                     {
-                        "entity": "goblin",
-                        "job": "monster",
-                        "pos": [
-                            11.0,
-                            15.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "goblin",
-                        "job": "monster",
-                        "pos": [
-                            15.0,
-                            12.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "entity": "goblin",
-                        "job": "monster",
-                        "pos": [
-                            9.0,
-                            12.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "amount": 1.0,
+                        "amount": 1,
                         "item_id": "bedroll",
-                        "pos": [
-                            10.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 10, 2 ], [ 10, 7 ], [ 13, 2 ], [ 8, 4 ] ]
                     },
                     {
-                        "amount": 1.0,
-                        "item_id": "bedroll",
-                        "pos": [
-                            10.0,
-                            7.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 6.0,
+                        "amount": 6,
                         "item_id": "raw_meat",
-                        "pos": [
-                            11.0,
-                            12.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 11, 12 ] ]
                     },
                     {
-                        "amount": 4.0,
+                        "amount": 4,
                         "item_id": "raw_meat",
-                        "pos": [
-                            12.0,
-                            14.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 12, 14 ] ]
                     },
                     {
-                        "amount": 1.0,
-                        "item_id": "bedroll",
-                        "pos": [
-                            13.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 2.0,
+                        "amount": 2,
                         "item_id": "sausage",
-                        "pos": [
-                            14.0,
-                            13.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 14, 13 ] ]
                     },
                     {
-                        "amount": 1.0,
+                        "amount": 1,
                         "item_id": "corpse_human",
-                        "pos": [
-                            18.0,
-                            12.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 18, 12 ], [ 18, 15 ], [ 21, 12 ] ]
                     },
                     {
-                        "amount": 1.0,
+                        "amount": 5,
                         "item_id": "corpse_human",
-                        "pos": [
-                            18.0,
-                            15.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 19, 11 ] ]
                     },
                     {
-                        "amount": 5.0,
+                        "amount": 2,
                         "item_id": "corpse_human",
-                        "pos": [
-                            19.0,
-                            11.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 2.0,
-                        "item_id": "corpse_human",
-                        "pos": [
-                            20.0,
-                            14.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "corpse_human",
-                        "pos": [
-                            21.0,
-                            12.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "amount": 1.0,
-                        "item_id": "bedroll",
-                        "pos": [
-                            8.0,
-                            4.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 20, 14 ] ]
                     },
                     {
                         "loot_table": "firewood",
-                        "pos": [
-                            10.0,
-                            9.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 10, 9 ], [ 9, 9 ] ]
                     },
                     {
                         "loot_table": "camp_supplies",
-                        "pos": [
-                            18.0,
-                            13.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "camp_supplies",
-                        "pos": [
-                            19.0,
-                            10.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 18, 13 ], [ 19, 10 ], [ 20, 12 ] ]
                     },
                     {
                         "loot_table": "valuables_common",
-                        "pos": [
-                            19.0,
-                            16.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "camp_supplies",
-                        "pos": [
-                            20.0,
-                            12.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 19, 16 ] ]
                     },
                     {
                         "loot_table": "tools_common",
-                        "pos": [
-                            4.0,
-                            17.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "firewood",
-                        "pos": [
-                            9.0,
-                            9.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 4, 17 ] ]
                     }
                 ]
             }
@@ -310,72 +178,37 @@
                     {
                         "entity": "bear",
                         "job": "animal",
-                        "pos": [
-                            6.0,
-                            6.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 6, 6 ] ]
                     },
                     {
-                        "amount": 6.0,
+                        "amount": 6,
                         "item_id": "bone",
-                        "pos": [
-                            2.0,
-                            4.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 2, 4 ] ]
                     },
                     {
-                        "amount": 1.0,
+                        "amount": 1,
                         "item_id": "corpse_human",
-                        "pos": [
-                            3.0,
-                            4.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 3, 4 ], [ 8, 2 ] ]
                     },
                     {
                         "loot_table": "dungeon_remains",
-                        "pos": [
-                            3.0,
-                            4.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 3, 4 ], [ 8, 2 ] ]
                     },
                     {
-                        "amount": 1.0,
-                        "item_id": "corpse_human",
-                        "pos": [
-                            8.0,
-                            2.0
-                        ],
-                        "type": "spawn_item"
-                    },
-                    {
-                        "loot_table": "dungeon_remains",
-                        "pos": [
-                            8.0,
-                            2.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "amount": 6.0,
+                        "amount": 6,
                         "item_id": "stick",
-                        "pos": [
-                            6.0,
-                            5.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 6, 5 ] ]
                     },
                     {
-                        "amount": 4.0,
+                        "amount": 4,
                         "item_id": "stick",
-                        "pos": [
-                            6.0,
-                            7.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 6, 7 ] ]
                     }
                 ]
             }
@@ -412,55 +245,37 @@
                     {
                         "entity": "bear",
                         "job": "animal",
-                        "pos": [
-                            6.0,
-                            6.0
-                        ],
-                        "type": "spawn_entity"
+                        "type": "spawn_entity",
+                        "positions": [ [ 6, 6 ] ]
                     },
                     {
-                        "amount": 3.0,
+                        "amount": 3,
                         "item_id": "bone",
-                        "pos": [
-                            5.0,
-                            5.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 5, 5 ] ]
                     },
                     {
-                        "amount": 2.0,
+                        "amount": 2,
                         "item_id": "bone",
-                        "pos": [
-                            6.0,
-                            3.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 6, 3 ] ]
                     },
                     {
-                        "amount": 1.0,
+                        "amount": 1,
                         "item_id": "corpse_human",
-                        "pos": [
-                            9.0,
-                            4.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 9, 4 ] ]
                     },
                     {
                         "loot_table": "dungeon_remains",
-                        "pos": [
-                            9.0,
-                            4.0
-                        ],
-                        "type": "spawn_loot_table"
+                        "type": "spawn_loot_table",
+                        "positions": [ [ 9, 4 ] ]
                     },
                     {
-                        "amount": 4.0,
+                        "amount": 4,
                         "item_id": "stick",
-                        "pos": [
-                            7.0,
-                            8.0
-                        ],
-                        "type": "spawn_item"
+                        "type": "spawn_item",
+                        "positions": [ [ 7, 8 ] ]
                     }
                 ]
             }

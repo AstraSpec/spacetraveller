@@ -28,10 +28,7 @@
                             "text": "Tavern"
                         },
                         "meta_type": "signage",
-                        "pos": [
-                            3.0,
-                            22.0
-                        ],
+                        "positions": [ [ 3, 22 ] ],
                         "type": "set_metadata"
                     }
                 ]
@@ -44,6 +41,14 @@
         "type": "tavern"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "adventurer_guild",
         "levels": {
             "0": {
@@ -69,40 +74,14 @@
                         "dialogue_id": "guild_master",
                         "entity": "human",
                         "job": "guild_master",
-                        "pos": [
-                            12,
-                            14
-                        ],
+                        "positions": [ [ 12, 14 ] ],
                         "type": "spawn_entity"
                     },
                     {
                         "dialogue_id": "adventurer",
                         "entity": "human",
                         "job": "adventurer",
-                        "pos": [
-                            18,
-                            8
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "adventurer",
-                        "entity": "human",
-                        "job": "adventurer",
-                        "pos": [
-                            5,
-                            8
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "adventurer",
-                        "entity": "human",
-                        "job": "adventurer",
-                        "pos": [
-                            8,
-                            16
-                        ],
+                        "positions": [ [ 18, 8 ], [ 5, 8 ], [ 8, 16 ] ],
                         "type": "spawn_entity"
                     }
                 ]
@@ -202,10 +181,7 @@
                         "dialogue_id": "church_offering",
                         "entity": "human",
                         "job": "church_offering",
-                        "pos": [
-                            14.0,
-                            4.0
-                        ],
+                        "positions": [ [ 14, 4 ] ],
                         "type": "spawn_entity"
                     },
                     {
@@ -213,79 +189,24 @@
                         "entity": "human",
                         "faction": "church",
                         "job": "guard",
-                        "pos": [
-                            17.0,
-                            9.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard_church",
-                        "entity": "human",
-                        "faction": "church",
-                        "job": "guard",
-                        "pos": [
-                            6.0,
-                            9.0
-                        ],
+                        "positions": [ [ 17, 9 ], [ 6, 9 ] ],
                         "type": "spawn_entity"
                     },
                     {
                         "dialogue_id": "merchant_church",
                         "entity": "human",
                         "job": "merchant_church",
-                        "pos": [
-                            9.0,
-                            4.0
-                        ],
+                        "positions": [ [ 9, 4 ] ],
                         "type": "spawn_entity"
                     },
                     {
                         "loot_table": "religious_items",
-                        "pos": [
-                            8.0,
-                            10.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "religious_items",
-                        "pos": [
-                            8.0,
-                            14.0
-                        ],
-                        "type": "spawn_loot_table"
-                    },
-                    {
-                        "loot_table": "religious_items",
-                        "pos": [
-                            8.0,
-                            18.0
-                        ],
+                        "positions": [ [ 8, 10 ], [ 8, 14 ], [ 8, 18 ] ],
                         "type": "spawn_loot_table"
                     },
                     {
                         "entity_group": "prisoner",
-                        "pos": [
-                            12.0,
-                            11.0
-                        ],
-                        "type": "spawn_entity_group"
-                    },
-                    {
-                        "entity_group": "prisoner",
-                        "pos": [
-                            12.0,
-                            15.0
-                        ],
-                        "type": "spawn_entity_group"
-                    },
-                    {
-                        "entity_group": "prisoner",
-                        "pos": [
-                            12.0,
-                            19.0
-                        ],
+                        "positions": [ [ 12, 11 ], [ 12, 15 ], [ 12, 19 ] ],
                         "type": "spawn_entity_group"
                     }
                 ]
@@ -315,53 +236,14 @@
                         "entity": "human",
                         "faction": "church",
                         "job": "guard",
-                        "pos": [
-                            10.0,
-                            20.0
-                        ],
+                        "positions": [ [ 10, 20 ], [ 13, 20 ], [ 16, 7 ], [ 7, 7 ] ],
                         "type": "spawn_entity"
                     },
                     {
                         "dialogue_id": "priest",
                         "entity": "human",
                         "job": "priest",
-                        "pos": [
-                            12.0,
-                            5.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard_church",
-                        "entity": "human",
-                        "faction": "church",
-                        "job": "guard",
-                        "pos": [
-                            13.0,
-                            20.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard_church",
-                        "entity": "human",
-                        "faction": "church",
-                        "job": "guard",
-                        "pos": [
-                            16.0,
-                            7.0
-                        ],
-                        "type": "spawn_entity"
-                    },
-                    {
-                        "dialogue_id": "guard_church",
-                        "entity": "human",
-                        "faction": "church",
-                        "job": "guard",
-                        "pos": [
-                            7.0,
-                            7.0
-                        ],
+                        "positions": [ [ 12, 5 ] ],
                         "type": "spawn_entity"
                     }
                 ]
@@ -424,10 +306,7 @@
                         "entity": "human",
                         "faction": "church",
                         "job": "guard",
-                        "pos": [
-                            9.0,
-                            5.0
-                        ],
+                        "positions": [ [ 9, 5 ] ],
                         "type": "spawn_entity"
                     }
                 ]

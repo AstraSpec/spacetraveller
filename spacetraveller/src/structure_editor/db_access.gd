@@ -62,20 +62,23 @@ static func _read_all(filepath: String) -> Array:
 	return []
 
 static func _write_all(data: Array, filepath: String):
-	# Convert all palette entries to encoded tokens before serialization
-	var encoded := _encode_palette_tokens(data)
+	# Encode selected values as tokens so they can be restored as compact JSON.
+	var encoded := _encode_compact_tokens(data)
 	var file = FileAccess.open(filepath, FileAccess.WRITE)
 	if file:
 		var text := JSON.stringify(encoded, "    ")
-		# Replace tokens with compact dict format
+		# Replace palette tokens with compact dict format.
 		# __T__void -> {"tile": "void"}, __TG__window -> {"tile_group": "window"}
 		text = text.replace("\"__T__", "{\"tile\": \"")
 		text = text.replace("\"__TG__", "{\"tile_group\": \"")
 		text = text.replace("__END__\"", "\"}")
+		# Replace position tokens with compact coordinate arrays.
+		text = text.replace("\"__POSITIONS__", "")
+		text = text.replace("__POSITIONS_END__\"", "")
 		file.store_string(text)
 		file.close()
 
-static func _encode_palette_tokens(data: Array) -> Array:
+static func _encode_compact_tokens(data: Array) -> Array:
 	for item in data:
 		if !(item is Dictionary):
 			continue
@@ -85,6 +88,7 @@ static func _encode_palette_tokens(data: Array) -> Array:
 				var level = item["levels"][key]
 				if level is Dictionary:
 					_encode_item_palette(level)
+					_encode_level_positions(level)
 	return data
 
 static func _encode_item_palette(d: Dictionary) -> void:
@@ -101,6 +105,27 @@ static func _encode_item_palette(d: Dictionary) -> void:
 		else:
 			encoded.append("__T__" + str(entry) + "__END__")
 	d["palette"] = encoded
+
+static func _encode_level_positions(level: Dictionary) -> void:
+	var rules: Variant = level.get("rules", [])
+	if !(rules is Array):
+		return
+	for rule_variant in rules:
+		if !(rule_variant is Dictionary):
+			continue
+		var rule: Dictionary = rule_variant
+		var positions_variant: Variant = rule.get("positions", [])
+		if !(positions_variant is Array):
+			continue
+		var compact_positions := PackedStringArray()
+		var positions_valid := true
+		for position_variant in positions_variant:
+			if !(position_variant is Array) or position_variant.size() != 2:
+				positions_valid = false
+				break
+			compact_positions.append("[ %d, %d ]" % [int(position_variant[0]), int(position_variant[1])])
+		if positions_valid:
+			rule["positions"] = "__POSITIONS__[ " + ", ".join(compact_positions) + " ]__POSITIONS_END__"
 
 static func _find_file_with_id(id: String, path: String) -> String:
 	var dir = DirAccess.open(path)
