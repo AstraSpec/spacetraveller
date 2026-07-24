@@ -20,8 +20,14 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace godot {
+
+enum class EntityLifecycleClass : uint8_t {
+    PERSISTENT,
+    AMBIENT
+};
 
 struct VendorState {
     static constexpr int DEFAULT_FUNDS = 1000;
@@ -69,6 +75,7 @@ public:
     std::unordered_map<uint32_t, SocialProfileData> social_profiles;
     std::unordered_map<uint32_t, AllegianceData> allegiance_data;
     std::unordered_map<uint32_t, VendorState> vendor_state;
+    std::unordered_map<uint32_t, EntityLifecycleClass> lifecycle_class;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -124,6 +131,9 @@ public:
     bool is_sapient(uint32_t id) const;
     bool has_core_components(uint32_t id) const;
     bool is_schedulable_actor(uint32_t id) const;
+    bool is_ambient(uint32_t id) const;
+    void mark_ambient(uint32_t id);
+    void promote_to_persistent(uint32_t id);
     bool validate_player(uint32_t id) const;
     bool validate_npc_actor(uint32_t id) const;
     bool validate_combatant(uint32_t id) const;

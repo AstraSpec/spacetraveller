@@ -1,0 +1,61 @@
+[
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "park",
+        "levels": {
+            "0": {
+                "blueprint": "(50x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 5x1, 4x2, 2x0, 4x2, 5x1, 4x0, 5x1, 2x2, 1x3, 1x2, 2x0, 1x2, 2x3, 1x2, 5x1, 4x0, 5x1, 1x2, 2x3, 1x2, 2x0, 1x2, 2x3, 1x2, 5x1, 4x0, 5x1, 4x2, 2x0, 4x2, 5x1, 52x0, 5x1, 2x2, 1x3, 1x2, 2x0, 4x2, 5x1, 4x0, 5x1, 1x2, 2x3, 1x2, 2x0, 1x2, 1x3, 2x2, 5x1, 4x0, 5x1, 2x2, 1x3, 1x2, 2x0, 4x2, 5x1, 4x0, 5x1, 4x2, 2x0, 4x2, 5x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 4x0, 9x1, 2x0, 9x1, 50x0)",
+                "palette": [
+                    {"tile": "alley_flagstone"},
+                    {"tile": "flower"},
+                    {"tile": "void"},
+                    {"tile": "chair"}
+                ],
+                "rules": [
+                    {
+                        "allowed_roles": [
+                            "villager"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 11, 5 ], [ 12, 18 ], [ 18, 12 ], [ 5, 11 ] ],
+                        "tags": [
+                            "park"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 2.0
+                    },
+                    {
+                        "allowed_roles": [
+                            "villager"
+                        ],
+                        "dwell_turns": [
+                            15,
+                            30
+                        ],
+                        "positions": [ [ 14, 14 ], [ 14, 8 ], [ 8, 14 ], [ 8, 9 ] ],
+                        "tags": [
+                            "park"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 2
+                    }
+                ]
+            }
+        },
+        "size": [
+            24,
+            24
+        ],
+        "type": "park"
+    }
+]

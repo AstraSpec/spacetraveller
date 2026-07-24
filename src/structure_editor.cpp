@@ -225,6 +225,8 @@ void StructureEditor::_create_preview_tile(const Vector2i &pos, const String &p_
         atlas_coords = Vector2i(71, 18);
     } else if (entry_type == "entity_group") {
         atlas_coords = Vector2i(72, 18);
+    } else if (entry_type == "point_of_interest") {
+        atlas_coords = Vector2i(22, 0);
     } else if (entry_type == "tile_group") {
         atlas_coords = Vector2i(71, 18);
     } else {

@@ -1,0 +1,24 @@
+{
+  "id": "tavern_worker",
+  "priority": 100,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": [
+        "Mind the counter. I have only just wiped it.",
+        "If you need something, say it before the room gets louder.",
+        "Cups come back to the bar when you are finished.",
+        "No blades on the tables. It ruins the polish.",
+        "The house keeps a simple rule: drink, talk, and leave the furniture standing.",
+        "I can hear an empty cup from across the room.",
+        "Everyone arrives thirsty at the same moment.",
+        "A busy room is better than a silent one, most nights.",
+        "Keep the doorway clear for the next tired traveller.",
+        "Someone always wants the cup I have just put away.",
+        "The work is steady, which is more than many can say.",
+        "Give me a moment. This room has more hands raised than I do."
+      ],
+      "options": []
+    }
+  }
+}

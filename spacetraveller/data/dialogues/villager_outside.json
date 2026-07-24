@@ -1,0 +1,25 @@
+{
+  "id": "villager_outside",
+  "priority": 100,
+  "start": "start",
+  "nodes": {
+    "start": {
+      "npc": [
+        "Good day to you.",
+        "These streets are busier than they used to be.",
+        "I have somewhere to be, though nowhere urgent.",
+        "A walk through town clears the head.",
+        "Mind the carriages when you cross.",
+        "There is always another errand waiting.",
+        "It is pleasant to see people out and about.",
+        "You hear all manner of stories on these streets.",
+        "A familiar road can still surprise you.",
+        "The city never truly stands still.",
+        "I am only passing through this part of town.",
+        "There is plenty to see if you are not in a hurry.",
+        "Safe travels, wherever you are headed."
+      ],
+      "options": []
+    }
+  }
+}

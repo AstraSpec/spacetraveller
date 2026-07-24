@@ -1,30 +1,25 @@
 [
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_fruit_veg",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x2, 1x1, 1x0, 1x1, 1x0, 1x3, 4x2, 1x0, 1x1, 3x0, 2x4, 2x0, 1x1)",
+                "blueprint": "(1x0, 5x1, 1x0, 1x2, 1x0, 1x3, 1x1, 1x4, 2x1, 1x0, 1x2, 3x0, 2x5, 2x0, 1x6, 8x2)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "dirt"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "table"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile": "barrel"},
+                    {"tile": "chair"},
+                    {"tile": "table"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -32,53 +27,64 @@
                             "text": "Fruit and Vegetables Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_fruit_veg",
-                        "type": "spawn_entity",
-                        "positions": [ [ 3, 1 ] ]
+                        "positions": [ [ 3, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
                         "loot_table": "fruit_veg_vendor_stock",
-                        "type": "spawn_loot_table",
-                        "positions": [ [ 0, 2 ], [ 1, 2 ] ]
+                        "positions": [ [ 0, 2 ], [ 1, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 3, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_fish",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 1x2, 1x3, 1x0, 1x4, 1x1, 1x2, 1x4, 1x1, 4x3, 1x1, 1x2, 1x0, 4x1, 1x0, 1x1, 1x5)",
+                "blueprint": "(1x0, 1x1, 2x2, 1x0, 1x3, 1x1, 1x4, 1x3, 1x1, 4x2, 1x1, 1x4, 1x0, 4x1, 1x0, 1x1, 1x5, 8x4)",
                 "palette": [
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "dirt"
-                    },
-                    {
-                        "tile": "w_crate"
-                    },
-                    {
-                        "tile": "hanging_sign"
-                    }
+                    {"tile": "barrel"},
+                    {"tile": "bar"},
+                    {"tile": "w_floor"},
+                    {"tile": "w_crate"},
+                    {"tile": "void"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -86,66 +92,78 @@
                             "text": "Fishmonger Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_fish",
-                        "type": "spawn_entity",
-                        "positions": [ [ 3, 1 ] ]
+                        "positions": [ [ 3, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
-                        "amount": 4,
+                        "amount": 3.0,
                         "item_id": "raw_fish",
-                        "type": "spawn_item",
-                        "positions": [ [ 2, 2 ] ]
+                        "positions": [ [ 3, 2 ] ],
+                        "type": "spawn_item"
                     },
                     {
-                        "amount": 3,
+                        "amount": 1.0,
                         "item_id": "raw_fish",
-                        "type": "spawn_item",
-                        "positions": [ [ 3, 2 ] ]
+                        "positions": [ [ 6, 1 ] ],
+                        "type": "spawn_item"
                     },
                     {
-                        "amount": 1,
-                        "item_id": "raw_fish",
-                        "type": "spawn_item",
-                        "positions": [ [ 6, 1 ] ]
+                        "loot_table": "fish_vendor_stock",
+                        "positions": [ [ 2, 2 ], [ 4, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 3, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_food",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 1x2, 2x3, 1x2, 1x0, 1x2, 1x0, 1x4, 1x3, 1x5, 2x3, 1x0, 1x2, 7x0, 1x2)",
+                "blueprint": "(1x0, 1x1, 4x2, 1x0, 1x3, 1x0, 1x4, 1x5, 1x6, 2x2, 1x0, 1x3, 7x0, 1x7, 8x3)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "w_crate"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "dirt"
-                    },
-                    {
-                        "tile": "chest"
-                    },
-                    {
-                        "tile": "barrel"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "w_crate"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile": "chest"},
+                    {"tile": "chair"},
+                    {"tile": "barrel"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -153,51 +171,66 @@
                             "text": "Prepared Food Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_food",
-                        "type": "spawn_entity",
-                        "positions": [ [ 2, 1 ] ]
+                        "positions": [ [ 2, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
-                        "amount": 3,
+                        "amount": 3.0,
                         "item_id": "bread",
-                        "type": "spawn_item",
-                        "positions": [ [ 4, 2 ] ]
+                        "positions": [ [ 4, 2 ] ],
+                        "type": "spawn_item"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 2, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_foraging",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 1x2, 1x3, 2x2, 1x0, 1x2, 1x0, 1x1, 2x3, 1x1, 1x2, 1x0, 1x2, 1x0, 4x4, 2x0, 1x2)",
+                "blueprint": "(1x0, 1x1, 4x2, 1x0, 1x3, 1x0, 1x1, 1x2, 1x4, 1x1, 1x2, 1x0, 1x3, 1x0, 4x5, 2x0, 1x6, 8x3)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "dirt"
-                    },
-                    {
-                        "tile": "table"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "barrel"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile": "chair"},
+                    {"tile": "table"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -205,50 +238,65 @@
                             "text": "Foraging Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_foraging",
-                        "type": "spawn_entity",
-                        "positions": [ [ 3, 1 ] ]
+                        "positions": [ [ 3, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
                         "loot_table": "gathered_food_common",
-                        "type": "spawn_loot_table",
-                        "positions": [ [ 2, 2 ], [ 4, 2 ] ]
+                        "positions": [ [ 2, 2 ], [ 4, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 3, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_weapon",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x1, 1x0, 1x3, 4x1, 1x0, 1x1, 7x0, 1x4)",
+                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x4, 1x5, 3x1, 1x0, 1x3, 7x0, 1x6, 8x3)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "dungeon_stuff"
-                    },
-                    {
-                        "tile": "w_crate"
-                    },
-                    {
-                        "tile": "hanging_sign"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "w_floor"},
+                    {"tile": "dungeon_stuff"},
+                    {"tile": "void"},
+                    {"tile": "w_crate"},
+                    {"tile": "chair"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -256,53 +304,66 @@
                             "text": "Weapons Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_weapons",
-                        "type": "spawn_entity",
-                        "positions": [ [ 2, 1 ] ]
+                        "positions": [ [ 2, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
                         "loot_table": "weapon_vendor_stock",
-                        "type": "spawn_loot_table",
-                        "positions": [ [ 4, 2 ] ]
+                        "positions": [ [ 4, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15,
+                            30
+                        ],
+                        "positions": [ [ 2, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3
                     }
                 ]
             }
-        }
-    },
-    {
-        "id": "stall_clothing",
-        "type": "feature",
+        },
         "size": [
             8,
-            3
+            4
         ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "stall_clothing",
         "levels": {
             "0": {
-                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x3, 4x1, 1x0, 1x1, 1x4, 4x0, 1x4, 1x0, 1x5)",
+                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x3, 2x1, 1x4, 1x1, 1x0, 1x5, 1x6, 4x0, 1x6, 1x0, 1x7, 8x5)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "flower"
-                    },
-                    {
-                        "tile": "mannequin"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "hanging_sign"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "w_floor"},
+                    {"tile": "flower"},
+                    {"tile": "mannequin"},
+                    {"tile": "chair"},
+                    {"tile": "void"},
+                    {"tile": "barrel"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -310,53 +371,66 @@
                             "text": "Clothing Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_clothing",
-                        "type": "spawn_entity",
-                        "positions": [ [ 4, 1 ] ]
+                        "positions": [ [ 4, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
                         "loot_table": "clothing_vendor_stock",
-                        "type": "spawn_loot_table",
-                        "positions": [ [ 2, 2 ] ]
+                        "positions": [ [ 2, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 4, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "stall_armor",
-        "type": "feature",
-        "size": [
-            8,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(1x0, 1x1, 2x2, 1x3, 1x0, 1x4, 1x2, 1x0, 4x2, 1x0, 1x4, 1x2, 7x0, 1x5)",
+                "blueprint": "(1x0, 1x1, 2x2, 1x3, 1x0, 1x4, 1x5, 1x0, 2x2, 1x6, 1x2, 1x0, 1x4, 1x5, 7x0, 1x7, 8x5)",
                 "palette": [
-                    {
-                        "tile": "bar"
-                    },
-                    {
-                        "tile": "bookcase"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "mannequin"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "hanging_sign"
-                    }
+                    {"tile": "bar"},
+                    {"tile": "bookcase"},
+                    {"tile": "w_floor"},
+                    {"tile": "mannequin"},
+                    {"tile": "barrel"},
+                    {"tile": "void"},
+                    {"tile": "chair"},
+                    {"tile": "hanging_sign"}
                 ],
                 "rules": [
                     {
@@ -364,22 +438,42 @@
                             "text": "Armor Market"
                         },
                         "meta_type": "signage",
-                        "type": "set_metadata",
-                        "positions": [ [ 7, 2 ] ]
+                        "positions": [ [ 7, 2 ] ],
+                        "type": "set_metadata"
                     },
                     {
                         "entity": "human",
                         "job": "merchant_armor",
-                        "type": "spawn_entity",
-                        "positions": [ [ 3, 1 ] ]
+                        "positions": [ [ 3, 1 ] ],
+                        "type": "spawn_entity"
                     },
                     {
                         "loot_table": "armor_vendor_stock",
-                        "type": "spawn_loot_table",
-                        "positions": [ [ 4, 2 ] ]
+                        "positions": [ [ 4, 2 ] ],
+                        "type": "spawn_loot_table"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 3, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            8.0,
+            4.0
+        ],
+        "type": "feature"
     }
 ]

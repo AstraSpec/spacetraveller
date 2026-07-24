@@ -8,6 +8,26 @@
     ]
   },
   {
+    "id": "roadside_merchant_carriages",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "merchant_carriage", "weight": 1 }
+    ]
+  },
+  {
+    "id": "roadside_merchant_stalls",
+    "type": "structure_stamp",
+    "entries": [
+      { "structure": "stall_fruit_veg", "weight": 4 },
+      { "structure": "stall_food", "weight": 4 },
+      { "structure": "stall_fish", "weight": 3 },
+      { "structure": "stall_foraging", "weight": 3 },
+      { "structure": "stall_weapon", "weight": 1 },
+      { "structure": "stall_clothing", "weight": 1 },
+      { "structure": "stall_armor", "weight": 1 }
+    ]
+  },
+  {
     "id": "alley_features",
     "type": "structure_stamp",
     "entries": [

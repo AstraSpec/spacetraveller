@@ -16,6 +16,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector3i.hpp>
 #include <godot_cpp/classes/json.hpp>
+#include <utility>
 #include <vector>
 
 using namespace godot;
@@ -63,6 +64,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_world_bubble_at_z", "playerPos", "z", "process_streaming"), &GameWorld::update_world_bubble_at_z, DEFVAL(true));
     ClassDB::bind_method(D_METHOD("update_world_view", "render_focus", "vision_origin", "process_streaming"), &GameWorld::update_world_view, DEFVAL(false));
     ClassDB::bind_method(D_METHOD("update_world_view_at_z", "render_focus", "vision_origin", "z", "process_streaming"), &GameWorld::update_world_view_at_z, DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("update_city_population", "calendar_turn", "is_day"), &GameWorld::update_city_population);
     ClassDB::bind_method(D_METHOD("init_region", "regionPos"), &GameWorld::init_region);
 
     ClassDB::bind_method(D_METHOD("place_tile", "x", "y", "tile_id", "layer"), &GameWorld::place_tile, DEFVAL(LAYER_TILE));
@@ -267,9 +269,20 @@ GameWorld::GameWorld() {
     deps.scheduler = &turn_scheduler;
     deps.sink = static_cast<ISimulationEventSink*>(this);
     deps.event_listener = quest_tracker.get();
+    deps.poi_registry = &poi_registry;
+    deps.city_population = &city_population;
     deps.player_entity_id = player_entity_id;
     deps.world_seed = &world_seed;
     sim_director.configure(deps);
+    city_population.configure(
+        generator.get(),
+        &bubble,
+        &entity_ledger,
+        &entity_tracker,
+        &turn_scheduler,
+        &poi_registry,
+        &world_seed
+    );
 }
 
 void GameWorld::_quest_updated_trampoline(void* userdata, const String& quest_id) {
@@ -335,13 +348,16 @@ int GameWorld::get_world_seed() const {
 }
 
 void GameWorld::init_world_bubble(const Vector2i& player_pos, bool is_square) {
+    city_population.clear();
+    poi_registry.clear();
     bubble.clear_all_caches();
     bubble.clear_active_area();
     const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
     bubble.set_active_z(player ? player->z : 0);
     if (renderer) {
-        bubble.set_active_radius(renderer->get_world_bubble_radius());
-        bubble.set_player_vision_radius(renderer->get_world_bubble_radius());
+        const int render_radius = renderer->get_world_bubble_radius();
+        bubble.set_active_radius(render_radius);
+        bubble.set_player_vision_radius(render_radius);
         renderer->init_world_bubble(player_pos, is_square);
     }
 }
@@ -540,7 +556,14 @@ Dictionary GameWorld::generate_story_quest_offer(int giver_entity_id, const Stri
 }
 
 bool GameWorld::accept_quest(const String& quest_id) {
-    return quest_tracker ? quest_tracker->accept(quest_id) : false;
+    if (!quest_tracker) return false;
+    const Dictionary quest = quest_tracker->get_quest(quest_id);
+    if (!quest_tracker->accept(quest_id)) return false;
+    const int64_t giver_id = quest.get("giver_entity_id", 0);
+    if (giver_id > 0) {
+        promote_ambient_entity(static_cast<uint32_t>(giver_id));
+    }
+    return true;
 }
 
 bool GameWorld::decline_quest(const String& quest_id) {
@@ -743,7 +766,8 @@ void GameWorld::despawn_entity(uint32_t entity_id) {
         bubble,
         turn_scheduler,
         static_cast<uint32_t>(world_seed),
-        false
+        false,
+        &poi_registry
     );
 }
 
@@ -933,10 +957,12 @@ int GameWorld::get_entity_romance(uint32_t entity_id) const {
 }
 
 void GameWorld::set_entity_friendship(uint32_t entity_id, int value) {
+    promote_ambient_entity(entity_id);
     entity_ledger.set_friendship(entity_id, value);
 }
 
 void GameWorld::set_entity_romance(uint32_t entity_id, int value) {
+    promote_ambient_entity(entity_id);
     entity_ledger.set_romance(entity_id, value);
 }
 
@@ -957,6 +983,7 @@ Dictionary GameWorld::get_entity_social_state(uint32_t entity_id) const {
 }
 
 void GameWorld::set_entity_social_state(uint32_t entity_id, const Dictionary& state) {
+    promote_ambient_entity(entity_id);
     String json = JSON::stringify(state);
     entity_ledger.set_social_state_json(entity_id, json);
 }
@@ -1039,6 +1066,8 @@ bool GameWorld::can_interact_with_entity(int entity_id) const {
 
 bool GameWorld::set_entity_relation(int entity_id, int target_id, const String& relation) {
     if (entity_id < 0 || target_id < 0) return false;
+    promote_ambient_entity(static_cast<uint32_t>(entity_id));
+    promote_ambient_entity(static_cast<uint32_t>(target_id));
     return sim_director.set_entity_relation(static_cast<uint32_t>(entity_id), static_cast<uint32_t>(target_id), relation);
 }
 
@@ -1049,11 +1078,13 @@ String GameWorld::get_entity_relation(int entity_id, int target_id) const {
 
 bool GameWorld::start_follow(int entity_id) {
     if (entity_id < 0) return false;
+    promote_ambient_entity(static_cast<uint32_t>(entity_id));
     return sim_director.start_entity_follow(static_cast<uint32_t>(entity_id));
 }
 
 bool GameWorld::set_entity_behavior(int entity_id, const String& state, int target_id) {
     if (entity_id < 0) return false;
+    promote_ambient_entity(static_cast<uint32_t>(entity_id));
     const uint32_t target = target_id < 0 ? EntityPool::INVALID_ID : static_cast<uint32_t>(target_id);
     return sim_director.set_entity_behavior(static_cast<uint32_t>(entity_id), state, target);
 }
@@ -1151,6 +1182,16 @@ void GameWorld::on_interact_event(uint32_t entity_id, uint32_t target_id) {
     emit_signal("interact_event", entity_id, target_id);
 }
 
+void GameWorld::update_city_population(int64_t calendar_turn, bool is_day) {
+    const Entity* player = entity_ledger.get_entity_pool().get_entity(player_entity_id);
+    if (!player || player->z != 0) return;
+    city_population.update(calendar_turn, is_day, Vector2i(player->x, player->y));
+}
+
+bool GameWorld::promote_ambient_entity(uint32_t entity_id) {
+    return city_population.promote(entity_id);
+}
+
 Dictionary GameWorld::get_entity_health(uint32_t entity_id) const {
     return entity_ledger.get_health(entity_id);
 }
@@ -1198,18 +1239,35 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
     std::vector<uint32_t> active_ids;
     entity_tracker.collect_ids(active_ids);
 
-    std::vector<uint32_t> to_freeze;
+    std::vector<uint32_t> to_remove;
     for (uint32_t id : active_ids) {
         const Entity* entity = entity_ledger.get_entity_pool().get_entity(id);
         if (!entity) continue;
         if (id == player_entity_id) continue;
-        if (!active_area.contains_offset(entity->x - player_pos.x, entity->y - player_pos.y)) {
-            to_freeze.push_back(id);
+        const bool outside_active_area = !active_area.contains_offset(
+            entity->x - player_pos.x, entity->y - player_pos.y);
+        const bool retained_ambient = entity_ledger.is_ambient(id)
+            && city_population.is_inside_route_area(
+                Vector3i(entity->x, entity->y, entity->z), player_pos);
+        if (outside_active_area && !retained_ambient) {
+            to_remove.push_back(id);
         }
     }
 
-    for (uint32_t id : to_freeze) {
-        EntityLifecycle::freeze_entity(id, entity_archive, entity_ledger, entity_tracker, bubble, turn_scheduler);
+    for (uint32_t id : to_remove) {
+        if (entity_ledger.is_ambient(id)) {
+            city_population.despawn_ambient(id);
+        } else {
+            EntityLifecycle::freeze_entity(
+                id,
+                entity_archive,
+                entity_ledger,
+                entity_tracker,
+                bubble,
+                turn_scheduler,
+                &poi_registry
+            );
+        }
     }
 
     std::vector<uint64_t> thaw_keys = entity_archive.get_frozen_keys_in_area(active_area);
@@ -1223,6 +1281,8 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
 
     bubble.consume_newly_seen_cells();
     std::vector<uint64_t> newly_active_cells = bubble.consume_newly_active_cells();
+    poi_registry.prune_to_area(active_area);
+    poi_registry.register_for_active_cells(newly_active_cells, *generator, world_seed);
     WorldSpawner::spawn_for_active_cells(
         static_cast<uint32_t>(world_seed),
         player_time,
@@ -1234,6 +1294,12 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         entity_tracker,
         turn_scheduler,
         spawn_state
+    );
+    poi_registry.rebuild_reservations(entity_ledger);
+    city_population.queue_exploration_activation(
+        std::move(newly_active_cells),
+        player_pos,
+        bubble.get_active_z()
     );
 }
 
@@ -1252,6 +1318,8 @@ Dictionary GameWorld::get_save_data() const {
 }
 
 void GameWorld::load_save_data(const Dictionary &p_data) {
+    city_population.clear();
+    poi_registry.clear();
     WorldSaveSerializer::load_save_data(
         p_data,
         world_seed,

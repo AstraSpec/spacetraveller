@@ -340,5 +340,13 @@
     "solid": true,
     "tags": ["SMASHABLE", "TRANSPARENT"],
     "smash_loot_table": "wooden_furniture_small_smashed"
+  },
+  {
+    "id": "vehicle_wheel",
+    "name": "Wheel",
+    "atlas": [36, 29],
+    "solid": true,
+    "tags": ["SMASHABLE", "TRANSPARENT"],
+    "smash_loot_table": "wooden_furniture_small_smashed"
   }
 ]

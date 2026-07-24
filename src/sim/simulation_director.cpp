@@ -13,6 +13,8 @@
 #include "core/tag_registry.h"
 #include "core/faction.h"
 #include "world/entity_lifecycle.h"
+#include "world/point_of_interest_registry.h"
+#include "world/city_population_director.h"
 #include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
 #include "components/action_planner.h"
@@ -121,6 +123,10 @@ bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
     // leave an NPC friendly without also assigning its follow order.
     AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
     if (!allegiance) return false;
+    if (d.poi_registry) d.poi_registry->release_for_entity(entity_id);
+    ai->routine_has_target = false;
+    ai->routine_phase = RoutinePhase::SEEKING;
+    ai->routine_dwell_remaining = 0;
     allegiance->faction_id = "player";
     allegiance->personal_relations[d.player_entity_id] = EntityRelation::FRIENDLY;
     ai->state = AIState::FOLLOW;
@@ -150,10 +156,13 @@ bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& s
             !d.ledger->is_alive(target_id)) {
             return false;
         }
-        ai->target_entity_id = target_id;
-    } else {
-        ai->target_entity_id = EntityPool::INVALID_ID;
     }
+    if (d.poi_registry) d.poi_registry->release_for_entity(entity_id);
+    ai->routine_has_target = false;
+    ai->routine_phase = RoutinePhase::SEEKING;
+    ai->routine_dwell_remaining = 0;
+    ai->routine_failed_attempts = 0;
+    ai->target_entity_id = needs_target ? target_id : EntityPool::INVALID_ID;
     if (next_state == AIState::FOLLOW) {
         ai->follow_leader_id = target_id;
     } else if (next_state != AIState::COMBAT && next_state != AIState::FLEE) {
@@ -323,8 +332,20 @@ void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& c
         }
         d.event_listener->on_game_event(e);
     }
+    if (d.city_population) {
+        d.city_population->release_for_entity(entity_id);
+    }
     uint32_t seed = d.world_seed ? static_cast<uint32_t>(*d.world_seed) : 0;
-    EntityLifecycle::despawn_entity(entity_id, *d.ledger, *d.tracker, *d.bubble, *d.scheduler, seed, true);
+    EntityLifecycle::despawn_entity(
+        entity_id,
+        *d.ledger,
+        *d.tracker,
+        *d.bubble,
+        *d.scheduler,
+        seed,
+        true,
+        d.poi_registry
+    );
 }
 
 bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
@@ -832,6 +853,11 @@ void SimulationDirector::notify_attack(uint32_t attacker_id, uint32_t defender_i
 
         set_entity_relation(observer_id, attacker_id, "hostile");
         if (ai->reaction_policy == ReactionPolicy::PASSIVE) continue;
+        if (d.poi_registry) d.poi_registry->release_for_entity(observer_id);
+        ai->routine_has_target = false;
+        ai->routine_phase = RoutinePhase::SEEKING;
+        ai->routine_dwell_remaining = 0;
+        ai->routine_failed_attempts = 0;
         ai->target_entity_id = attacker_id;
         ai->last_known_target_position = Vector2i(attacker->x, attacker->y);
         ai->has_last_known_target_position = true;
@@ -852,6 +878,10 @@ float SimulationDirector::resolve_attack(
     const String& ability_id,
     int body_part_index
 ) {
+    if (d.city_population) {
+        if (attacker_id == d.player_entity_id) d.city_population->promote(defender_id);
+        if (defender_id == d.player_entity_id) d.city_population->promote(attacker_id);
+    }
     if (!d.ledger->is_alive(defender_id)) {
         return 1.0f;
     }

@@ -41,6 +41,7 @@ struct DungeonStructureContext {
     String structure_id;
     Vector2i local_pos;
     int local_z = 0;
+    Vector3i origin;
 };
 
 struct SurfaceFeatureContext {
@@ -48,6 +49,7 @@ struct SurfaceFeatureContext {
     String structure_id;
     Vector2i local_pos;
     int local_z = 0;
+    Vector3i origin;
 };
 
 struct CityStructureContext {
@@ -55,6 +57,7 @@ struct CityStructureContext {
     String structure_id;
     Vector2i local_pos;
     int local_z = 0;
+    Vector3i origin;
 };
 
 class WorldGenerator {

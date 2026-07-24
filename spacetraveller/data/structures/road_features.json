@@ -1,116 +1,146 @@
 [
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "horse_carriage",
-        "type": "feature",
-        "size": [
-            6,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(2x0, 1x1, 1x0, 1x2, 1x3, 1x0, 1x4, 2x5, 1x4, 1x6, 2x0, 1x7, 1x0, 1x2, 1x3)",
+                "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x0, 1x3, 1x1, 1x4, 2x5, 1x4, 1x6, 1x0, 1x1, 1x7, 1x1, 1x0, 1x3)",
                 "palette": [
-                    {
-                        "tile": "w_wall"
-                    },
-                    {
-                        "tile": "w_door_c"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "sign"
-                    },
-                    {
-                        "tile": "chair"
-                    },
-                    {
-                        "tile": "w_floor"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile_group": "window"
-                    }
-                ],
-                "rules": []
+                    {"tile": "vehicle_wheel"},
+                    {"tile": "w_wall"},
+                    {"tile": "w_door_c"},
+                    {"tile": "w_fence"},
+                    {"tile": "chair"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile_group": "window"}
+                ]
             }
-        }
+        },
+        "size": [
+            6.0,
+            3.0
+        ],
+        "type": "feature"
+    },
+    {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
+        "id": "merchant_carriage",
+        "levels": {
+            "0": {
+                "blueprint": "(1x0, 1x1, 1x2, 1x1, 1x0, 1x3, 1x1, 1x4, 2x5, 1x6, 1x7, 1x0, 1x1, 1x8, 1x1, 1x0, 1x3, 1x9, 3x7, 2x9)",
+                "palette": [
+                    {"tile": "vehicle_wheel"},
+                    {"tile": "w_wall"},
+                    {"tile": "w_door_c"},
+                    {"tile": "w_fence"},
+                    {"tile": "w_crate"},
+                    {"tile": "w_floor"},
+                    {"tile": "chair"},
+                    {"tile": "void"},
+                    {"tile_group": "window"},
+                    {"tile": "barrel"}
+                ],
+                "rules": [
+                    {
+                        "entity_group": "generic_merchants",
+                        "positions": [ [ 2, 1 ] ],
+                        "type": "spawn_entity_group"
+                    },
+                    {
+                        "allowed_roles": [
+                            "customer"
+                        ],
+                        "dwell_turns": [
+                            15.0,
+                            30.0
+                        ],
+                        "positions": [ [ 2, 3 ] ],
+                        "tags": [
+                            "shopping"
+                        ],
+                        "type": "point_of_interest",
+                        "weight": 3.0
+                    }
+                ]
+            }
+        },
+        "size": [
+            6,
+            4
+        ],
+        "type": "feature"
     },
     {
         "id": "road_fountain",
-        "type": "feature",
-        "size": [
-            5,
-            5
-        ],
         "levels": {
             "0": {
                 "blueprint": "(6x0, 3x1, 2x0, 1x1, 1x2, 1x1, 2x0, 3x1, 6x0)",
                 "palette": [
-                    {
-                        "tile": "alley_flagstone"
-                    },
-                    {
-                        "tile": "water"
-                    },
-                    {
-                        "tile": "fountain"
-                    }
+                    {"tile": "alley_flagstone"},
+                    {"tile": "water"},
+                    {"tile": "fountain"}
                 ],
                 "rules": []
             }
-        }
+        },
+        "size": [
+            5.0,
+            5.0
+        ],
+        "type": "feature"
     },
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "horse_carriage_prison",
-        "type": "feature",
-        "size": [
-            11,
-            3
-        ],
         "levels": {
             "0": {
-                "blueprint": "(4x0, 1x1, 2x2, 1x3, 1x2, 1x1, 1x4, 1x0, 2x5, 1x0, 1x6, 1x2, 3x5, 1x7, 1x6, 4x0, 1x1, 2x2, 1x8, 1x2, 1x1, 1x4)",
+                "blueprint": "(4x0, 1x1, 1x2, 1x3, 1x4, 1x3, 1x2, 1x1, 1x0, 2x5, 1x0, 1x6, 1x3, 3x5, 1x7, 1x6, 4x0, 1x1, 1x2, 1x3, 1x8, 1x3, 1x2, 1x1)",
                 "palette": [
-                    {
-                        "tile": "iron_bars"
-                    },
-                    {
-                        "tile": "barrel"
-                    },
-                    {
-                        "tile": "w_wall"
-                    },
-                    {
-                        "tile": "w_door_c"
-                    },
-                    {
-                        "tile": "sign"
-                    },
-                    {
-                        "tile": "w_floor"
-                    },
-                    {
-                        "tile": "void"
-                    },
-                    {
-                        "tile": "chair"
-                    },
-                    {
-                        "tile_group": "window"
-                    }
+                    {"tile": "iron_bars"},
+                    {"tile": "w_fence"},
+                    {"tile": "vehicle_wheel"},
+                    {"tile": "w_wall"},
+                    {"tile": "w_door_c"},
+                    {"tile": "w_floor"},
+                    {"tile": "void"},
+                    {"tile": "chair"},
+                    {"tile_group": "window"}
                 ],
                 "rules": [
                     {
                         "entity_group": "carriage_prisoner_goblin",
-                        "type": "spawn_entity_group",
-                        "positions": [ [ 1, 1 ] ]
+                        "positions": [ [ 1, 1 ] ],
+                        "type": "spawn_entity_group"
                     }
                 ]
             }
-        }
+        },
+        "size": [
+            11.0,
+            3.0
+        ],
+        "type": "feature"
     }
 ]

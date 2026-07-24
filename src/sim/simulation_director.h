@@ -26,6 +26,8 @@ struct ActionResult;
 struct RaceInfo;
 class TileDb;
 class EntityTracker;
+class PointOfInterestRegistry;
+class CityPopulationDirector;
 
 struct SimulationDirectorDeps {
     EntityLedger* ledger = nullptr;
@@ -35,6 +37,8 @@ struct SimulationDirectorDeps {
     TurnScheduler* scheduler = nullptr;
     ISimulationEventSink* sink = nullptr;
     IGameEventListener* event_listener = nullptr;
+    PointOfInterestRegistry* poi_registry = nullptr;
+    CityPopulationDirector* city_population = nullptr;
     uint32_t player_entity_id = PLAYER_ENTITY_ID;
     const int* world_seed = nullptr;
 };

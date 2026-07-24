@@ -85,8 +85,22 @@ void EntityLedger::destroy_entity(uint32_t id) {
     social_profiles.erase(id);
     allegiance_data.erase(id);
     vendor_state.erase(id);
+    lifecycle_class.erase(id);
     
     entity_pool.destroy_entity(id);
+}
+
+bool EntityLedger::is_ambient(uint32_t id) const {
+    auto it = lifecycle_class.find(id);
+    return it != lifecycle_class.end() && it->second == EntityLifecycleClass::AMBIENT;
+}
+
+void EntityLedger::mark_ambient(uint32_t id) {
+    if (entity_pool.contains(id)) lifecycle_class[id] = EntityLifecycleClass::AMBIENT;
+}
+
+void EntityLedger::promote_to_persistent(uint32_t id) {
+    if (entity_pool.contains(id)) lifecycle_class[id] = EntityLifecycleClass::PERSISTENT;
 }
 
 InventoryData& EntityLedger::ensure_inventory(uint32_t id) {
@@ -413,6 +427,7 @@ Dictionary EntityLedger::serialize() const {
     Dictionary data;
     Array entities;
     for (uint32_t id : entity_pool.get_live_ids()) {
+        if (is_ambient(id)) continue;
         entities.push_back(serialize_entity(id));
     }
     data["entities"] = entities;
@@ -439,6 +454,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     social_profiles.clear();
     allegiance_data.clear();
     vendor_state.clear();
+    lifecycle_class.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {

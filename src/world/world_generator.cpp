@@ -1793,6 +1793,36 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
         return true;
     };
 
+    auto candidate_claims_cell = [&](const SurfaceFeatureInstance& p_candidate, int p_world_x, int p_world_y) {
+        const int local_x = p_world_x - p_candidate.origin.x;
+        const int local_y = p_world_y - p_candidate.origin.y;
+        const uint16_t tile = get_surface_feature_tile_at(
+            p_candidate.feature_id,
+            local_x,
+            local_y,
+            p_candidate.source_size,
+            p_candidate.rotation
+        );
+        if (tile != 0 && tile != id_void) return true;
+
+        const StructureInfo* structure = s_db->get_structure_info(p_candidate.feature_id);
+        if (!structure) return false;
+        auto level_it = structure->levels.find(0);
+        if (level_it == structure->levels.end()) return false;
+        const Vector2i source_pos = resolve_surface_feature_source_pos(
+            local_x,
+            local_y,
+            p_candidate.source_size,
+            p_candidate.rotation
+        );
+        for (const StructureRuleInfo& rule : level_it->second.rules) {
+            if (rule.type == RuleType::POINT_OF_INTEREST && rule.pos == source_pos) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     auto candidates_overlap = [&](const SurfaceFeatureInstance& p_a, const SurfaceFeatureInstance& p_b) {
         const int min_x = p_a.origin.x > p_b.origin.x ? p_a.origin.x : p_b.origin.x;
         const int min_y = p_a.origin.y > p_b.origin.y ? p_a.origin.y : p_b.origin.y;
@@ -1807,23 +1837,8 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
 
         for (int wy = min_y; wy < max_y; wy++) {
             for (int wx = min_x; wx < max_x; wx++) {
-                const uint16_t tile_a = get_surface_feature_tile_at(
-                    p_a.feature_id,
-                    wx - p_a.origin.x,
-                    wy - p_a.origin.y,
-                    p_a.source_size,
-                    p_a.rotation
-                );
-                if (tile_a == 0 || tile_a == id_void) continue;
-
-                const uint16_t tile_b = get_surface_feature_tile_at(
-                    p_b.feature_id,
-                    wx - p_b.origin.x,
-                    wy - p_b.origin.y,
-                    p_b.source_size,
-                    p_b.rotation
-                );
-                if (tile_b != 0 && tile_b != id_void) return true;
+                if (!candidate_claims_cell(p_a, wx, wy)) continue;
+                if (candidate_claims_cell(p_b, wx, wy)) return true;
             }
         }
 
@@ -2232,12 +2247,22 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
                 const int shoulder_nudge = rng.range(-1, 1);
                 if (!place_horizontal) {
                     const bool use_far_side = west_open && east_open ? rng.range(0, 1) == 1 : east_open;
+                    candidate.rotation = use_far_side
+                        ? WorldCoords::ROT_WEST
+                        : WorldCoords::ROT_EAST;
+                    candidate.placed_size = get_rotated_surface_feature_size(
+                        candidate.source_size, candidate.rotation);
                     anchor_x += use_far_side
                         ? WorldCoords::CHUNK_SIZE - ROAD_SHOULDER_OFFSET - candidate.placed_size.x - shoulder_nudge
                         : ROAD_SHOULDER_OFFSET + shoulder_nudge;
                     anchor_y += rng.range(0, WorldCoords::CHUNK_SIZE - candidate.placed_size.y);
                 } else {
                     const bool use_far_side = north_open && south_open ? rng.range(0, 1) == 1 : south_open;
+                    candidate.rotation = use_far_side
+                        ? WorldCoords::ROT_NORTH
+                        : WorldCoords::ROT_SOUTH;
+                    candidate.placed_size = get_rotated_surface_feature_size(
+                        candidate.source_size, candidate.rotation);
                     anchor_x += rng.range(0, WorldCoords::CHUNK_SIZE - candidate.placed_size.x);
                     anchor_y += use_far_side
                         ? WorldCoords::CHUNK_SIZE - ROAD_SHOULDER_OFFSET - candidate.placed_size.y - shoulder_nudge
@@ -2794,6 +2819,7 @@ DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int
             feature->rotation
         );
         context.local_z = 0;
+        context.origin = Vector3i(feature->origin.x, feature->origin.y, z);
         return context;
     }
 
@@ -2824,6 +2850,7 @@ DungeonStructureContext WorldGenerator::get_dungeon_structure_context(int x, int
                 room.rotation
             );
             context.local_z = 0;
+            context.origin = Vector3i(room.bounds.origin.x, room.bounds.origin.y, p_layout.z);
             return context;
         }
 
@@ -2873,6 +2900,7 @@ SurfaceFeatureContext WorldGenerator::get_surface_feature_context(int x, int y, 
     context.structure_id = instance.feature_id;
     context.local_pos = source_pos;
     context.local_z = 0;
+    context.origin = Vector3i(instance.origin.x, instance.origin.y, z);
     return context;
 }
 
@@ -2894,6 +2922,7 @@ CityStructureContext WorldGenerator::get_city_structure_context(int x, int y, in
     context.valid = true;
     context.structure_id = instance.structure_id;
     context.local_z = z;
+    context.origin = Vector3i(instance.origin.x, instance.origin.y, 0);
     context.local_pos = Vector2i(-1, -1);
     if (local_x < 0 || local_y < 0 || local_x >= instance.placed_size.x || local_y >= instance.placed_size.y) {
         return context;

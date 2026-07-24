@@ -16,6 +16,7 @@ func _ready() -> void:
 
 	InputManager.inventory_item_dropped.connect(_on_inventory_item_dropped)
 	player_action_resolved.connect(_on_player_action_resolved)
+	TimeManager.turn_passed.connect(_on_time_turn_passed)
 
 func _on_inventory_item_dropped(ID: String, amount: int) -> void:
 	drop_item(Vector2i(get_player_position()), ID, amount)
@@ -24,12 +25,16 @@ func _on_inventory_item_dropped(ID: String, amount: int) -> void:
 func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: float) -> void:
 	TimeManager.advance_turn(max(1, int(cost)))
 
+func _on_time_turn_passed() -> void:
+	update_city_population(TimeManager.total_turns, TimeManager.is_daytime())
+
 func generate_world(playerPos: Vector2i, location: Dictionary = {}) -> void:
 	var regionChunks = init_region(Vector2i.ZERO)
 	var resolvedPlayerPos: Vector2i = _resolve_start_position(playerPos, location, regionChunks)
 	spawn_player(resolvedPlayerPos.x, resolvedPlayerPos.y, "human")
 	init_world_bubble(resolvedPlayerPos, true)
 	update_world_bubble(resolvedPlayerPos)
+	update_city_population(TimeManager.total_turns, TimeManager.is_daytime())
 	generated.emit(regionChunks)
 
 func _resolve_start_position(fallback: Vector2i, location: Dictionary, regionChunks: Dictionary) -> Vector2i:

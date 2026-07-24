@@ -28,7 +28,8 @@ enum class RuleType : uint8_t {
     SPAWN_ENTITY_GROUP,
     SPAWN_LOOT_TABLE,
     SPAWN_ITEM,
-    SET_METADATA
+    SET_METADATA,
+    POINT_OF_INTEREST
 };
 
 struct StructureRuleInfo {
@@ -45,6 +46,11 @@ struct StructureRuleInfo {
     uint16_t loot_table = 0;
     uint16_t item_id = 0;
     int amount = 0;
+    std::vector<String> poi_tags;
+    std::vector<String> poi_allowed_roles;
+    int poi_dwell_min = 0;
+    int poi_dwell_max = 0;
+    int poi_weight = 0;
     Dictionary params;
 };
 

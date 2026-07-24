@@ -68,7 +68,119 @@ static bool parse_rule_type(const String& p_type, RuleType& r_type) {
         r_type = RuleType::SET_METADATA;
         return true;
     }
+    if (p_type == "point_of_interest") {
+        r_type = RuleType::POINT_OF_INTEREST;
+        return true;
+    }
     return false;
+}
+
+static bool is_valid_poi_identifier(const String& p_value) {
+    if (p_value.is_empty() || p_value != p_value.to_lower()) return false;
+    for (int i = 0; i < p_value.length(); i++) {
+        const char32_t c = p_value[i];
+        if (!((c >= U'a' && c <= U'z') || (c >= U'0' && c <= U'9') || c == U'_')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool parse_poi_identifier_list(
+    const Variant& p_value,
+    const String& p_field,
+    const String& p_structure_id,
+    int p_rule_index,
+    std::vector<String>& r_values
+) {
+    if (p_value.get_type() != Variant::ARRAY) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " requires a non-empty '", p_field, "' array."
+        );
+        return false;
+    }
+    Array values = p_value;
+    if (values.is_empty()) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " requires a non-empty '", p_field, "' array."
+        );
+        return false;
+    }
+    for (int i = 0; i < values.size(); i++) {
+        if (values[i].get_type() != Variant::STRING) {
+            UtilityFunctions::push_error(
+                "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+                " has a non-string '", p_field, "' value."
+            );
+            return false;
+        }
+        const String value = String(values[i]);
+        if (!is_valid_poi_identifier(value)) {
+            UtilityFunctions::push_error(
+                "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+                " has invalid '", p_field, "' value: ", value
+            );
+            return false;
+        }
+        if (std::find(r_values.begin(), r_values.end(), value) == r_values.end()) {
+            r_values.push_back(value);
+        }
+    }
+    return true;
+}
+
+static bool variant_to_rule_coordinate(const Variant& p_value, int& r_coordinate);
+
+static bool parse_poi_dwell(
+    const Variant& p_value,
+    const String& p_structure_id,
+    int p_rule_index,
+    int& r_min,
+    int& r_max
+) {
+    if (p_value.get_type() != Variant::ARRAY) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " requires 'dwell_turns' as [minimum, maximum]."
+        );
+        return false;
+    }
+    Array dwell = p_value;
+    if (dwell.size() != 2
+        || !variant_to_rule_coordinate(dwell[0], r_min)
+        || !variant_to_rule_coordinate(dwell[1], r_max)) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " requires two integer 'dwell_turns' values."
+        );
+        return false;
+    }
+    if (r_min <= 0 || r_max < r_min) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " has invalid 'dwell_turns'; require 0 < minimum <= maximum."
+        );
+        return false;
+    }
+    return true;
+}
+
+static bool parse_poi_weight(
+    const Variant& p_value,
+    const String& p_structure_id,
+    int p_rule_index,
+    int& r_weight
+) {
+    if (!variant_to_rule_coordinate(p_value, r_weight) || r_weight <= 0) {
+        UtilityFunctions::push_error(
+            "[StructureDb] POI rule ", p_rule_index, " in structure ", p_structure_id,
+            " requires a positive integer 'weight'."
+        );
+        return false;
+    }
+    return true;
 }
 
 static int variant_to_level(const Variant& p_value, int p_default = 0) {
@@ -246,6 +358,21 @@ static void parse_rules(
             continue;
         }
 
+        if (rule.type == RuleType::POINT_OF_INTEREST) {
+            if (!parse_poi_identifier_list(
+                    rule_data.get("tags", Variant()), "tags", p_structure_id, i, rule.poi_tags)
+                || !parse_poi_identifier_list(
+                    rule_data.get("allowed_roles", Variant()), "allowed_roles", p_structure_id, i, rule.poi_allowed_roles)
+                || !parse_poi_dwell(
+                    rule_data.get("dwell_turns", Variant()), p_structure_id, i,
+                    rule.poi_dwell_min, rule.poi_dwell_max)
+                || !parse_poi_weight(
+                    rule_data.get("weight", Variant()), p_structure_id, i,
+                    rule.poi_weight)) {
+                continue;
+            }
+        }
+
         String loot_table = String(rule_data.get("loot_table", ""));
         if (p_id_reg && !loot_table.is_empty()) {
             rule.loot_table = p_id_reg->register_string(loot_table);
@@ -274,6 +401,15 @@ static void parse_rules(
                 UtilityFunctions::push_error(
                     "[StructureDb] Rule ", i, " in structure ", p_structure_id,
                     " has out-of-bounds position: ", position
+                );
+                positions_valid = false;
+                break;
+            }
+            if (rule.type == RuleType::POINT_OF_INTEREST
+                && std::find(positions.begin(), positions.end(), position) != positions.end()) {
+                UtilityFunctions::push_error(
+                    "[StructureDb] POI rule ", i, " in structure ", p_structure_id,
+                    " contains duplicate position: ", position
                 );
                 positions_valid = false;
                 break;

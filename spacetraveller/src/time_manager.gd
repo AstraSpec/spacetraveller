@@ -34,6 +34,9 @@ func reset() -> void:
 	total_turns = 28800
 	_update_environment()
 
+func is_daytime() -> bool:
+	return bool(_get_environment_context().get("is_day", false))
+
 func _update_environment() -> void:
 	var ctx = _get_environment_context()
 	

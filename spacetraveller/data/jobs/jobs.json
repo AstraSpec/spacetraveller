@@ -208,6 +208,26 @@
     "traits": [],
     "vendor_loot_table": "scavenger_vendor_stock"
   },
+  "villager": {
+    "display_name": "Villager",
+    "dialogues": ["villager_tavern"],
+    "reaction_policy": "defensive",
+    "faction": "settlement",
+    "default_ai_state": "wander",
+    "atlas_offset": 0,
+    "traits": [],
+    "context_tags": ["villager", "customer"]
+  },
+  "tavern_worker": {
+    "display_name": "Tavern Worker",
+    "dialogues": ["tavern_worker"],
+    "reaction_policy": "defensive",
+    "faction": "settlement",
+    "default_ai_state": "wander",
+    "atlas_offset": 4,
+    "traits": [],
+    "context_tags": ["worker", "tavern_worker"]
+  },
   "monster": {
     "display_name": "Monster",
     "dialogues": [],

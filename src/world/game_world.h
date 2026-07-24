@@ -18,6 +18,8 @@
 #include "world_generator.h"
 #include "quest_tracker.h"
 #include "world_spawn_state.h"
+#include "point_of_interest_registry.h"
+#include "city_population_director.h"
 #include "entity_archive.h"
 #include "path/a_star_grid.h"
 #include "trade_system.h"
@@ -58,6 +60,8 @@ private:
     std::unique_ptr<AStarGridPathfinder> pathfinder;
     std::unique_ptr<QuestTracker> quest_tracker;
     WorldSpawnState spawn_state;
+    PointOfInterestRegistry poi_registry;
+    CityPopulationDirector city_population;
     EntityArchive entity_archive;
     EntityLedger entity_ledger;
     EntityTracker entity_tracker;
@@ -230,6 +234,8 @@ public:
     bool wield_entity_weapon_by_string(uint32_t entity_id, const String& item_id);
 
     void process_game_turn(float current_time);
+    void update_city_population(int64_t calendar_turn, bool is_day);
+    bool promote_ambient_entity(uint32_t entity_id);
 
     void on_entity_moved(uint32_t entity_id, const Vector2i& new_pos, const Vector2i& new_chunk) override;
     void on_entity_died(uint32_t entity_id, const String& cause) override;

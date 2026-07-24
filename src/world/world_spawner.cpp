@@ -3,6 +3,7 @@
 #include "world_bubble.h"
 #include "entity_archive.h"
 #include "world_generator.h"
+#include "point_of_interest_registry.h"
 #include "turn_scheduler.h"
 #include "data/chunk_db.h"
 #include "data/dungeon_db.h"
@@ -15,6 +16,7 @@
 #include "core/tag_registry.h"
 #include "core/world_coords.h"
 #include "entities/entity_factory.h"
+#include "entities/entity_ledger.h"
 #include "entities/entity_pool.h"
 #include "entities/entity_tracker.h"
 #include "world/traversal_rules.h"
@@ -142,6 +144,7 @@ static String rule_type_to_string(RuleType p_type) {
         case RuleType::SPAWN_LOOT_TABLE: return "spawn_loot_table";
         case RuleType::SPAWN_ITEM: return "spawn_item";
         case RuleType::SET_METADATA: return "set_metadata";
+        case RuleType::POINT_OF_INTEREST: return "point_of_interest";
     }
     return "unknown";
 }
@@ -464,7 +467,8 @@ static bool apply_structure_spawn_rule(
     const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
     EntityTracker& p_tracker,
-    TurnScheduler& p_scheduler
+    TurnScheduler& p_scheduler,
+    const PointOfInterestScope& p_scope
 ) {
     if (p_rule.entity.is_empty()) return false;
 
@@ -476,6 +480,14 @@ static bool apply_structure_spawn_rule(
     if (!spawn_with_structure_rule(p_world_seed, p_spawn_turn_time, p_pos, p_rule, p_bubble, p_ledger, p_tracker, p_scheduler)) {
         UtilityFunctions::push_error("[WorldSpawner] Failed structure spawn rule: ", p_structure_id, " type=", rule_type_to_string(p_rule.type), " pos=", p_rule.pos, " entity=", p_rule.entity);
         return false;
+    }
+
+    if (const WorldBubble::CellEntity* cell = p_bubble.get_entity_at(p_pos.x, p_pos.y)) {
+        if (AIData* ai = p_ledger.try_get_ai(cell->entity_id)) {
+            ai->has_routine_scope = p_scope.is_valid();
+            ai->routine_structure_id = p_scope.structure_id;
+            ai->routine_scope_origin = p_scope.origin;
+        }
     }
 
     return true;
@@ -491,7 +503,8 @@ static bool apply_structure_spawn_group_rule(
     const EntityArchive& p_entity_archive,
     EntityLedger& p_ledger,
     EntityTracker& p_tracker,
-    TurnScheduler& p_scheduler
+    TurnScheduler& p_scheduler,
+    const PointOfInterestScope& p_scope
 ) {
     if (p_rule.entity_group.is_empty()) return false;
 
@@ -540,6 +553,14 @@ static bool apply_structure_spawn_group_rule(
         return false;
     }
 
+    if (const WorldBubble::CellEntity* cell = p_bubble.get_entity_at(p_pos.x, p_pos.y)) {
+        if (AIData* ai = p_ledger.try_get_ai(cell->entity_id)) {
+            ai->has_routine_scope = p_scope.is_valid();
+            ai->routine_structure_id = p_scope.structure_id;
+            ai->routine_scope_origin = p_scope.origin;
+        }
+    }
+
     return true;
 }
 
@@ -572,6 +593,10 @@ void WorldSpawner::spawn_for_active_cells(
 
                     bool spawned_from_rule = false;
                     bool custom_loot_rule_matched = false;
+                    const PointOfInterestScope scope{
+                        dungeon_structure.structure_id,
+                        dungeon_structure.origin
+                    };
                     for (const StructureRuleInfo& rule : level.rules) {
                         if (rule.pos != dungeon_structure.local_pos) continue;
 
@@ -586,16 +611,18 @@ void WorldSpawner::spawn_for_active_cells(
                                 break;
                             case RuleType::SPAWN_ENTITY:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SPAWN_ENTITY_GROUP:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, dungeon_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SET_METADATA:
                                 p_bubble.set_tile_metadata(pos, rule.params);
+                                break;
+                            case RuleType::POINT_OF_INTEREST:
                                 break;
                         }
                     }
@@ -642,6 +669,10 @@ void WorldSpawner::spawn_for_active_cells(
                     const StructureLevelInfo& level = level_it->second;
                     bool spawned_from_rule = false;
                     bool custom_loot_rule_matched = false;
+                    const PointOfInterestScope scope{
+                        city_structure.structure_id,
+                        city_structure.origin
+                    };
                     for (const StructureRuleInfo& rule : level.rules) {
                         if (rule.pos != city_structure.local_pos) continue;
 
@@ -656,16 +687,18 @@ void WorldSpawner::spawn_for_active_cells(
                                 break;
                             case RuleType::SPAWN_ENTITY:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SPAWN_ENTITY_GROUP:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, city_structure.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SET_METADATA:
                                 p_bubble.set_tile_metadata(pos, rule.params);
+                                break;
+                            case RuleType::POINT_OF_INTEREST:
                                 break;
                         }
                     }
@@ -691,6 +724,10 @@ void WorldSpawner::spawn_for_active_cells(
 
                     bool spawned_from_rule = false;
                     bool custom_loot_rule_matched = false;
+                    const PointOfInterestScope scope{
+                        surface_feature.structure_id,
+                        surface_feature.origin
+                    };
                     for (const StructureRuleInfo& rule : level.rules) {
                         if (rule.pos != surface_feature.local_pos) continue;
 
@@ -705,16 +742,18 @@ void WorldSpawner::spawn_for_active_cells(
                                 break;
                             case RuleType::SPAWN_ENTITY:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, surface_feature.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, surface_feature.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SPAWN_ENTITY_GROUP:
                                 if (!spawned_from_rule) {
-                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, surface_feature.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                    spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, surface_feature.structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                                 }
                                 break;
                             case RuleType::SET_METADATA:
                                 p_bubble.set_tile_metadata(pos, rule.params);
+                                break;
+                            case RuleType::POINT_OF_INTEREST:
                                 break;
                         }
                     }
@@ -749,6 +788,14 @@ void WorldSpawner::spawn_for_active_cells(
                     pos.y - chunk_y * WorldCoords::CHUNK_SIZE
                 );
                 uint8_t rotation = p_generator.get_chunk_rotation_for_cell(pos.x, pos.y);
+                const PointOfInterestScope scope{
+                    structure_id,
+                    Vector3i(
+                        chunk_x * WorldCoords::CHUNK_SIZE,
+                        chunk_y * WorldCoords::CHUNK_SIZE,
+                        0
+                    )
+                };
 
                 bool spawned_from_rule = false;
                 bool custom_loot_rule_matched = false;
@@ -767,16 +814,18 @@ void WorldSpawner::spawn_for_active_cells(
                             break;
                         case RuleType::SPAWN_ENTITY:
                             if (!spawned_from_rule) {
-                                spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                spawned_from_rule = apply_structure_spawn_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                             }
                             break;
                         case RuleType::SPAWN_ENTITY_GROUP:
                             if (!spawned_from_rule) {
-                                spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler);
+                                spawned_from_rule = apply_structure_spawn_group_rule(p_world_seed, p_spawn_turn_time, structure_id, rule, pos, p_bubble, p_entity_archive, p_ledger, p_tracker, p_scheduler, scope);
                             }
                             break;
                         case RuleType::SET_METADATA:
                             p_bubble.set_tile_metadata(pos, rule.params);
+                            break;
+                        case RuleType::POINT_OF_INTEREST:
                             break;
                     }
                 }

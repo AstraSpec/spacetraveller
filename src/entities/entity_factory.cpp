@@ -58,7 +58,9 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     if (!race) return EntityPool::INVALID_ID;
 
     bool sapient = race_db->has_tag(race_id, "SAPIENT");
-    Rng::Seeded profile_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT);
+    Rng::Seeded profile_rng = overrides.identity_salt == 0
+        ? Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT)
+        : Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::LOOT, overrides.identity_salt);
     JobDb* job_db = JobDb::get_singleton();
     const JobInfo* job_info = nullptr;
     if (job_db && !overrides.job.is_empty()) {
@@ -81,13 +83,17 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     ledger.combat_style[id] = race->combat_style;
 
     if (race_db->has_tag(race_id, "GENDER")) {
-        Rng::Seeded rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::GENDER);
+        Rng::Seeded rng = overrides.identity_salt == 0
+            ? Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::GENDER)
+            : Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::GENDER, overrides.identity_salt);
         String g = rng.chance(0.5f) ? "male" : "female";
         ledger.gender[id] = g;
 
         NameDb* name_db = NameDb::get_singleton();
         if (name_db) {
-            Rng::Seeded name_rng = Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::NAME);
+            Rng::Seeded name_rng = overrides.identity_salt == 0
+                ? Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::NAME)
+                : Rng::at(static_cast<uint32_t>(world_seed), pos, Rng::NAME, overrides.identity_salt);
             String full_name = name_db->generate(race_id, g, name_rng);
             if (!full_name.is_empty()) ledger.entity_name[id] = full_name;
         }

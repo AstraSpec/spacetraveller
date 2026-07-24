@@ -3,6 +3,7 @@
 #include "entity_archive.h"
 #include "world_bubble.h"
 #include "turn_scheduler.h"
+#include "point_of_interest_registry.h"
 #include "core/id_registry.h"
 #include "core/rng.h"
 #include "core/world_coords.h"
@@ -123,13 +124,15 @@ bool EntityLifecycle::freeze_entity(
     EntityLedger& ledger,
     EntityTracker& tracker,
     WorldBubble& bubble,
-    TurnScheduler& scheduler
+    TurnScheduler& scheduler,
+    PointOfInterestRegistry* poi_registry
 ) {
     Entity* entity = ledger.get_entity_pool().get_entity(entity_id);
     if (!entity) return false;
 
     uint64_t packed = WorldCoords::pack_coords_3d(entity->x, entity->y, entity->z);
     archive.freeze_entity(packed, ledger.serialize_entity(entity_id));
+    if (poi_registry) poi_registry->release_for_entity(entity_id);
     scheduler.remove(entity_id);
     bubble.remove_entity(entity->x, entity->y);
     tracker.remove(entity_id);
@@ -185,7 +188,8 @@ bool EntityLifecycle::despawn_entity(
     WorldBubble& bubble,
     TurnScheduler& scheduler,
     uint32_t world_seed,
-    bool drop_contents
+    bool drop_contents,
+    PointOfInterestRegistry* poi_registry
 ) {
     if (entity_id == EntityPool::PLAYER_ID) return false;
 
@@ -195,6 +199,7 @@ bool EntityLifecycle::despawn_entity(
     }
 
     scheduler.remove(entity_id);
+    if (poi_registry) poi_registry->release_for_entity(entity_id);
 
     if (entity) {
         bubble.remove_entity(entity->x, entity->y);

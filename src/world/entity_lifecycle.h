@@ -11,6 +11,7 @@ class EntityLedger;
 class EntityTracker;
 class TurnScheduler;
 class WorldBubble;
+class PointOfInterestRegistry;
 
 namespace EntityLifecycle {
     bool activate_entity(
@@ -29,7 +30,8 @@ namespace EntityLifecycle {
         EntityLedger& ledger,
         EntityTracker& tracker,
         WorldBubble& bubble,
-        TurnScheduler& scheduler
+        TurnScheduler& scheduler,
+        PointOfInterestRegistry* poi_registry = nullptr
     );
 
     uint32_t thaw_entity(
@@ -49,7 +51,8 @@ namespace EntityLifecycle {
         WorldBubble& bubble,
         TurnScheduler& scheduler,
         uint32_t world_seed,
-        bool drop_contents = true
+        bool drop_contents = true,
+        PointOfInterestRegistry* poi_registry = nullptr
     );
 }
 

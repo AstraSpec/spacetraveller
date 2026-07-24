@@ -198,6 +198,10 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
         return Intent{};
     }
 
+    if (ctx.has_routine_goal) {
+        return move_toward(ai, loco, ctx, ctx.routine_goal, 0);
+    }
+
     Vector2i wander_goal;
     if (Locomotion::has_path(loco)) {
         wander_goal = loco.path_goal;
@@ -237,6 +241,30 @@ Dictionary AIController::serialize(const AIData& data) {
     d["wander_radius"] = data.wander_radius;
     d["wait_turns"] = data.wait_turns;
     d["forced_reaction"] = data.forced_reaction;
+    if (data.has_routine_scope) {
+        d["routine_structure_id"] = data.routine_structure_id;
+        d["routine_scope_x"] = data.routine_scope_origin.x;
+        d["routine_scope_y"] = data.routine_scope_origin.y;
+        d["routine_scope_z"] = data.routine_scope_origin.z;
+    }
+    switch (data.routine_phase) {
+        case RoutinePhase::TRAVELLING: d["routine_phase"] = "travelling"; break;
+        case RoutinePhase::DWELLING: d["routine_phase"] = "dwelling"; break;
+        case RoutinePhase::SEEKING: d["routine_phase"] = "seeking"; break;
+    }
+    if (data.routine_has_target) {
+        d["routine_target_x"] = data.routine_target.x;
+        d["routine_target_y"] = data.routine_target.y;
+        d["routine_target_z"] = data.routine_target.z;
+    }
+    if (data.routine_has_last_position) {
+        d["routine_last_x"] = data.routine_last_position.x;
+        d["routine_last_y"] = data.routine_last_position.y;
+        d["routine_last_z"] = data.routine_last_position.z;
+    }
+    d["routine_dwell_remaining"] = data.routine_dwell_remaining;
+    d["routine_retry_turns"] = data.routine_retry_turns;
+    d["routine_failed_attempts"] = data.routine_failed_attempts;
     return d;
 }
 
@@ -268,6 +296,39 @@ void AIController::deserialize(AIData& data, const Dictionary& dict) {
     data.wander_radius = static_cast<float>(static_cast<double>(dict.get("wander_radius", 4.0)));
     data.wait_turns = std::max(0, static_cast<int>(dict.get("wait_turns", 0)));
     data.forced_reaction = static_cast<bool>(dict.get("forced_reaction", false));
+    data.has_routine_scope = dict.has("routine_structure_id")
+        && dict.has("routine_scope_x")
+        && dict.has("routine_scope_y")
+        && dict.has("routine_scope_z");
+    data.routine_structure_id = String(dict.get("routine_structure_id", ""));
+    data.routine_scope_origin = Vector3i(
+        static_cast<int>(dict.get("routine_scope_x", 0)),
+        static_cast<int>(dict.get("routine_scope_y", 0)),
+        static_cast<int>(dict.get("routine_scope_z", 0))
+    );
+    const String routine_phase = String(dict.get("routine_phase", "seeking"));
+    data.routine_phase = routine_phase == "travelling"
+        ? RoutinePhase::TRAVELLING
+        : (routine_phase == "dwelling" ? RoutinePhase::DWELLING : RoutinePhase::SEEKING);
+    data.routine_has_target = dict.has("routine_target_x")
+        && dict.has("routine_target_y")
+        && dict.has("routine_target_z");
+    data.routine_target = Vector3i(
+        static_cast<int>(dict.get("routine_target_x", 0)),
+        static_cast<int>(dict.get("routine_target_y", 0)),
+        static_cast<int>(dict.get("routine_target_z", 0))
+    );
+    data.routine_has_last_position = dict.has("routine_last_x")
+        && dict.has("routine_last_y")
+        && dict.has("routine_last_z");
+    data.routine_last_position = Vector3i(
+        static_cast<int>(dict.get("routine_last_x", 0)),
+        static_cast<int>(dict.get("routine_last_y", 0)),
+        static_cast<int>(dict.get("routine_last_z", 0))
+    );
+    data.routine_dwell_remaining = std::max(0, static_cast<int>(dict.get("routine_dwell_remaining", 0)));
+    data.routine_retry_turns = std::max(0, static_cast<int>(dict.get("routine_retry_turns", 0)));
+    data.routine_failed_attempts = std::max(0, static_cast<int>(dict.get("routine_failed_attempts", 0)));
     data.calm_scan_countdown = 0;
     data.blocked_move_count = 0;
     data.path_retry_countdown = 0;

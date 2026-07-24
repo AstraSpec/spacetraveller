@@ -2,7 +2,9 @@
 #define SPACETRAVELLER_AI_CONTROLLER_H
 
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/vector3i.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/variant/string.hpp>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -16,6 +18,7 @@ struct Entity;
 
 enum class AIState { WANDER, COMBAT, IDLE, FOLLOW, FLEE, GUARD };
 enum class ReactionPolicy { PASSIVE, TIMID, DEFENSIVE, AGGRESSIVE, PREDATORY };
+enum class RoutinePhase { SEEKING, TRAVELLING, DWELLING };
 
 struct AIData {
     AIState state = AIState::WANDER;
@@ -36,6 +39,17 @@ struct AIData {
     int blocked_move_count = 0;
     int path_retry_countdown = 0;
     bool forced_reaction = false;
+    bool has_routine_scope = false;
+    String routine_structure_id;
+    Vector3i routine_scope_origin;
+    RoutinePhase routine_phase = RoutinePhase::SEEKING;
+    bool routine_has_target = false;
+    Vector3i routine_target;
+    bool routine_has_last_position = false;
+    Vector3i routine_last_position;
+    int routine_dwell_remaining = 0;
+    int routine_retry_turns = 0;
+    int routine_failed_attempts = 0;
 };
 
 struct AIContext {
@@ -45,6 +59,8 @@ struct AIContext {
     bool has_target = false;
     bool target_visible = false;
     bool target_same_level = true;
+    bool has_routine_goal = false;
+    Vector2i routine_goal;
     const std::function<bool(Vector2i)>& can_enter_terrain;
     const std::function<PathResult(Vector2i, Vector2i, int)>& find_path;
 };

@@ -13,7 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 [ext_resource type="Script" path="res://src/structure_editor/group_list.gd" id="12_group"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileSearch", "TileGrid", "TileGroupList", "ItemSearch", "ItemGrid", "ItemGroupList", "NpcSearch", "NpcGrid", "NpcGroupList", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileSearch", "TileGrid", "TileGroupList", "ItemSearch", "ItemGrid", "ItemGroupList", "NpcSearch", "NpcGrid", "NpcGroupList", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "PoiTagsText", "PoiRolesText", "PoiDwellMin", "PoiDwellMax", "PoiWeight", "PoiWarning", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -38,6 +38,12 @@ NpcDialoguePopup = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxCon
 TileGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Tiles/TileGroupCheck")
 LootGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/Items/LootGroupCheck")
 EntityGroupCheck = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/NPCs/NpcOptions/EntityGroupCheck")
+PoiTagsText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiTagsText")
+PoiRolesText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiRolesText")
+PoiDwellMin = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer/PoiDwellMin")
+PoiDwellMax = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer/PoiDwellMax")
+PoiWeight = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiWeight")
+PoiWarning = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiWarning")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
 chunkMenu = NodePath("Canvas/HBoxContainer/MenuBar/Struct")
@@ -263,6 +269,67 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 1
 script = ExtResource("12_group")
+
+[node name="POIs" type="VBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+metadata/_tab_index = 3
+
+[node name="TagsLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+text = "Tags:"
+
+[node name="PoiTagsText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+
+[node name="RolesLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+text = "Allowed roles:"
+
+[node name="PoiRolesText" type="LineEdit" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+
+[node name="DwellLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+text = "Dwell turns:"
+
+[node name="DwellContainer" type="HBoxContainer" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+
+[node name="PoiDwellMin" type="SpinBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 999.0
+value = 10.0
+
+[node name="ToLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer"]
+layout_mode = 2
+text = "to"
+
+[node name="PoiDwellMax" type="SpinBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 999.0
+value = 20.0
+
+[node name="WeightLabel" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+text = "Weight:"
+
+[node name="PoiWeight" type="SpinBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+min_value = 1.0
+max_value = 999.0
+value = 1.0
+
+[node name="PoiWarning" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0.2, 1)
+autowrap_mode = 2
 
 [node name="CoordsLabel" type="Label" parent="Canvas/MarginContainer"]
 layout_mode = 2

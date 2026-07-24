@@ -76,12 +76,24 @@
   {
     "id": "road",
     "atlas": [ 53, 0 ],
-    "tags": ["ROAD"],
+    "tags": ["ROAD", "CITY_AMBIENT_ENTRY"],
     "feature_spawns": [
       {
         "pool": "roadside_features",
-        "chance": 0.25,
-        "candidates": 2,
+        "chance": 0.50,
+        "candidates": 1,
+        "placement": "roadside"
+      },
+      {
+        "pool": "roadside_merchant_carriages",
+        "chance": 0.50,
+        "candidates": 1,
+        "placement": "roadside"
+      },
+      {
+        "pool": "roadside_merchant_stalls",
+        "chance": 0.50,
+        "candidates": 1,
         "placement": "roadside"
       }
     ]
@@ -107,7 +119,7 @@
         "placement": "fixed_areas",
         "rotation": "chunk",
         "areas": [
-          { "origin": [ 1, 16 ], "size": [ 8, 3 ] }
+          { "origin": [ 1, 16 ], "size": [ 8, 4 ] }
         ]
       },
       {
@@ -117,7 +129,7 @@
         "placement": "fixed_areas",
         "rotation": "chunk",
         "areas": [
-          { "origin": [ 15, 16 ], "size": [ 8, 3 ] }
+          { "origin": [ 15, 16 ], "size": [ 8, 4 ] }
         ]
       },
       {
@@ -127,7 +139,7 @@
         "placement": "fixed_areas",
         "rotation": "chunk",
         "areas": [
-          { "origin": [ 1, 4 ], "size": [ 8, 3 ] }
+          { "origin": [ 1, 4 ], "size": [ 8, 4 ] }
         ]
       },
       {
@@ -137,7 +149,7 @@
         "placement": "fixed_areas",
         "rotation": "chunk",
         "areas": [
-          { "origin": [ 15, 4 ], "size": [ 8, 3 ] }
+          { "origin": [ 15, 4 ], "size": [ 8, 4 ] }
         ]
       }
     ]
@@ -156,7 +168,7 @@
         "placement": "fixed_areas",
         "rotation": "center",
         "areas": [
-          { "origin": [ 5, 12 ], "size": [ 3, 8 ] }
+          { "origin": [ 5, 12 ], "size": [ 4, 8 ], "facing": "east" }
         ]
       },
       {
@@ -166,7 +178,7 @@
         "placement": "fixed_areas",
         "rotation": "center",
         "areas": [
-          { "origin": [ 16, 12 ], "size": [ 3, 8 ] }
+          { "origin": [ 15, 12 ], "size": [ 4, 8 ], "facing": "west" }
         ]
       },
       {
@@ -176,10 +188,21 @@
         "placement": "fixed_areas",
         "rotation": "center",
         "areas": [
-          { "origin": [ 5, 3 ], "size": [ 3, 8 ] }
+          { "origin": [ 5, 3 ], "size": [ 4, 8 ], "facing": "east" }
         ]
       }
     ]
+  },
+  {
+    "id": "park",
+    "atlas": [ 35, 3 ],
+    "tile_group": "garden",
+    "city_spawn_weight": 35,
+    "city_zone_min": 0.15,
+    "city_zone_max": 0.85,
+    "city_min_count": 1,
+    "city_max_count": 3,
+    "structure_type": "park"
   },
   {
     "id": "tavern",
@@ -238,7 +261,7 @@
     "id": "alley",
     "atlas": [ 53, 1 ],
     "tile_group": "garden",
-    "tags": ["ROAD"],
+    "tags": ["ROAD", "CITY_AMBIENT_ENTRY"],
     "feature_spawns": [
       {
         "pool": "alley_features",

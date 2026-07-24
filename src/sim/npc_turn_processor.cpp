@@ -15,6 +15,8 @@
 #include "path/path_request.h"
 #include "path/path_result.h"
 #include "world/traversal_rules.h"
+#include "world/point_of_interest_registry.h"
+#include "world/city_population_director.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -210,6 +212,18 @@ void NpcTurnProcessor::run_turn(
     AIData* ai = director.d.ledger->try_get_ai(entity_id);
     if (!loco || !ai) return;
 
+    auto cancel_routine = [&](bool p_retry) {
+        if (director.d.poi_registry) {
+            director.d.poi_registry->release_for_entity(entity_id);
+        }
+        ai->routine_has_target = false;
+        ai->routine_phase = RoutinePhase::SEEKING;
+        ai->routine_dwell_remaining = 0;
+        ai->routine_failed_attempts = 0;
+        if (p_retry) ai->routine_retry_turns = UtilityFunctions::randi_range(2, 4);
+        Locomotion::clear_path(*loco);
+    };
+
     auto restore_home_order = [&]() {
         ai->state = ai->home_state;
         ai->target_entity_id = ai->home_state == AIState::FOLLOW
@@ -318,6 +332,10 @@ void NpcTurnProcessor::run_turn(
         target_visible = false;
     }
 
+    if (ai->state != AIState::WANDER && ai->routine_has_target) {
+        cancel_routine(false);
+    }
+
     uint32_t target_id = EntityPool::INVALID_ID;
     Entity* target_entity = nullptr;
     Vector2i target_pos(entity->x, entity->y);
@@ -368,6 +386,372 @@ void NpcTurnProcessor::run_turn(
         return director.d.pathfinder->find_path(request, traversal);
     };
 
+    bool has_routine_goal = false;
+    bool has_ambient_goal = false;
+    bool ambient_goal_is_road = false;
+    Vector2i routine_goal(entity->x, entity->y);
+    const SocialProfileData* social_profile = director.d.ledger->try_get_social_profile(entity_id);
+    AmbientJourneyData* ambient = director.d.city_population
+        ? director.d.city_population->get_journey(entity_id)
+        : nullptr;
+
+    if (ambient && ai->state != AIState::WANDER
+        && ambient->phase != AmbientJourneyPhase::FOLLOWING_ROUTE) {
+        director.d.city_population->cancel_detour(entity_id);
+    }
+
+    if (ambient && ai->state == AIState::WANDER) {
+        const Vector3i current(entity->x, entity->y, entity->z);
+
+        if (ambient->phase == AmbientJourneyPhase::DWELLING) {
+            if (ambient->dwell_remaining > 0) --ambient->dwell_remaining;
+            if (ambient->dwell_remaining <= 0) {
+                if (director.d.poi_registry) {
+                    director.d.poi_registry->release_for_entity(entity_id);
+                }
+                ambient->phase = AmbientJourneyPhase::RETURNING_TO_ROAD;
+                ambient->return_final_index =
+                    static_cast<int>(ambient->detour_final_path.size()) - 2;
+                ambient->blocked_turns = 0;
+                Locomotion::clear_path(*loco);
+                if (ambient->return_final_index < 0) {
+                    ambient->phase = AmbientJourneyPhase::FOLLOWING_ROUTE;
+                    director.d.city_population->reroute(entity_id);
+                }
+            }
+            const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
+            director.finish_entity_action(entity_id, ActionCost::WAIT / actor_speed, base_time);
+            return;
+        }
+
+        if (ambient->phase == AmbientJourneyPhase::RETURNING_TO_ROAD) {
+            while (ambient->return_final_index >= 0
+                && current == ambient->detour_final_path[ambient->return_final_index]) {
+                --ambient->return_final_index;
+            }
+            if (ambient->return_final_index < 0) {
+                ambient->phase = AmbientJourneyPhase::FOLLOWING_ROUTE;
+                if (!director.d.city_population->reroute(entity_id)) {
+                    director.d.city_population->cancel_detour(entity_id);
+                }
+            } else {
+                has_ambient_goal = true;
+                has_routine_goal = true;
+                const Vector3i& step =
+                    ambient->detour_final_path[ambient->return_final_index];
+                routine_goal = Vector2i(step.x, step.y);
+                ambient_goal_is_road =
+                    director.d.city_population->is_road_position(step);
+            }
+        }
+
+        if (ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE) {
+            while (ambient->route_index < static_cast<int>(ambient->route.size())
+                && current == ambient->route[ambient->route_index]) {
+                ++ambient->route_index;
+            }
+
+            if (ambient->route_index >= static_cast<int>(ambient->route.size())) {
+                if (!director.d.city_population->continue_route(entity_id)) {
+                    director.d.city_population->despawn_ambient(entity_id);
+                    return;
+                }
+            }
+
+            if (ambient->wants_detour
+                && !ambient->detour_attempted
+                && director.d.poi_registry
+                && social_profile) {
+                std::vector<Vector3i> detours =
+                    director.d.poi_registry->find_compatible_near(
+                        current,
+                        director.d.city_population->get_detour_radius(),
+                        social_profile->context_tags,
+                        director.d.city_population->get_detour_tags()
+                    );
+                detours.erase(
+                    std::remove_if(
+                        detours.begin(),
+                        detours.end(),
+                        [&](const Vector3i& candidate) {
+                            if (!can_enter_terrain(Vector2i(candidate.x, candidate.y))) return true;
+                            const uint32_t occupant = occupant_at(
+                                Vector2i(candidate.x, candidate.y), candidate.z, director.d.tracker);
+                            return occupant != EntityPool::INVALID_ID && occupant != entity_id;
+                        }
+                    ),
+                    detours.end()
+                );
+
+                while (!detours.empty()
+                    && ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE) {
+                    double total_weight = 0.0;
+                    for (const Vector3i& candidate : detours) {
+                        const PointOfInterestInfo* point =
+                            director.d.poi_registry->get(candidate);
+                        if (point) total_weight += static_cast<double>(point->weight);
+                    }
+                    if (total_weight <= 0.0) break;
+                    double roll = UtilityFunctions::randf() * total_weight;
+                    int selected_index = static_cast<int>(detours.size()) - 1;
+                    for (int i = 0; i < static_cast<int>(detours.size()); ++i) {
+                        const PointOfInterestInfo* point =
+                            director.d.poi_registry->get(detours[i]);
+                        if (!point) continue;
+                        roll -= static_cast<double>(point->weight);
+                        if (roll < 0.0) {
+                            selected_index = i;
+                            break;
+                        }
+                    }
+                    const Vector3i selected = detours[selected_index];
+                    detours.erase(detours.begin() + selected_index);
+                    std::vector<Vector3i> road_route;
+                    Vector3i approach;
+                    if (!director.d.city_population->find_detour_approach(
+                            current, selected, road_route, approach)) {
+                        continue;
+                    }
+                    std::vector<Vector3i> final_path;
+                    final_path.push_back(approach);
+                    if (approach != selected) {
+                        const PathResult final_result = find_path(
+                            Vector2i(approach.x, approach.y),
+                            Vector2i(selected.x, selected.y),
+                            0
+                        );
+                        if (!final_result.found
+                            || final_result.waypoints.empty()
+                            || final_result.waypoints.size() > 2) {
+                            continue;
+                        }
+                        for (const Vector2i& waypoint : final_result.waypoints) {
+                            final_path.push_back(Vector3i(
+                                waypoint.x, waypoint.y, entity->z));
+                        }
+                    }
+                    if (!director.d.poi_registry->try_reserve(selected, entity_id)) {
+                        continue;
+                    }
+                    ambient->detour_target = selected;
+                    ambient->detour_attempted = true;
+                    ambient->detour_road_route = std::move(road_route);
+                    ambient->detour_road_index = 1;
+                    ambient->detour_final_path = std::move(final_path);
+                    ambient->detour_final_index = 1;
+                    ambient->return_final_index = -1;
+                    ambient->phase = AmbientJourneyPhase::TRAVELLING_TO_DETOUR;
+                    ambient->blocked_turns = 0;
+                    Locomotion::clear_path(*loco);
+                }
+            }
+        }
+
+        if (ambient->phase == AmbientJourneyPhase::TRAVELLING_TO_DETOUR) {
+            const PointOfInterestInfo* point = director.d.poi_registry
+                ? director.d.poi_registry->get(ambient->detour_target)
+                : nullptr;
+            if (!point
+                || (!director.d.poi_registry->is_reserved_by(ambient->detour_target, entity_id)
+                    && !director.d.poi_registry->try_reserve(ambient->detour_target, entity_id))) {
+                director.d.city_population->cancel_detour(entity_id);
+            }
+            while (ambient->phase == AmbientJourneyPhase::TRAVELLING_TO_DETOUR
+                && ambient->detour_road_index
+                    < static_cast<int>(ambient->detour_road_route.size())
+                && current == ambient->detour_road_route[ambient->detour_road_index]) {
+                ++ambient->detour_road_index;
+            }
+            while (ambient->phase == AmbientJourneyPhase::TRAVELLING_TO_DETOUR
+                && ambient->detour_road_index
+                    >= static_cast<int>(ambient->detour_road_route.size())
+                && ambient->detour_final_index
+                    < static_cast<int>(ambient->detour_final_path.size())
+                && current == ambient->detour_final_path[ambient->detour_final_index]) {
+                ++ambient->detour_final_index;
+            }
+            if (ambient->phase == AmbientJourneyPhase::TRAVELLING_TO_DETOUR
+                && current == ambient->detour_target
+                && ambient->detour_final_index
+                    >= static_cast<int>(ambient->detour_final_path.size())) {
+                ambient->phase = AmbientJourneyPhase::DWELLING;
+                ambient->dwell_remaining = UtilityFunctions::randi_range(
+                    point->dwell_min, point->dwell_max);
+                ambient->blocked_turns = 0;
+                Locomotion::clear_path(*loco);
+                const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
+                director.finish_entity_action(
+                    entity_id, ActionCost::WAIT / actor_speed, base_time);
+                return;
+            }
+            if (ambient->phase == AmbientJourneyPhase::TRAVELLING_TO_DETOUR) {
+                has_ambient_goal = true;
+                has_routine_goal = true;
+                Vector3i step;
+                if (ambient->detour_road_index
+                    < static_cast<int>(ambient->detour_road_route.size())) {
+                    step = ambient->detour_road_route[ambient->detour_road_index];
+                } else if (ambient->detour_final_index
+                    < static_cast<int>(ambient->detour_final_path.size())) {
+                    step = ambient->detour_final_path[ambient->detour_final_index];
+                } else {
+                    step = ambient->detour_target;
+                }
+                routine_goal = Vector2i(step.x, step.y);
+                ambient_goal_is_road =
+                    director.d.city_population->is_road_position(step);
+            }
+        } else if (ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE
+            && ambient->route_index < static_cast<int>(ambient->route.size())) {
+            const Vector3i& waypoint = ambient->route[ambient->route_index];
+            if (chebyshev_distance(
+                    Vector2i(current.x, current.y),
+                    Vector2i(waypoint.x, waypoint.y)) > 1
+                && !director.d.city_population->reroute(entity_id)) {
+                ambient->blocked_turns = 3;
+            }
+            has_ambient_goal = true;
+            has_routine_goal = true;
+            const Vector3i& next = ambient->route[ambient->route_index];
+            routine_goal = Vector2i(next.x, next.y);
+            ambient_goal_is_road = true;
+        }
+    }
+
+    const bool routine_enabled = director.d.poi_registry
+        && !ambient
+        && ai->has_routine_scope
+        && ai->home_state == AIState::WANDER
+        && ai->state == AIState::WANDER
+        && social_profile
+        && !social_profile->context_tags.is_empty();
+
+    if (!routine_enabled) {
+        if (ai->routine_has_target) cancel_routine(false);
+    } else {
+        const PointOfInterestScope scope{
+            ai->routine_structure_id,
+            ai->routine_scope_origin
+        };
+
+        if (ai->routine_has_target) {
+            const PointOfInterestInfo* target_point =
+                director.d.poi_registry->get(ai->routine_target);
+            if (!target_point || !(target_point->scope == scope)
+                || (!director.d.poi_registry->is_reserved_by(ai->routine_target, entity_id)
+                    && !director.d.poi_registry->try_reserve(ai->routine_target, entity_id))) {
+                cancel_routine(true);
+            }
+        }
+
+        if (ai->routine_has_target
+            && Vector3i(entity->x, entity->y, entity->z) == ai->routine_target) {
+            const PointOfInterestInfo* target_point =
+                director.d.poi_registry->get(ai->routine_target);
+            if (target_point && ai->routine_phase != RoutinePhase::DWELLING) {
+                ai->routine_phase = RoutinePhase::DWELLING;
+                ai->routine_dwell_remaining = UtilityFunctions::randi_range(
+                    target_point->dwell_min,
+                    target_point->dwell_max
+                );
+                ai->routine_failed_attempts = 0;
+                Locomotion::clear_path(*loco);
+            }
+        }
+
+        if (ai->routine_phase == RoutinePhase::DWELLING && ai->routine_has_target) {
+            if (ai->routine_dwell_remaining > 0) {
+                --ai->routine_dwell_remaining;
+            }
+            if (ai->routine_dwell_remaining <= 0) {
+                ai->routine_last_position = ai->routine_target;
+                ai->routine_has_last_position = true;
+                cancel_routine(false);
+            }
+            const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
+            director.finish_entity_action(entity_id, ActionCost::WAIT / actor_speed, base_time);
+            return;
+        }
+
+        if (!ai->routine_has_target) {
+            if (ai->routine_retry_turns > 0) {
+                --ai->routine_retry_turns;
+                const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
+                director.finish_entity_action(entity_id, ActionCost::WAIT / actor_speed, base_time);
+                return;
+            }
+
+            std::vector<Vector3i> candidates = director.d.poi_registry->find_compatible(
+                scope,
+                entity->z,
+                social_profile->context_tags,
+                ai->routine_last_position,
+                ai->routine_has_last_position
+            );
+            candidates.erase(
+                std::remove_if(
+                    candidates.begin(),
+                    candidates.end(),
+                    [&](const Vector3i& candidate) {
+                        if (!can_enter_terrain(Vector2i(candidate.x, candidate.y))) return true;
+                        const uint32_t occupant = occupant_at(
+                            Vector2i(candidate.x, candidate.y), candidate.z, director.d.tracker);
+                        return occupant != EntityPool::INVALID_ID && occupant != entity_id;
+                    }
+                ),
+                candidates.end()
+            );
+
+            while (!candidates.empty() && !ai->routine_has_target) {
+                double total_weight = 0.0;
+                for (const Vector3i& candidate : candidates) {
+                    const PointOfInterestInfo* point =
+                        director.d.poi_registry->get(candidate);
+                    if (point) total_weight += static_cast<double>(point->weight);
+                }
+                if (total_weight <= 0.0) break;
+
+                double roll = UtilityFunctions::randf() * total_weight;
+                int index = static_cast<int>(candidates.size()) - 1;
+                for (int candidate_index = 0;
+                     candidate_index < static_cast<int>(candidates.size());
+                     ++candidate_index) {
+                    const PointOfInterestInfo* point =
+                        director.d.poi_registry->get(candidates[candidate_index]);
+                    if (!point) continue;
+                    roll -= static_cast<double>(point->weight);
+                    if (roll < 0.0) {
+                        index = candidate_index;
+                        break;
+                    }
+                }
+                const Vector3i selected = candidates[index];
+                candidates.erase(candidates.begin() + index);
+                if (director.d.poi_registry->try_reserve(selected, entity_id)) {
+                    ai->routine_target = selected;
+                    ai->routine_has_target = true;
+                    ai->routine_phase = RoutinePhase::TRAVELLING;
+                    ai->routine_failed_attempts = 0;
+                    ai->blocked_move_count = 0;
+                    ai->path_retry_countdown = 0;
+                    Locomotion::clear_path(*loco);
+                }
+            }
+
+            if (!ai->routine_has_target) {
+                ai->routine_retry_turns = UtilityFunctions::randi_range(2, 4);
+                const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
+                director.finish_entity_action(entity_id, ActionCost::WAIT / actor_speed, base_time);
+                return;
+            }
+        }
+
+        if (ai->routine_has_target && ai->routine_phase == RoutinePhase::TRAVELLING) {
+            has_routine_goal = true;
+            routine_goal = Vector2i(ai->routine_target.x, ai->routine_target.y);
+        }
+    }
+
     AIContext context{
         *entity,
         target_pos,
@@ -375,10 +759,32 @@ void NpcTurnProcessor::run_turn(
         has_target,
         target_visible,
         target_same_level,
+        has_routine_goal,
+        routine_goal,
         can_enter_terrain,
         find_path
     };
-    Intent intent = AIController::tick(*ai, *loco, context);
+    const int retry_countdown_before_tick = ai->path_retry_countdown;
+    Intent intent;
+    if (has_ambient_goal && Vector2i(entity->x, entity->y) != routine_goal) {
+        intent.type = IntentType::MOVE;
+        intent.target = routine_goal;
+    } else {
+        intent = AIController::tick(*ai, *loco, context);
+    }
+
+    if (has_routine_goal
+        && !has_ambient_goal
+        && intent.type == IntentType::NONE
+        && Vector2i(entity->x, entity->y) != routine_goal
+        && retry_countdown_before_tick == 0
+        && ai->path_retry_countdown > 0) {
+        ++ai->routine_failed_attempts;
+        if (ai->routine_failed_attempts >= 2) {
+            cancel_routine(true);
+            has_routine_goal = false;
+        }
+    }
 
     const float actor_speed = loco->speed > 0.0f ? loco->speed : 1.0f;
     float cost = ActionCost::WAIT / actor_speed;
@@ -390,26 +796,77 @@ void NpcTurnProcessor::run_turn(
     } else if (intent.type == IntentType::MOVE) {
         const Vector2i self_pos(entity->x, entity->y);
         const bool completing_wander_path = ai->state == AIState::WANDER &&
+            !has_routine_goal &&
             Locomotion::has_path(*loco) &&
             loco->path_index + 1 == static_cast<int>(loco->path.size()) &&
             loco->path[loco->path_index] == intent.target;
 
+        bool road_reserved = true;
+        if (has_ambient_goal && ambient_goal_is_road) {
+            road_reserved = director.d.city_population->try_reserve_road_cell(
+                Vector3i(intent.target.x, intent.target.y, entity->z),
+                entity_id
+            );
+        }
         const uint32_t occupant = occupant_at(intent.target, entity->z, director.d.tracker);
-        const bool desired_available = occupant == EntityPool::INVALID_ID &&
-            legal_step(self_pos, intent.target, can_enter_terrain);
+        const bool desired_available = road_reserved
+            && occupant == EntityPool::INVALID_ID
+            && legal_step(self_pos, intent.target, can_enter_terrain);
         bool detour = false;
+        bool ambient_alternate = false;
         if (!desired_available) {
             ++ai->blocked_move_count;
-            Vector2i alternative;
-            if (choose_local_alternative(
-                    entity_id, *entity, *ai, *loco, target_pos,
-                    can_enter_terrain, director.d.tracker, alternative)) {
-                intent.target = alternative;
-                detour = true;
-                Locomotion::clear_path(*loco);
-            } else {
-                if (ai->blocked_move_count >= 2) Locomotion::clear_path(*loco);
+            if (has_ambient_goal && ambient) {
+                director.d.city_population->release_road_reservation(entity_id);
+                ++ambient->blocked_turns;
+                Vector3i alternative;
+                if (ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE
+                    && ambient_goal_is_road
+                    && director.d.city_population->find_alternate_road_step(
+                        entity_id,
+                        Vector3i(entity->x, entity->y, entity->z),
+                        ambient->route.empty()
+                            ? Vector3i(routine_goal.x, routine_goal.y, entity->z)
+                            : ambient->route.back(),
+                        alternative)
+                    && director.d.city_population->try_reserve_road_cell(
+                        alternative, entity_id)) {
+                    intent.target = Vector2i(alternative.x, alternative.y);
+                    ambient_alternate = true;
+                    detour = true;
+                } else {
+                    intent.type = IntentType::NONE;
+                    if (ambient->blocked_turns >= 3) {
+                        if (ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE) {
+                            director.d.city_population->reroute_around_congestion(entity_id);
+                        } else {
+                            director.d.city_population->cancel_detour(entity_id);
+                            if (director.d.city_population->is_road_position(
+                                    Vector3i(entity->x, entity->y, entity->z))) {
+                                director.d.city_population->reroute(entity_id);
+                            }
+                        }
+                        ambient->blocked_turns = 0;
+                        ai->blocked_move_count = 0;
+                    }
+                }
+            } else if (has_routine_goal && ++ai->routine_failed_attempts >= 2) {
+                cancel_routine(true);
+                has_routine_goal = false;
                 intent.type = IntentType::NONE;
+            } else {
+                Vector2i alternative;
+                if (choose_local_alternative(
+                        entity_id, *entity, *ai, *loco,
+                        has_routine_goal ? routine_goal : target_pos,
+                        can_enter_terrain, director.d.tracker, alternative)) {
+                    intent.target = alternative;
+                    detour = true;
+                    Locomotion::clear_path(*loco);
+                } else {
+                    if (ai->blocked_move_count >= 2) Locomotion::clear_path(*loco);
+                    intent.type = IntentType::NONE;
+                }
             }
         }
 
@@ -427,7 +884,28 @@ void NpcTurnProcessor::run_turn(
                 if (move_result.success && move_result.cost > 0.0f) {
                     ai->blocked_move_count = 0;
                     ai->path_retry_countdown = 0;
+                    if (has_ambient_goal && ambient) {
+                        ambient->blocked_turns = 0;
+                    }
+                    if (!detour) ai->routine_failed_attempts = 0;
                     cost = director.movement_action_cost(entity_id, move_result.cost, *loco);
+                    if (ambient_alternate && ambient) {
+                        director.d.city_population->reroute_from(
+                            entity_id,
+                            Vector3i(entity->x, entity->y, entity->z)
+                        );
+                    }
+                    if (ambient
+                        && ambient->phase == AmbientJourneyPhase::FOLLOWING_ROUTE
+                        && !ambient->route.empty()
+                        && Vector3i(entity->x, entity->y, entity->z)
+                            == ambient->route.back()) {
+                        if (!director.d.city_population->continue_route(entity_id)) {
+                            director.d.city_population->release_road_reservation(entity_id);
+                            director.d.city_population->despawn_ambient(entity_id);
+                            return;
+                        }
+                    }
                     if (completing_wander_path && !detour) {
                         ai->wait_turns = UtilityFunctions::randi_range(3, 6);
                         Locomotion::clear_path(*loco);
@@ -440,6 +918,13 @@ void NpcTurnProcessor::run_turn(
         }
     }
 
+    if (has_routine_goal && !has_ambient_goal && ai->blocked_move_count >= 2) {
+        cancel_routine(true);
+    }
+
+    if (director.d.city_population) {
+        director.d.city_population->release_road_reservation(entity_id);
+    }
     if (cost <= 0.0f) cost = ActionCost::WAIT / actor_speed;
     director.finish_entity_action(entity_id, cost, base_time);
 }

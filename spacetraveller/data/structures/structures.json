@@ -1,5 +1,13 @@
 [
     {
+        "dungeon_room": {
+            "entrances": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ]
+        },
         "id": "tavern",
         "levels": {
             "0": {
@@ -30,13 +38,88 @@
                         "meta_type": "signage",
                         "positions": [ [ 3, 22 ] ],
                         "type": "set_metadata"
+                    },
+                    {
+                        "dialogue_id": "tavern_worker",
+                        "entity": "human",
+                        "job": "tavern_worker",
+                        "positions": [ [ 15, 5 ] ],
+                        "type": "spawn_entity"
+                    },
+                    {
+                        "entity_group": "tavern_patron",
+                        "positions": [ [ 11, 16 ], [ 13, 11 ], [ 16, 10 ], [ 7, 11 ], [ 8, 16 ] ],
+                        "type": "spawn_entity_group"
+                    },
+                    {
+                        "allowed_roles": [
+                            "villager"
+                        ],
+                        "dwell_turns": [
+                            20.0,
+                            45.0
+                        ],
+                        "positions": [ [ 11, 16 ], [ 13, 11 ], [ 16, 10 ], [ 6, 10 ], [ 7, 11 ], [ 9, 15 ] ],
+                        "tags": [
+                            "seating",
+                            "social"
+                        ],
+                        "weight": 4,
+                        "type": "point_of_interest"
+                    },
+                    {
+                        "allowed_roles": [
+                            "villager"
+                        ],
+                        "dwell_turns": [
+                            50,
+                            100
+                        ],
+                        "positions": [ [ 12, 7 ], [ 15, 7 ], [ 17, 7 ] ],
+                        "tags": [
+                            "drink",
+                            "social"
+                        ],
+                        "weight": 3,
+                        "type": "point_of_interest"
+                    },
+                    {
+                        "allowed_roles": [
+                            "tavern_worker"
+                        ],
+                        "dwell_turns": [
+                            15,
+                            30
+                        ],
+                        "positions": [ [ 13, 5 ], [ 15, 5 ], [ 17, 5 ] ],
+                        "tags": [
+                            "work"
+                        ],
+                        "weight": 1,
+                        "type": "point_of_interest"
+                    },
+                    {
+                        "allowed_roles": [
+                            "villager"
+                        ],
+                        "dwell_turns": [
+                            100,
+                            250
+                        ],
+                        "positions": [ [ 18, 20 ], [ 20, 20 ] ],
+                        "tags": [
+                            "toilet",
+                            "private"
+                        ],
+                        "weight": 1,
+                        "type": "point_of_interest"
                     }
                 ]
             }
         },
         "size": [
-            24.0,
-            24.0
+            24,
+            24
         ],
         "type": "tavern"
     },
@@ -95,8 +178,8 @@
             }
         },
         "size": [
-            24,
-            24
+            24.0,
+            24.0
         ],
         "type": "adventurer_guild"
     },

@@ -23,6 +23,7 @@ namespace EntityFactory {
         String ai_state;
         Array traits;
         Array context_tags;
+        uint64_t identity_salt = 0;
     };
 
     uint32_t create_npc(const String& race_id, const Vector2i& pos, int world_seed,

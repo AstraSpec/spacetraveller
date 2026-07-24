@@ -28,6 +28,12 @@ signal editor_area_changed(size: Vector2i)
 @export var TileGroupCheck :CheckBox
 @export var LootGroupCheck :CheckBox
 @export var EntityGroupCheck :CheckBox
+@export var PoiTagsText :LineEdit
+@export var PoiRolesText :LineEdit
+@export var PoiDwellMin :SpinBox
+@export var PoiDwellMax :SpinBox
+@export var PoiWeight :SpinBox
+@export var PoiWarning :Label
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
 @export var chunkMenu :PopupMenu
@@ -93,6 +99,8 @@ var editor_loot_table_rules_by_level :Dictionary = {}
 var editor_loot_table_sprites :Dictionary = {}
 var editor_entity_group_rules_by_level :Dictionary = {}
 var editor_entity_group_sprites :Dictionary = {}
+var editor_poi_rules_by_level :Dictionary = {}
+var editor_poi_markers :Dictionary = {}
 var editor_tile_group_sprites :Dictionary = {}
 var editor_tile_group_rules_by_level :Dictionary = {}
 var editor_other_rules_by_level :Dictionary = {}
@@ -103,6 +111,7 @@ const MAX_UNDOS = 100
 const MAX_STRUCTURE_CELLS = 1024 * 1024
 const LOOT_TABLE_ATLAS := Vector2i(71, 18)
 const ENTITY_GROUP_ATLAS := Vector2i(72, 18)
+const POI_ATLAS := Vector2i(22, 0)
 const GROUP_TYPE_MAP := {"tile": "tile_group", "item": "loot_table", "npc": "entity_group"}
 const TYPE_BASE_MAP := {"tile_group": "tile", "loot_table": "item", "entity_group": "npc"}
 const CONTENT_TYPES := {
@@ -148,10 +157,17 @@ const CONTENT_TYPES := {
 		"erase_id": "",
 		"erase_type": "tile_group_erase",
 		"erase_label": "erase tile group"
+	},
+	"point_of_interest": {
+		"tab": "POIs",
+		"key": "point_of_interest",
+		"erase_id": "",
+		"erase_type": "point_of_interest_erase",
+		"erase_label": "erase POI"
 	}
 }
-const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group", "tile_group"]
-const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "tile_group", "tile"]
+const CONTENT_CAPTURE_ORDER := ["tile", "npc", "item", "loot_table", "entity_group", "point_of_interest", "tile_group"]
+const CONTENT_PICK_ORDER := ["npc", "item", "loot_table", "entity_group", "point_of_interest", "tile_group", "tile"]
 
 func _apply_content_visibility() -> void:
 	if FastTilemap and is_instance_valid(FastTilemap):
@@ -175,6 +191,7 @@ func update_editor_visuals():
 		FastTilemap.update_visuals(playerOffset, playerOffset)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_poi_markers()
 	_refresh_tile_group_markers()
 
 func start_live_world_editor(offset :Vector2 = Vector2.ZERO) -> void:
@@ -211,6 +228,7 @@ func start_editor(offset :Vector2 = Vector2.ZERO, mode :WorkspaceMode = Workspac
 		ContentTabs.tab_changed.connect(_on_content_tab_changed)
 	
 	select_entry("road_bricks", "tile")
+	primary_ids_by_content_type["point_of_interest"] = "point_of_interest"
 	set_secondary_to_group_remover(active_content_type)
 	if ContentTabs:
 		_on_content_tab_changed(ContentTabs.current_tab)
@@ -383,6 +401,7 @@ func _capture_editor_state() -> Dictionary:
 		"item_rules_by_level": editor_item_rules_by_level.duplicate(true),
 		"loot_table_rules_by_level": editor_loot_table_rules_by_level.duplicate(true),
 		"entity_group_rules_by_level": editor_entity_group_rules_by_level.duplicate(true),
+		"poi_rules_by_level": editor_poi_rules_by_level.duplicate(true),
 		"tile_group_rules_by_level": editor_tile_group_rules_by_level.duplicate(true),
 		"other_rules_by_level": editor_other_rules_by_level.duplicate(true)
 	}
@@ -397,6 +416,7 @@ func _restore_editor_state(state: Dictionary) -> void:
 	editor_item_rules_by_level = state.get("item_rules_by_level", {}).duplicate(true)
 	editor_loot_table_rules_by_level = state.get("loot_table_rules_by_level", {}).duplicate(true)
 	editor_entity_group_rules_by_level = state.get("entity_group_rules_by_level", {}).duplicate(true)
+	editor_poi_rules_by_level = state.get("poi_rules_by_level", {}).duplicate(true)
 	editor_tile_group_rules_by_level = state.get("tile_group_rules_by_level", {}).duplicate(true)
 	editor_other_rules_by_level = state.get("other_rules_by_level", {}).duplicate(true)
 	_apply_editor_rules_for_level(active_z)
@@ -466,6 +486,8 @@ func _on_content_tab_changed(tab: int) -> void:
 			NpcJobContainer.visible = !group
 			NpcDialogueContainer.visible = !group and _is_sapient_race(tileID1)
 			set_active_content_type(_npc_grid_type, true)
+		"point_of_interest":
+			set_active_content_type("point_of_interest", true)
 		_:
 			set_active_content_type(_tile_grid_type, true)
 
@@ -534,6 +556,7 @@ func set_active_content_type(type: String, restore_primary: bool = true) -> void
 		_update_npc_options_for_race(tileID1)
 	set_secondary_to_group_remover(type)
 	_update_selection_labels()
+	_refresh_poi_markers()
 	if active_tool:
 		active_tool.on_hover(mousePos)
 
@@ -582,6 +605,7 @@ func select_entry(id: String, type: String = "tile", is_primary: bool = true):
 	if type == "npc":
 		_update_npc_options_for_race(id)
 	_update_selection_labels()
+	_refresh_poi_markers()
 
 func on_tile_changed(_pos: Vector2i):
 	if active_tool:
@@ -740,6 +764,10 @@ func place_entry(world_pos: Vector2i, id: String, type: String = "tile", amount:
 			_set_entity_group_rule(world_pos, id)
 		"entity_group_erase":
 			_remove_entity_group_rule(world_pos)
+		"point_of_interest":
+			_set_poi_rule(world_pos)
+		"point_of_interest_erase":
+			_remove_poi_rule(world_pos)
 		"tile_group":
 			_set_tile_group_rule(world_pos, id)
 		"tile_group_erase":
@@ -960,6 +988,81 @@ func _remove_entity_group_rule(world_pos: Vector2i) -> void:
 	rules.erase(_pos_key(local_pos))
 	_refresh_entity_group_markers()
 
+func _is_valid_poi_identifier(value: String) -> bool:
+	if value.is_empty() or value != value.to_lower():
+		return false
+	const VALID_CHARS := "abcdefghijklmnopqrstuvwxyz0123456789_"
+	for index in range(value.length()):
+		if VALID_CHARS.find(value.substr(index, 1)) < 0:
+			return false
+	return true
+
+func _parse_poi_identifiers(text: String, field_name: String) -> Array:
+	var result: Array = []
+	for raw_value in text.split(","):
+		var value := str(raw_value).strip_edges()
+		if value.is_empty():
+			continue
+		if !_is_valid_poi_identifier(value):
+			_set_poi_warning(field_name + " must use lowercase letters, numbers, and underscores.")
+			return []
+		if !result.has(value):
+			result.append(value)
+	if result.is_empty():
+		_set_poi_warning(field_name + " requires at least one value.")
+	return result
+
+func _set_poi_warning(message: String) -> void:
+	if PoiWarning:
+		PoiWarning.text = message
+		PoiWarning.visible = !message.is_empty()
+
+func _set_poi_rule(world_pos: Vector2i) -> void:
+	var tags := _parse_poi_identifiers(PoiTagsText.text if PoiTagsText else "", "Tags")
+	if tags.is_empty():
+		return
+	var roles := _parse_poi_identifiers(PoiRolesText.text if PoiRolesText else "", "Allowed roles")
+	if roles.is_empty():
+		return
+	var dwell_min := int(PoiDwellMin.value) if PoiDwellMin else 1
+	var dwell_max := int(PoiDwellMax.value) if PoiDwellMax else dwell_min
+	var weight := int(PoiWeight.value) if PoiWeight else 1
+	if dwell_min <= 0 or dwell_max < dwell_min:
+		_set_poi_warning("Dwell turns require 0 < minimum <= maximum.")
+		return
+	if weight <= 0:
+		_set_poi_warning("Weight must be positive.")
+		return
+
+	var tile_id := str(World.get_tile_at(world_pos.x, world_pos.y)) if World else ""
+	if !tile_id.is_empty() and TileDb.is_solid(tile_id):
+		_set_poi_warning("Warning: this POI is on the solid tile '" + tile_id + "'.")
+		push_warning("POI placed on solid tile '" + tile_id + "' at " + str(world_pos) + ".")
+	else:
+		_set_poi_warning("")
+
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules := _get_level_rule_dict(editor_poi_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = {
+		"type": "point_of_interest",
+		"tags": tags,
+		"allowed_roles": roles,
+		"dwell_turns": [dwell_min, dwell_max],
+		"weight": weight,
+		"pos": _rule_pos_array(local_pos)
+	}
+	_refresh_poi_markers()
+
+func _remove_poi_rule(world_pos: Vector2i) -> void:
+	var key := _active_level_key()
+	if !editor_poi_rules_by_level.has(key):
+		return
+	var local_pos := _local_pos_from_world(world_pos)
+	var rules: Dictionary = editor_poi_rules_by_level[key]
+	rules.erase(_pos_key(local_pos))
+	_set_poi_warning("")
+	_refresh_poi_markers()
+
 func _set_tile_group_rule(world_pos: Vector2i, tile_group_id: String) -> void:
 	if tile_group_id.is_empty():
 		return
@@ -1006,6 +1109,8 @@ func _single_rule_store_for_content_type(type: String) -> Dictionary:
 			return editor_loot_table_rules_by_level
 		"entity_group":
 			return editor_entity_group_rules_by_level
+		"point_of_interest":
+			return editor_poi_rules_by_level
 		"tile_group":
 			return editor_tile_group_rules_by_level
 	return {}
@@ -1020,6 +1125,8 @@ func _content_id_from_rule(type: String, rule: Dictionary) -> String:
 			return str(rule.get("loot_table", "")).strip_edges()
 		"entity_group":
 			return str(rule.get("entity_group", rule.get("entity_group_id", ""))).strip_edges()
+		"point_of_interest":
+			return "point_of_interest"
 		"tile_group":
 			return str(rule.get("tile_group", "")).strip_edges()
 	return ""
@@ -1083,6 +1190,20 @@ func _apply_selected_content_options(type: String, rule: Dictionary, is_primary:
 			_refresh_npc_dialogue_menu()
 	elif type == "item" and ItemAmountInput:
 		ItemAmountInput.value = max(1, int(rule.get("amount", 1)))
+	elif type == "point_of_interest":
+		if PoiTagsText:
+			PoiTagsText.text = ", ".join(rule.get("tags", []))
+		if PoiRolesText:
+			PoiRolesText.text = ", ".join(rule.get("allowed_roles", []))
+		var dwell: Array = rule.get("dwell_turns", [1, 1])
+		if dwell.size() == 2:
+			if PoiDwellMin:
+				PoiDwellMin.value = int(dwell[0])
+			if PoiDwellMax:
+				PoiDwellMax.value = int(dwell[1])
+		if PoiWeight:
+			PoiWeight.value = int(rule.get("weight", 1))
+		_set_poi_warning("")
 
 func _select_content_value(type: String, value: Variant, is_primary: bool) -> bool:
 	if type == "tile":
@@ -1135,6 +1256,8 @@ func _clear_content_type_at(type: String, world_pos: Vector2i) -> void:
 			_erase_rule_at(editor_loot_table_rules_by_level, world_pos)
 		"entity_group":
 			_erase_rule_at(editor_entity_group_rules_by_level, world_pos)
+		"point_of_interest":
+			_erase_rule_at(editor_poi_rules_by_level, world_pos)
 		"tile_group":
 			_erase_rule_at(editor_tile_group_rules_by_level, world_pos)
 
@@ -1166,6 +1289,10 @@ func _place_content_value(type: String, world_pos: Vector2i, local_pos: Vector2i
 			if value is Dictionary:
 				var entity_group_rule: Dictionary = value
 				_store_entity_group_content(local_pos, entity_group_rule)
+		"point_of_interest":
+			if value is Dictionary:
+				var poi_rule: Dictionary = value
+				_store_poi_content(local_pos, poi_rule)
 		"tile_group":
 			if value is Dictionary:
 				var tile_group_rule: Dictionary = value
@@ -1210,6 +1337,7 @@ func capture_editor_contents(rect: Rect2i, clear_map: bool = false) -> Dictionar
 	if clear_map:
 		_refresh_loot_table_markers()
 		_refresh_entity_group_markers()
+		_refresh_poi_markers()
 		_refresh_tile_group_markers()
 	return contents_by_pos
 
@@ -1249,6 +1377,13 @@ func _store_entity_group_content(local_pos: Vector2i, rule: Dictionary) -> void:
 	var rules := _get_level_rule_dict(editor_entity_group_rules_by_level, _active_level_key())
 	rules[_pos_key(local_pos)] = stored_rule
 
+func _store_poi_content(local_pos: Vector2i, rule: Dictionary) -> void:
+	var stored_rule := rule.duplicate(true)
+	stored_rule["type"] = "point_of_interest"
+	stored_rule["pos"] = _rule_pos_array(local_pos)
+	var rules := _get_level_rule_dict(editor_poi_rules_by_level, _active_level_key())
+	rules[_pos_key(local_pos)] = stored_rule
+
 func _store_tile_group_content(local_pos: Vector2i, rule: Dictionary) -> void:
 	var tile_group_id := str(rule.get("tile_group", "")).strip_edges()
 	if tile_group_id.is_empty():
@@ -1282,6 +1417,7 @@ func place_editor_contents(origin: Vector2i, contents_by_pos: Dictionary) -> voi
 				_place_content_value(str(content_type), world_pos, local_pos, value)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_poi_markers()
 	_refresh_tile_group_markers()
 
 func _has_group_rule_at(world_pos: Vector2i, type: String) -> String:
@@ -1460,6 +1596,41 @@ func _refresh_entity_group_markers() -> void:
 		add_child(marker)
 		editor_entity_group_sprites[rule_key] = marker
 
+func clear_editor_poi_markers() -> void:
+	for marker in editor_poi_markers.values():
+		if is_instance_valid(marker):
+			marker.queue_free()
+	editor_poi_markers.clear()
+
+func _refresh_poi_markers() -> void:
+	clear_editor_poi_markers()
+	if !FastTilemap or !ContentTabs or _content_type_for_tab(ContentTabs.current_tab) != "point_of_interest":
+		return
+	var tilesheet: Texture2D = FastTilemap.get_tilesheet()
+	if !tilesheet:
+		return
+	var rules: Dictionary = editor_poi_rules_by_level.get(_active_level_key(), {})
+	var cell_size := FastTilemap.get_cell_size()
+	for rule_key in rules.keys():
+		var rule: Dictionary = rules[rule_key]
+		var local_pos := _rule_pos_from_variant(rule.get("pos", []))
+		var world_pos := _world_pos_from_local(local_pos)
+		var atlas_texture := AtlasTexture.new()
+		atlas_texture.atlas = tilesheet
+		atlas_texture.region = Rect2(
+			1 + POI_ATLAS.x * (TILE_SIZE + 1),
+			1 + POI_ATLAS.y * (TILE_SIZE + 1),
+			TILE_SIZE,
+			TILE_SIZE
+		)
+		var marker := Sprite2D.new()
+		marker.texture = atlas_texture
+		marker.centered = false
+		marker.z_index = 21
+		marker.position = (Vector2(world_pos.x, world_pos.y) - playerOffset) * cell_size
+		add_child(marker)
+		editor_poi_markers[rule_key] = marker
+
 func _clear_editor_rule_state() -> void:
 	editor_npc_rules_by_level.clear()
 	editor_item_rules_by_level.clear()
@@ -1467,6 +1638,8 @@ func _clear_editor_rule_state() -> void:
 	clear_editor_loot_table_markers()
 	editor_entity_group_rules_by_level.clear()
 	clear_editor_entity_group_markers()
+	editor_poi_rules_by_level.clear()
+	clear_editor_poi_markers()
 	editor_tile_group_rules_by_level.clear()
 	clear_editor_tile_group_markers()
 	editor_other_rules_by_level.clear()
@@ -1629,6 +1802,7 @@ func _clear_current_chunk(clear_rules: bool = false) -> void:
 	clear_editor_live_items()
 	clear_editor_loot_table_markers()
 	clear_editor_entity_group_markers()
+	clear_editor_poi_markers()
 	clear_editor_tile_group_markers()
 	if clear_rules:
 		var key := _active_level_key()
@@ -1636,6 +1810,7 @@ func _clear_current_chunk(clear_rules: bool = false) -> void:
 		editor_item_rules_by_level.erase(key)
 		editor_loot_table_rules_by_level.erase(key)
 		editor_entity_group_rules_by_level.erase(key)
+		editor_poi_rules_by_level.erase(key)
 		editor_tile_group_rules_by_level.erase(key)
 		editor_other_rules_by_level.erase(key)
 	var area_world_origin := _editor_world_origin()
@@ -1813,6 +1988,29 @@ func _is_valid_group_rule_position(value: Variant, size: Vector2i) -> bool:
 	var pos := Vector2i(int(value[0]), int(value[1]))
 	return pos.x >= 0 and pos.x < size.x and pos.y >= 0 and pos.y < size.y
 
+func _is_valid_poi_identifier_array(value: Variant) -> bool:
+	if !(value is Array) or value.is_empty():
+		return false
+	for entry_variant in value:
+		if !(entry_variant is String) or !_is_valid_poi_identifier(str(entry_variant)):
+			return false
+	return true
+
+func _is_valid_poi_dwell(value: Variant) -> bool:
+	if !(value is Array) or value.size() != 2:
+		return false
+	for dwell_value in value:
+		if !(dwell_value is int) and !(dwell_value is float):
+			return false
+		if float(dwell_value) != floor(float(dwell_value)):
+			return false
+	return int(value[0]) > 0 and int(value[1]) >= int(value[0])
+
+func _is_valid_poi_weight(value: Variant) -> bool:
+	if !(value is int) and !(value is float):
+		return false
+	return float(value) == floor(float(value)) and int(value) > 0
+
 func _validate_grouped_structure_rules(levels_to_validate: Dictionary, size: Vector2i, structure_id: String) -> bool:
 	for key in levels_to_validate.keys():
 		var level: Dictionary = levels_to_validate[key]
@@ -1837,6 +2035,26 @@ func _validate_grouped_structure_rules(levels_to_validate: Dictionary, size: Vec
 				if !_is_valid_group_rule_position(positions_variant[position_index], size):
 					push_error("Rule " + str(rule_index) + " for structure '" + structure_id + "' at z=" + str(key) + " has an invalid position at index " + str(position_index) + ".")
 					return false
+			if str(rule.get("type", "")) == "point_of_interest":
+				if !_is_valid_poi_identifier_array(rule.get("tags", null)):
+					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires valid lowercase tags.")
+					return false
+				if !_is_valid_poi_identifier_array(rule.get("allowed_roles", null)):
+					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires valid lowercase allowed_roles.")
+					return false
+				if !_is_valid_poi_dwell(rule.get("dwell_turns", null)):
+					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires dwell_turns [minimum, maximum] with 0 < minimum <= maximum.")
+					return false
+				if !_is_valid_poi_weight(rule.get("weight", null)):
+					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires a positive integer weight.")
+					return false
+				var seen_positions := {}
+				for position_variant in positions_variant:
+					var position_key := str(position_variant)
+					if seen_positions.has(position_key):
+						push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' contains a duplicate position.")
+						return false
+					seen_positions[position_key] = true
 	return true
 
 func _expand_grouped_rules(rules: Array) -> Array:
@@ -1912,6 +2130,9 @@ func _is_spawn_loot_table_rule(rule: Dictionary) -> bool:
 func _is_spawn_entity_group_rule(rule: Dictionary) -> bool:
 	return str(rule.get("type", "")) == "spawn_entity_group"
 
+func _is_point_of_interest_rule(rule: Dictionary) -> bool:
+	return str(rule.get("type", "")) == "point_of_interest"
+
 func _is_spawn_tile_group_rule(rule: Dictionary) -> bool:
 	return str(rule.get("type", "")) == "tile_group_ref"
 
@@ -1979,6 +2200,15 @@ func _split_editor_rules_for_level(key: String, level_data: Dictionary, grouped_
 						"entity_group": entity_group_id,
 						"pos": _rule_pos_array(pos)
 					}
+					continue
+			elif _is_point_of_interest_rule(rule):
+				if rule.has("pos"):
+					var pos := _rule_pos_from_variant(rule["pos"])
+					var rules := _get_level_rule_dict(editor_poi_rules_by_level, key)
+					var stored_rule := rule.duplicate(true)
+					stored_rule["type"] = "point_of_interest"
+					stored_rule["pos"] = _rule_pos_array(pos)
+					rules[_pos_key(pos)] = stored_rule
 					continue
 			unmanaged.append(rule.duplicate(true))
 	if unmanaged.is_empty():
@@ -2065,6 +2295,11 @@ func _rules_for_level(key: String) -> Array:
 	entity_group_keys.sort()
 	for entity_group_key in entity_group_keys:
 		result.append(entity_group_rules[entity_group_key].duplicate(true))
+	var poi_rules: Dictionary = editor_poi_rules_by_level.get(key, {})
+	var poi_keys: Array = poi_rules.keys()
+	poi_keys.sort()
+	for poi_key in poi_keys:
+		result.append(poi_rules[poi_key].duplicate(true))
 	return result
 
 func _sync_level_rules_into(key: String, level_data: Dictionary) -> void:
@@ -2087,6 +2322,8 @@ func _sync_all_level_rules() -> void:
 	for key in editor_loot_table_rules_by_level.keys():
 		seen[str(key)] = true
 	for key in editor_entity_group_rules_by_level.keys():
+		seen[str(key)] = true
+	for key in editor_poi_rules_by_level.keys():
 		seen[str(key)] = true
 	for key in editor_tile_group_rules_by_level.keys():
 		seen[str(key)] = true
@@ -2128,6 +2365,7 @@ func _apply_editor_rules_for_level(z: int) -> void:
 		editor_live_item_rules[item_key] = rule.duplicate(true)
 	_refresh_loot_table_markers()
 	_refresh_entity_group_markers()
+	_refresh_poi_markers()
 	_refresh_tile_group_markers()
 
 func _compact_level_to_size(level_data: Dictionary, source_size: Vector2i, target_size: Vector2i, level_key: String = "") -> Dictionary:
@@ -2357,5 +2595,7 @@ func export_structure(id: String, footprint: Vector2i = Vector2i(24, 24)) -> Dic
 		var blank_level: Dictionary = Editor.export_to_rle("", _editor_world_origin(), 0, footprint)
 		blank_level.erase("id")
 		result_levels["0"] = blank_level
+	if !_validate_grouped_structure_rules(result_levels, footprint, id):
+		return {}
 	structure_size = footprint
 	return result

@@ -36,6 +36,38 @@
     ]
   },
   {
+    "id": "tavern_patron",
+    "entries": [
+      { "none": true, "weight": 2 },
+      { "entity": "human", "weight": 3, "job": "villager" }
+    ]
+  },
+  {
+    "id": "generic_merchants",
+    "entries": [
+      { "entity": "human", "weight": 1, "job": "merchant_church" },
+      { "entity": "human", "weight": 1, "job": "merchant_fruit_veg" },
+      { "entity": "human", "weight": 1, "job": "merchant_fish" },
+      { "entity": "human", "weight": 1, "job": "merchant_food" },
+      { "entity": "human", "weight": 1, "job": "merchant_foraging" },
+      { "entity": "human", "weight": 1, "job": "merchant_weapons" },
+      { "entity": "human", "weight": 1, "job": "merchant_armor" },
+      { "entity": "human", "weight": 1, "job": "merchant_clothing" },
+      { "entity": "human", "weight": 1, "job": "merchant_scavenger" }
+    ]
+  },
+  {
+    "id": "city_ambient_population",
+    "entries": [
+      {
+        "entity": "human",
+        "weight": 1,
+        "job": "villager",
+        "dialogue_id": "villager_outside"
+      }
+    ]
+  },
+  {
     "id": "bear_cave_entities",
     "entries": [
       { "entity": "bear", "weight": 1, "job": "animal" }

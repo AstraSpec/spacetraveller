@@ -80,6 +80,7 @@ func apply_loaded_data() -> void:
 		# Entity 0 (player) position, anatomy, clothing, health, equipment
 		# are all restored inside _GameWorld.load_save_data()
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
+		_GameWorld.update_city_population(TimeManager.total_turns, TimeManager.is_daytime())
 
 func load_game(slot_name: String) -> void:
 	if not _GameWorld:

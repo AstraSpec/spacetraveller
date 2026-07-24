@@ -3,7 +3,7 @@
   "name": "Human",
   "atlas": [104, 17],
   "base_hp": 100,
-  "speed": 0.0,
+  "speed": 0.9,
   "base_damage": 10,
   "base_stamina": 100,
   "corpse_item": "corpse_human",
