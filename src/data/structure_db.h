@@ -51,6 +51,7 @@ struct StructureRuleInfo {
     int poi_dwell_min = 0;
     int poi_dwell_max = 0;
     int poi_weight = 0;
+    bool poi_initial_visitor_spawn = false;
     Dictionary params;
 };
 

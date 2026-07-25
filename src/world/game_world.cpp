@@ -1247,7 +1247,8 @@ void GameWorld::sync_entity_streaming(const Vector2i& player_pos) {
         const bool outside_active_area = !active_area.contains_offset(
             entity->x - player_pos.x, entity->y - player_pos.y);
         const bool retained_ambient = entity_ledger.is_ambient(id)
-            && city_population.is_inside_route_area(
+            && city_population.should_retain_ambient(
+                id,
                 Vector3i(entity->x, entity->y, entity->z), player_pos);
         if (outside_active_area && !retained_ambient) {
             to_remove.push_back(id);

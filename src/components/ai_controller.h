@@ -67,6 +67,7 @@ struct AIContext {
 
 namespace AIController {
     Intent tick(AIData& ai, LocomotionData& loco, const AIContext& ctx);
+    void reset_routine(AIData& ai, bool clear_history, int retry_turns = 0);
     AIState state_from_string(const String& value);
     String state_to_string(AIState value);
     bool is_valid_state_name(const String& value);

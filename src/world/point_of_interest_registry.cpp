@@ -1,6 +1,7 @@
 #include "point_of_interest_registry.h"
 
 #include "cell_area.h"
+#include "components/ai_controller.h"
 #include "core/world_coords.h"
 #include "data/structure_db.h"
 #include "entities/entity_ledger.h"
@@ -12,12 +13,6 @@
 using namespace godot;
 
 namespace {
-
-int floor_div_chunk(int p_value) {
-    return p_value >= 0
-        ? p_value / WorldCoords::CHUNK_SIZE
-        : (p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE;
-}
 
 Vector2i resolve_chunk_rule_local(const Vector2i& p_structure_pos, uint8_t p_rotation) {
     const int max_coord = WorldCoords::CHUNK_SIZE - 1;
@@ -59,6 +54,7 @@ bool tags_overlap(const std::vector<String>& p_actual, const std::vector<String>
 
 void PointOfInterestRegistry::clear() {
     points.clear();
+    points_by_chunk.clear();
     reservations.clear();
     entity_reservations.clear();
 }
@@ -70,6 +66,15 @@ void PointOfInterestRegistry::register_for_active_cells(
 ) {
     StructureDb* structure_db = StructureDb::get_singleton();
     if (!structure_db) return;
+    auto store_point = [&](uint64_t p_key, PointOfInterestInfo&& p_info) {
+        const Vector3i& position = p_info.position;
+        const uint64_t chunk_key = WorldCoords::pack_coords_3d(
+            WorldCoords::chunk_coord(position.x),
+            WorldCoords::chunk_coord(position.y),
+            position.z);
+        points_by_chunk[chunk_key].insert(p_key);
+        points[p_key] = std::move(p_info);
+    };
 
     for (const uint64_t packed : p_active_cells) {
         const Vector3i world_pos = WorldCoords::unpack_coords_3d(packed);
@@ -119,8 +124,8 @@ void PointOfInterestRegistry::register_for_active_cells(
                         auto it = structure->levels.find(world_pos.z);
                         if (it != structure->levels.end()) {
                             level = &it->second;
-                            const int chunk_x = floor_div_chunk(world_pos.x);
-                            const int chunk_y = floor_div_chunk(world_pos.y);
+                            const int chunk_x = WorldCoords::chunk_coord(world_pos.x);
+                            const int chunk_y = WorldCoords::chunk_coord(world_pos.y);
                             const Vector2i chunk_origin(
                                 chunk_x * WorldCoords::CHUNK_SIZE,
                                 chunk_y * WorldCoords::CHUNK_SIZE
@@ -148,7 +153,8 @@ void PointOfInterestRegistry::register_for_active_cells(
                                 info.dwell_min = rule.poi_dwell_min;
                                 info.dwell_max = rule.poi_dwell_max;
                                 info.weight = rule.poi_weight;
-                                points[packed] = std::move(info);
+                                info.initial_visitor_spawn = rule.poi_initial_visitor_spawn;
+                                store_point(packed, std::move(info));
                             }
                             continue;
                         }
@@ -168,7 +174,8 @@ void PointOfInterestRegistry::register_for_active_cells(
             info.dwell_min = rule.poi_dwell_min;
             info.dwell_max = rule.poi_dwell_max;
             info.weight = rule.poi_weight;
-            points[packed] = std::move(info);
+            info.initial_visitor_spawn = rule.poi_initial_visitor_spawn;
+            store_point(packed, std::move(info));
         }
     }
 }
@@ -182,6 +189,19 @@ void PointOfInterestRegistry::prune_to_area(const CellArea& p_area) {
         }
     }
     for (const uint64_t key : removed) {
+        auto point = points.find(key);
+        if (point != points.end()) {
+            const Vector3i& position = point->second.position;
+            const uint64_t chunk_key = WorldCoords::pack_coords_3d(
+                WorldCoords::chunk_coord(position.x),
+                WorldCoords::chunk_coord(position.y),
+                position.z);
+            auto bucket = points_by_chunk.find(chunk_key);
+            if (bucket != points_by_chunk.end()) {
+                bucket->second.erase(key);
+                if (bucket->second.empty()) points_by_chunk.erase(bucket);
+            }
+        }
         auto reservation = reservations.find(key);
         if (reservation != reservations.end()) {
             entity_reservations.erase(reservation->second);
@@ -196,6 +216,15 @@ const PointOfInterestInfo* PointOfInterestRegistry::get(const Vector3i& p_positi
     return it == points.end() ? nullptr : &it->second;
 }
 
+bool PointOfInterestRegistry::is_available_to_roles(
+    uint64_t p_point_key,
+    const PointOfInterestInfo& p_info,
+    const Array& p_roles
+) const {
+    return roles_overlap(p_info.allowed_roles, p_roles)
+        && reservations.find(p_point_key) == reservations.end();
+}
+
 std::vector<Vector3i> PointOfInterestRegistry::find_compatible(
     const PointOfInterestScope& p_scope,
     int p_z,
@@ -208,8 +237,7 @@ std::vector<Vector3i> PointOfInterestRegistry::find_compatible(
     for (const auto& pair : points) {
         const PointOfInterestInfo& info = pair.second;
         if (info.position.z != p_z || !(info.scope == p_scope)
-            || !roles_overlap(info.allowed_roles, p_roles)
-            || reservations.find(pair.first) != reservations.end()) {
+            || !is_available_to_roles(pair.first, info, p_roles)) {
             continue;
         }
         if (p_has_last_position && info.position == p_last_position) {
@@ -235,14 +263,121 @@ std::vector<Vector3i> PointOfInterestRegistry::find_compatible_near(
             || std::max(
                 std::abs(info.position.x - p_origin.x),
                 std::abs(info.position.y - p_origin.y)) > radius
-            || !roles_overlap(info.allowed_roles, p_roles)
             || !tags_overlap(info.tags, p_tags)
-            || reservations.find(pair.first) != reservations.end()) {
+            || !is_available_to_roles(pair.first, info, p_roles)) {
             continue;
         }
         result.push_back(info.position);
     }
     return result;
+}
+
+std::vector<Vector3i> PointOfInterestRegistry::find_compatible_in_chunk(
+    const Vector3i& p_chunk,
+    const Array& p_roles,
+    const Vector3i& p_last_position,
+    bool p_has_last_position
+) const {
+    std::vector<Vector3i> preferred;
+    const uint64_t chunk_key =
+        WorldCoords::pack_coords_3d(p_chunk.x, p_chunk.y, p_chunk.z);
+    auto bucket = points_by_chunk.find(chunk_key);
+    if (bucket == points_by_chunk.end()) return preferred;
+    for (const uint64_t point_key : bucket->second) {
+        auto point = points.find(point_key);
+        if (point == points.end()) continue;
+        const PointOfInterestInfo& info = point->second;
+        if (!is_available_to_roles(point_key, info, p_roles)) {
+            continue;
+        }
+        if (p_has_last_position && info.position == p_last_position) {
+            continue;
+        } else {
+            preferred.push_back(info.position);
+        }
+    }
+    return preferred;
+}
+
+std::vector<Vector3i> PointOfInterestRegistry::find_in_chunk(
+    const Vector3i& p_chunk
+) const {
+    std::vector<Vector3i> result;
+    const uint64_t chunk_key =
+        WorldCoords::pack_coords_3d(p_chunk.x, p_chunk.y, p_chunk.z);
+    auto bucket = points_by_chunk.find(chunk_key);
+    if (bucket == points_by_chunk.end()) return result;
+    result.reserve(bucket->second.size());
+    for (const uint64_t point_key : bucket->second) {
+        auto point = points.find(point_key);
+        if (point != points.end()) result.push_back(point->second.position);
+    }
+    std::sort(result.begin(), result.end(), [](const Vector3i& a, const Vector3i& b) {
+        if (a.y != b.y) return a.y < b.y;
+        return a.x < b.x;
+    });
+    return result;
+}
+
+bool PointOfInterestRegistry::is_reserved(const Vector3i& p_position) const {
+    const uint64_t key =
+        WorldCoords::pack_coords_3d(p_position.x, p_position.y, p_position.z);
+    return reservations.find(key) != reservations.end();
+}
+
+bool PointOfInterestRegistry::try_reserve_weighted(
+    std::vector<Vector3i> p_candidates,
+    uint32_t p_entity_id,
+    double p_normalized_roll,
+    Vector3i& r_selected
+) {
+    p_candidates.erase(
+        std::remove_if(
+            p_candidates.begin(),
+            p_candidates.end(),
+            [&](const Vector3i& candidate) {
+                return get(candidate) == nullptr;
+            }),
+        p_candidates.end());
+    if (p_candidates.empty()) return false;
+    std::sort(
+        p_candidates.begin(),
+        p_candidates.end(),
+        [](const Vector3i& a, const Vector3i& b) {
+            return WorldCoords::pack_coords_3d(a.x, a.y, a.z)
+                < WorldCoords::pack_coords_3d(b.x, b.y, b.z);
+        });
+
+    int total_weight = 0;
+    for (const Vector3i& candidate : p_candidates) {
+        const PointOfInterestInfo* point = get(candidate);
+        if (point) total_weight += std::max(1, point->weight);
+    }
+    if (total_weight <= 0) return false;
+
+    const double normalized_roll =
+        std::clamp(p_normalized_roll, 0.0, 0.9999999999999999);
+    int weighted_roll = static_cast<int>(
+        normalized_roll * static_cast<double>(total_weight));
+    size_t selected_index = p_candidates.size() - 1;
+    for (size_t index = 0; index < p_candidates.size(); ++index) {
+        const PointOfInterestInfo* point = get(p_candidates[index]);
+        if (!point) continue;
+        weighted_roll -= std::max(1, point->weight);
+        if (weighted_roll < 0) {
+            selected_index = index;
+            break;
+        }
+    }
+
+    for (size_t offset = 0; offset < p_candidates.size(); ++offset) {
+        const size_t index = (selected_index + offset) % p_candidates.size();
+        if (try_reserve(p_candidates[index], p_entity_id)) {
+            r_selected = p_candidates[index];
+            return true;
+        }
+    }
+    return false;
 }
 
 bool PointOfInterestRegistry::try_reserve(const Vector3i& p_position, uint32_t p_entity_id) {
@@ -297,17 +432,18 @@ void PointOfInterestRegistry::rebuild_reservations(EntityLedger& p_ledger) {
         const Vector3i target = ai->routine_target;
         const PointOfInterestInfo* point = get(target);
         const PointOfInterestScope scope{ai->routine_structure_id, ai->routine_scope_origin};
+        const bool target_matches_routine = point
+            && (ai->has_routine_scope
+                ? point->scope == scope
+                : p_ledger.is_ambient(id));
         if (!entity
             || !profile
             || target.z != entity->z
-            || !point
-            || !(point->scope == scope)
+            || !target_matches_routine
             || !roles_overlap(point->allowed_roles, profile->context_tags)
             || !try_reserve(target, id)) {
-            ai->routine_has_target = false;
-            ai->routine_phase = RoutinePhase::SEEKING;
-            ai->routine_dwell_remaining = 0;
-            ai->routine_failed_attempts = 0;
+            release_for_entity(id);
+            AIController::reset_routine(*ai, false);
         }
     }
 }

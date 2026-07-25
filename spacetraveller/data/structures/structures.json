@@ -8,6 +8,10 @@
                 "west"
             ]
         },
+        "entrance": [
+            5.0,
+            6.0
+        ],
         "id": "tavern",
         "levels": {
             "0": {
@@ -47,72 +51,70 @@
                         "type": "spawn_entity"
                     },
                     {
-                        "entity_group": "tavern_patron",
-                        "positions": [ [ 11, 16 ], [ 13, 11 ], [ 16, 10 ], [ 7, 11 ], [ 8, 16 ] ],
-                        "type": "spawn_entity_group"
-                    },
-                    {
                         "allowed_roles": [
                             "villager"
                         ],
                         "dwell_turns": [
-                            20.0,
-                            45.0
+                            40.0,
+                            75.0
                         ],
+                        "initial_visitor_spawn": true,
                         "positions": [ [ 11, 16 ], [ 13, 11 ], [ 16, 10 ], [ 6, 10 ], [ 7, 11 ], [ 9, 15 ] ],
                         "tags": [
                             "seating",
                             "social"
                         ],
-                        "weight": 4,
-                        "type": "point_of_interest"
+                        "type": "point_of_interest",
+                        "weight": 4.0
                     },
                     {
                         "allowed_roles": [
                             "villager"
                         ],
                         "dwell_turns": [
-                            50,
-                            100
+                            50.0,
+                            100.0
                         ],
+                        "initial_visitor_spawn": true,
                         "positions": [ [ 12, 7 ], [ 15, 7 ], [ 17, 7 ] ],
                         "tags": [
                             "drink",
                             "social"
                         ],
-                        "weight": 3,
-                        "type": "point_of_interest"
+                        "type": "point_of_interest",
+                        "weight": 3.0
                     },
                     {
                         "allowed_roles": [
                             "tavern_worker"
                         ],
                         "dwell_turns": [
-                            15,
-                            30
+                            30,
+                            60
                         ],
+                        "initial_visitor_spawn": false,
                         "positions": [ [ 13, 5 ], [ 15, 5 ], [ 17, 5 ] ],
                         "tags": [
                             "work"
                         ],
-                        "weight": 1,
-                        "type": "point_of_interest"
+                        "type": "point_of_interest",
+                        "weight": 1
                     },
                     {
                         "allowed_roles": [
                             "villager"
                         ],
                         "dwell_turns": [
-                            100,
-                            250
+                            100.0,
+                            250.0
                         ],
                         "positions": [ [ 18, 20 ], [ 20, 20 ] ],
                         "tags": [
                             "toilet",
                             "private"
                         ],
-                        "weight": 1,
-                        "type": "point_of_interest"
+                        "type": "point_of_interest",
+                        "weight": 1.0
                     }
                 ]
             }

@@ -8,6 +8,7 @@
 #include "core/world_coords.h"
 #include "data/chunk_db.h"
 #include "data/entity_group_db.h"
+#include "data/structure_db.h"
 #include "data/tile_db.h"
 #include "entities/entity_factory.h"
 #include "entities/entity_ledger.h"
@@ -17,6 +18,7 @@
 #include "light_level.h"
 #include "point_of_interest_registry.h"
 #include "turn_scheduler.h"
+#include "traversal_rules.h"
 #include "world_bubble.h"
 #include "world_generator.h"
 
@@ -115,10 +117,24 @@ int positive_mod(int p_value, int p_modulus) {
     return result < 0 ? result + p_modulus : result;
 }
 
-int floor_div_chunk(int p_value) {
-    return p_value >= 0
-        ? p_value / WorldCoords::CHUNK_SIZE
-        : (p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE;
+Vector2i rotate_structure_local(
+    const Vector2i& p_position,
+    uint8_t p_rotation
+) {
+    const int max_coord = WorldCoords::CHUNK_SIZE - 1;
+    switch (p_rotation) {
+        case WorldCoords::ROT_WEST:
+            return Vector2i(max_coord - p_position.y, p_position.x);
+        case WorldCoords::ROT_NORTH:
+            return Vector2i(
+                max_coord - p_position.x,
+                max_coord - p_position.y);
+        case WorldCoords::ROT_EAST:
+            return Vector2i(p_position.y, max_coord - p_position.x);
+        case WorldCoords::ROT_SOUTH:
+        default:
+            return p_position;
+    }
 }
 
 bool is_on_direction_boundary(
@@ -225,6 +241,46 @@ bool routes_overlap_opening(
     return overlap >= ROUTE_OPENING_REJECT_OVERLAP;
 }
 
+bool chunk_intersects_area(const Vector3i& p_chunk, const CellArea& p_area) {
+    if (p_chunk.z != p_area.z) return false;
+    const int chunk_min_x = p_chunk.x * WorldCoords::CHUNK_SIZE;
+    const int chunk_min_y = p_chunk.y * WorldCoords::CHUNK_SIZE;
+    const int chunk_max_x = chunk_min_x + WorldCoords::CHUNK_SIZE - 1;
+    const int chunk_max_y = chunk_min_y + WorldCoords::CHUNK_SIZE - 1;
+    const int area_min_x = p_area.center.x - p_area.radius;
+    const int area_min_y = p_area.center.y - p_area.radius;
+    const int area_max_x = p_area.center.x + p_area.radius - 1;
+    const int area_max_y = p_area.center.y + p_area.radius - 1;
+    return chunk_max_x >= area_min_x && chunk_min_x <= area_max_x
+        && chunk_max_y >= area_min_y && chunk_min_y <= area_max_y;
+}
+
+uint32_t chunk_coverage_signature(
+    const Vector3i& p_chunk,
+    const CellArea& p_area
+) {
+    if (!chunk_intersects_area(p_chunk, p_area)) {
+        return std::numeric_limits<uint32_t>::max();
+    }
+    const int chunk_min_x = p_chunk.x * WorldCoords::CHUNK_SIZE;
+    const int chunk_min_y = p_chunk.y * WorldCoords::CHUNK_SIZE;
+    const int chunk_max_x = chunk_min_x + WorldCoords::CHUNK_SIZE - 1;
+    const int chunk_max_y = chunk_min_y + WorldCoords::CHUNK_SIZE - 1;
+    const int area_min_x = p_area.center.x - p_area.radius;
+    const int area_min_y = p_area.center.y - p_area.radius;
+    const int area_max_x = p_area.center.x + p_area.radius - 1;
+    const int area_max_y = p_area.center.y + p_area.radius - 1;
+    const uint32_t min_x = static_cast<uint32_t>(
+        std::max(chunk_min_x, area_min_x) - chunk_min_x);
+    const uint32_t min_y = static_cast<uint32_t>(
+        std::max(chunk_min_y, area_min_y) - chunk_min_y);
+    const uint32_t max_x = static_cast<uint32_t>(
+        std::min(chunk_max_x, area_max_x) - chunk_min_x);
+    const uint32_t max_y = static_cast<uint32_t>(
+        std::min(chunk_max_y, area_max_y) - chunk_min_y);
+    return min_x | (min_y << 5) | (max_x << 10) | (max_y << 15);
+}
+
 }
 
 void CityPopulationDirector::configure(
@@ -279,6 +335,12 @@ bool CityPopulationDirector::load_config() {
         0.0f,
         1.0f
     );
+    config.venue_initial_spawn_chance = std::clamp(
+        static_cast<float>(row.get(
+            "venue_initial_spawn_chance", config.venue_initial_spawn_chance)),
+        0.0f,
+        1.0f
+    );
     config.detour_chance = std::clamp(
         static_cast<float>(row.get("detour_chance", config.detour_chance)), 0.0f, 1.0f);
     config.detour_radius = std::max(1, static_cast<int>(row.get("detour_radius", config.detour_radius)));
@@ -298,6 +360,7 @@ void CityPopulationDirector::clear() {
     entry_last_used.clear();
     road_cell_reservations.clear();
     entity_road_reservations.clear();
+    active_venues.clear();
     pending_activation = PendingActivationBatch();
     next_replenish_turn = std::numeric_limits<int64_t>::min();
     latest_calendar_turn = 0;
@@ -328,7 +391,7 @@ void CityPopulationDirector::queue_exploration_activation(
     last_activation_center = p_center;
     last_activation_z = p_z;
     has_last_activation_center = true;
-    if (pending_activation.bulk && has_population_context && p_z == 0) {
+    if (pending_activation.bulk && has_population_context) {
         const int target =
             latest_is_day ? config.day_target : config.night_target;
         process_exploration_activation(
@@ -767,32 +830,33 @@ bool CityPopulationDirector::build_boundary_route(
     return r_route.size() >= 2;
 }
 
-bool CityPopulationDirector::spawn_route(
-    std::vector<Vector3i>&& p_route,
-    RoadLateralPreference p_lateral_preference,
-    int64_t p_calendar_turn,
-    uint64_t p_salt,
-    int p_travel_direction
+uint32_t CityPopulationDirector::create_ambient_at(
+    const Vector3i& p_position,
+    uint64_t p_salt
 ) {
-    if (!bubble || !ledger || !tracker || !scheduler || !world_seed
-        || p_route.size() < 2) {
-        return false;
+    if (!bubble || !ledger || !tracker || !scheduler || !world_seed) {
+        return EntityPool::INVALID_ID;
     }
     const Entity* player =
         ledger->get_entity_pool().get_entity(EntityPool::PLAYER_ID);
-    if (!player || player->z != 0) return false;
+    if (!player || player->z != p_position.z
+        || tracker->get_at(p_position) != EntityPool::INVALID_ID) {
+        return EntityPool::INVALID_ID;
+    }
 
     EntityGroupDb* groups = EntityGroupDb::get_singleton();
-    if (!groups) return false;
+    if (!groups) return EntityPool::INVALID_ID;
     Rng::Seeded rng = Rng::at(
         static_cast<uint32_t>(*world_seed),
-        Vector2i(p_route.front().x, p_route.front().y),
+        Vector2i(p_position.x, p_position.y),
         Rng::SPAWN,
         p_salt
     );
     const EntityGroupEntry* entry =
         groups->pick_weighted_entry(config.entity_group, rng);
-    if (!entry || entry->none || entry->entity.is_empty()) return false;
+    if (!entry || entry->none || entry->entity.is_empty()) {
+        return EntityPool::INVALID_ID;
+    }
 
     EntityFactory::SpawnOverrides overrides;
     overrides.job = entry->job;
@@ -804,10 +868,9 @@ bool CityPopulationDirector::spawn_route(
     overrides.identity_salt = p_salt;
     const float initial_turn_time =
         player->next_turn_time + 0.1f + rng.unit() * 0.8f;
-    const Vector3i spawn_position = p_route.front();
     const uint32_t id = EntityFactory::create_npc(
         entry->entity,
-        Vector2i(spawn_position.x, spawn_position.y),
+        Vector2i(p_position.x, p_position.y),
         *world_seed,
         *ledger,
         *tracker,
@@ -816,9 +879,32 @@ bool CityPopulationDirector::spawn_route(
         overrides,
         initial_turn_time
     );
-    if (id == EntityPool::INVALID_ID) return false;
+    if (id == EntityPool::INVALID_ID) return id;
 
     ledger->mark_ambient(id);
+    return id;
+}
+
+bool CityPopulationDirector::spawn_route(
+    std::vector<Vector3i>&& p_route,
+    RoadLateralPreference p_lateral_preference,
+    int64_t p_calendar_turn,
+    uint64_t p_salt,
+    int p_travel_direction,
+    uint32_t* r_entity_id
+) {
+    if (r_entity_id) *r_entity_id = EntityPool::INVALID_ID;
+    if (p_route.size() < 2) return false;
+    const Vector3i spawn_position = p_route.front();
+    const uint32_t id =
+        create_ambient_at(spawn_position, p_salt);
+    if (id == EntityPool::INVALID_ID) return false;
+
+    Rng::Seeded rng = Rng::at(
+        static_cast<uint32_t>(*world_seed),
+        Vector2i(spawn_position.x, spawn_position.y),
+        Rng::SPAWN,
+        Rng::mix64(p_salt ^ UINT64_C(0xD370A2)));
     AmbientJourneyData journey;
     journey.route = std::move(p_route);
     journey.travel_direction = p_travel_direction;
@@ -828,14 +914,17 @@ bool CityPopulationDirector::spawn_route(
     journeys[id] = std::move(journey);
     entry_last_used[WorldCoords::pack_coords_3d(
         spawn_position.x, spawn_position.y, spawn_position.z)] = p_calendar_turn;
+    if (r_entity_id) *r_entity_id = id;
     return true;
 }
 
 bool CityPopulationDirector::spawn_ingress(
     const Vector2i& p_center,
     int64_t p_calendar_turn,
-    std::vector<Vector3i>& r_batch_entries
+    std::vector<Vector3i>& r_batch_entries,
+    uint32_t* r_entity_id
 ) {
+    if (r_entity_id) *r_entity_id = EntityPool::INVALID_ID;
     if (!generator || !bubble || !ledger || !tracker || !scheduler || !world_seed) return false;
     const Entity* player = ledger->get_entity_pool().get_entity(EntityPool::PLAYER_ID);
     if (!player || player->z != 0) return false;
@@ -873,13 +962,378 @@ bool CityPopulationDirector::spawn_ingress(
     if (!spawn_route(
             std::move(route),
             lateral_preference,
-            p_calendar_turn,
-            salt,
-            travel_direction)) {
+             p_calendar_turn,
+             salt,
+             travel_direction,
+             r_entity_id)) {
         return false;
     }
     r_batch_entries.push_back(spawn_position);
     return true;
+}
+
+int CityPopulationDirector::street_population_count() const {
+    int count = 0;
+    for (const auto& pair : journeys) {
+        if (pair.second.venue_key == NO_AMBIENT_VENUE) ++count;
+    }
+    return count;
+}
+
+bool CityPopulationDirector::entrance_approach_less(
+    const VenueEntranceApproach& p_a,
+    const VenueEntranceApproach& p_b
+) {
+    const uint64_t a_entrance = WorldCoords::pack_coords_3d(
+        p_a.entrance.x, p_a.entrance.y, p_a.entrance.z);
+    const uint64_t b_entrance = WorldCoords::pack_coords_3d(
+        p_b.entrance.x, p_b.entrance.y, p_b.entrance.z);
+    if (a_entrance != b_entrance) return a_entrance < b_entrance;
+    return WorldCoords::pack_coords_3d(
+               p_a.road_access.x, p_a.road_access.y, p_a.road_access.z)
+        < WorldCoords::pack_coords_3d(
+               p_b.road_access.x, p_b.road_access.y, p_b.road_access.z);
+}
+
+bool CityPopulationDirector::entrance_approach_matches(
+    const VenueEntranceApproach& p_approach,
+    const Vector3i& p_entrance,
+    const Vector3i& p_road_access
+) {
+    return p_approach.entrance == p_entrance
+        && p_approach.road_access == p_road_access;
+}
+
+void CityPopulationDirector::update_admission_readiness(
+    ActiveVenue& r_venue
+) {
+    r_venue.admission_ready =
+        r_venue.has_activity && !r_venue.entrance_approaches.empty();
+}
+
+bool CityPopulationDirector::venue_has_vacancy(
+    const ActiveVenue& p_venue
+) {
+    return p_venue.admission_ready
+        && static_cast<int>(p_venue.visitors.size()) < p_venue.capacity;
+}
+
+void CityPopulationDirector::refresh_venue_entrance_approaches(
+    ActiveVenue& r_venue
+) {
+    r_venue.entrance_approaches.clear();
+    if (!generator || !world_seed || !bubble) {
+        r_venue.admission_ready = false;
+        return;
+    }
+    const int min_x = r_venue.chunk.x * WorldCoords::CHUNK_SIZE;
+    const int min_y = r_venue.chunk.y * WorldCoords::CHUNK_SIZE;
+    StructureDb* structure_db = StructureDb::get_singleton();
+    if (structure_db) {
+        const uint32_t packed_chunk = generator->get_biome_chunk_data(
+            r_venue.chunk.x,
+            r_venue.chunk.y,
+            r_venue.chunk.z,
+            *world_seed);
+        const uint8_t rotation = static_cast<uint8_t>(
+            (packed_chunk >> WorldCoords::ORIENTATION_SHIFT)
+            & WorldCoords::ROTATION_MASK);
+        const String structure_id = generator->get_structure_id_for_cell(
+            min_x, min_y, r_venue.chunk.z, *world_seed);
+        const StructureInfo* structure =
+            structure_db->get_structure_info(structure_id);
+        if (structure) {
+            for (const int entrance_x : structure->entrances) {
+                if (entrance_x < 0
+                    || entrance_x >= WorldCoords::CHUNK_SIZE) {
+                    continue;
+                }
+                const Vector2i local = rotate_structure_local(
+                    Vector2i(
+                        entrance_x,
+                        WorldCoords::CHUNK_SIZE - 1),
+                    rotation);
+                const Vector3i entrance(
+                    min_x + local.x,
+                    min_y + local.y,
+                    r_venue.chunk.z);
+                for (int offset_y = -2; offset_y <= 2; ++offset_y) {
+                    for (int offset_x = -2; offset_x <= 2; ++offset_x) {
+                        const Vector3i road_access(
+                            entrance.x + offset_x,
+                            entrance.y + offset_y,
+                            entrance.z);
+                        if (!is_road_position(road_access)) continue;
+                        const bool duplicate = std::any_of(
+                            r_venue.entrance_approaches.begin(),
+                            r_venue.entrance_approaches.end(),
+                            [&](const VenueEntranceApproach& approach) {
+                                return entrance_approach_matches(
+                                    approach, entrance, road_access);
+                            });
+                        if (!duplicate) {
+                            r_venue.entrance_approaches.push_back(
+                                VenueEntranceApproach{entrance, road_access});
+                        }
+                    }
+                }
+            }
+        }
+    }
+    std::sort(
+        r_venue.entrance_approaches.begin(),
+        r_venue.entrance_approaches.end(),
+        entrance_approach_less);
+    update_admission_readiness(r_venue);
+}
+
+void CityPopulationDirector::refresh_venue_activities(
+    ActiveVenue& r_venue,
+    uint32_t p_coverage_signature
+) {
+    r_venue.initial_spawn_points.clear();
+    r_venue.has_activity = false;
+    r_venue.coverage_signature = p_coverage_signature;
+    if (!poi_registry) {
+        r_venue.admission_ready = false;
+        return;
+    }
+    const std::vector<Vector3i> positions =
+        poi_registry->find_in_chunk(r_venue.chunk);
+    r_venue.has_activity = !positions.empty();
+    for (const Vector3i& position : positions) {
+        const PointOfInterestInfo* point = poi_registry->get(position);
+        if (point && point->initial_visitor_spawn) {
+            r_venue.initial_spawn_points.push_back(position);
+        }
+    }
+    std::sort(
+        r_venue.initial_spawn_points.begin(),
+        r_venue.initial_spawn_points.end(),
+        [](const Vector3i& a, const Vector3i& b) {
+            return WorldCoords::pack_coords_3d(a.x, a.y, a.z)
+                < WorldCoords::pack_coords_3d(b.x, b.y, b.z);
+        });
+    update_admission_readiness(r_venue);
+}
+
+bool CityPopulationDirector::select_venue_activity(
+    uint32_t p_entity_id,
+    ActiveVenue& p_venue,
+    const Vector3i& p_avoid,
+    bool p_has_avoid,
+    Vector3i& r_activity
+) {
+    if (!ledger || !tracker || !poi_registry || !world_seed) return false;
+    const SocialProfileData* profile =
+        ledger->try_get_social_profile(p_entity_id);
+    const Entity* entity =
+        ledger->get_entity_pool().get_entity(p_entity_id);
+    if (!profile || !entity) return false;
+    std::vector<Vector3i> candidates =
+        poi_registry->find_compatible_in_chunk(
+            p_venue.chunk,
+            profile->context_tags,
+            p_avoid,
+            p_has_avoid);
+    candidates.erase(
+        std::remove_if(
+            candidates.begin(),
+            candidates.end(),
+            [&](const Vector3i& position) {
+                return !venue_activity_is_usable(p_entity_id, position);
+            }),
+        candidates.end());
+    if (candidates.empty()) return false;
+
+    Rng::Seeded rng = Rng::at(
+        static_cast<uint32_t>(*world_seed),
+        Vector2i(entity->x, entity->y),
+        Rng::SPAWN,
+        Rng::mix64(
+            static_cast<uint64_t>(latest_calendar_turn)
+            ^ (static_cast<uint64_t>(p_entity_id) << 17)
+            ^ (++spawn_serial << 29)));
+    return poi_registry->try_reserve_weighted(
+        std::move(candidates), p_entity_id, rng.unit(), r_activity);
+}
+
+bool CityPopulationDirector::venue_activity_is_usable(
+    uint32_t p_entity_id,
+    const Vector3i& p_position
+) const {
+    if (!bubble || !ledger || !tracker || !poi_registry
+        || !poi_registry->get(p_position)) {
+        return false;
+    }
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return false;
+    const uint16_t tile_id = bubble->query_tile_id_at_z(
+        p_position.x, p_position.y, p_position.z);
+    if (!TraversalRules::can_enter_or_open(
+            p_entity_id, tile_id, *ledger)) {
+        return false;
+    }
+    const uint32_t occupant = tracker->get_at(p_position);
+    return occupant == EntityPool::INVALID_ID || occupant == p_entity_id;
+}
+
+bool CityPopulationDirector::seed_venue_visitors(
+    uint64_t p_venue_key,
+    ActiveVenue& r_venue
+) {
+    if (!r_venue.admission_ready || !world_seed || !ledger || !tracker
+        || !poi_registry) {
+        return false;
+    }
+
+    bool spawned_any = false;
+    for (const Vector3i& position : r_venue.initial_spawn_points) {
+        const uint64_t point_key =
+            WorldCoords::pack_coords_3d(position.x, position.y, position.z);
+        if (r_venue.rolled_initial_points.find(point_key)
+            != r_venue.rolled_initial_points.end()) {
+            continue;
+        }
+        r_venue.rolled_initial_points.insert(point_key);
+        if (!venue_has_vacancy(r_venue)) break;
+
+        const uint64_t salt = Rng::mix64(
+            p_venue_key
+            ^ static_cast<uint64_t>(r_venue.activation_turn)
+            ^ point_key
+            ^ UINT64_C(0x51EED));
+        Rng::Seeded rng = Rng::at(
+            static_cast<uint32_t>(*world_seed),
+            Vector2i(position.x, position.y),
+            Rng::SPAWN,
+            salt);
+        if (!rng.chance(config.venue_initial_spawn_chance)) continue;
+
+        const PointOfInterestInfo* point = poi_registry->get(position);
+        TileDb* tile_db = TileDb::get_singleton();
+        const TileInfo* tile = tile_db && bubble
+            ? tile_db->get_tile_info(
+                bubble->query_tile_id_at_z(position.x, position.y, position.z))
+            : nullptr;
+        if (!point || !tile || tile->solid
+            || poi_registry->is_reserved(position)
+            || tracker->get_at(position) != EntityPool::INVALID_ID) {
+            continue;
+        }
+
+        const uint32_t id = create_ambient_at(position, salt);
+        if (id == EntityPool::INVALID_ID) continue;
+        if (!venue_activity_is_usable(id, position)
+            || !poi_registry->try_reserve(position, id)) {
+            despawn_ambient(id);
+            continue;
+        }
+
+        AmbientJourneyData journey;
+        journey.phase = AmbientJourneyPhase::VENUE_ACTIVITY;
+        journey.venue_key = p_venue_key;
+        journey.venue_entry_activity = position;
+        journey.venue_leave_at_turn = latest_calendar_turn
+            + rng.range(r_venue.visit_min, r_venue.visit_max);
+        journey.detour_attempted = true;
+        journey.wants_detour = false;
+        journeys[id] = std::move(journey);
+        r_venue.visitors.insert(id);
+        if (!begin_venue_activity(id)) {
+            r_venue.visitors.erase(id);
+            despawn_ambient(id);
+            continue;
+        }
+        spawned_any = true;
+    }
+    return spawned_any;
+}
+
+void CityPopulationDirector::deactivate_venue(uint64_t p_venue_key) {
+    auto venue_it = active_venues.find(p_venue_key);
+    if (venue_it == active_venues.end()) return;
+    std::vector<uint32_t> visitors(
+        venue_it->second.visitors.begin(), venue_it->second.visitors.end());
+    std::sort(visitors.begin(), visitors.end());
+    for (uint32_t id : visitors) {
+        AmbientJourneyData* journey = get_journey(id);
+        const Entity* entity = ledger
+            ? ledger->get_entity_pool().get_entity(id)
+            : nullptr;
+        if (!journey || !entity) {
+            release_for_entity(id);
+            continue;
+        }
+        if (journey->phase == AmbientJourneyPhase::APPROACHING_VENUE
+            && is_road_position(Vector3i(entity->x, entity->y, entity->z))) {
+            clear_venue_assignment(id, true);
+        } else {
+            despawn_ambient(id);
+        }
+    }
+    active_venues.erase(p_venue_key);
+}
+
+void CityPopulationDirector::update_venues_from_activation(
+    const PendingActivationBatch& p_batch,
+    int64_t p_calendar_turn,
+    const Vector2i& p_player_position
+) {
+    if (!generator || !world_seed || !bubble || !poi_registry) return;
+    ChunkDb* chunk_db = ChunkDb::get_singleton();
+    if (!chunk_db) return;
+
+    std::unordered_set<uint64_t> discovered_chunks;
+    for (const uint64_t packed : p_batch.cells) {
+        const Vector3i position = WorldCoords::unpack_coords_3d(packed);
+        const Vector3i chunk(
+            WorldCoords::chunk_coord(position.x),
+            WorldCoords::chunk_coord(position.y),
+            position.z);
+        const uint64_t key =
+            WorldCoords::pack_coords_3d(chunk.x, chunk.y, chunk.z);
+        if (!discovered_chunks.insert(key).second) continue;
+        const uint32_t chunk_data = generator->get_biome_chunk_data(
+            chunk.x, chunk.y, chunk.z, *world_seed);
+        const ChunkInfo* info =
+            chunk_db->get_chunk_info(static_cast<uint16_t>(
+                chunk_data & WorldCoords::ID_MASK));
+        if (!info || info->venue_visitor_capacity <= 0) continue;
+        auto inserted = active_venues.emplace(key, ActiveVenue());
+        ActiveVenue& venue = inserted.first->second;
+        if (inserted.second) {
+            venue.chunk = chunk;
+            venue.capacity = info->venue_visitor_capacity;
+            venue.visit_min = info->venue_visit_min;
+            venue.visit_max = info->venue_visit_max;
+            venue.activation_turn = p_calendar_turn;
+            refresh_venue_entrance_approaches(venue);
+        }
+    }
+
+    const CellArea active_area = bubble->get_active_area(p_player_position);
+    std::vector<uint64_t> deactivated;
+    for (const auto& pair : active_venues) {
+        if (!chunk_intersects_area(pair.second.chunk, active_area)) {
+            deactivated.push_back(pair.first);
+        }
+    }
+    for (const uint64_t key : deactivated) deactivate_venue(key);
+
+    std::vector<uint64_t> keys;
+    keys.reserve(active_venues.size());
+    for (const auto& pair : active_venues) keys.push_back(pair.first);
+    std::sort(keys.begin(), keys.end());
+    for (const uint64_t key : keys) {
+        auto venue = active_venues.find(key);
+        if (venue == active_venues.end()) continue;
+        const uint32_t coverage =
+            chunk_coverage_signature(venue->second.chunk, active_area);
+        if (coverage == venue->second.coverage_signature) continue;
+        refresh_venue_activities(venue->second, coverage);
+        seed_venue_visitors(key, venue->second);
+    }
 }
 
 int CityPopulationDirector::process_exploration_activation(
@@ -890,9 +1344,11 @@ int CityPopulationDirector::process_exploration_activation(
     if (pending_activation.cells.empty()) return 0;
     PendingActivationBatch batch = std::move(pending_activation);
     pending_activation = PendingActivationBatch();
+    update_venues_from_activation(
+        batch, p_calendar_turn, p_player_position);
     if (!generator || !bubble || !ledger || !tracker || !world_seed
         || batch.z != 0
-        || static_cast<int>(journeys.size()) >= p_target) {
+        || street_population_count() >= p_target) {
         return 0;
     }
 
@@ -914,8 +1370,8 @@ int CityPopulationDirector::process_exploration_activation(
             || tracker->get_at(position) != EntityPool::INVALID_ID) {
             continue;
         }
-        const int chunk_x = floor_div_chunk(position.x);
-        const int chunk_y = floor_div_chunk(position.y);
+        const int chunk_x = WorldCoords::chunk_coord(position.x);
+        const int chunk_y = WorldCoords::chunk_coord(position.y);
         const uint64_t chunk_key = WorldCoords::pack_coords(chunk_x, chunk_y);
         auto bucket_it = bucket_indices.find(chunk_key);
         if (bucket_it == bucket_indices.end()) {
@@ -969,7 +1425,7 @@ int CityPopulationDirector::process_exploration_activation(
     );
 
     int desired_spawns = 0;
-    const int current_population = static_cast<int>(journeys.size());
+    const int current_population = street_population_count();
     if (batch.bulk) {
         for (int slot = current_population; slot < p_target; ++slot) {
             if (rng.chance(BULK_EXPLORATION_SLOT_CHANCE)) {
@@ -1017,7 +1473,7 @@ int CityPopulationDirector::process_exploration_activation(
     int spawned = 0;
     for (const ExplorationCandidate& candidate : candidates) {
         if (spawned >= desired_spawns
-            || static_cast<int>(journeys.size()) >= p_target
+            || street_population_count() >= p_target
             || route_attempts >= route_attempt_limit) {
             break;
         }
@@ -1088,6 +1544,294 @@ int CityPopulationDirector::process_exploration_activation(
     return spawned;
 }
 
+bool CityPopulationDirector::has_venue_vacancy() const {
+    for (const auto& pair : active_venues) {
+        if (venue_has_vacancy(pair.second)) return true;
+    }
+    return false;
+}
+
+bool CityPopulationDirector::build_road_route_to_any(
+    const Vector3i& p_start,
+    const std::vector<Vector3i>& p_targets,
+    std::vector<Vector3i>& r_route,
+    Vector3i& r_selected_target
+) const {
+    r_route.clear();
+    if (!bubble || !ledger || !is_road_position(p_start)
+        || p_targets.empty()) {
+        return false;
+    }
+    const Entity* player =
+        ledger->get_entity_pool().get_entity(EntityPool::PLAYER_ID);
+    if (!player || player->z != p_start.z) return false;
+    const CellArea area = population_route_area(
+        bubble, Vector2i(player->x, player->y), p_start.z);
+    if (!area.contains_world(p_start.x, p_start.y, p_start.z)) return false;
+
+    std::unordered_set<uint64_t> target_keys;
+    for (const Vector3i& target : p_targets) {
+        if (target.z == p_start.z
+            && area.contains_world(target.x, target.y, target.z)
+            && is_road_position(target)) {
+            target_keys.insert(WorldCoords::pack_coords(target.x, target.y));
+        }
+    }
+    if (target_keys.empty()) return false;
+
+    const uint64_t start_key =
+        WorldCoords::pack_coords(p_start.x, p_start.y);
+    std::queue<Vector2i> frontier;
+    std::unordered_map<uint64_t, uint64_t> parents;
+    frontier.push(Vector2i(p_start.x, p_start.y));
+    parents[start_key] = start_key;
+    uint64_t selected_key = 0;
+    bool found = false;
+    while (!frontier.empty()) {
+        const Vector2i current = frontier.front();
+        frontier.pop();
+        const uint64_t current_key =
+            WorldCoords::pack_coords(current.x, current.y);
+        if (target_keys.find(current_key) != target_keys.end()) {
+            selected_key = current_key;
+            r_selected_target =
+                Vector3i(current.x, current.y, p_start.z);
+            found = true;
+            break;
+        }
+        for (const Vector2i& direction : CARDINAL_DIRECTIONS) {
+            const Vector2i next = current + direction;
+            if (!area.contains_world(next.x, next.y, p_start.z)) continue;
+            const uint64_t next_key =
+                WorldCoords::pack_coords(next.x, next.y);
+            if (parents.find(next_key) != parents.end()
+                || !is_road_position(Vector3i(
+                    next.x, next.y, p_start.z))) {
+                continue;
+            }
+            parents[next_key] = current_key;
+            frontier.push(next);
+        }
+    }
+    if (!found) return false;
+
+    std::vector<Vector3i> reversed;
+    uint64_t cursor = selected_key;
+    while (true) {
+        const Vector2i position = WorldCoords::unpack_coords(cursor);
+        reversed.push_back(Vector3i(position.x, position.y, p_start.z));
+        if (cursor == start_key) break;
+        auto parent = parents.find(cursor);
+        if (parent == parents.end()) return false;
+        cursor = parent->second;
+    }
+    r_route.assign(reversed.rbegin(), reversed.rend());
+    return !r_route.empty();
+}
+
+bool CityPopulationDirector::build_road_route_to_venue(
+    const Vector3i& p_start,
+    ActiveVenue& r_venue,
+    const Vector3i* p_excluded_entrance,
+    const Vector3i* p_excluded_access,
+    std::vector<Vector3i>& r_route,
+    VenueEntranceApproach& r_approach
+) {
+    r_route.clear();
+    if (!bubble || !ledger || !is_road_position(p_start)) return false;
+    if (r_venue.entrance_approaches.empty()) return false;
+
+    std::vector<VenueEntranceApproach> candidates;
+    for (const VenueEntranceApproach& approach :
+         r_venue.entrance_approaches) {
+        if (approach.entrance.z != p_start.z
+            || !is_road_position(approach.road_access)) {
+            continue;
+        }
+        if (p_excluded_entrance && p_excluded_access
+            && entrance_approach_matches(
+                approach, *p_excluded_entrance, *p_excluded_access)) {
+            continue;
+        }
+        candidates.push_back(approach);
+    }
+    if (candidates.empty()) return false;
+    std::sort(
+        candidates.begin(),
+        candidates.end(),
+        [&](const VenueEntranceApproach& a,
+            const VenueEntranceApproach& b) {
+            const int a_distance =
+                manhattan_distance(p_start, a.road_access);
+            const int b_distance =
+                manhattan_distance(p_start, b.road_access);
+            if (a_distance != b_distance) return a_distance < b_distance;
+            const int a_entry_distance =
+                manhattan_distance(a.road_access, a.entrance);
+            const int b_entry_distance =
+                manhattan_distance(b.road_access, b.entrance);
+            if (a_entry_distance != b_entry_distance) {
+                return a_entry_distance < b_entry_distance;
+            }
+            return entrance_approach_less(a, b);
+        });
+    std::vector<Vector3i> targets;
+    targets.reserve(candidates.size());
+    for (const VenueEntranceApproach& candidate : candidates) {
+        targets.push_back(candidate.road_access);
+    }
+    Vector3i selected_access;
+    if (!build_road_route_to_any(
+            p_start, targets, r_route, selected_access)) {
+        return false;
+    }
+    auto selected = std::find_if(
+        candidates.begin(),
+        candidates.end(),
+        [&](const VenueEntranceApproach& approach) {
+            return approach.road_access == selected_access;
+        });
+    if (selected == candidates.end()) return false;
+    r_approach = *selected;
+    return true;
+}
+
+bool CityPopulationDirector::select_departure_approach(
+    ActiveVenue& r_venue,
+    const Vector3i& p_from,
+    const Vector3i* p_excluded_entrance,
+    const Vector3i* p_excluded_access,
+    VenueEntranceApproach& r_approach
+) {
+    bool found = false;
+    int best_score = std::numeric_limits<int>::max();
+    for (const VenueEntranceApproach& approach :
+         r_venue.entrance_approaches) {
+        if (!is_road_position(approach.road_access)
+            || (p_excluded_entrance && p_excluded_access
+                && entrance_approach_matches(
+                    approach, *p_excluded_entrance, *p_excluded_access))) {
+            continue;
+        }
+        const int score = manhattan_distance(p_from, approach.entrance) * 4
+            + manhattan_distance(
+                approach.entrance, approach.road_access);
+        if (!found || score < best_score
+            || (score == best_score
+                && entrance_approach_less(approach, r_approach))) {
+            r_approach = approach;
+            best_score = score;
+            found = true;
+        }
+    }
+    return found;
+}
+
+bool CityPopulationDirector::assign_to_venue(
+    uint32_t p_entity_id,
+    uint64_t p_venue_key
+) {
+    auto venue_it = active_venues.find(p_venue_key);
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    const Entity* entity = ledger
+        ? ledger->get_entity_pool().get_entity(p_entity_id)
+        : nullptr;
+    if (venue_it == active_venues.end() || !journey || !entity
+        || journey->venue_key != NO_AMBIENT_VENUE
+        || journey->phase != AmbientJourneyPhase::FOLLOWING_ROUTE
+        || journey->departing
+        || !is_road_position(Vector3i(entity->x, entity->y, entity->z))) {
+        return false;
+    }
+    ActiveVenue& venue = venue_it->second;
+    refresh_venue_entrance_approaches(venue);
+    if (!venue_has_vacancy(venue)) {
+        return false;
+    }
+
+    Vector3i activity;
+    if (!select_venue_activity(
+            p_entity_id, venue, Vector3i(), false, activity)) {
+        return false;
+    }
+    VenueEntranceApproach approach;
+    std::vector<Vector3i> approach_route;
+    if (!build_road_route_to_venue(
+            Vector3i(entity->x, entity->y, entity->z),
+            venue,
+            nullptr,
+            nullptr,
+            approach_route,
+            approach)) {
+        poi_registry->release_for_entity(p_entity_id);
+        return false;
+    }
+
+    release_road_reservation(p_entity_id);
+    journey->venue_key = p_venue_key;
+    journey->venue_entrance = approach.entrance;
+    journey->venue_road_access = approach.road_access;
+    journey->venue_entry_activity = activity;
+    journey->venue_leave_at_turn = 0;
+    journey->venue_route_failures = 0;
+    journey->venue_entrance_reached = false;
+    journey->phase = AmbientJourneyPhase::APPROACHING_VENUE;
+    journey->detour_attempted = true;
+    journey->wants_detour = false;
+    journey->blocked_turns = 0;
+    journey->route = std::move(approach_route);
+    journey->route_index = 1;
+    venue.visitors.insert(p_entity_id);
+    if (LocomotionData* loco = ledger->try_get_locomotion(p_entity_id)) {
+        Locomotion::clear_path(*loco);
+    }
+    return true;
+}
+
+bool CityPopulationDirector::try_assign_existing_road_visitor() {
+    if (!has_venue_vacancy()) return false;
+    std::vector<uint32_t> ids;
+    for (const auto& pair : journeys) {
+        const AmbientJourneyData& journey = pair.second;
+        if (journey.venue_key == NO_AMBIENT_VENUE
+            && journey.phase == AmbientJourneyPhase::FOLLOWING_ROUTE
+            && !journey.detour_attempted
+            && !journey.departing) {
+            ids.push_back(pair.first);
+        }
+    }
+    std::sort(ids.begin(), ids.end());
+
+    int remaining_combinations = 8;
+    for (const uint32_t id : ids) {
+        if (try_assign_to_vacant_venue(id, remaining_combinations)) {
+            return true;
+        }
+        if (remaining_combinations <= 0) return false;
+    }
+    return false;
+}
+
+bool CityPopulationDirector::try_assign_to_vacant_venue(
+    uint32_t p_entity_id,
+    int& r_remaining_combinations
+) {
+    if (r_remaining_combinations <= 0) return false;
+    std::vector<uint64_t> venue_keys;
+    for (const auto& pair : active_venues) {
+        if (venue_has_vacancy(pair.second)) {
+            venue_keys.push_back(pair.first);
+        }
+    }
+    std::sort(venue_keys.begin(), venue_keys.end());
+    for (const uint64_t venue_key : venue_keys) {
+        if (r_remaining_combinations <= 0) return false;
+        --r_remaining_combinations;
+        if (assign_to_venue(p_entity_id, venue_key)) return true;
+    }
+    return false;
+}
+
 void CityPopulationDirector::update(
     int64_t p_calendar_turn,
     bool p_is_day,
@@ -1116,15 +1860,32 @@ void CityPopulationDirector::update(
 
     process_exploration_activation(
         target, p_calendar_turn, p_player_position);
+    try_assign_existing_road_visitor();
 
     if (initialize_ingress_timer
-        || static_cast<int>(journeys.size()) >= target
         || p_calendar_turn < next_replenish_turn) {
         return;
     }
 
     std::vector<Vector3i> batch_entries;
-    spawn_ingress(p_player_position, p_calendar_turn, batch_entries);
+    const int street_population = street_population_count();
+    if (street_population > target) return;
+    if (street_population < target) {
+        spawn_ingress(p_player_position, p_calendar_turn, batch_entries);
+    } else if (has_venue_vacancy()) {
+        uint32_t entrant_id = EntityPool::INVALID_ID;
+        if (spawn_ingress(
+                p_player_position,
+                p_calendar_turn,
+                batch_entries,
+                &entrant_id)) {
+            int remaining_combinations = 8;
+            if (!try_assign_to_vacant_venue(
+                    entrant_id, remaining_combinations)) {
+                despawn_ambient(entrant_id);
+            }
+        }
+    }
     next_replenish_turn =
         p_calendar_turn + roll_replenish_delay(p_player_position, p_calendar_turn);
 }
@@ -1144,10 +1905,22 @@ bool CityPopulationDirector::is_ambient(uint32_t p_entity_id) const {
         && journeys.find(p_entity_id) != journeys.end();
 }
 
-bool CityPopulationDirector::is_inside_route_area(
+bool CityPopulationDirector::should_retain_ambient(
+    uint32_t p_entity_id,
     const Vector3i& p_position,
     const Vector2i& p_center
 ) const {
+    const AmbientJourneyData* journey = get_journey(p_entity_id);
+    if (journey && journey->venue_key != NO_AMBIENT_VENUE
+        && active_venues.find(journey->venue_key) != active_venues.end()) {
+        const Vector3i venue_chunk =
+            WorldCoords::unpack_coords_3d(journey->venue_key);
+        if (WorldCoords::chunk_coord(p_position.x) == venue_chunk.x
+            && WorldCoords::chunk_coord(p_position.y) == venue_chunk.y
+            && p_position.z == venue_chunk.z) {
+            return true;
+        }
+    }
     if (!bubble || p_position.z != bubble->get_active_z()) return false;
     return population_route_area(bubble, p_center, p_position.z).contains_world(
         p_position.x, p_position.y, p_position.z);
@@ -1162,80 +1935,20 @@ bool CityPopulationDirector::find_detour_approach(
     if (!bubble || !is_road_position(p_start) || p_start.z != p_target.z) {
         return false;
     }
-    const Entity* player = ledger
-        ? ledger->get_entity_pool().get_entity(EntityPool::PLAYER_ID)
-        : nullptr;
-    if (!player) return false;
-    const CellArea area = population_route_area(
-        bubble, Vector2i(player->x, player->y), p_start.z);
-    if (!area.contains_world(p_start.x, p_start.y, p_start.z)) {
-        return false;
-    }
-
-    const uint64_t start_key = WorldCoords::pack_coords(p_start.x, p_start.y);
-    std::queue<Vector2i> frontier;
-    std::unordered_map<uint64_t, uint64_t> parents;
-    std::unordered_map<uint64_t, int> distances;
-    frontier.push(Vector2i(p_start.x, p_start.y));
-    parents[start_key] = start_key;
-    distances[start_key] = 0;
-    static const Vector2i directions[] = {
-        Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)
-    };
-    while (!frontier.empty()) {
-        const Vector2i current = frontier.front();
-        frontier.pop();
-        const uint64_t current_key = WorldCoords::pack_coords(current.x, current.y);
-        for (const Vector2i& direction : directions) {
-            const Vector2i next = current + direction;
-            if (!area.contains_world(next.x, next.y, p_start.z)) continue;
-            const uint64_t key = WorldCoords::pack_coords(next.x, next.y);
-            if (parents.find(key) != parents.end()
-                || !is_road_position(Vector3i(next.x, next.y, p_start.z))) {
-                continue;
-            }
-            parents[key] = current_key;
-            distances[key] = distances[current_key] + 1;
-            frontier.push(next);
-        }
-    }
-
-    bool found = false;
-    uint64_t approach_key = 0;
-    int best_score = std::numeric_limits<int>::max();
+    std::vector<Vector3i> targets;
     for (int oy = -2; oy <= 2; ++oy) {
         for (int ox = -2; ox <= 2; ++ox) {
-            const Vector3i candidate(p_target.x + ox, p_target.y + oy, p_target.z);
+            const Vector3i candidate(
+                p_target.x + ox, p_target.y + oy, p_target.z);
             if (chebyshev_distance(candidate, p_target) > 2
-                || !area.contains_world(candidate.x, candidate.y, candidate.z)
                 || !is_road_position(candidate)) {
                 continue;
             }
-            const uint64_t key = WorldCoords::pack_coords(candidate.x, candidate.y);
-            auto distance = distances.find(key);
-            if (distance == distances.end()) continue;
-            const int score = distance->second * 4
-                + chebyshev_distance(candidate, p_target);
-            if (!found || score < best_score) {
-                approach_key = key;
-                r_approach = candidate;
-                best_score = score;
-                found = true;
-            }
+            targets.push_back(candidate);
         }
     }
-    if (!found) return false;
-
-    std::vector<Vector3i> reversed;
-    uint64_t cursor = approach_key;
-    while (true) {
-        const Vector2i position = WorldCoords::unpack_coords(cursor);
-        reversed.push_back(Vector3i(position.x, position.y, p_start.z));
-        if (cursor == start_key) break;
-        cursor = parents[cursor];
-    }
-    r_road_route.assign(reversed.rbegin(), reversed.rend());
-    return true;
+    return build_road_route_to_any(
+        p_start, targets, r_road_route, r_approach);
 }
 
 bool CityPopulationDirector::find_alternate_road_step(
@@ -1244,13 +1957,10 @@ bool CityPopulationDirector::find_alternate_road_step(
     const Vector3i& p_goal,
     Vector3i& r_step
 ) const {
-    static const Vector2i directions[] = {
-        Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)
-    };
     const int current_distance = manhattan_distance(p_current, p_goal);
     bool found = false;
     int best_score = std::numeric_limits<int>::max();
-    for (const Vector2i& direction : directions) {
+    for (const Vector2i& direction : CARDINAL_DIRECTIONS) {
         const Vector3i candidate(
             p_current.x + direction.x,
             p_current.y + direction.y,
@@ -1328,6 +2038,23 @@ bool CityPopulationDirector::reroute_from(
         ? ledger->get_entity_pool().get_entity(EntityPool::PLAYER_ID)
         : nullptr;
     if (!journey || !player || !is_road_position(p_start)) return false;
+    if (journey->phase == AmbientJourneyPhase::APPROACHING_VENUE
+        && journey->venue_key != NO_AMBIENT_VENUE) {
+        std::vector<Vector3i> venue_route;
+        Vector3i selected_access;
+        if (!build_road_route_to_any(
+                p_start,
+                std::vector<Vector3i>{journey->venue_road_access},
+                venue_route,
+                selected_access)) {
+            return false;
+        }
+        release_road_reservation(p_entity_id);
+        journey->route = std::move(venue_route);
+        journey->route_index = 1;
+        journey->blocked_turns = 0;
+        return true;
+    }
     const Vector3i preferred = journey->route.empty() ? Vector3i() : journey->route.back();
     const Vector2i player_position(player->x, player->y);
     std::vector<Vector3i> route;
@@ -1472,6 +2199,16 @@ bool CityPopulationDirector::continue_route(uint32_t p_entity_id) {
 void CityPopulationDirector::cancel_detour(uint32_t p_entity_id) {
     AmbientJourneyData* journey = get_journey(p_entity_id);
     if (!journey) return;
+    if (journey->venue_key != NO_AMBIENT_VENUE) {
+        const Entity* entity = ledger
+            ? ledger->get_entity_pool().get_entity(p_entity_id)
+            : nullptr;
+        clear_venue_assignment(
+            p_entity_id,
+            entity && is_road_position(
+                Vector3i(entity->x, entity->y, entity->z)));
+        return;
+    }
     if (poi_registry) poi_registry->release_for_entity(p_entity_id);
     release_road_reservation(p_entity_id);
     const Entity* entity = ledger
@@ -1506,7 +2243,271 @@ void CityPopulationDirector::cancel_detour(uint32_t p_entity_id) {
     }
 }
 
+bool CityPopulationDirector::is_venue_assignment_valid(
+    uint32_t p_entity_id
+) {
+    const AmbientJourneyData* journey = get_journey(p_entity_id);
+    if (!journey || journey->venue_key == NO_AMBIENT_VENUE) return false;
+    auto venue = active_venues.find(journey->venue_key);
+    if (venue == active_venues.end()
+        || venue->second.visitors.find(p_entity_id)
+            == venue->second.visitors.end()) {
+        return false;
+    }
+    const auto has_approach = [&](const Vector3i& entrance,
+                                  const Vector3i& road_access) {
+        return std::any_of(
+            venue->second.entrance_approaches.begin(),
+            venue->second.entrance_approaches.end(),
+            [&](const VenueEntranceApproach& approach) {
+                return entrance_approach_matches(
+                    approach, entrance, road_access);
+            });
+    };
+    if (journey->phase == AmbientJourneyPhase::APPROACHING_VENUE) {
+        const PointOfInterestInfo* activity = poi_registry
+            ? poi_registry->get(journey->venue_entry_activity)
+            : nullptr;
+        return activity
+            && WorldCoords::chunk_coord(
+                journey->venue_entry_activity.x) == venue->second.chunk.x
+            && WorldCoords::chunk_coord(
+                journey->venue_entry_activity.y) == venue->second.chunk.y
+            && journey->venue_entry_activity.z == venue->second.chunk.z
+            && has_approach(
+                journey->venue_entrance, journey->venue_road_access)
+            && is_road_position(journey->venue_road_access)
+            && (poi_registry->is_reserved_by(
+                    journey->venue_entry_activity, p_entity_id)
+                || poi_registry->try_reserve(
+                    journey->venue_entry_activity, p_entity_id));
+    }
+    if (journey->phase == AmbientJourneyPhase::LEAVING_VENUE) {
+        return has_approach(
+                journey->venue_entrance, journey->venue_road_access)
+            && is_road_position(journey->venue_road_access);
+    }
+    return journey->phase == AmbientJourneyPhase::VENUE_ACTIVITY;
+}
+
+bool CityPopulationDirector::begin_venue_activity(uint32_t p_entity_id) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    AIData* ai = ledger ? ledger->try_get_ai(p_entity_id) : nullptr;
+    const Entity* entity = ledger
+        ? ledger->get_entity_pool().get_entity(p_entity_id)
+        : nullptr;
+    auto venue = journey
+        ? active_venues.find(journey->venue_key)
+        : active_venues.end();
+    if (!journey || !ai || !entity || venue == active_venues.end()
+        || !world_seed) {
+        return false;
+    }
+    const Vector3i first_activity = journey->venue_entry_activity;
+    if (!poi_registry
+        || !poi_registry->is_reserved_by(first_activity, p_entity_id)) {
+        return false;
+    }
+    if (journey->venue_leave_at_turn <= 0) {
+        Rng::Seeded visit_rng = Rng::at(
+            static_cast<uint32_t>(*world_seed),
+            Vector2i(entity->x, entity->y),
+            Rng::SPAWN,
+            Rng::mix64(
+                journey->venue_key
+                ^ (static_cast<uint64_t>(p_entity_id) << 21)
+                ^ static_cast<uint64_t>(latest_calendar_turn)
+                ^ UINT64_C(0x71517)));
+        journey->venue_leave_at_turn = latest_calendar_turn
+            + visit_rng.range(
+                venue->second.visit_min, venue->second.visit_max);
+    }
+    AIController::reset_routine(*ai, true);
+    ai->routine_target = first_activity;
+    ai->routine_has_target = true;
+    ai->routine_phase = RoutinePhase::TRAVELLING;
+    journey->venue_entry_activity = Vector3i();
+    journey->venue_route_failures = 0;
+    journey->venue_entrance_reached = false;
+    journey->phase = AmbientJourneyPhase::VENUE_ACTIVITY;
+    if (LocomotionData* loco = ledger->try_get_locomotion(p_entity_id)) {
+        Locomotion::clear_path(*loco);
+    }
+    return true;
+}
+
+void CityPopulationDirector::clear_venue_routine(uint32_t p_entity_id) {
+    if (poi_registry) poi_registry->release_for_entity(p_entity_id);
+    AIData* ai = ledger ? ledger->try_get_ai(p_entity_id) : nullptr;
+    if (!ai) return;
+    AIController::reset_routine(*ai, true);
+}
+
+bool CityPopulationDirector::begin_venue_departure(uint32_t p_entity_id) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    const Entity* entity = ledger
+        ? ledger->get_entity_pool().get_entity(p_entity_id)
+        : nullptr;
+    auto venue = journey
+        ? active_venues.find(journey->venue_key)
+        : active_venues.end();
+    if (!journey || !entity || venue == active_venues.end()) return false;
+
+    refresh_venue_entrance_approaches(venue->second);
+    VenueEntranceApproach approach;
+    if (!select_departure_approach(
+            venue->second,
+            Vector3i(entity->x, entity->y, entity->z),
+            nullptr,
+            nullptr,
+            approach)) {
+        return false;
+    }
+    clear_venue_routine(p_entity_id);
+    journey->venue_entrance = approach.entrance;
+    journey->venue_road_access = approach.road_access;
+    journey->venue_route_failures = 0;
+    journey->venue_entrance_reached = false;
+    journey->phase = AmbientJourneyPhase::LEAVING_VENUE;
+    return true;
+}
+
+bool CityPopulationDirector::finish_venue_departure(uint32_t p_entity_id) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    const Entity* entity = ledger
+        ? ledger->get_entity_pool().get_entity(p_entity_id)
+        : nullptr;
+    if (!journey || !entity
+        || journey->venue_key == NO_AMBIENT_VENUE) return false;
+    reset_venue_assignment_state(p_entity_id, *journey, true);
+    return reroute_from(
+        p_entity_id, Vector3i(entity->x, entity->y, entity->z));
+}
+
+bool CityPopulationDirector::retry_or_abandon_venue(uint32_t p_entity_id) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    if (!journey || journey->venue_key == NO_AMBIENT_VENUE) return false;
+    ++journey->venue_route_failures;
+    if (journey->venue_route_failures < 3) {
+        auto venue = active_venues.find(journey->venue_key);
+        const Entity* entity = ledger
+            ? ledger->get_entity_pool().get_entity(p_entity_id)
+            : nullptr;
+        if (venue != active_venues.end() && entity) {
+            refresh_venue_entrance_approaches(venue->second);
+            const Vector3i current(entity->x, entity->y, entity->z);
+            const Vector3i previous_entrance = journey->venue_entrance;
+            const Vector3i previous_access = journey->venue_road_access;
+            VenueEntranceApproach approach;
+            if (journey->phase
+                == AmbientJourneyPhase::APPROACHING_VENUE) {
+                if (!is_road_position(current)) return true;
+                std::vector<Vector3i> route;
+                bool prepared = build_road_route_to_venue(
+                    current,
+                    venue->second,
+                    &previous_entrance,
+                    &previous_access,
+                    route,
+                    approach);
+                if (!prepared) {
+                    prepared = build_road_route_to_venue(
+                        current,
+                        venue->second,
+                        nullptr,
+                        nullptr,
+                        route,
+                        approach);
+                }
+                if (prepared) {
+                    journey->route = std::move(route);
+                    journey->route_index = 1;
+                    journey->venue_entrance = approach.entrance;
+                    journey->venue_road_access = approach.road_access;
+                    journey->venue_entrance_reached = false;
+                    journey->blocked_turns = 0;
+                    return true;
+                }
+            } else if (journey->phase
+                == AmbientJourneyPhase::LEAVING_VENUE) {
+                bool prepared = select_departure_approach(
+                    venue->second,
+                    current,
+                    &previous_entrance,
+                    &previous_access,
+                    approach);
+                if (!prepared) {
+                    prepared = select_departure_approach(
+                        venue->second,
+                        current,
+                        nullptr,
+                        nullptr,
+                        approach);
+                }
+                if (prepared) {
+                    journey->venue_entrance = approach.entrance;
+                    journey->venue_road_access = approach.road_access;
+                    journey->venue_entrance_reached = false;
+                    journey->blocked_turns = 0;
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+    clear_venue_assignment(p_entity_id, false);
+    return false;
+}
+
+void CityPopulationDirector::reset_venue_assignment_state(
+    uint32_t p_entity_id,
+    AmbientJourneyData& r_journey,
+    bool p_departing
+) {
+    auto venue = active_venues.find(r_journey.venue_key);
+    if (venue != active_venues.end()) {
+        venue->second.visitors.erase(p_entity_id);
+    }
+    clear_venue_routine(p_entity_id);
+    r_journey.venue_key = NO_AMBIENT_VENUE;
+    r_journey.venue_entrance = Vector3i();
+    r_journey.venue_road_access = Vector3i();
+    r_journey.venue_entry_activity = Vector3i();
+    r_journey.venue_leave_at_turn = 0;
+    r_journey.venue_route_failures = 0;
+    r_journey.venue_entrance_reached = false;
+    r_journey.wants_detour = false;
+    r_journey.detour_attempted = true;
+    r_journey.blocked_turns = 0;
+    r_journey.phase = AmbientJourneyPhase::FOLLOWING_ROUTE;
+    r_journey.departing = p_departing;
+}
+
+void CityPopulationDirector::clear_venue_assignment(
+    uint32_t p_entity_id,
+    bool p_resume_road
+) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    if (!journey) return;
+    reset_venue_assignment_state(p_entity_id, *journey, false);
+    if (p_resume_road) {
+        reroute(p_entity_id);
+    } else {
+        journey->route.clear();
+        journey->route_index = 1;
+    }
+}
+
 void CityPopulationDirector::release_for_entity(uint32_t p_entity_id) {
+    AmbientJourneyData* journey = get_journey(p_entity_id);
+    if (journey && journey->venue_key != NO_AMBIENT_VENUE) {
+        auto venue = active_venues.find(journey->venue_key);
+        if (venue != active_venues.end()) {
+            venue->second.visitors.erase(p_entity_id);
+        }
+    }
     if (poi_registry) poi_registry->release_for_entity(p_entity_id);
     release_road_reservation(p_entity_id);
     journeys.erase(p_entity_id);
@@ -1541,10 +2542,7 @@ bool CityPopulationDirector::promote(uint32_t p_entity_id) {
     AIData* ai = ledger->try_get_ai(p_entity_id);
     const Entity* entity = ledger->get_entity_pool().get_entity(p_entity_id);
     if (ai) {
-        ai->routine_has_target = false;
-        ai->routine_phase = RoutinePhase::SEEKING;
-        ai->routine_dwell_remaining = 0;
-        ai->routine_failed_attempts = 0;
+        AIController::reset_routine(*ai, true);
         ai->home_state = AIState::WANDER;
         if (entity) ai->home_position = Vector2i(entity->x, entity->y);
     }

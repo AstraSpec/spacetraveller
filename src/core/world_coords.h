@@ -31,6 +31,12 @@ struct WorldCoords {
         NEIGH_WEST = 1 << 3
     };
 
+    static inline int chunk_coord(int value) {
+        const int quotient = value / CHUNK_SIZE;
+        const int remainder = value % CHUNK_SIZE;
+        return remainder < 0 ? quotient - 1 : quotient;
+    }
+
     static inline uint64_t pack_coords(int x, int y) {
         return (static_cast<uint64_t>(static_cast<uint32_t>(x)) << 32) |
                static_cast<uint64_t>(static_cast<uint32_t>(y));

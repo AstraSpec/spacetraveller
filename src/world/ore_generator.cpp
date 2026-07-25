@@ -25,10 +25,6 @@ static int floor_mod(int p_value, int p_divisor) {
     return remainder < 0 ? remainder + std::abs(p_divisor) : remainder;
 }
 
-static int floor_div_chunk(int p_value) {
-    return floor_div(p_value, WorldCoords::CHUNK_SIZE);
-}
-
 static float smoothstep(float p_value) {
     return p_value * p_value * (3.0f - 2.0f * p_value);
 }
@@ -236,8 +232,8 @@ static bool candidate_precedes(const OreCandidate& p_a, const OreCandidate& p_b)
 OreMatch OreGenerator::find_match(int p_x, int p_y, int p_z, int p_world_seed) {
     OreMatch best;
     if (p_z >= 0) return best;
-    const int chunk_x = floor_div_chunk(p_x);
-    const int chunk_y = floor_div_chunk(p_y);
+    const int chunk_x = WorldCoords::chunk_coord(p_x);
+    const int chunk_y = WorldCoords::chunk_coord(p_y);
     ensure_seed(p_world_seed);
     if (!cached_query_neighborhood_valid || cached_query_chunk_x != chunk_x || cached_query_chunk_y != chunk_y) {
         int index = 0;

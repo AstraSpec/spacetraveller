@@ -33,6 +33,7 @@ signal editor_area_changed(size: Vector2i)
 @export var PoiDwellMin :SpinBox
 @export var PoiDwellMax :SpinBox
 @export var PoiWeight :SpinBox
+@export var PoiInitialVisitorSpawn :CheckBox
 @export var PoiWarning :Label
 @export var SelectionVisual :Line2D
 @export var editMenu :PopupMenu
@@ -1049,6 +1050,7 @@ func _set_poi_rule(world_pos: Vector2i) -> void:
 		"allowed_roles": roles,
 		"dwell_turns": [dwell_min, dwell_max],
 		"weight": weight,
+		"initial_visitor_spawn": PoiInitialVisitorSpawn.button_pressed if PoiInitialVisitorSpawn else false,
 		"pos": _rule_pos_array(local_pos)
 	}
 	_refresh_poi_markers()
@@ -1203,6 +1205,8 @@ func _apply_selected_content_options(type: String, rule: Dictionary, is_primary:
 				PoiDwellMax.value = int(dwell[1])
 		if PoiWeight:
 			PoiWeight.value = int(rule.get("weight", 1))
+		if PoiInitialVisitorSpawn:
+			PoiInitialVisitorSpawn.button_pressed = bool(rule.get("initial_visitor_spawn", false))
 		_set_poi_warning("")
 
 func _select_content_value(type: String, value: Variant, is_primary: bool) -> bool:
@@ -2047,6 +2051,9 @@ func _validate_grouped_structure_rules(levels_to_validate: Dictionary, size: Vec
 					return false
 				if !_is_valid_poi_weight(rule.get("weight", null)):
 					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires a positive integer weight.")
+					return false
+				if rule.has("initial_visitor_spawn") and !(rule["initial_visitor_spawn"] is bool):
+					push_error("POI rule " + str(rule_index) + " for structure '" + structure_id + "' requires boolean initial_visitor_spawn.")
 					return false
 				var seen_positions := {}
 				for position_variant in positions_variant:

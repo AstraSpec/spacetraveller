@@ -22,12 +22,6 @@
 
 using namespace godot;
 
-static int floor_div_chunk(int p_value) {
-    return (p_value >= 0)
-        ? (p_value / WorldCoords::CHUNK_SIZE)
-        : ((p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-}
-
 static Vector2i variant_to_vector2i(const Variant& p_value, const Vector2i& p_fallback = Vector2i()) {
     if (p_value.get_type() != Variant::ARRAY) {
         return p_fallback;
@@ -271,14 +265,14 @@ void WorldGenerator::stamp_dungeon_layout_biomes(const DungeonLayout& p_layout) 
     };
 
     auto stamp_cell = [&](int p_x, int p_y) {
-        stamp_chunk(floor_div_chunk(p_x), floor_div_chunk(p_y));
+        stamp_chunk(WorldCoords::chunk_coord(p_x), WorldCoords::chunk_coord(p_y));
     };
 
     for (const PlacedDungeonRoom& room : p_layout.rooms) {
-        const int min_cx = floor_div_chunk(room.bounds.origin.x);
-        const int min_cy = floor_div_chunk(room.bounds.origin.y);
-        const int max_cx = floor_div_chunk(room.bounds.origin.x + room.bounds.size.x - 1);
-        const int max_cy = floor_div_chunk(room.bounds.origin.y + room.bounds.size.y - 1);
+        const int min_cx = WorldCoords::chunk_coord(room.bounds.origin.x);
+        const int min_cy = WorldCoords::chunk_coord(room.bounds.origin.y);
+        const int max_cx = WorldCoords::chunk_coord(room.bounds.origin.x + room.bounds.size.x - 1);
+        const int max_cy = WorldCoords::chunk_coord(room.bounds.origin.y + room.bounds.size.y - 1);
         for (int cy = min_cy; cy <= max_cy; cy++) {
             for (int cx = min_cx; cx <= max_cx; cx++) {
                 stamp_chunk(cx, cy);
@@ -601,8 +595,9 @@ const WorldGenerator::SewerFeatureInstance* WorldGenerator::get_sewer_feature_in
     int world_seed
 ) {
     if (z != -2) return nullptr;
-    get_sewer_chunk_descriptor(floor_div_chunk(x), floor_div_chunk(y), world_seed);
-    const auto it = sewer_feature_cache.find(WorldCoords::pack_coords(floor_div_chunk(x), floor_div_chunk(y)));
+    get_sewer_chunk_descriptor(WorldCoords::chunk_coord(x), WorldCoords::chunk_coord(y), world_seed);
+    const auto it = sewer_feature_cache.find(WorldCoords::pack_coords(
+        WorldCoords::chunk_coord(x), WorldCoords::chunk_coord(y)));
     if (it == sewer_feature_cache.end()) return nullptr;
 
     for (const SewerFeatureInstance& instance : it->second) {
@@ -618,8 +613,8 @@ const WorldGenerator::SewerFeatureInstance* WorldGenerator::get_sewer_feature_in
 uint16_t WorldGenerator::get_sewer_tile(int x, int y, int z, int world_seed) {
     if (!sewer_generator || (z != 0 && z != -1 && z != -2)) return id_void;
     const SewerChunkDescriptor* descriptor = get_sewer_chunk_descriptor(
-        floor_div_chunk(x),
-        floor_div_chunk(y),
+        WorldCoords::chunk_coord(x),
+        WorldCoords::chunk_coord(y),
         world_seed
     );
     if (!descriptor) return id_void;
@@ -1350,8 +1345,8 @@ uint16_t WorldGenerator::get_alley_surface_tile(int p_local_x, int p_local_y, in
 
     ChunkDb* chunk_db = ChunkDb::get_singleton();
     const BiomeLayer* surface_layer = get_biome_layer(0);
-    const int chunk_x = floor_div_chunk(p_world_x);
-    const int chunk_y = floor_div_chunk(p_world_y);
+    const int chunk_x = WorldCoords::chunk_coord(p_world_x);
+    const int chunk_y = WorldCoords::chunk_coord(p_world_y);
 
     auto get_surface_chunk_id = [&](int p_chunk_x, int p_chunk_y) -> uint16_t {
         if (!surface_layer) return 0;
@@ -1460,8 +1455,8 @@ bool WorldGenerator::alley_garden_strip_has_building_entrance(
     WorldCoords::NeighborBits p_side,
     int p_world_seed
 ) const {
-    int adjacent_chunk_x = floor_div_chunk(p_world_x);
-    int adjacent_chunk_y = floor_div_chunk(p_world_y);
+    int adjacent_chunk_x = WorldCoords::chunk_coord(p_world_x);
+    int adjacent_chunk_y = WorldCoords::chunk_coord(p_world_y);
     uint8_t required_rotation = WorldCoords::ROT_SOUTH;
     int edge_coord = 0;
 
@@ -1549,12 +1544,13 @@ uint16_t WorldGenerator::get_biome_id_for_chunk(int p_chunk_x, int p_chunk_y, in
 }
 
 uint16_t WorldGenerator::get_biome_id_for_cell(int x, int y, int z, int world_seed) {
-    return get_biome_id_for_chunk(floor_div_chunk(x), floor_div_chunk(y), z, world_seed);
+    return get_biome_id_for_chunk(
+        WorldCoords::chunk_coord(x), WorldCoords::chunk_coord(y), z, world_seed);
 }
 
 uint16_t WorldGenerator::get_chunk_id_for_cell(int x, int y) const {
-    int cx = floor_div_chunk(x);
-    int cy = floor_div_chunk(y);
+    int cx = WorldCoords::chunk_coord(x);
+    int cy = WorldCoords::chunk_coord(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
     const BiomeLayer* layer = get_biome_layer(0);
     if (!layer) return id_void;
@@ -1564,8 +1560,8 @@ uint16_t WorldGenerator::get_chunk_id_for_cell(int x, int y) const {
 }
 
 uint8_t WorldGenerator::get_chunk_rotation_for_cell(int x, int y) const {
-    int cx = floor_div_chunk(x);
-    int cy = floor_div_chunk(y);
+    int cx = WorldCoords::chunk_coord(x);
+    int cy = WorldCoords::chunk_coord(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
     const BiomeLayer* layer = get_biome_layer(0);
     if (!layer) return WorldCoords::ROT_SOUTH;
@@ -1616,8 +1612,8 @@ String WorldGenerator::get_structure_id_for_cell(int x, int y, int z, int world_
 uint16_t WorldGenerator::get_base_surface_tile(int x, int y, int world_seed) {
     CityStructureContext city_structure = get_city_structure_context(x, y, 0);
 
-    int cx = floor_div_chunk(x);
-    int cy = floor_div_chunk(y);
+    int cx = WorldCoords::chunk_coord(x);
+    int cy = WorldCoords::chunk_coord(y);
     uint64_t chunk_key = WorldCoords::pack_coords(cx, cy);
 
     if (!last_chunk_valid || last_chunk_key != chunk_key) {
@@ -1741,7 +1737,8 @@ bool WorldGenerator::validate_surface_feature_anchor(
             const int world_x = p_origin.x + lx;
             const int world_y = p_origin.y + ly;
             if (p_require_source_chunk) {
-                if (floor_div_chunk(world_x) != p_source_chunk_x || floor_div_chunk(world_y) != p_source_chunk_y) {
+                if (WorldCoords::chunk_coord(world_x) != p_source_chunk_x
+                    || WorldCoords::chunk_coord(world_y) != p_source_chunk_y) {
                     return false;
                 }
             }
@@ -1775,8 +1772,8 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
     const BiomeLayer* feature_layer = get_biome_layer(z);
     if (!feature_layer) return false;
 
-    const int current_cx = floor_div_chunk(x);
-    const int current_cy = floor_div_chunk(y);
+    const int current_cx = WorldCoords::chunk_coord(x);
+    const int current_cy = WorldCoords::chunk_coord(y);
 
     auto get_chunk_data = [&](int p_chunk_x, int p_chunk_y, uint32_t& r_packed, uint16_t& r_chunk_id, uint8_t& r_neighbor_mask) -> bool {
         const uint64_t chunk_key = WorldCoords::pack_coords(p_chunk_x, p_chunk_y);
@@ -1879,7 +1876,9 @@ bool WorldGenerator::find_feature_at(int x, int y, int z, int world_seed, Surfac
                 owner_rotation
             );
             const Vector2i owner_origin(x - owner_local_pos.x, y - owner_local_pos.y);
-            const Vector2i owner_chunk(floor_div_chunk(owner_origin.x), floor_div_chunk(owner_origin.y));
+            const Vector2i owner_chunk(
+                WorldCoords::chunk_coord(owner_origin.x),
+                WorldCoords::chunk_coord(owner_origin.y));
             const uint64_t owner_key = WorldCoords::pack_coords(owner_chunk.x, owner_chunk.y) ^
                 static_cast<uint64_t>(owner_context.structure_id.hash());
             const Vector2i rotated_owner_size = get_rotated_surface_feature_size(owner_structure->size, owner_rotation);
@@ -2905,7 +2904,8 @@ SurfaceFeatureContext WorldGenerator::get_surface_feature_context(int x, int y, 
 }
 
 CityStructureContext WorldGenerator::get_city_structure_context(int x, int y, int z) const {
-    const uint64_t chunk_key = WorldCoords::pack_coords(floor_div_chunk(x), floor_div_chunk(y));
+    const uint64_t chunk_key = WorldCoords::pack_coords(
+        WorldCoords::chunk_coord(x), WorldCoords::chunk_coord(y));
     auto index_it = city_structure_by_chunk.find(chunk_key);
     if (index_it == city_structure_by_chunk.end() || index_it->second >= city_structure_instances.size()) {
         return CityStructureContext{};
@@ -3155,10 +3155,12 @@ void WorldGenerator::deserialize_city_structures(const Array& p_data) {
 
         const size_t index = city_structure_instances.size();
         city_structure_instances.push_back(instance);
-        const int min_chunk_x = floor_div_chunk(instance.origin.x);
-        const int min_chunk_y = floor_div_chunk(instance.origin.y);
-        const int max_chunk_x = floor_div_chunk(instance.origin.x + instance.placed_size.x - 1);
-        const int max_chunk_y = floor_div_chunk(instance.origin.y + instance.placed_size.y - 1);
+        const int min_chunk_x = WorldCoords::chunk_coord(instance.origin.x);
+        const int min_chunk_y = WorldCoords::chunk_coord(instance.origin.y);
+        const int max_chunk_x =
+            WorldCoords::chunk_coord(instance.origin.x + instance.placed_size.x - 1);
+        const int max_chunk_y =
+            WorldCoords::chunk_coord(instance.origin.y + instance.placed_size.y - 1);
         for (int chunk_y = min_chunk_y; chunk_y <= max_chunk_y; chunk_y++) {
             for (int chunk_x = min_chunk_x; chunk_x <= max_chunk_x; chunk_x++) {
                 city_structure_by_chunk[WorldCoords::pack_coords(chunk_x, chunk_y)] = index;

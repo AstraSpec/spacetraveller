@@ -111,6 +111,8 @@
     "tile_group": "grass_dirt",
     "city_spawn_weight": 5,
     "structure_type": "food_market",
+    "venue_visitor_capacity": 4,
+    "venue_visit_turns": [ 150, 450 ],
     "feature_spawns": [
       {
         "pool": "food_market_fruit_stall",
@@ -160,6 +162,8 @@
     "tile_group": "grass_dirt",
     "city_spawn_weight": 3,
     "structure_type": "equipment_market",
+    "venue_visitor_capacity": 3,
+    "venue_visit_turns": [ 150, 450 ],
     "feature_spawns": [
       {
         "pool": "equipment_market_weapon_stall",
@@ -209,6 +213,8 @@
     "atlas": [ 60, 8 ],
     "tile_group": "grass_dirt",
     "structure_type": "tavern",
+    "venue_visitor_capacity": 5,
+    "venue_visit_turns": [ 200, 1000 ],
     "city_spawn_weight": 5,
     "city_zone_min": 0.0,
     "city_zone_max": 0.45,

@@ -1,6 +1,7 @@
 #include "chunk_db.h"
 #include "core/id_registry.h"
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
 
 namespace godot {
@@ -93,6 +94,27 @@ ChunkInfo ChunkDb::_parse_row(const Dictionary &p_data) {
     info.structure_type = String(p_data.get("structure_type", ""));
     info.dungeon_type = String(p_data.get("dungeon_type", ""));
     info.tile_group = String(p_data.get("tile_group", ""));
+    info.venue_visitor_capacity = std::max(
+        0, static_cast<int>(p_data.get("venue_visitor_capacity", 0)));
+    Variant venue_visit_var = p_data.get("venue_visit_turns", Array());
+    if (venue_visit_var.get_type() == Variant::ARRAY) {
+        Array venue_visit = venue_visit_var;
+        if (venue_visit.size() == 2) {
+            info.venue_visit_min = std::max(0, static_cast<int>(venue_visit[0]));
+            info.venue_visit_max = std::max(0, static_cast<int>(venue_visit[1]));
+            if (info.venue_visit_min > info.venue_visit_max) {
+                info.venue_visit_min = 0;
+                info.venue_visit_max = 0;
+            }
+        }
+    }
+    if (info.venue_visitor_capacity > 0
+        && (info.venue_visit_min <= 0 || info.venue_visit_max <= 0)) {
+        UtilityFunctions::push_error(
+            "[ChunkDb] Venue chunk ", String(p_data.get("id", "")),
+            " requires venue_visit_turns [minimum, maximum] with 0 < minimum <= maximum.");
+        info.venue_visitor_capacity = 0;
+    }
     
     info.ambient_entity_group = String(p_data.get("ambient_entity_group", ""));
     info.ambient_entity_chance = static_cast<float>(static_cast<double>(p_data.get("ambient_entity_chance", 0.0)));

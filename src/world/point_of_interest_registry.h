@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace godot {
@@ -33,12 +34,20 @@ struct PointOfInterestInfo {
     int dwell_min = 1;
     int dwell_max = 1;
     int weight = 1;
+    bool initial_visitor_spawn = false;
 };
 
 class PointOfInterestRegistry {
     std::unordered_map<uint64_t, PointOfInterestInfo> points;
+    std::unordered_map<uint64_t, std::unordered_set<uint64_t>> points_by_chunk;
     std::unordered_map<uint64_t, uint32_t> reservations;
     std::unordered_map<uint32_t, uint64_t> entity_reservations;
+
+    bool is_available_to_roles(
+        uint64_t p_point_key,
+        const PointOfInterestInfo& p_info,
+        const Array& p_roles
+    ) const;
 
 public:
     void clear();
@@ -63,6 +72,20 @@ public:
         const Array& p_roles,
         const std::vector<String>& p_tags
     ) const;
+    std::vector<Vector3i> find_compatible_in_chunk(
+        const Vector3i& p_chunk,
+        const Array& p_roles,
+        const Vector3i& p_last_position,
+        bool p_has_last_position
+    ) const;
+    std::vector<Vector3i> find_in_chunk(const Vector3i& p_chunk) const;
+    bool is_reserved(const Vector3i& p_position) const;
+    bool try_reserve_weighted(
+        std::vector<Vector3i> p_candidates,
+        uint32_t p_entity_id,
+        double p_normalized_roll,
+        Vector3i& r_selected
+    );
 
     bool try_reserve(const Vector3i& p_position, uint32_t p_entity_id);
     bool is_reserved_by(const Vector3i& p_position, uint32_t p_entity_id) const;

@@ -36,13 +36,6 @@
     ]
   },
   {
-    "id": "tavern_patron",
-    "entries": [
-      { "none": true, "weight": 2 },
-      { "entity": "human", "weight": 3, "job": "villager" }
-    ]
-  },
-  {
     "id": "generic_merchants",
     "entries": [
       { "entity": "human", "weight": 1, "job": "merchant_church" },

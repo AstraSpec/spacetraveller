@@ -371,6 +371,8 @@ static void parse_rules(
                     rule.poi_weight)) {
                 continue;
             }
+            rule.poi_initial_visitor_spawn =
+                static_cast<bool>(rule_data.get("initial_visitor_spawn", false));
         }
 
         String loot_table = String(rule_data.get("loot_table", ""));

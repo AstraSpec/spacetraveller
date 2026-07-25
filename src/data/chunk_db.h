@@ -37,6 +37,9 @@ struct ChunkInfo {
     String structure_type;
     String dungeon_type;
     String tile_group;
+    int venue_visitor_capacity = 0;
+    int venue_visit_min = 0;
+    int venue_visit_max = 0;
     String ambient_entity_group;
     float ambient_entity_chance = 0.0f;
     uint16_t ambient_loot_table = 0;

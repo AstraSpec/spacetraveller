@@ -45,12 +45,6 @@ static bool tile_has_ground_tag(uint16_t p_tile_id) {
     return tile && ground_tag_id != 0 && TagRegistry::has_tag(ground_tag_id, tile->tags);
 }
 
-static int floor_div_chunk(int p_value) {
-    return (p_value >= 0)
-        ? (p_value / WorldCoords::CHUNK_SIZE)
-        : ((p_value - (WorldCoords::CHUNK_SIZE - 1)) / WorldCoords::CHUNK_SIZE);
-}
-
 static Vector2i resolve_structure_rule_local(const Vector2i& p_structure_pos, uint8_t p_rotation) {
     int max_coord = WorldCoords::CHUNK_SIZE - 1;
     switch (p_rotation) {
@@ -781,8 +775,8 @@ void WorldSpawner::spawn_for_active_cells(
                 }
                 const StructureLevelInfo& level = level_it->second;
 
-                int chunk_x = floor_div_chunk(pos.x);
-                int chunk_y = floor_div_chunk(pos.y);
+                int chunk_x = WorldCoords::chunk_coord(pos.x);
+                int chunk_y = WorldCoords::chunk_coord(pos.y);
                 Vector2i local_pos(
                     pos.x - chunk_x * WorldCoords::CHUNK_SIZE,
                     pos.y - chunk_y * WorldCoords::CHUNK_SIZE

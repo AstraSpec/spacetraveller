@@ -124,9 +124,7 @@ bool SimulationDirector::start_entity_follow(uint32_t entity_id) {
     AllegianceData* allegiance = d.ledger->try_get_allegiance(entity_id);
     if (!allegiance) return false;
     if (d.poi_registry) d.poi_registry->release_for_entity(entity_id);
-    ai->routine_has_target = false;
-    ai->routine_phase = RoutinePhase::SEEKING;
-    ai->routine_dwell_remaining = 0;
+    AIController::reset_routine(*ai, true);
     allegiance->faction_id = "player";
     allegiance->personal_relations[d.player_entity_id] = EntityRelation::FRIENDLY;
     ai->state = AIState::FOLLOW;
@@ -158,10 +156,7 @@ bool SimulationDirector::set_entity_behavior(uint32_t entity_id, const String& s
         }
     }
     if (d.poi_registry) d.poi_registry->release_for_entity(entity_id);
-    ai->routine_has_target = false;
-    ai->routine_phase = RoutinePhase::SEEKING;
-    ai->routine_dwell_remaining = 0;
-    ai->routine_failed_attempts = 0;
+    AIController::reset_routine(*ai, true);
     ai->target_entity_id = needs_target ? target_id : EntityPool::INVALID_ID;
     if (next_state == AIState::FOLLOW) {
         ai->follow_leader_id = target_id;
@@ -854,10 +849,7 @@ void SimulationDirector::notify_attack(uint32_t attacker_id, uint32_t defender_i
         set_entity_relation(observer_id, attacker_id, "hostile");
         if (ai->reaction_policy == ReactionPolicy::PASSIVE) continue;
         if (d.poi_registry) d.poi_registry->release_for_entity(observer_id);
-        ai->routine_has_target = false;
-        ai->routine_phase = RoutinePhase::SEEKING;
-        ai->routine_dwell_remaining = 0;
-        ai->routine_failed_attempts = 0;
+        AIController::reset_routine(*ai, true);
         ai->target_entity_id = attacker_id;
         ai->last_known_target_position = Vector2i(attacker->x, attacker->y);
         ai->has_last_known_target_position = true;

@@ -13,7 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://bfmpebkm2x04c" path="res://src/structure_editor/structure_button.tscn" id="11_btns"]
 [ext_resource type="Script" path="res://src/structure_editor/group_list.gd" id="12_group"]
 
-[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileSearch", "TileGrid", "TileGroupList", "ItemSearch", "ItemGrid", "ItemGroupList", "NpcSearch", "NpcGrid", "NpcGroupList", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "PoiTagsText", "PoiRolesText", "PoiDwellMin", "PoiDwellMax", "PoiWeight", "PoiWarning", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
+[node name="StructureEditor" type="Node2D" node_paths=PackedStringArray("Editor", "TileIDLabel1", "TileIDLabel2", "TileSearch", "TileGrid", "TileGroupList", "ItemSearch", "ItemGrid", "ItemGroupList", "NpcSearch", "NpcGrid", "NpcGroupList", "ContentTabs", "ItemAmountInput", "NpcJobContainer", "NpcJobText", "NpcJobPopup", "NpcDialogueContainer", "NpcDialogueText", "NpcDialoguePopup", "TileGroupCheck", "LootGroupCheck", "EntityGroupCheck", "PoiTagsText", "PoiRolesText", "PoiDwellMin", "PoiDwellMax", "PoiWeight", "PoiInitialVisitorSpawn", "PoiWarning", "SelectionVisual", "editMenu", "chunkMenu", "ToolOptions", "LoadWindow", "SetTypeWindow", "CoordsLabel", "ChunkVisual", "ZLevelLabel")]
 script = ExtResource("1_urqvf")
 Editor = NodePath("Editor")
 TileIDLabel1 = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TileIDLabel1")
@@ -43,6 +43,7 @@ PoiRolesText = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContain
 PoiDwellMin = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer/PoiDwellMin")
 PoiDwellMax = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/DwellContainer/PoiDwellMax")
 PoiWeight = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiWeight")
+PoiInitialVisitorSpawn = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiInitialVisitorSpawn")
 PoiWarning = NodePath("Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs/PoiWarning")
 SelectionVisual = NodePath("SelectionVisual")
 editMenu = NodePath("Canvas/HBoxContainer/MenuBar/Edit")
@@ -324,6 +325,10 @@ layout_mode = 2
 min_value = 1.0
 max_value = 999.0
 value = 1.0
+
+[node name="PoiInitialVisitorSpawn" type="CheckBox" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
+layout_mode = 2
+text = "Initial visitor spawn"
 
 [node name="PoiWarning" type="Label" parent="Canvas/MarginContainer/AspectRatioContainer/VBoxContainer/TabContainer/POIs"]
 visible = false

@@ -53,6 +53,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }
@@ -130,6 +131,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }
@@ -198,6 +200,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }
@@ -264,6 +267,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }
@@ -330,6 +334,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3
                     }
@@ -397,6 +402,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }
@@ -464,6 +470,7 @@
                         "tags": [
                             "shopping"
                         ],
+                        "initial_visitor_spawn": true,
                         "type": "point_of_interest",
                         "weight": 3.0
                     }

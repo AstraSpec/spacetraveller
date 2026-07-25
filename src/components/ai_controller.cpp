@@ -219,6 +219,23 @@ Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx
     return move_toward(ai, loco, ctx, wander_goal, 0);
 }
 
+void AIController::reset_routine(
+    AIData& ai,
+    bool clear_history,
+    int retry_turns
+) {
+    ai.routine_has_target = false;
+    ai.routine_target = Vector3i();
+    ai.routine_phase = RoutinePhase::SEEKING;
+    ai.routine_dwell_remaining = 0;
+    ai.routine_retry_turns = std::max(0, retry_turns);
+    ai.routine_failed_attempts = 0;
+    if (clear_history) {
+        ai.routine_has_last_position = false;
+        ai.routine_last_position = Vector3i();
+    }
+}
+
 Dictionary AIController::serialize(const AIData& data) {
     Dictionary d;
     d["state"] = state_to_string(data.state);
