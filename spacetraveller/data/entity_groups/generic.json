@@ -55,8 +55,7 @@
       {
         "entity": "human",
         "weight": 1,
-        "job": "villager",
-        "dialogue_id": "villager_outside"
+        "job": "villager"
       }
     ]
   },

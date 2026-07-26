@@ -15,7 +15,7 @@
         "id": "tavern",
         "levels": {
             "0": {
-                "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 44x0)",
+                "blueprint": "(50x0, 13x1, 1x2, 3x1, 1x3, 2x1, 4x0, 1x1, 1x4, 1x5, 1x6, 1x1, 1x4, 1x5, 1x6, 1x1, 1x7, 1x5, 2x6, 1x5, 1x8, 1x6, 1x9, 2x5, 1x1, 4x0, 1x1, 2x5, 1x10, 1x1, 2x5, 1x10, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 1x1, 1x11, 2x5, 1x1, 1x11, 2x5, 1x1, 7x5, 1x9, 2x5, 1x2, 4x0, 3x1, 1x3, 3x1, 1x3, 1x1, 1x5, 7x9, 2x5, 1x1, 4x0, 1x2, 1x12, 1x13, 5x5, 1x1, 10x5, 1x1, 4x0, 7x1, 1x3, 1x1, 10x5, 1x1, 4x0, 1x1, 11x5, 1x10, 6x5, 1x1, 4x0, 1x1, 3x5, 1x10, 7x5, 2x6, 1x10, 4x5, 1x1, 4x0, 1x2, 1x5, 1x10, 2x6, 1x10, 5x5, 1x10, 2x6, 5x5, 1x2, 4x0, 1x2, 2x5, 2x6, 8x5, 1x10, 5x5, 1x2, 4x0, 1x1, 2x5, 2x10, 14x5, 1x1, 4x0, 1x1, 18x5, 1x1, 4x0, 1x1, 6x5, 2x10, 10x5, 1x1, 4x0, 1x2, 5x5, 1x10, 2x6, 1x10, 9x5, 1x1, 4x0, 1x2, 6x5, 2x6, 1x10, 9x5, 1x1, 4x0, 1x1, 6x5, 2x10, 4x5, 1x1, 1x3, 1x1, 1x3, 1x1, 1x3, 1x1, 4x0, 1x1, 12x5, 1x1, 1x5, 1x1, 1x5, 1x1, 1x5, 1x1, 4x0, 1x1, 12x5, 1x1, 1x14, 1x1, 1x14, 1x1, 1x14, 1x1, 4x0, 3x1, 2x3, 15x1, 5x0, 1x15, 1x0, 2x16, 22x0, 2x16, 17x0)",
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_wall"},
@@ -32,7 +32,8 @@
                     {"tile": "stairs_up"},
                     {"tile": "stairs_down"},
                     {"tile": "toilet"},
-                    {"tile": "hanging_sign"}
+                    {"tile": "hanging_sign"},
+                    {"tile": "road_flagstone"}
                 ],
                 "rules": [
                     {
@@ -55,12 +56,13 @@
                             "villager"
                         ],
                         "dwell_turns": [
-                            40.0,
-                            75.0
+                            15.0,
+                            200.0
                         ],
                         "initial_visitor_spawn": true,
                         "positions": [ [ 11, 16 ], [ 13, 11 ], [ 16, 10 ], [ 6, 10 ], [ 7, 11 ], [ 9, 15 ] ],
                         "tags": [
+                            "tavern",
                             "seating",
                             "social"
                         ],
@@ -78,6 +80,7 @@
                         "initial_visitor_spawn": true,
                         "positions": [ [ 12, 7 ], [ 15, 7 ], [ 17, 7 ] ],
                         "tags": [
+                            "tavern",
                             "drink",
                             "social"
                         ],
@@ -89,8 +92,8 @@
                             "tavern_worker"
                         ],
                         "dwell_turns": [
-                            30,
-                            60
+                            30.0,
+                            60.0
                         ],
                         "initial_visitor_spawn": false,
                         "positions": [ [ 13, 5 ], [ 15, 5 ], [ 17, 5 ] ],
@@ -98,7 +101,7 @@
                             "work"
                         ],
                         "type": "point_of_interest",
-                        "weight": 1
+                        "weight": 1.0
                     },
                     {
                         "allowed_roles": [
@@ -110,6 +113,7 @@
                         ],
                         "positions": [ [ 18, 20 ], [ 20, 20 ] ],
                         "tags": [
+                            "tavern",
                             "toilet",
                             "private"
                         ],

@@ -1,6 +1,9 @@
 {
   "id": "villager_tavern",
   "priority": 100,
+  "constraints": {
+    "poi_tag": "tavern"
+  },
   "start": "start",
   "nodes": {
     "start": {

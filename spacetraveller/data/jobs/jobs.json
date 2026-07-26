@@ -210,7 +210,7 @@
   },
   "villager": {
     "display_name": "Villager",
-    "dialogues": ["villager_tavern"],
+    "dialogues": ["villager_tavern", "villager_market", "villager_outside"],
     "reaction_policy": "defensive",
     "faction": "settlement",
     "default_ai_state": "wander",

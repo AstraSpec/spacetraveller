@@ -35,7 +35,8 @@ func has_dialogue_for(world, target_id: int) -> bool:
 	return not _dialogue_candidates(world, target_id).is_empty()
 
 func start_state(world, target_id: int, saved: Dictionary = {}) -> Dictionary:
-	if _is_saved_state_valid(saved):
+	var dialogue := _pick_dialogue(world, target_id)
+	if _is_saved_state_valid(saved) and _state_uses_dialogue(saved, dialogue):
 		var restored := saved.duplicate(true)
 		var resume_node := str(restored.get("resume_node", ""))
 		if not resume_node.is_empty():
@@ -44,7 +45,6 @@ func start_state(world, target_id: int, saved: Dictionary = {}) -> Dictionary:
 			if saved_nodes.has(resume_node):
 				restored["node_id"] = resume_node
 		return restored
-	var dialogue := _pick_dialogue(world, target_id)
 	if dialogue.is_empty():
 		return {}
 	return {
@@ -142,6 +142,12 @@ func _is_saved_state_valid(saved: Dictionary) -> bool:
 	var nodes: Dictionary = _dialogues_by_id[did].get("nodes", {})
 	return nodes.has(nid)
 
+func _state_uses_dialogue(state: Dictionary, dialogue: Dictionary) -> bool:
+	return (
+		not dialogue.is_empty()
+		and str(state.get("dialogue_id", "")) == str(dialogue.get("id", ""))
+	)
+
 func _pick_dialogue(world: Node, target_id: int) -> Dictionary:
 	var candidates := _dialogue_candidates(world, target_id)
 	if candidates.is_empty():
@@ -184,7 +190,9 @@ func _dialogue_candidates(world: Node, target_id: int) -> Array:
 		for job_dialogue_id in JobDb.get_dialogues(job):
 			dialogue_id = str(job_dialogue_id).strip_edges()
 			if not dialogue_id.is_empty() and _dialogues_by_id.has(dialogue_id):
-				candidates.append(_dialogues_by_id[dialogue_id])
+				var dialogue: Dictionary = _dialogues_by_id[dialogue_id]
+				if _dict_constraints_pass(dialogue.get("constraints", {}), ctx):
+					candidates.append(dialogue)
 	if not candidates.is_empty():
 		return candidates
 	if _dialogues_by_id.has(FALLBACK_DIALOGUE_ID):
@@ -206,6 +214,15 @@ func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
 	if c.has("job") and str(c["job"]) != str(ctx.get("job", "")):
 		return false
 	if c.has("trait") and not Array(ctx.get("traits", [])).has(str(c["trait"])):
+		return false
+	var poi_tags: Array = ctx.get("poi_tags", [])
+	if c.has("poi_tag") and not poi_tags.has(str(c["poi_tag"])):
+		return false
+	if c.has("poi_tags_any") and not _has_any_tag(poi_tags, c["poi_tags_any"]):
+		return false
+	if c.has("poi_tags_all") and not _has_all_tags(poi_tags, c["poi_tags_all"]):
+		return false
+	if c.has("not_poi_tags") and _has_any_tag(poi_tags, c["not_poi_tags"]):
 		return false
 	if c.has("min_friendship") and int(ctx.get("friendship", 0)) < int(c["min_friendship"]):
 		return false
@@ -247,6 +264,27 @@ func _dict_constraints_pass(c: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	return true
 
+func _has_any_tag(actual: Array, required) -> bool:
+	for tag in _constraint_values(required):
+		if actual.has(tag):
+			return true
+	return false
+
+func _has_all_tags(actual: Array, required) -> bool:
+	for tag in _constraint_values(required):
+		if not actual.has(tag):
+			return false
+	return true
+
+func _constraint_values(value) -> Array:
+	var result: Array = []
+	if value is Array:
+		for entry in value:
+			result.append(str(entry))
+	else:
+		result.append(str(value))
+	return result
+
 func _build_context(world, target_id: int) -> Dictionary:
 	var anatomy: Dictionary = world.get_entity_anatomy(target_id) if world else {}
 	var profile: Dictionary = world.get_entity_social_profile(target_id) if world and world.has_method("get_entity_social_profile") else {}
@@ -264,6 +302,7 @@ func _build_context(world, target_id: int) -> Dictionary:
 		"dialogue_id": str(profile.get("dialogue_id", "")),
 		"traits": profile.get("traits", []),
 		"context_tags": profile.get("context_tags", []),
+		"poi_tags": world.get_entity_active_poi_tags(target_id) if world and world.has_method("get_entity_active_poi_tags") else [],
 		"friendship": int(world.get_entity_friendship(target_id)) if world else 0,
 		"romance": int(world.get_entity_romance(target_id)) if world else 0,
 		"player_stamina": float(stamina.get("current_stamina", 0.0)),

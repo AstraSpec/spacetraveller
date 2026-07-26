@@ -164,6 +164,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_effects", "entity_id"), &GameWorld::get_entity_effects);
     ClassDB::bind_method(D_METHOD("get_player_effects"), &GameWorld::get_player_effects);
     ClassDB::bind_method(D_METHOD("get_entity_social_profile", "entity_id"), &GameWorld::get_entity_social_profile);
+    ClassDB::bind_method(D_METHOD("get_entity_active_poi_tags", "entity_id"), &GameWorld::get_entity_active_poi_tags);
 
     ClassDB::bind_method(D_METHOD("add_overlay", "x", "y", "atlas_x", "atlas_y", "color", "lifetime", "always_visible"), &GameWorld::add_overlay, DEFVAL(-1.0f), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("remove_overlay", "x", "y"), &GameWorld::remove_overlay);
@@ -1218,6 +1219,35 @@ Dictionary GameWorld::get_player_effects() const {
 
 Dictionary GameWorld::get_entity_social_profile(uint32_t entity_id) const {
     return entity_ledger.get_social_profile(entity_id);
+}
+
+Array GameWorld::get_entity_active_poi_tags(uint32_t entity_id) const {
+    Array result;
+    const Entity* entity = entity_ledger.get_entity_pool().get_entity(entity_id);
+    if (!entity) return result;
+
+    const Vector3i position(entity->x, entity->y, entity->z);
+    const PointOfInterestInfo* point = nullptr;
+    const AIData* ai = entity_ledger.try_get_ai(entity_id);
+    if (ai
+        && ai->routine_has_target
+        && ai->routine_phase == RoutinePhase::DWELLING
+        && ai->routine_target == position) {
+        point = poi_registry.get(ai->routine_target);
+    } else {
+        const AmbientJourneyData* journey = city_population.get_journey(entity_id);
+        if (journey
+            && journey->phase == AmbientJourneyPhase::DWELLING
+            && journey->detour_target == position) {
+            point = poi_registry.get(journey->detour_target);
+        }
+    }
+
+    if (!point) return result;
+    for (const String& tag : point->tags) {
+        result.push_back(tag);
+    }
+    return result;
 }
 
 void GameWorld::add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime, bool always_visible) {

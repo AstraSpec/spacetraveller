@@ -254,6 +254,7 @@ public:
     Dictionary get_entity_effects(uint32_t entity_id) const;
     Dictionary get_player_effects() const;
     Dictionary get_entity_social_profile(uint32_t entity_id) const;
+    Array get_entity_active_poi_tags(uint32_t entity_id) const;
 
     void add_overlay(int x, int y, int atlas_x, int atlas_y, const Color& color, float lifetime, bool always_visible);
     void remove_overlay(int x, int y);
