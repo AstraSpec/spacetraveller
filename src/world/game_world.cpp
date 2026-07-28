@@ -215,6 +215,11 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("would_player_move_fall", "target_x", "target_y"), &GameWorld::would_player_move_fall);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
     ClassDB::bind_method(D_METHOD("submit_player_targeted_attack", "target_id", "ability_id", "body_part_index"), &GameWorld::submit_player_targeted_attack);
+    ClassDB::bind_method(D_METHOD("get_player_movement_mode"), &GameWorld::get_player_movement_mode);
+    ClassDB::bind_method(D_METHOD("set_player_movement_mode", "mode_id"), &GameWorld::set_player_movement_mode);
+    ClassDB::bind_method(D_METHOD("toggle_player_run"), &GameWorld::toggle_player_run);
+    ClassDB::bind_method(D_METHOD("get_player_movement_mode_options"), &GameWorld::get_player_movement_mode_options);
+    ClassDB::bind_method(D_METHOD("get_entity_effective_movement_speed", "entity_id"), &GameWorld::get_entity_effective_movement_speed);
     ClassDB::bind_method(D_METHOD("can_change_z", "entity_id", "delta"), &GameWorld::can_change_z);
     ClassDB::bind_method(D_METHOD("submit_player_change_z", "delta"), &GameWorld::submit_player_change_z);
     ClassDB::bind_method(D_METHOD("is_entity_hostile_to", "entity_id", "target_id"), &GameWorld::is_entity_hostile_to);
@@ -242,6 +247,9 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::INT, "entity_id"),
         PropertyInfo(Variant::FLOAT, "cost"),
         PropertyInfo(Variant::FLOAT, "next_turn_time")));
+    ADD_SIGNAL(MethodInfo("player_movement_mode_changed",
+        PropertyInfo(Variant::STRING, "mode_id"),
+        PropertyInfo(Variant::STRING, "reason")));
     ADD_SIGNAL(MethodInfo("combat_event",
         PropertyInfo(Variant::INT, "attacker_id"),
         PropertyInfo(Variant::INT, "defender_id"),
@@ -741,6 +749,18 @@ Dictionary GameWorld::inspect_cell(const Vector2i& pos) const {
             else if (fraction >= 0.35f) entity_view["health"] = "Wounded";
             else entity_view["health"] = "Badly wounded";
         }
+        if (entity_id != player_entity_id) {
+            const float player_speed = sim_director.get_entity_effective_movement_speed(player_entity_id);
+            const float entity_speed = sim_director.get_entity_effective_movement_speed(entity_id);
+            if (player_speed > 0.0f && entity_speed > 0.0f) {
+                const float ratio = entity_speed / player_speed;
+                if (ratio < 0.5f) entity_view["relative_speed"] = "Much slower than you";
+                else if (ratio < 0.9f) entity_view["relative_speed"] = "Slower than you";
+                else if (ratio <= 1.1f) entity_view["relative_speed"] = "About as fast as you";
+                else if (ratio <= 2.0f) entity_view["relative_speed"] = "Faster than you";
+                else entity_view["relative_speed"] = "Much faster than you";
+            }
+        }
         result["entity"] = entity_view;
     }
 
@@ -1129,6 +1149,26 @@ float GameWorld::submit_player_targeted_attack(int target_id, const String& abil
     );
 }
 
+String GameWorld::get_player_movement_mode() const {
+    return sim_director.get_player_movement_mode();
+}
+
+bool GameWorld::set_player_movement_mode(const String& mode_id) {
+    return sim_director.set_player_movement_mode(mode_id);
+}
+
+bool GameWorld::toggle_player_run() {
+    return sim_director.toggle_player_run();
+}
+
+Array GameWorld::get_player_movement_mode_options() const {
+    return sim_director.get_player_movement_mode_options();
+}
+
+float GameWorld::get_entity_effective_movement_speed(uint32_t entity_id) const {
+    return sim_director.get_entity_effective_movement_speed(entity_id);
+}
+
 bool GameWorld::is_entity_hostile_to(int entity_id, int target_id) const {
     if (entity_id < 0 || target_id < 0) return false;
     return sim_director.entity_is_hostile_to(static_cast<uint32_t>(entity_id), static_cast<uint32_t>(target_id));
@@ -1235,6 +1275,10 @@ void GameWorld::on_player_turn_ready(uint32_t entity_id) {
 
 void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) {
     emit_signal("player_action_resolved", entity_id, cost, next_turn_time);
+}
+
+void GameWorld::on_player_movement_mode_changed(const String& mode_id, const String& reason) {
+    emit_signal("player_movement_mode_changed", mode_id, reason);
 }
 
 void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) {

@@ -16,6 +16,7 @@ public:
     virtual void on_entity_died(uint32_t entity_id, const String& cause) = 0;
     virtual void on_player_turn_ready(uint32_t entity_id) = 0;
     virtual void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) = 0;
+    virtual void on_player_movement_mode_changed(const String& mode_id, const String& reason) = 0;
     virtual void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) = 0;
     virtual void on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) = 0;
     virtual void on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) = 0;

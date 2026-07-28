@@ -43,6 +43,8 @@ enum class ActionFailure {
 struct ActionResult {
     bool success = false;
     float cost = 0.0f;
+    float stamina_cost = 0.0f;
+    bool suppress_stamina_recovery = false;
     ActionFailure failure = ActionFailure::NONE;
     int amount = 0;
 

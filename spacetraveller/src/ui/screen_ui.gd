@@ -35,6 +35,8 @@ const COLOR_DANGER := Color(0.89, 0.43, 0.43, 1.0)
 @onready var CreatureName: Label = $Look/VBoxContainer/CreatureSection/Grid/NameValue
 @onready var AttitudeLabel: Label = $Look/VBoxContainer/CreatureSection/Grid/AttitudeLabel
 @onready var AttitudeValue: Label = $Look/VBoxContainer/CreatureSection/Grid/AttitudeValue
+@onready var SpeedLabel: Label = $Look/VBoxContainer/CreatureSection/Grid/SpeedLabel
+@onready var SpeedValue: Label = $Look/VBoxContainer/CreatureSection/Grid/SpeedValue
 @onready var ItemsSection: VBoxContainer = $Look/VBoxContainer/ItemsSection
 @onready var ItemsTitle: Label = $Look/VBoxContainer/ItemsSection/SectionTitle
 @onready var ItemsList: VBoxContainer = $Look/VBoxContainer/ItemsSection/ItemsList
@@ -55,6 +57,7 @@ func _ready() -> void:
 		_GameWorld.smash_event.connect(_on_smash_event)
 		_GameWorld.effect_event.connect(_on_effect_event)
 		_GameWorld.interact_event.connect(_on_interact_event)
+		_GameWorld.player_movement_mode_changed.connect(_on_player_movement_mode_changed)
 	if QuestService.quest_completed.is_connected(_on_quest_completed) == false:
 		QuestService.quest_completed.connect(_on_quest_completed)
 	if QuestService.quest_failed.is_connected(_on_quest_failed) == false:
@@ -371,6 +374,10 @@ func _render_inspection(inspection: Dictionary) -> void:
 		AttitudeValue.visible = show_attitude
 		AttitudeValue.text = relation.capitalize()
 		AttitudeValue.add_theme_color_override("font_color", relation_color)
+		var relative_speed := str(entity.get("relative_speed", ""))
+		SpeedLabel.visible = not relative_speed.is_empty()
+		SpeedValue.visible = not relative_speed.is_empty()
+		SpeedValue.text = relative_speed
 
 	var items: Array = inspection.get("items", [])
 	_render_items(items)
@@ -380,6 +387,9 @@ func _render_inspection(inspection: Dictionary) -> void:
 	if not metadata_text.is_empty():
 		TextSection.visible = true
 		WorldText.text = '“%s”' % metadata_text
+
+func _on_player_movement_mode_changed(_mode_id: String, _reason: String) -> void:
+	_refresh_inspection()
 
 func _render_items(items: Array) -> void:
 	for child in ItemsList.get_children():

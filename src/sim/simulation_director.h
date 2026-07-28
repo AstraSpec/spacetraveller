@@ -69,6 +69,11 @@ public:
     bool submit_player_unwield(const String& slot_name);
     bool submit_player_wear(const String& item_id);
     bool submit_player_remove_clothing(const String& item_id);
+    String get_player_movement_mode() const;
+    bool set_player_movement_mode(const String& mode_id, const String& reason = "selected");
+    bool toggle_player_run();
+    Array get_player_movement_mode_options() const;
+    float get_entity_effective_movement_speed(uint32_t entity_id) const;
 
     Array find_path(const Vector2i& start, const Vector2i& goal);
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
@@ -112,9 +117,17 @@ private:
     void notify_attack(uint32_t attacker_id, uint32_t defender_id);
     float execute_player_intent(Intent intent);
     void handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id);
-    bool finish_entity_action(uint32_t entity_id, float cost, float base_time);
+    bool finish_entity_action(
+        uint32_t entity_id,
+        float cost,
+        float base_time,
+        float stamina_cost = 0.0f,
+        bool suppress_stamina_recovery = false
+    );
     void emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos);
     float movement_action_cost(uint32_t entity_id, float base_cost, const LocomotionData& loco) const;
+    bool can_player_run() const;
+    void force_player_walk_if_exhausted();
     void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk);
     void advance_entity_time(uint32_t entity_id, float dt);
     float entity_base_damage(uint32_t entity_id) const;

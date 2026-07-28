@@ -177,6 +177,11 @@ public:
     bool would_player_move_fall(int target_x, int target_y);
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
     float submit_player_targeted_attack(int target_id, const String& ability_id, int body_part_index);
+    String get_player_movement_mode() const;
+    bool set_player_movement_mode(const String& mode_id);
+    bool toggle_player_run();
+    Array get_player_movement_mode_options() const;
+    float get_entity_effective_movement_speed(uint32_t entity_id) const;
     bool can_change_z(uint32_t entity_id, int delta);
     float submit_player_change_z(int delta);
     bool is_entity_hostile_to(int entity_id, int target_id) const;
@@ -254,6 +259,7 @@ public:
     void on_entity_died(uint32_t entity_id, const String& cause) override;
     void on_player_turn_ready(uint32_t entity_id) override;
     void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) override;
+    void on_player_movement_mode_changed(const String& mode_id, const String& reason) override;
     void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) override;
     void on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) override;
     void on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) override;

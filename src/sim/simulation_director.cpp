@@ -628,12 +628,22 @@ void SimulationDirector::restore_player_activity() {
     }
 }
 
-bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
+bool SimulationDirector::finish_entity_action(
+    uint32_t entity_id,
+    float cost,
+    float base_time,
+    float stamina_cost,
+    bool suppress_stamina_recovery
+) {
     if (cost <= 0.0f) return false;
 
     StaminaData* stamina = d.ledger->try_get_stamina(entity_id);
     if (stamina) {
-        Stamina::regen(*stamina, cost * StaminaTuning::REGEN_PER_TIME);
+        if (stamina_cost > 0.0f) {
+            Stamina::drain(*stamina, stamina_cost);
+        } else if (!suppress_stamina_recovery) {
+            Stamina::regen(*stamina, cost * StaminaTuning::REGEN_PER_TIME);
+        }
     }
 
     advance_entity_time(entity_id, cost);
@@ -650,12 +660,95 @@ bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, fl
 float SimulationDirector::movement_action_cost(uint32_t entity_id, float base_cost, const LocomotionData& loco) const {
     if (base_cost <= 0.0f) return 0.0f;
 
-    float cost = base_cost / (loco.speed > 0.0f ? loco.speed : 1.0f);
+    const float effective_speed = (loco.speed > 0.0f ? loco.speed : 1.0f)
+        * Locomotion::movement_mode_speed_multiplier(loco.movement_mode);
+    float cost = base_cost / (effective_speed > 0.0f ? effective_speed : 1.0f);
     const StaminaData* stamina = d.ledger->try_get_stamina(entity_id);
     if (stamina) {
         cost *= Stamina::move_cost_multiplier(*stamina);
     }
     return cost;
+}
+
+float SimulationDirector::get_entity_effective_movement_speed(uint32_t entity_id) const {
+    if (!d.ledger) return 0.0f;
+    const LocomotionData* loco = d.ledger->try_get_locomotion(entity_id);
+    if (!loco) return 0.0f;
+
+    float speed = (loco->speed > 0.0f ? loco->speed : 1.0f)
+        * Locomotion::movement_mode_speed_multiplier(loco->movement_mode);
+    const StaminaData* stamina = d.ledger->try_get_stamina(entity_id);
+    if (stamina) {
+        speed /= Stamina::move_cost_multiplier(*stamina);
+    }
+    return speed;
+}
+
+String SimulationDirector::get_player_movement_mode() const {
+    if (!d.ledger) return "walk";
+    const LocomotionData* loco = d.ledger->try_get_locomotion(d.player_entity_id);
+    return loco ? Locomotion::movement_mode_id(loco->movement_mode) : String("walk");
+}
+
+bool SimulationDirector::can_player_run() const {
+    if (!d.ledger) return false;
+    const StaminaData* stamina = d.ledger->try_get_stamina(d.player_entity_id);
+    return stamina
+        && Stamina::get_percent(*stamina) > MovementTuning::RUN_MIN_STAMINA_PERCENT
+        && stamina->current_stamina >= MovementTuning::RUN_STAMINA_PER_CARDINAL_STEP;
+}
+
+bool SimulationDirector::set_player_movement_mode(const String& mode_id, const String& reason) {
+    if (!d.ledger) return false;
+    LocomotionData* loco = d.ledger->try_get_locomotion(d.player_entity_id);
+    if (!loco) return false;
+
+    MovementMode mode;
+    if (!Locomotion::movement_mode_from_id(mode_id, mode)) return false;
+    if (mode == MovementMode::RUN && loco->movement_mode != MovementMode::RUN && !can_player_run()) {
+        return false;
+    }
+    if (loco->movement_mode == mode) return true;
+
+    loco->movement_mode = mode;
+    if (d.sink) {
+        d.sink->on_player_movement_mode_changed(Locomotion::movement_mode_id(mode), reason);
+    }
+    return true;
+}
+
+bool SimulationDirector::toggle_player_run() {
+    return get_player_movement_mode() == "run"
+        ? set_player_movement_mode("walk", "toggle")
+        : set_player_movement_mode("run", "toggle");
+}
+
+Array SimulationDirector::get_player_movement_mode_options() const {
+    Array options;
+    const String active = get_player_movement_mode();
+    const bool run_available = can_player_run() || active == "run";
+
+    auto append_option = [&](MovementMode mode, const String& description, bool available) {
+        Dictionary option;
+        const String id = Locomotion::movement_mode_id(mode);
+        option["id"] = id;
+        option["name"] = Locomotion::movement_mode_name(mode);
+        option["description"] = description;
+        option["speed_multiplier"] = Locomotion::movement_mode_speed_multiplier(mode);
+        option["active"] = id == active;
+        option["available"] = available;
+        options.push_back(option);
+    };
+
+    append_option(MovementMode::WALK, "", true);
+    append_option(MovementMode::RUN, "", run_available);
+    append_option(MovementMode::PRONE, "", true);
+    return options;
+}
+
+void SimulationDirector::force_player_walk_if_exhausted() {
+    if (get_player_movement_mode() != "run" || can_player_run()) return;
+    set_player_movement_mode("walk", "exhausted");
 }
 
 void SimulationDirector::emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos) {
@@ -929,11 +1022,21 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
 }
 
 ActionResult SimulationDirector::resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco) {
+    if (intent.type == IntentType::MOVE && loco.movement_mode == MovementMode::RUN && !can_player_run()) {
+        set_player_movement_mode("walk", "exhausted");
+    }
+
     ActionResult result = ActionResolver::resolve(d.player_entity_id, intent, *d.bubble, entity, loco, d.ledger, d.tracker);
     if (!result.success) return result;
 
     if (intent.type == IntentType::MOVE) {
+        const float base_step_cost = result.cost;
         result.cost = movement_action_cost(d.player_entity_id, result.cost, loco);
+        if (loco.movement_mode == MovementMode::RUN) {
+            result.stamina_cost =
+                MovementTuning::RUN_STAMINA_PER_CARDINAL_STEP * base_step_cost;
+            result.suppress_stamina_recovery = true;
+        }
     }
     return result;
 }
@@ -979,7 +1082,17 @@ ActionResult SimulationDirector::resolve_player_action(const Intent& intent, Ent
 
 bool SimulationDirector::finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos, int old_z) {
     if (!result.success || result.cost <= 0.0f) return false;
-    if (!finish_entity_action(d.player_entity_id, result.cost, base_time)) return false;
+    if (!finish_entity_action(
+            d.player_entity_id,
+            result.cost,
+            base_time,
+            result.stamina_cost,
+            result.suppress_stamina_recovery)) {
+        return false;
+    }
+    if (result.stamina_cost > 0.0f) {
+        force_player_walk_if_exhausted();
+    }
 
     emit_movement_if_needed(d.player_entity_id, old_pos);
     Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);

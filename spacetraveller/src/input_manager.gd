@@ -35,6 +35,7 @@ signal action_close_requested
 signal action_examine_requested
 signal action_ascend_requested
 signal action_descend_requested
+signal toggle_run_requested
 signal exploration_right_click(pos: Vector2)
 
 signal structure_mode_changed(mode :String)
@@ -149,6 +150,18 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("open_actions"):
 		if current_mode == InputMode.EXPLORATION or current_mode == InputMode.MENU:
 			toggle_menu("actions")
+			get_viewport().set_input_as_handled()
+			return
+
+	if event.is_action_pressed("open_movement_modes"):
+		if current_mode == InputMode.EXPLORATION or current_mode == InputMode.MENU:
+			toggle_menu("movement_modes")
+			get_viewport().set_input_as_handled()
+			return
+
+	if event.is_action_pressed("toggle_run"):
+		if current_mode == InputMode.EXPLORATION:
+			toggle_run_requested.emit()
 			get_viewport().set_input_as_handled()
 			return
 

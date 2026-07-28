@@ -24,6 +24,7 @@ func _ready() -> void:
 	player_activity_interrupted.connect(_on_player_activity_interrupted)
 	player_activity_completed.connect(_on_player_activity_completed)
 	player_activity_cancelled.connect(_on_player_activity_cancelled)
+	player_movement_mode_changed.connect(_on_player_movement_mode_changed)
 	TimeManager.turn_passed.connect(_on_time_turn_passed)
 
 func _process(_delta: float) -> void:
@@ -35,6 +36,18 @@ func _process(_delta: float) -> void:
 func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: float) -> void:
 	TimeManager.advance_time(cost)
 	update_world_bubble(get_player_position())
+
+func _on_player_movement_mode_changed(mode_id: String, reason: String) -> void:
+	var message := ""
+	if reason == "exhausted":
+		message = "You are too exhausted to keep running."
+	elif mode_id == "run":
+		message = "You start running."
+	elif mode_id == "prone":
+		message = "You lie down."
+	else:
+		message = "You start walking."
+	EventBus.post("movement", message, {"mode": mode_id, "reason": reason})
 
 func _on_player_activity_started(activity: Dictionary) -> void:
 	_enter_activity_mode()

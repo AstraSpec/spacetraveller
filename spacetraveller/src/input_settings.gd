@@ -23,6 +23,8 @@ const BINDABLE_ACTIONS = {
 		{"id": "open_quests", "name": "Open Quests"},
 		{"id": "open_map", "name": "Open Map"},
 		{"id": "look_mode", "name": "Look Around"},
+		{"id": "open_movement_modes", "name": "Movement Modes"},
+		{"id": "toggle_run", "name": "Toggle Run"},
 		{"id": "open_structure_mode", "name": "Structure Mode"}
 	],
 	"Structure Editor": [

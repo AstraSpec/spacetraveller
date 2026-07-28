@@ -29,6 +29,7 @@ func _ready():
 	InputManager.action_examine_requested.connect(_on_examine_requested)
 	InputManager.action_ascend_requested.connect(_on_ascend_requested)
 	InputManager.action_descend_requested.connect(_on_descend_requested)
+	InputManager.toggle_run_requested.connect(_on_toggle_run_requested)
 	InputManager.exploration_right_click.connect(_on_right_click)
 	InputManager.menu_toggled.connect(_on_menu_toggled)
 
@@ -239,6 +240,16 @@ func _on_ascend_requested():
 
 func _on_descend_requested():
 	_try_change_z(-1)
+
+func set_movement_mode(mode_id: String) -> bool:
+	var changed := World.set_player_movement_mode(mode_id)
+	if not changed:
+		EventBus.post("movement_warning", "You are too exhausted to run.", {"mode": mode_id})
+	return changed
+
+func _on_toggle_run_requested() -> void:
+	if not World.toggle_player_run():
+		EventBus.post("movement_warning", "You are too exhausted to run.", {"mode": "run"})
 
 func _try_change_z(delta: int) -> void:
 	_clear_targeting()

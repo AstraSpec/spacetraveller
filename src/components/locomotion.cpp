@@ -6,10 +6,54 @@ using namespace godot;
 
 void Locomotion::init(LocomotionData& data, float speed) {
     data.speed = speed;
+    data.movement_mode = MovementMode::WALK;
     data.path.clear();
     data.path_index = 0;
     data.path_goal = Vector2i();
     data.path_goal_radius = 0;
+}
+
+bool Locomotion::movement_mode_from_id(const String& id, MovementMode& out_mode) {
+    if (id == "walk") {
+        out_mode = MovementMode::WALK;
+        return true;
+    }
+    if (id == "run") {
+        out_mode = MovementMode::RUN;
+        return true;
+    }
+    if (id == "prone") {
+        out_mode = MovementMode::PRONE;
+        return true;
+    }
+    return false;
+}
+
+String Locomotion::movement_mode_id(MovementMode mode) {
+    switch (mode) {
+        case MovementMode::RUN: return "run";
+        case MovementMode::PRONE: return "prone";
+        case MovementMode::WALK:
+        default: return "walk";
+    }
+}
+
+String Locomotion::movement_mode_name(MovementMode mode) {
+    switch (mode) {
+        case MovementMode::RUN: return "Run";
+        case MovementMode::PRONE: return "Prone";
+        case MovementMode::WALK:
+        default: return "Walk";
+    }
+}
+
+float Locomotion::movement_mode_speed_multiplier(MovementMode mode) {
+    switch (mode) {
+        case MovementMode::RUN: return 2.0f;
+        case MovementMode::PRONE: return 0.2f;
+        case MovementMode::WALK:
+        default: return 1.0f;
+    }
 }
 
 void Locomotion::set_path(LocomotionData& data, const std::vector<Vector2i>& new_path, const Vector2i& goal, int goal_radius) {
@@ -52,11 +96,17 @@ float Locomotion::get_step_cost(int from_x, int from_y, int to_x, int to_y) {
 Dictionary Locomotion::serialize(const LocomotionData& data) {
     Dictionary d;
     d["speed"] = data.speed;
+    d["movement_mode"] = movement_mode_id(data.movement_mode);
     return d;
 }
 
 void Locomotion::deserialize(LocomotionData& data, const Dictionary& dict) {
     data.speed = static_cast<float>(static_cast<double>(dict.get("speed", 0.8)));
+    data.movement_mode = MovementMode::WALK;
+    MovementMode loaded_mode;
+    if (movement_mode_from_id(String(dict.get("movement_mode", "walk")), loaded_mode)) {
+        data.movement_mode = loaded_mode;
+    }
     data.path.clear();
     data.path_index = 0;
     data.path_goal = Vector2i();
