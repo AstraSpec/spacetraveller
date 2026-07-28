@@ -1,5 +1,7 @@
 extends GameWorld
 
+const ACTIVITY_INFO_OWNER := "activity"
+
 @export var Tilesheet :Texture2D
 @export var Player :PlayerController
 @export var ActivityConfirmation :ConfirmationPopup
@@ -36,6 +38,7 @@ func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: f
 
 func _on_player_activity_started(activity: Dictionary) -> void:
 	_enter_activity_mode()
+	InformationPanel.show_info(_activity_information_text(activity), ACTIVITY_INFO_OWNER)
 	if str(activity.get("type", "")) == "crafting" and not bool(activity.get("restored", false)):
 		var recipe_name := String(RecipeDb.get_recipe_name(str(activity.get("subject_id", ""))))
 		EventBus.post("inventory", "You begin crafting %s." % recipe_name, activity)
@@ -54,6 +57,7 @@ func _on_player_activity_interrupted(activity: Dictionary) -> void:
 		_show_generic_interruption(activity)
 
 func _on_player_activity_completed(activity: Dictionary) -> void:
+	InformationPanel.hide_info(ACTIVITY_INFO_OWNER)
 	_refresh_after_activity_time(activity)
 	var recipe_id := str(activity.get("subject_id", ""))
 	var labels: Array[String] = []
@@ -67,6 +71,7 @@ func _on_player_activity_completed(activity: Dictionary) -> void:
 	_finish_activity_ui(activity)
 
 func _on_player_activity_cancelled(activity: Dictionary) -> void:
+	InformationPanel.hide_info(ACTIVITY_INFO_OWNER)
 	_refresh_after_activity_time(activity)
 	var reason := str(activity.get("reason", ""))
 	if reason == "requirements_missing":
@@ -84,6 +89,18 @@ func _enter_activity_mode() -> void:
 		InputManager.pop_mode()
 	if InputManager.current_mode != InputManager.InputMode.ACTIVITY:
 		InputManager.push_mode(InputManager.InputMode.ACTIVITY)
+
+func _activity_information_text(activity: Dictionary) -> String:
+	var activity_type := str(activity.get("type", ""))
+	if activity_type == "crafting":
+		var recipe_name := String(RecipeDb.get_recipe_name(str(activity.get("subject_id", ""))))
+		if not recipe_name.is_empty():
+			return "Crafting %s…" % recipe_name
+
+	var activity_name := activity_type.replace("_", " ").strip_edges().capitalize()
+	if activity_name.is_empty():
+		activity_name = "Working"
+	return "%s…" % activity_name
 
 func _finish_activity_ui(activity: Dictionary) -> void:
 	if InputManager.current_mode == InputManager.InputMode.ACTIVITY:

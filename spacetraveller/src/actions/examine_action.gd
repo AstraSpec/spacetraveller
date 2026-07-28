@@ -18,6 +18,9 @@ func execute(cell_pos: Vector2i) -> void:
 func get_action_name() -> String:
 	return "Examine"
 
+func get_target_prompt() -> String:
+	return "Examine where?"
+
 func _metadata_text(metadata: Dictionary) -> String:
 	var data = metadata.get("data", {})
 	if data is Dictionary:

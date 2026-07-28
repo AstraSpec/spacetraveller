@@ -10,3 +10,6 @@ func execute(cell_pos: Vector2i) -> void:
 
 func get_action_name() -> String:
 	return "Smash"
+
+func get_target_prompt() -> String:
+	return "Smash where?"

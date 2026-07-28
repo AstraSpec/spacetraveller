@@ -26,6 +26,7 @@ SaveManager="*res://src/save_manager.gd"
 EventBus="*res://src/event_bus.gd"
 DialogueService="*res://src/dialogue_service.gd"
 QuestService="*res://src/quest_service.gd"
+InformationPanel="*res://src/ui/information_panel.tscn"
 
 [debug]
 

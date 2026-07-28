@@ -6,3 +6,6 @@ func is_valid(cell_pos: Vector2i) -> bool:
 
 func get_action_name() -> String:
 	return "Attack"
+
+func get_target_prompt() -> String:
+	return "Attack whom?"

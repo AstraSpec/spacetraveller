@@ -25,3 +25,6 @@ func get_target_offsets() -> Array[Vector2i]:
 
 func get_action_name() -> String:
 	return "Action"
+
+func get_target_prompt() -> String:
+	return "Choose a direction."

@@ -14,3 +14,6 @@ func execute(cell_pos: Vector2i) -> void:
 
 func get_action_name() -> String:
 	return "Close"
+
+func get_target_prompt() -> String:
+	return "Close what?"

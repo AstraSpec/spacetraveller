@@ -4,6 +4,8 @@ class_name PlayerController
 signal moved_cell(cellPos :Vector2)
 signal moved_chunk(chunkPos :Vector2)
 
+const TARGETING_INFO_OWNER := "targeting"
+
 @export var Camera :Camera2D
 @export var World : GameWorld
 @export var PathfindingTimer :Timer
@@ -28,6 +30,7 @@ func _ready():
 	InputManager.action_ascend_requested.connect(_on_ascend_requested)
 	InputManager.action_descend_requested.connect(_on_descend_requested)
 	InputManager.exploration_right_click.connect(_on_right_click)
+	InputManager.menu_toggled.connect(_on_menu_toggled)
 
 	available_actions.append(SmashAction.new(self, World))
 	available_actions.append(PickupAction.new(self, World))
@@ -52,6 +55,7 @@ func _on_entity_moved(entity_id: int, new_pos: Vector2i, new_chunk: Vector2i):
 
 func _on_right_click(_global_pos: Vector2):
 	var overlays_changed := _clear_path(false)
+	overlays_changed = _clear_targeting(false) or overlays_changed
 	var mouse_local = get_local_mouse_position()
 	var cell_diff = (mouse_local / World.get_renderer().get_cell_size()).floor()
 	var target_cell = Vector2i(cellPos()) + Vector2i(cell_diff)
@@ -79,10 +83,9 @@ func cancel_navigation() -> void:
 	if PathfindingTimer:
 		PathfindingTimer.stop()
 	var overlays_changed := _clear_path(false)
-	overlays_changed = _clear_interaction_cells(false) or overlays_changed
+	overlays_changed = _clear_targeting(false) or overlays_changed
 	if overlays_changed:
 		World.update_world_bubble(cellPos())
-	currentAction = null
 
 func _on_pathfinding_timer_timeout() -> void:
 	if current_path.is_empty():
@@ -145,8 +148,13 @@ func _clear_interaction_cells(refresh_visuals: bool = true) -> bool:
 		World.update_world_bubble(cellPos())
 	return true
 
+func _clear_targeting(refresh_visuals: bool = true) -> bool:
+	currentAction = null
+	InformationPanel.hide_info(TARGETING_INFO_OWNER)
+	return _clear_interaction_cells(refresh_visuals)
+
 func _try_set_action(action: PlayerAction):
-	_clear_interaction_cells()
+	_clear_targeting()
 	_clear_path()
 	var valid_cells: Array[Vector2i] = []
 
@@ -164,6 +172,7 @@ func _try_set_action(action: PlayerAction):
 			interactionCells.append(target)
 		World.update_world_bubble(cellPos())
 		currentAction = action
+		InformationPanel.show_info(action.get_target_prompt(), TARGETING_INFO_OWNER)
 	else:
 		currentAction = null
 
@@ -177,8 +186,7 @@ func _on_movement_triggered(dir: Vector2):
 			else:
 				currentAction.execute(target_cell)
 
-		currentAction = null
-		_clear_interaction_cells()
+		_clear_targeting()
 	else:
 		if dir == Vector2.ZERO:
 			World.submit_player_intent(World.INTENT_NONE, 0, 0, "")
@@ -233,7 +241,7 @@ func _on_descend_requested():
 	_try_change_z(-1)
 
 func _try_change_z(delta: int) -> void:
-	_clear_interaction_cells()
+	_clear_targeting()
 	_clear_path()
 	var old_z := World.get_player_z()
 	var cost := World.submit_player_change_z(delta)
@@ -248,6 +256,10 @@ func _try_change_z(delta: int) -> void:
 		EventBus.post("movement", "You cannot go up here.", {"z": old_z})
 	else:
 		EventBus.post("movement", "You cannot go down here.", {"z": old_z})
+
+func _on_menu_toggled(_id: String, is_open: bool, _params: Dictionary) -> void:
+	if is_open:
+		_clear_targeting()
 
 func _check_ground_items(pos: Vector2i) -> void:
 	var items = World.get_items_at(pos)
