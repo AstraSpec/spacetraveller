@@ -103,14 +103,8 @@ func _unequip_selected_item():
 		return
 	
 	var item_id = _items_cache[selected_index]["id"]
-	if not _GameWorld.add_entity_inventory_item(0, item_id, 1):
-		EventBus.post("inventory_warning", "You cannot take off %s. Carry weight is over limit." % _item_label(item_id), {"item_id": item_id})
-		return
-	if _GameWorld.unequip_entity_clothing_by_string(0, item_id):
+	if _GameWorld.submit_player_remove_clothing(item_id):
 		EventBus.post("inventory", "You take off %s." % _item_label(item_id), {"item_id": item_id})
-		TimeManager.advance_turn()
-		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 		refresh_view()
 	else:
-		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 		EventBus.post("inventory_warning", "You cannot take off %s." % _item_label(item_id), {"item_id": item_id})

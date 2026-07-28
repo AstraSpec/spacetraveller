@@ -28,13 +28,23 @@
 #include "components/equipment.h"
 #include "components/anatomy.h"
 #include "data/body_part_db.h"
+#include "data/recipe_db.h"
+#include "data/item_db.h"
+#include "components/inventory.h"
+#include "components/activity.h"
+#include "core/string_hasher.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector3i.hpp>
 #include <cmath>
 #include <vector>
+#include <unordered_map>
 
 using namespace godot;
+
+namespace {
+constexpr int ACTIVITY_EVENT_SAFETY_BUDGET = 512;
+}
 
 void SimulationDirector::configure(const SimulationDirectorDeps& deps) {
     d = deps;
@@ -312,6 +322,9 @@ CombatOutcome SimulationDirector::resolve_entity_attack(
 
 void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& cause, uint32_t killer_id) {
     if (entity_id == d.player_entity_id) {
+        if (has_player_activity()) {
+            cancel_player_activity("death", false);
+        }
         d.sink->on_player_died(cause);
         return;
     }
@@ -341,6 +354,278 @@ void SimulationDirector::handle_entity_death(uint32_t entity_id, const String& c
         true,
         d.poi_registry
     );
+}
+
+bool SimulationDirector::has_player_activity() const {
+    if (!d.ledger) return false;
+    const ActivityData* activity = d.ledger->try_get_activity(d.player_entity_id);
+    return activity && Activity::is_active(*activity);
+}
+
+Dictionary SimulationDirector::get_player_activity() const {
+    if (!d.ledger) return Dictionary();
+    const ActivityData* activity = d.ledger->try_get_activity(d.player_entity_id);
+    return activity ? Activity::to_dictionary(*activity) : Dictionary();
+}
+
+bool SimulationDirector::validate_crafting_requirements(const String& recipe_id) const {
+    if (!d.ledger) return false;
+    RecipeDb* recipes = RecipeDb::get_singleton();
+    ItemDb* items = ItemDb::get_singleton();
+    const RecipeInfo* recipe = recipes ? recipes->get_info(recipe_id) : nullptr;
+    const InventoryData* inventory = d.ledger->try_get_inventory(d.player_entity_id);
+    if (!recipe || !items || !inventory || recipe->time_seconds <= 0.0f || recipe->results.empty()) return false;
+
+    std::unordered_map<String, int, StringHasher> required;
+    for (const RecipeRequirement& entry : recipe->requirements) {
+        if (entry.amount <= 0 || !items->get_item_info(entry.item_id)) return false;
+        required[entry.item_id] += entry.amount;
+    }
+    for (const RecipeResult& entry : recipe->results) {
+        if (entry.amount <= 0 || !items->get_item_info(entry.item_id)) return false;
+    }
+    for (const auto& pair : required) {
+        if (!Inventory::has_item_by_string(*inventory, pair.first, pair.second)) return false;
+    }
+    return true;
+}
+
+void SimulationDirector::schedule_next_activity_work(ActivityData& activity) {
+    Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    if (!player || !Activity::is_running(activity)) return;
+    const float remaining = MAX(0.0f, activity.total_time - activity.completed_time);
+    activity.scheduled_work = MIN(1.0f, remaining);
+    if (activity.scheduled_work <= 0.0f) return;
+    player->next_turn_time = activity.simulation_time + activity.scheduled_work;
+    d.scheduler->push(d.player_entity_id, player->next_turn_time);
+}
+
+bool SimulationDirector::start_player_crafting(const String& recipe_id) {
+    if (!d.ledger || !d.scheduler || !d.sink || has_player_activity() ||
+        !validate_crafting_requirements(recipe_id)) {
+        return false;
+    }
+    Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    RecipeDb* recipes = RecipeDb::get_singleton();
+    const RecipeInfo* recipe = recipes ? recipes->get_info(recipe_id) : nullptr;
+    if (!player || !recipe) return false;
+
+    ActivityData& activity = d.ledger->ensure_activity(d.player_entity_id);
+    activity = ActivityData();
+    activity.type = "crafting";
+    activity.subject_id = recipe_id;
+    activity.total_time = recipe->time_seconds;
+    activity.start_position = Vector3i(player->x, player->y, player->z);
+    activity.simulation_time = player->next_turn_time;
+    activity.last_refresh_time = activity.simulation_time;
+    activity.next_refresh_time = activity.simulation_time + MIN(30.0f, activity.total_time);
+
+    d.scheduler->remove(d.player_entity_id);
+    schedule_next_activity_work(activity);
+    d.sink->on_player_activity_started(Activity::to_dictionary(activity));
+    return true;
+}
+
+void SimulationDirector::emit_activity_checkpoint(ActivityData& activity) {
+    const float elapsed = MAX(0.0f, activity.simulation_time - activity.last_refresh_time);
+    activity.last_refresh_time = activity.simulation_time;
+    activity.next_refresh_time = MIN(
+        activity.simulation_time + 30.0f,
+        activity.simulation_time + MAX(0.0f, activity.total_time - activity.completed_time)
+    );
+    d.sink->on_player_activity_checkpoint(Activity::to_dictionary(activity, elapsed));
+}
+
+void SimulationDirector::emit_activity_interrupted(ActivityData& activity) {
+    const float elapsed = MAX(0.0f, activity.simulation_time - activity.last_refresh_time);
+    activity.last_refresh_time = activity.simulation_time;
+    d.sink->on_player_activity_interrupted(Activity::to_dictionary(activity, elapsed));
+}
+
+bool SimulationDirector::request_activity_interruption(const String& interruption_id, uint32_t source_entity) {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_running(*activity) || interruption_id.is_empty() ||
+        Activity::ignores(*activity, interruption_id)) {
+        return false;
+    }
+    activity->state = "interrupted";
+    activity->pending_interruption = interruption_id;
+    activity->pending_source_entity = source_entity;
+    if (!processing_activity_batch) emit_activity_interrupted(*activity);
+    return true;
+}
+
+void SimulationDirector::cancel_player_activity(const String& reason, bool restore_menu) {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_active(*activity)) return;
+
+    const float elapsed = MAX(0.0f, activity->simulation_time - activity->last_refresh_time);
+    Dictionary payload = Activity::to_dictionary(*activity, elapsed);
+    payload["reason"] = reason;
+    payload["restore_menu"] = restore_menu;
+    d.scheduler->remove(d.player_entity_id);
+    if (Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id)) {
+        player->next_turn_time = activity->simulation_time;
+    }
+    d.ledger->activity_data.erase(d.player_entity_id);
+    d.sink->on_player_activity_cancelled(payload);
+}
+
+bool SimulationDirector::complete_crafting(const String& recipe_id, Dictionary& completion) {
+    if (!validate_crafting_requirements(recipe_id)) return false;
+    RecipeDb* recipes = RecipeDb::get_singleton();
+    const RecipeInfo* recipe = recipes ? recipes->get_info(recipe_id) : nullptr;
+    InventoryData* inventory = d.ledger->try_get_inventory(d.player_entity_id);
+    Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    if (!recipe || !inventory || !player) return false;
+
+    std::unordered_map<String, int, StringHasher> required;
+    for (const RecipeRequirement& entry : recipe->requirements) required[entry.item_id] += entry.amount;
+    for (const auto& pair : required) {
+        if (!Inventory::remove_item_by_string(*inventory, pair.first, pair.second)) return false;
+    }
+
+    Array results;
+    Array overflow;
+    IdRegistry* ids = IdRegistry::get_singleton();
+    for (const RecipeResult& entry : recipe->results) {
+        Dictionary result;
+        result["item_id"] = entry.item_id;
+        result["amount"] = entry.amount;
+        results.push_back(result);
+        if (!Inventory::add_item_by_string(*inventory, entry.item_id, entry.amount)) {
+            const uint16_t item_id = ids ? ids->get_id(entry.item_id) : 0;
+            if (item_id != 0) {
+                d.bubble->drop_item(Vector2i(player->x, player->y), item_id, entry.amount);
+                overflow.push_back(result);
+            }
+        }
+    }
+    completion["results"] = results;
+    completion["overflow"] = overflow;
+    return true;
+}
+
+void SimulationDirector::complete_player_activity() {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_active(*activity)) return;
+
+    Dictionary completion;
+    bool success = activity->type == "crafting" && complete_crafting(activity->subject_id, completion);
+    if (!success) {
+        cancel_player_activity("requirements_missing");
+        return;
+    }
+
+    const float elapsed = MAX(0.0f, activity->simulation_time - activity->last_refresh_time);
+    Dictionary payload = Activity::to_dictionary(*activity, elapsed);
+    payload.merge(completion, true);
+    d.scheduler->remove(d.player_entity_id);
+    if (Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id)) {
+        player->next_turn_time = activity->simulation_time;
+    }
+    d.ledger->activity_data.erase(d.player_entity_id);
+    d.sink->on_player_activity_completed(payload);
+}
+
+void SimulationDirector::process_player_activity_batch() {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_running(*activity) || !d.scheduler || !d.bubble) return;
+    TileDb* tile_db = TileDb::get_singleton();
+    if (!tile_db) return;
+
+    processing_activity_batch = true;
+    int processed = 0;
+    while (processed < ACTIVITY_EVENT_SAFETY_BUDGET && Activity::is_running(*activity)) {
+        const float event_time = d.scheduler->peek_time();
+        if (!std::isfinite(event_time)) {
+            processing_activity_batch = false;
+            cancel_player_activity("scheduler_empty");
+            return;
+        }
+        activity->simulation_time = event_time;
+        const uint32_t entity_id = d.scheduler->pop();
+        if (entity_id == EntityPool::INVALID_ID) break;
+        ++processed;
+
+        if (entity_id == d.player_entity_id) {
+            const float work = activity->scheduled_work;
+            activity->scheduled_work = 0.0f;
+            if (StaminaData* stamina = d.ledger->try_get_stamina(d.player_entity_id)) {
+                Stamina::regen(*stamina, work * StaminaTuning::REGEN_PER_TIME);
+            }
+            advance_entity_time(d.player_entity_id, work);
+            if (!has_player_activity()) {
+                processing_activity_batch = false;
+                return;
+            }
+            activity = d.ledger->try_get_activity(d.player_entity_id);
+            activity->completed_time = MIN(activity->total_time, activity->completed_time + work);
+            if (activity->completed_time >= activity->total_time) {
+                processing_activity_batch = false;
+                complete_player_activity();
+                return;
+            }
+            schedule_next_activity_work(*activity);
+        } else {
+            NpcTurnProcessor::run_turn(
+                entity_id,
+                d.ledger->get_entity_pool(),
+                *tile_db,
+                *this
+            );
+        }
+
+        if (!has_player_activity()) {
+            processing_activity_batch = false;
+            return;
+        }
+        activity = d.ledger->try_get_activity(d.player_entity_id);
+        if (Activity::is_interrupted(*activity)) {
+            processing_activity_batch = false;
+            emit_activity_interrupted(*activity);
+            return;
+        }
+        if (activity->simulation_time >= activity->next_refresh_time &&
+            d.scheduler->peek_time() > activity->next_refresh_time) {
+            processing_activity_batch = false;
+            emit_activity_checkpoint(*activity);
+            return;
+        }
+    }
+    processing_activity_batch = false;
+}
+
+bool SimulationDirector::resolve_player_activity_interruption(const String& resolution) {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_interrupted(*activity)) return false;
+    if (resolution == "stop") {
+        cancel_player_activity(activity->pending_interruption);
+        return true;
+    }
+    if (resolution != "continue" && resolution != "ignore") return false;
+    if (resolution == "ignore") Activity::ignore(*activity, activity->pending_interruption);
+    activity->pending_interruption = "";
+    activity->pending_source_entity = UINT32_MAX;
+    activity->state = "running";
+    return true;
+}
+
+void SimulationDirector::restore_player_activity() {
+    ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
+    if (!activity || !Activity::is_active(*activity)) return;
+    if (activity->type == "crafting" && !validate_crafting_requirements(activity->subject_id)) {
+        cancel_player_activity("requirements_missing");
+        return;
+    }
+    Dictionary restored = Activity::to_dictionary(*activity);
+    restored["restored"] = true;
+    if (Activity::is_interrupted(*activity)) {
+        d.sink->on_player_activity_started(restored);
+        emit_activity_interrupted(*activity);
+    } else {
+        d.sink->on_player_activity_started(restored);
+    }
 }
 
 bool SimulationDirector::finish_entity_action(uint32_t entity_id, float cost, float base_time) {
@@ -710,6 +995,7 @@ bool SimulationDirector::finish_player_action(const ActionResult& result, float 
 }
 
 float SimulationDirector::execute_player_intent(Intent intent) {
+    if (has_player_activity()) return 0.0f;
     Entity* entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
     if (!entity) return 0.0f;
 
@@ -784,6 +1070,7 @@ float SimulationDirector::submit_player_change_z(int delta) {
         return 0.0f;
     }
 
+    if (has_player_activity()) return 0.0f;
     Entity* entity = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
     if (!entity) return 0.0f;
 
@@ -888,11 +1175,13 @@ float SimulationDirector::resolve_attack(
 
     if (atk.no_limbs) {
         d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "no_limbs", atk.verb, "");
+        if (defender_id == d.player_entity_id) request_activity_interruption("attacked", attacker_id);
         return ActionCost::ATTACK;
     }
 
     if (atk.exhausted) {
         d.sink->on_combat_event(attacker_id, defender_id, 0.0f, "exhausted", atk.verb, "");
+        if (defender_id == d.player_entity_id) request_activity_interruption("attacked", attacker_id);
         return ActionCost::ATTACK;
     }
 
@@ -907,9 +1196,107 @@ float SimulationDirector::resolve_attack(
         handle_entity_death(defender_id, "combat", attacker_id);
     } else {
         apply_attack_effects(attacker_id, defender_id, atk);
+        if (defender_id == d.player_entity_id) request_activity_interruption("attacked", attacker_id);
     }
 
     return cost;
+}
+
+bool SimulationDirector::finish_short_player_action() {
+    Entity* player = d.ledger ? d.ledger->get_entity_pool().get_entity(d.player_entity_id) : nullptr;
+    if (!player || has_player_activity()) return false;
+    const Vector2i position(player->x, player->y);
+    return finish_player_action(
+        ActionResult::make_success(ActionCost::INTERACT),
+        player->next_turn_time,
+        position,
+        player->z
+    );
+}
+
+bool SimulationDirector::submit_player_drop(const String& item_id, int amount) {
+    if (!d.ledger || !d.bubble || amount <= 0 || has_player_activity()) return false;
+    InventoryData* inventory = d.ledger->try_get_inventory(d.player_entity_id);
+    Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    IdRegistry* ids = IdRegistry::get_singleton();
+    const uint16_t id = ids ? ids->get_id(item_id) : 0;
+    if (!inventory || !player || id == 0 || !Inventory::remove_item(*inventory, id, amount)) return false;
+
+    d.bubble->drop_item(Vector2i(player->x, player->y), id, amount);
+    if (finish_short_player_action()) return true;
+    d.bubble->remove_item(Vector2i(player->x, player->y), id, amount);
+    Inventory::add_item(*inventory, id, amount);
+    return false;
+}
+
+bool SimulationDirector::submit_player_wield(const String& item_id) {
+    if (!d.ledger || has_player_activity() ||
+        d.ledger->get_inventory_item_amount(d.player_entity_id, item_id) <= 0) return false;
+    EquipmentData* equipment = d.ledger->try_get_equipment(d.player_entity_id);
+    if (!equipment) return false;
+    String slot;
+    if (!Equipment::is_slot_occupied(*equipment, Equipment::MAIN_HAND_SLOT)) {
+        slot = Equipment::MAIN_HAND_SLOT;
+    } else if (!Equipment::is_slot_occupied(*equipment, Equipment::OFF_HAND_SLOT)) {
+        slot = Equipment::OFF_HAND_SLOT;
+    } else {
+        return false;
+    }
+    if (!d.ledger->wield_weapon(d.player_entity_id, slot, item_id)) return false;
+    if (!d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1)) {
+        d.ledger->unwield_weapon(d.player_entity_id, slot);
+        return false;
+    }
+    if (finish_short_player_action()) return true;
+    d.ledger->add_inventory_item(d.player_entity_id, item_id, 1);
+    d.ledger->unwield_weapon(d.player_entity_id, slot);
+    return false;
+}
+
+bool SimulationDirector::submit_player_unwield(const String& slot_name) {
+    if (!d.ledger || has_player_activity()) return false;
+    EquipmentData* equipment = d.ledger->try_get_equipment(d.player_entity_id);
+    const EquipmentSlot* slot = equipment ? Equipment::get_slot(*equipment, slot_name) : nullptr;
+    if (!slot || slot->item_id.is_empty()) return false;
+    const String item_id = slot->item_id;
+    if (!d.ledger->add_inventory_item(d.player_entity_id, item_id, 1)) return false;
+    if (!d.ledger->unwield_weapon(d.player_entity_id, slot_name)) {
+        d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1);
+        return false;
+    }
+    if (finish_short_player_action()) return true;
+    d.ledger->wield_weapon(d.player_entity_id, slot_name, item_id);
+    d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1);
+    return false;
+}
+
+bool SimulationDirector::submit_player_wear(const String& item_id) {
+    if (!d.ledger || has_player_activity() ||
+        d.ledger->get_inventory_item_amount(d.player_entity_id, item_id) <= 0) return false;
+    if (!d.ledger->equip_clothing_by_string(d.player_entity_id, item_id)) return false;
+    if (!d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1)) {
+        d.ledger->unequip_clothing_by_string(d.player_entity_id, item_id);
+        return false;
+    }
+    if (finish_short_player_action()) return true;
+    d.ledger->add_inventory_item(d.player_entity_id, item_id, 1);
+    d.ledger->unequip_clothing_by_string(d.player_entity_id, item_id);
+    return false;
+}
+
+bool SimulationDirector::submit_player_remove_clothing(const String& item_id) {
+    if (!d.ledger || has_player_activity()) return false;
+    const ClothingData* clothing = d.ledger->try_get_clothing(d.player_entity_id);
+    if (!clothing || !Clothing::is_equipped(*clothing, item_id)) return false;
+    if (!d.ledger->add_inventory_item(d.player_entity_id, item_id, 1)) return false;
+    if (!d.ledger->unequip_clothing_by_string(d.player_entity_id, item_id)) {
+        d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1);
+        return false;
+    }
+    if (finish_short_player_action()) return true;
+    d.ledger->equip_clothing_by_string(d.player_entity_id, item_id);
+    d.ledger->remove_inventory_item(d.player_entity_id, item_id, 1);
+    return false;
 }
 
 void SimulationDirector::process_game_turn(float current_time) {

@@ -19,6 +19,7 @@ func save_game(slot_name: String = "") -> void:
 	
 	var data = {
 		"time": TimeManager.total_turns,
+		"time_fraction": TimeManager.get_fractional_turns(),
 		"world": _GameWorld.get_save_data(),
 	}
 	
@@ -74,6 +75,7 @@ func apply_loaded_data() -> void:
 		
 	if loaded_save_data.has("time"):
 		TimeManager.total_turns = loaded_save_data["time"]
+	TimeManager.set_fractional_turns(float(loaded_save_data.get("time_fraction", 0.0)))
 		
 	if loaded_save_data.has("world") and _GameWorld:
 		_GameWorld.load_save_data(loaded_save_data["world"])
@@ -81,6 +83,8 @@ func apply_loaded_data() -> void:
 		# are all restored inside _GameWorld.load_save_data()
 		_GameWorld.update_world_bubble(_GameWorld.get_player_position())
 		_GameWorld.update_city_population(TimeManager.total_turns, TimeManager.is_daytime())
+		if _GameWorld.has_player_activity():
+			_GameWorld.call_deferred("restore_player_activity")
 
 func load_game(slot_name: String) -> void:
 	if not _GameWorld:

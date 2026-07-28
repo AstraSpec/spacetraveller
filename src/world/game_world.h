@@ -232,6 +232,19 @@ public:
     bool wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id);
     bool unwield_entity_weapon(uint32_t entity_id, const String& slot_name);
     bool wield_entity_weapon_by_string(uint32_t entity_id, const String& item_id);
+    bool start_player_crafting(const String& recipe_id);
+    void process_player_activity_batch();
+    bool request_player_activity_cancel();
+    bool request_activity_interruption(const String& interruption_id, int source_entity = -1);
+    bool resolve_player_activity_interruption(const String& resolution);
+    Dictionary get_player_activity() const;
+    bool has_player_activity() const;
+    void restore_player_activity();
+    bool submit_player_drop(const String& item_id, int amount);
+    bool submit_player_wield(const String& item_id);
+    bool submit_player_unwield(const String& slot_name);
+    bool submit_player_wear(const String& item_id);
+    bool submit_player_remove_clothing(const String& item_id);
 
     void process_game_turn(float current_time);
     void update_city_population(int64_t calendar_turn, bool is_day);
@@ -246,6 +259,11 @@ public:
     void on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) override;
     void on_interact_event(uint32_t entity_id, uint32_t target_id) override;
     void on_player_died(const String& cause) override;
+    void on_player_activity_started(const Dictionary& activity) override;
+    void on_player_activity_checkpoint(const Dictionary& activity) override;
+    void on_player_activity_interrupted(const Dictionary& activity) override;
+    void on_player_activity_completed(const Dictionary& activity) override;
+    void on_player_activity_cancelled(const Dictionary& activity) override;
 
     Dictionary get_entity_health(uint32_t entity_id) const;
     Dictionary get_player_health() const;

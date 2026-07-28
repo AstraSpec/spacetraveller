@@ -9,32 +9,63 @@ func _get_display_data() -> Array:
 	var formatted = []
 	
 	for id in ids:
+		var recipe_id := str(id)
+		var craftable := _can_craft_recipe(recipe_id)
 		formatted.append({
-			"id": id,
-			"display_name": RecipeDb.get_recipe_name(id),
-			"description": RecipeDb.get_recipe_description(id),
-			"quantity_text": ""
+			"id": recipe_id,
+			"display_name": RecipeDb.get_recipe_name(recipe_id),
+			"description": RecipeDb.get_recipe_description(recipe_id),
+			"quantity_text": _format_crafting_time(RecipeDb.get_recipe_time(recipe_id)) if craftable else "",
+			"craftable": craftable,
+			"disabled": not craftable,
 		})
+
+	formatted.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			var a_craftable := bool(a.get("craftable", false))
+			var b_craftable := bool(b.get("craftable", false))
+			if a_craftable != b_craftable:
+				return a_craftable
+			var a_name := str(a.get("display_name", "")).to_lower()
+			var b_name := str(b.get("display_name", "")).to_lower()
+			if a_name == b_name:
+				return str(a.get("id", "")) < str(b.get("id", ""))
+			return a_name < b_name
+	)
 	return formatted
+
+func _can_craft_recipe(recipe_id: String) -> bool:
+	var required: Dictionary = {}
+	for requirement in RecipeDb.get_recipe_requirements(recipe_id):
+		if not requirement is Dictionary:
+			return false
+		var item_id := str(requirement.get("id", ""))
+		var amount := int(requirement.get("amount", 0))
+		if item_id.is_empty() or amount <= 0:
+			return false
+		required[item_id] = int(required.get(item_id, 0)) + amount
+
+	for item_id in required:
+		if _GameWorld.get_entity_inventory_item_amount(0, str(item_id)) < int(required[item_id]):
+			return false
+	return true
+
+func _format_crafting_time(seconds: float) -> String:
+	var total_seconds := maxi(0, ceili(seconds))
+	var hours := total_seconds / 3600
+	var minutes := (total_seconds % 3600) / 60
+	var remaining_seconds := total_seconds % 60
+	var parts: Array[String] = []
+	if hours > 0:
+		parts.append("%dh" % hours)
+	if minutes > 0:
+		parts.append("%dm" % minutes)
+	if remaining_seconds > 0 or parts.is_empty():
+		parts.append("%ds" % remaining_seconds)
+	return " ".join(parts)
 
 func _on_refresh() -> void:
 	pass
-
-func _item_label(item_id: String) -> String:
-	var item_name := String(ItemDb.get_item_name(item_id))
-	return item_name if not item_name.is_empty() else item_id
-
-func _format_item_amount(item_id: String, amount: int) -> String:
-	var label = _item_label(item_id)
-	if amount <= 1:
-		return label
-	return "%s x%d" % [label, amount]
-
-func _format_result_list(results: Array) -> String:
-	var labels: Array[String] = []
-	for res in results:
-		labels.append(_format_item_amount(res["id"], res["amount"]))
-	return ", ".join(labels)
 
 func _update_details_ui(item_data: Dictionary) -> void:
 	if not detailsContainer: return
@@ -50,7 +81,7 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	req_header.text = "Requirements:"
 	detailsContainer.add_child(req_header)
 	
-	var can_craft = true
+	var can_craft := _can_craft_recipe(recipe_id)
 	for req in reqs:
 		var label = Label.new()
 		var has_item = _GameWorld.get_entity_inventory_item_amount(0, req["id"]) >= req["amount"]
@@ -59,7 +90,6 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		
 		if not has_item:
 			label.modulate = Color(0xff6666ff)
-			can_craft = false
 		else:
 			label.modulate = Color(0x66ff66ff)
 			
@@ -83,42 +113,22 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		InsufficientLabel.visible = true
 
 func _on_item_activated() -> void:
-	if _items_cache.is_empty() or selected_index < 0:
+	if _items_cache.is_empty() or selected_index < 0 or selected_index >= _items_cache.size():
 		return
-		
-	var recipe_id = _items_cache[selected_index]["id"]
+
+	var item_data: Dictionary = _items_cache[selected_index]
+	var recipe_id := str(item_data.get("id", ""))
+	if bool(item_data.get("disabled", false)) or not _can_craft_recipe(recipe_id):
+		return
 	_craft_recipe(recipe_id)
 
 func _craft_recipe(recipe_id: String):
-	var reqs = RecipeDb.get_recipe_requirements(recipe_id)
-	var results = RecipeDb.get_recipe_results(recipe_id)
-	var craft_time = RecipeDb.get_recipe_time(recipe_id)
-	
-	for req in reqs:
-		if _GameWorld.get_entity_inventory_item_amount(0, req["id"]) < req["amount"]:
-			return
-			
-	for req in reqs:
-		_GameWorld.remove_entity_inventory_item(0, req["id"], req["amount"])
-		
-	var added_results: Array[Dictionary] = []
-	for res in results:
-		if _GameWorld.add_entity_inventory_item(0, res["id"], res["amount"]):
-			added_results.append({"id": res["id"], "amount": res["amount"]})
-		else:
-			for added in added_results:
-				_GameWorld.remove_entity_inventory_item(0, added["id"], added["amount"])
-			for req in reqs:
-				_GameWorld.add_entity_inventory_item(0, req["id"], req["amount"])
-			EventBus.post("inventory_warning", "You cannot craft %s. Carry weight is over limit." % RecipeDb.get_recipe_name(recipe_id), {"recipe_id": recipe_id})
-			refresh_view()
-			return
-		
-	var turns_to_advance = max(1, int(craft_time))
-	TimeManager.advance_turn(turns_to_advance)
-	EventBus.post("inventory", "You craft %s." % _format_result_list(results), {"recipe_id": recipe_id})
-	
-	refresh_view()
+	if not _GameWorld.start_player_crafting(recipe_id):
+		EventBus.post(
+			"inventory_warning",
+			"You cannot begin crafting %s." % RecipeDb.get_recipe_name(recipe_id),
+			{"recipe_id": recipe_id}
+		)
 
 func _on_craft_button_pressed() -> void:
 	_on_item_activated()

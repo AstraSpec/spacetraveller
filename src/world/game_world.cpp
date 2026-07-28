@@ -154,6 +154,19 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("wield_entity_weapon", "entity_id", "slot_name", "item_id"), &GameWorld::wield_entity_weapon);
     ClassDB::bind_method(D_METHOD("unwield_entity_weapon", "entity_id", "slot_name"), &GameWorld::unwield_entity_weapon);
     ClassDB::bind_method(D_METHOD("wield_entity_weapon_by_string", "entity_id", "item_id"), &GameWorld::wield_entity_weapon_by_string);
+    ClassDB::bind_method(D_METHOD("start_player_crafting", "recipe_id"), &GameWorld::start_player_crafting);
+    ClassDB::bind_method(D_METHOD("process_player_activity_batch"), &GameWorld::process_player_activity_batch);
+    ClassDB::bind_method(D_METHOD("request_player_activity_cancel"), &GameWorld::request_player_activity_cancel);
+    ClassDB::bind_method(D_METHOD("request_activity_interruption", "interruption_id", "source_entity"), &GameWorld::request_activity_interruption, DEFVAL(-1));
+    ClassDB::bind_method(D_METHOD("resolve_player_activity_interruption", "resolution"), &GameWorld::resolve_player_activity_interruption);
+    ClassDB::bind_method(D_METHOD("get_player_activity"), &GameWorld::get_player_activity);
+    ClassDB::bind_method(D_METHOD("has_player_activity"), &GameWorld::has_player_activity);
+    ClassDB::bind_method(D_METHOD("restore_player_activity"), &GameWorld::restore_player_activity);
+    ClassDB::bind_method(D_METHOD("submit_player_drop", "item_id", "amount"), &GameWorld::submit_player_drop);
+    ClassDB::bind_method(D_METHOD("submit_player_wield", "item_id"), &GameWorld::submit_player_wield);
+    ClassDB::bind_method(D_METHOD("submit_player_unwield", "slot_name"), &GameWorld::submit_player_unwield);
+    ClassDB::bind_method(D_METHOD("submit_player_wear", "item_id"), &GameWorld::submit_player_wear);
+    ClassDB::bind_method(D_METHOD("submit_player_remove_clothing", "item_id"), &GameWorld::submit_player_remove_clothing);
 
     ClassDB::bind_method(D_METHOD("get_entity_health", "entity_id"), &GameWorld::get_entity_health);
     ClassDB::bind_method(D_METHOD("get_player_health"), &GameWorld::get_player_health);
@@ -250,6 +263,16 @@ void GameWorld::_bind_methods() {
     ADD_SIGNAL(MethodInfo("interact_event",
         PropertyInfo(Variant::INT, "entity_id"),
         PropertyInfo(Variant::INT, "target_id")));
+    ADD_SIGNAL(MethodInfo("player_activity_started",
+        PropertyInfo(Variant::DICTIONARY, "activity")));
+    ADD_SIGNAL(MethodInfo("player_activity_checkpoint",
+        PropertyInfo(Variant::DICTIONARY, "activity")));
+    ADD_SIGNAL(MethodInfo("player_activity_interrupted",
+        PropertyInfo(Variant::DICTIONARY, "activity")));
+    ADD_SIGNAL(MethodInfo("player_activity_completed",
+        PropertyInfo(Variant::DICTIONARY, "activity")));
+    ADD_SIGNAL(MethodInfo("player_activity_cancelled",
+        PropertyInfo(Variant::DICTIONARY, "activity")));
 }
 
 GameWorld::GameWorld() {
@@ -1038,6 +1061,61 @@ bool GameWorld::wield_entity_weapon_by_string(uint32_t entity_id, const String& 
     return entity_ledger.wield_weapon_by_string(entity_id, item_id);
 }
 
+bool GameWorld::start_player_crafting(const String& recipe_id) {
+    return sim_director.start_player_crafting(recipe_id);
+}
+
+void GameWorld::process_player_activity_batch() {
+    sim_director.process_player_activity_batch();
+}
+
+bool GameWorld::request_player_activity_cancel() {
+    return sim_director.request_activity_interruption("manual_cancel");
+}
+
+bool GameWorld::request_activity_interruption(const String& interruption_id, int source_entity) {
+    return sim_director.request_activity_interruption(
+        interruption_id,
+        source_entity < 0 ? UINT32_MAX : static_cast<uint32_t>(source_entity)
+    );
+}
+
+bool GameWorld::resolve_player_activity_interruption(const String& resolution) {
+    return sim_director.resolve_player_activity_interruption(resolution);
+}
+
+Dictionary GameWorld::get_player_activity() const {
+    return sim_director.get_player_activity();
+}
+
+bool GameWorld::has_player_activity() const {
+    return sim_director.has_player_activity();
+}
+
+void GameWorld::restore_player_activity() {
+    sim_director.restore_player_activity();
+}
+
+bool GameWorld::submit_player_drop(const String& item_id, int amount) {
+    return sim_director.submit_player_drop(item_id, amount);
+}
+
+bool GameWorld::submit_player_wield(const String& item_id) {
+    return sim_director.submit_player_wield(item_id);
+}
+
+bool GameWorld::submit_player_unwield(const String& slot_name) {
+    return sim_director.submit_player_unwield(slot_name);
+}
+
+bool GameWorld::submit_player_wear(const String& item_id) {
+    return sim_director.submit_player_wear(item_id);
+}
+
+bool GameWorld::submit_player_remove_clothing(const String& item_id) {
+    return sim_director.submit_player_remove_clothing(item_id);
+}
+
 float GameWorld::submit_player_intent(int intent_type, int target_x, int target_y, const String& param) {
     return sim_director.submit_player_intent(intent_type, target_x, target_y, param);
 }
@@ -1169,6 +1247,26 @@ void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, floa
 
 void GameWorld::on_player_died(const String& cause) {
     emit_signal("player_died", cause);
+}
+
+void GameWorld::on_player_activity_started(const Dictionary& activity) {
+    emit_signal("player_activity_started", activity);
+}
+
+void GameWorld::on_player_activity_checkpoint(const Dictionary& activity) {
+    emit_signal("player_activity_checkpoint", activity);
+}
+
+void GameWorld::on_player_activity_interrupted(const Dictionary& activity) {
+    emit_signal("player_activity_interrupted", activity);
+}
+
+void GameWorld::on_player_activity_completed(const Dictionary& activity) {
+    emit_signal("player_activity_completed", activity);
+}
+
+void GameWorld::on_player_activity_cancelled(const Dictionary& activity) {
+    emit_signal("player_activity_cancelled", activity);
 }
 
 void GameWorld::on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) {

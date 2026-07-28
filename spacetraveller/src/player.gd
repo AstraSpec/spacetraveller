@@ -47,18 +47,19 @@ func _on_entity_moved(entity_id: int, new_pos: Vector2i, new_chunk: Vector2i):
 	if entity_id == 0:
 		moved_cell.emit(Vector2(new_pos))
 		moved_chunk.emit(Vector2(new_chunk))
-		World.update_world_bubble(new_pos)
 		_check_tile_metadata(new_pos)
 		_check_ground_items(new_pos)
 
 func _on_right_click(_global_pos: Vector2):
-	_clear_path()
+	var overlays_changed := _clear_path(false)
 	var mouse_local = get_local_mouse_position()
 	var cell_diff = (mouse_local / World.get_renderer().get_cell_size()).floor()
 	var target_cell = Vector2i(cellPos()) + Vector2i(cell_diff)
 
 	var path_array = World.request_player_path(Vector2i(cellPos()), target_cell)
 	if path_array.is_empty():
+		if overlays_changed:
+			World.update_world_bubble(cellPos())
 		return
 
 	for p in path_array:
@@ -67,8 +68,9 @@ func _on_right_click(_global_pos: Vector2):
 	if not current_path.is_empty() and current_path[0] == Vector2i(cellPos()):
 		current_path.remove_at(0)
 
-	_show_path_indicators()
-	World.update_world_bubble(cellPos())
+	overlays_changed = _show_path_indicators(false) or overlays_changed
+	if overlays_changed:
+		World.update_world_bubble(cellPos())
 
 	if not current_path.is_empty():
 		PathfindingTimer.start()
@@ -76,8 +78,10 @@ func _on_right_click(_global_pos: Vector2):
 func cancel_navigation() -> void:
 	if PathfindingTimer:
 		PathfindingTimer.stop()
-	_clear_path()
-	_clear_interaction_cells()
+	var overlays_changed := _clear_path(false)
+	overlays_changed = _clear_interaction_cells(false) or overlays_changed
+	if overlays_changed:
+		World.update_world_bubble(cellPos())
 	currentAction = null
 
 func _on_pathfinding_timer_timeout() -> void:
@@ -98,34 +102,48 @@ func _on_pathfinding_timer_timeout() -> void:
 		PathfindingTimer.stop()
 		_clear_path()
 
-func _show_path_indicators():
+func _show_path_indicators(refresh_visuals: bool = true) -> bool:
+	var changed := false
 	for i in range(current_path.size()):
 		var waypoint = current_path[i]
 		var is_endpoint = (i == current_path.size() - 1)
 		var atlas_x = 17 if is_endpoint else 18
 		World.add_overlay(waypoint.x, waypoint.y, atlas_x, 0, Color(1.0, 1.0, 1.0, 1.0), -1.0)
 		pathIndicators.append(waypoint)
-	World.update_world_bubble(cellPos())
+		changed = true
+	if changed and refresh_visuals:
+		World.update_world_bubble(cellPos())
+	return changed
 
-func _clear_path():
+func _clear_path(refresh_visuals: bool = true) -> bool:
 	current_path.clear()
-	_clear_path_overlays()
+	return _clear_path_overlays(refresh_visuals)
 
-func _clear_path_overlays():
+func _clear_path_overlays(refresh_visuals: bool = true) -> bool:
+	if pathIndicators.is_empty():
+		return false
 	for indicator in pathIndicators:
 		World.remove_overlay(indicator.x, indicator.y)
 	pathIndicators.clear()
-	World.update_world_bubble(cellPos())
+	if refresh_visuals:
+		World.update_world_bubble(cellPos())
+	return true
 
 func _refresh_path_indicators():
-	_clear_path_overlays()
-	_show_path_indicators()
+	var changed := _clear_path_overlays(false)
+	changed = _show_path_indicators(false) or changed
+	if changed:
+		World.update_world_bubble(cellPos())
 
-func _clear_interaction_cells():
+func _clear_interaction_cells(refresh_visuals: bool = true) -> bool:
+	if interactionCells.is_empty():
+		return false
 	for cell in interactionCells:
 		World.remove_overlay(cell.x, cell.y)
 	interactionCells.clear()
-	World.update_world_bubble(cellPos())
+	if refresh_visuals:
+		World.update_world_bubble(cellPos())
+	return true
 
 func _try_set_action(action: PlayerAction):
 	_clear_interaction_cells()
@@ -139,7 +157,6 @@ func _try_set_action(action: PlayerAction):
 
 	if action.auto and valid_cells.size() == 1:
 		action.execute(valid_cells[0])
-		World.update_world_bubble(cellPos())
 		currentAction = null
 	elif not valid_cells.is_empty():
 		for target in valid_cells:
@@ -159,14 +176,12 @@ func _on_movement_triggered(dir: Vector2):
 				World.submit_player_intent(World.INTENT_ATTACK, target_cell.x, target_cell.y, "")
 			else:
 				currentAction.execute(target_cell)
-			World.update_world_bubble(cellPos())
 
 		currentAction = null
 		_clear_interaction_cells()
 	else:
 		if dir == Vector2.ZERO:
 			World.submit_player_intent(World.INTENT_NONE, 0, 0, "")
-			World.update_world_bubble(cellPos())
 		else:
 			_submit_move(dir)
 
@@ -189,7 +204,6 @@ func _submit_move(dir: Vector2) -> bool:
 
 func _confirm_ledge_jump(target: Vector2i) -> void:
 	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")
-	World.update_world_bubble(cellPos())
 
 func _load_vector2(v) -> Vector2:
 	if v is Vector2:
@@ -225,7 +239,6 @@ func _try_change_z(delta: int) -> void:
 	var cost := World.submit_player_change_z(delta)
 	if cost > 0.0:
 		var pos := Vector2i(cellPos())
-		World.update_world_bubble(pos)
 		EventBus.post("movement", "You go up." if delta > 0 else "You go down.", {"z": World.get_player_z(), "old_z": old_z})
 		_check_tile_metadata(pos)
 		_check_ground_items(pos)

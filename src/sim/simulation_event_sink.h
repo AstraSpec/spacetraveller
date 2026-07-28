@@ -3,6 +3,7 @@
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <cstdint>
 
 namespace godot {
@@ -20,6 +21,11 @@ public:
     virtual void on_effect_event(uint32_t entity_id, const String& effect_type, const String& note, const String& part) = 0;
     virtual void on_interact_event(uint32_t entity_id, uint32_t target_id) = 0;
     virtual void on_player_died(const String& cause) = 0;
+    virtual void on_player_activity_started(const Dictionary& activity) = 0;
+    virtual void on_player_activity_checkpoint(const Dictionary& activity) = 0;
+    virtual void on_player_activity_interrupted(const Dictionary& activity) = 0;
+    virtual void on_player_activity_completed(const Dictionary& activity) = 0;
+    virtual void on_player_activity_cancelled(const Dictionary& activity) = 0;
 };
 
 }

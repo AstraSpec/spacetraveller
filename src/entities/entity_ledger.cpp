@@ -86,6 +86,7 @@ void EntityLedger::destroy_entity(uint32_t id) {
     allegiance_data.erase(id);
     vendor_state.erase(id);
     lifecycle_class.erase(id);
+    activity_data.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -455,6 +456,7 @@ void EntityLedger::deserialize(const Dictionary& data) {
     allegiance_data.clear();
     vendor_state.clear();
     lifecycle_class.clear();
+    activity_data.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -578,6 +580,11 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
         data["vendor"] = vendor;
     }
 
+    auto activity_it = activity_data.find(id);
+    if (activity_it != activity_data.end() && Activity::is_active(activity_it->second)) {
+        data["activity"] = Activity::serialize(activity_it->second);
+    }
+
     return data;
 }
 
@@ -699,6 +706,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
             }
         }
         vendor_state[id] = state;
+    }
+
+    if (data.has("activity")) {
+        Activity::deserialize(activity_data[id], data["activity"]);
     }
 
     return id;

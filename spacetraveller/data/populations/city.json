@@ -2,12 +2,12 @@
   "day_target": 4,
   "night_target": 2,
   "entity_group": "city_ambient_population",
-  "replenish_turns": [ 1, 100 ],
-  "exploration_spawn_chance": 0.045,
+  "replenish_turns": [ 1, 80 ],
+  "exploration_spawn_chance": 0.055,
   "venue_initial_spawn_chance": 0.50,
   "entry_cooldown_turns": 12,
   "entry_min_distance": 10,
-  "detour_chance": 0.75,
+  "detour_chance": 0.5,
   "detour_radius": 10,
   "detour_tags": [ "shopping", "park" ]
 }

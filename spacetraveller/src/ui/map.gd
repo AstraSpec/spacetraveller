@@ -35,6 +35,7 @@ func _gui_input(event: InputEvent) -> void:
 			if Player.has_method("cancel_navigation"):
 				Player.cancel_navigation()
 			if World.teleport_player_to_chunk(chunk_pos):
+				World.update_world_bubble(World.get_player_position())
 				accept_event()
 
 func _screen_pos_to_chunk(screen_pos: Vector2) -> Vector2i:

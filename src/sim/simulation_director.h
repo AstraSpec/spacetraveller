@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_SIMULATION_DIRECTOR_H
 
 #include <godot_cpp/variant/array.hpp>
+#include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 #include <cstdint>
@@ -55,6 +56,19 @@ public:
     float submit_player_change_z(int delta);
     bool submit_pickup(uint32_t entity_id, const Vector2i& pos, const String& item_id, int amount);
     void process_game_turn(float current_time);
+    bool start_player_crafting(const String& recipe_id);
+    void process_player_activity_batch();
+    bool request_activity_interruption(const String& interruption_id, uint32_t source_entity = UINT32_MAX);
+    bool resolve_player_activity_interruption(const String& resolution);
+    Dictionary get_player_activity() const;
+    bool has_player_activity() const;
+    void restore_player_activity();
+
+    bool submit_player_drop(const String& item_id, int amount);
+    bool submit_player_wield(const String& item_id);
+    bool submit_player_unwield(const String& slot_name);
+    bool submit_player_wear(const String& item_id);
+    bool submit_player_remove_clothing(const String& item_id);
 
     Array find_path(const Vector2i& start, const Vector2i& goal);
     Array request_player_path(const Vector2i& start, const Vector2i& goal);
@@ -108,6 +122,15 @@ private:
     Rng::Seeded combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const;
     const RaceInfo* get_race_info(uint32_t entity_id) const;
     static uint64_t entity_rng_salt(const Entity* entity, uint32_t entity_id);
+    void schedule_next_activity_work(ActivityData& activity);
+    void emit_activity_checkpoint(ActivityData& activity);
+    void emit_activity_interrupted(ActivityData& activity);
+    void cancel_player_activity(const String& reason, bool restore_menu = true);
+    void complete_player_activity();
+    bool validate_crafting_requirements(const String& recipe_id) const;
+    bool complete_crafting(const String& recipe_id, Dictionary& completion);
+    bool finish_short_player_action();
+    bool processing_activity_batch = false;
 
     SimulationDirectorDeps d;
 };

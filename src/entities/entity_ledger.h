@@ -15,6 +15,7 @@
 #include "components/social_memory.h"
 #include "components/social_profile.h"
 #include "components/allegiance.h"
+#include "components/activity.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -76,6 +77,7 @@ public:
     std::unordered_map<uint32_t, AllegianceData> allegiance_data;
     std::unordered_map<uint32_t, VendorState> vendor_state;
     std::unordered_map<uint32_t, EntityLifecycleClass> lifecycle_class;
+    std::unordered_map<uint32_t, ActivityData> activity_data;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -116,11 +118,14 @@ public:
     const AllegianceData* try_get_allegiance(uint32_t id) const { return try_get_ptr(allegiance_data, id); }
     VendorState* try_get_vendor_state(uint32_t id) { return try_get_ptr(vendor_state, id); }
     const VendorState* try_get_vendor_state(uint32_t id) const { return try_get_ptr(vendor_state, id); }
+    ActivityData* try_get_activity(uint32_t id) { return try_get_ptr(activity_data, id); }
+    const ActivityData* try_get_activity(uint32_t id) const { return try_get_ptr(activity_data, id); }
 
     InventoryData& ensure_inventory(uint32_t id);
     EffectsData& ensure_effects(uint32_t id);
     SocialMemoryData& ensure_social_memory(uint32_t id);
     VendorState& ensure_vendor_state(uint32_t id);
+    ActivityData& ensure_activity(uint32_t id) { return activity_data[id]; }
 
     bool has_inventory(uint32_t id) const;
     bool is_alive(uint32_t id) const;

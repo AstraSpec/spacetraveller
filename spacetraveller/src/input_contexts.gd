@@ -328,3 +328,10 @@ class ConfirmationContext extends InputContext:
 		var step = move_processor.get_step_vector(delta, manager.is_shift_pressed)
 		if step != Vector2.INF and step != Vector2.ZERO:
 			manager.confirmation_directional_input.emit(step)
+
+class ActivityContext extends InputContext:
+	func handle_input(event: InputEvent) -> bool:
+		if event.is_action_pressed("ui_cancel"):
+			manager.activity_cancel_requested.emit()
+			return true
+		return false

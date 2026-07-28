@@ -88,10 +88,11 @@ texture_filter = 1
 [node name="Camera" type="Camera2D" parent="MapView"]
 script = ExtResource("4_8p67s")
 
-[node name="GameWorld" type="GameWorld" parent="." node_paths=PackedStringArray("Player")]
+[node name="GameWorld" type="GameWorld" parent="." node_paths=PackedStringArray("Player", "ActivityConfirmation")]
 script = ExtResource("1_0bwn5")
 Tilesheet = ExtResource("2_hj8l7")
 Player = NodePath("../Player")
+ActivityConfirmation = NodePath("../Canvas/Window/ConfirmationPopup")
 
 [node name="Player" type="Node2D" parent="." node_paths=PackedStringArray("Camera", "World", "PathfindingTimer", "_ConfirmationPopup")]
 script = ExtResource("4_yn2v7")

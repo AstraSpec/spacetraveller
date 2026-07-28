@@ -17,11 +17,11 @@ signal ui_prev_tab
 signal ui_drop_requested(all: bool)
 signal ui_wear_requested
 signal ui_wield_requested
-signal inventory_item_dropped(item_id: String, amount: int)
 signal confirmation_directional_input(direction: Vector2)
 signal confirmation_accept
 signal confirmation_cancel
 signal menu_close_requested(id: String)
+signal activity_cancel_requested
 
 signal menu_toggled(id: String, is_open: bool, params: Dictionary)
 signal structure_editor_toggled(active: bool)
@@ -42,7 +42,7 @@ signal structure_key_input(key :String)
 signal structure_mouse_input(button: String, action: MouseAction)
 enum MouseAction { PRESS, RELEASE, DRAG }
 
-enum InputMode { EXPLORATION, LOOK, MAP, STRUCTURE, MENU, CONFIRMATION }
+enum InputMode { EXPLORATION, LOOK, MAP, STRUCTURE, MENU, CONFIRMATION, ACTIVITY }
 var current_mode: InputMode = InputMode.EXPLORATION
 var _mode_stack: Array[InputMode] = []
 var active_menu_id: String = ""
@@ -70,7 +70,8 @@ func _ready() -> void:
 		InputMode.MAP: InputContext.MapContext.new(self),
 		InputMode.STRUCTURE: InputContext.StructureContext.new(self),
 		InputMode.MENU: InputContext.MenuContext.new(self),
-		InputMode.CONFIRMATION: InputContext.ConfirmationContext.new(self)
+		InputMode.CONFIRMATION: InputContext.ConfirmationContext.new(self),
+		InputMode.ACTIVITY: InputContext.ActivityContext.new(self)
 	}
 	active_context = contexts.get(current_mode)
 	ui_cancel.connect(_on_ui_cancel)

@@ -24,6 +24,17 @@ const INTENSITY_VARIANCE = 0.2
 
 var total_turns: int = 28800 # Start at 08:00
 var solar_input: float = 0.0
+var _fractional_turns: float = 0.0
+
+func advance_time(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	_fractional_turns += seconds
+	var whole_turns := int(floor(_fractional_turns))
+	if whole_turns <= 0:
+		return
+	_fractional_turns -= float(whole_turns)
+	advance_turn(whole_turns)
 
 func advance_turn(count: int = 1) -> void:
 	total_turns += count
@@ -32,7 +43,14 @@ func advance_turn(count: int = 1) -> void:
 
 func reset() -> void:
 	total_turns = 28800
+	_fractional_turns = 0.0
 	_update_environment()
+
+func get_fractional_turns() -> float:
+	return _fractional_turns
+
+func set_fractional_turns(value: float) -> void:
+	_fractional_turns = clampf(value, 0.0, 0.999999)
 
 func is_daytime() -> bool:
 	return bool(_get_environment_context().get("is_day", false))

@@ -2,6 +2,7 @@ extends GameWorld
 
 @export var Tilesheet :Texture2D
 @export var Player :PlayerController
+@export var ActivityConfirmation :ConfirmationPopup
 @onready var BiomeNoise :FastNoiseLite = preload("res://noise/biome_noise.tres")
 
 signal generated(regionChunks)
@@ -14,16 +15,134 @@ func _ready() -> void:
 	get_renderer().tilesheet = Tilesheet
 	world_seed = seed_
 
-	InputManager.inventory_item_dropped.connect(_on_inventory_item_dropped)
+	InputManager.activity_cancel_requested.connect(_on_activity_cancel_requested)
 	player_action_resolved.connect(_on_player_action_resolved)
+	player_activity_started.connect(_on_player_activity_started)
+	player_activity_checkpoint.connect(_on_player_activity_checkpoint)
+	player_activity_interrupted.connect(_on_player_activity_interrupted)
+	player_activity_completed.connect(_on_player_activity_completed)
+	player_activity_cancelled.connect(_on_player_activity_cancelled)
 	TimeManager.turn_passed.connect(_on_time_turn_passed)
 
-func _on_inventory_item_dropped(ID: String, amount: int) -> void:
-	drop_item(Vector2i(get_player_position()), ID, amount)
-	update_world_bubble(get_player_position())
+func _process(_delta: float) -> void:
+	if InputManager.current_mode == InputManager.InputMode.ACTIVITY and has_player_activity():
+		var activity := get_player_activity()
+		if str(activity.get("state", "")) == "running":
+			process_player_activity_batch()
 
 func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: float) -> void:
-	TimeManager.advance_turn(max(1, int(cost)))
+	TimeManager.advance_time(cost)
+	update_world_bubble(get_player_position())
+
+func _on_player_activity_started(activity: Dictionary) -> void:
+	_enter_activity_mode()
+	if str(activity.get("type", "")) == "crafting" and not bool(activity.get("restored", false)):
+		var recipe_name := String(RecipeDb.get_recipe_name(str(activity.get("subject_id", ""))))
+		EventBus.post("inventory", "You begin crafting %s." % recipe_name, activity)
+
+func _on_player_activity_checkpoint(activity: Dictionary) -> void:
+	_refresh_after_activity_time(activity)
+
+func _on_player_activity_interrupted(activity: Dictionary) -> void:
+	_refresh_after_activity_time(activity)
+	var interruption_id := str(activity.get("pending_interruption", ""))
+	if interruption_id == "attacked":
+		_show_attack_interruption(activity)
+	elif interruption_id == "manual_cancel":
+		_show_cancel_interruption(activity)
+	else:
+		_show_generic_interruption(activity)
+
+func _on_player_activity_completed(activity: Dictionary) -> void:
+	_refresh_after_activity_time(activity)
+	var recipe_id := str(activity.get("subject_id", ""))
+	var labels: Array[String] = []
+	for result in activity.get("results", []):
+		var item_id := str(result.get("item_id", ""))
+		var amount := int(result.get("amount", 0))
+		var item_name := String(ItemDb.get_item_name(item_id))
+		var label := item_name if not item_name.is_empty() else item_id
+		labels.append(label if amount <= 1 else "%s x%d" % [label, amount])
+	EventBus.post("inventory", "You craft %s." % ", ".join(labels), {"recipe_id": recipe_id})
+	_finish_activity_ui(activity)
+
+func _on_player_activity_cancelled(activity: Dictionary) -> void:
+	_refresh_after_activity_time(activity)
+	var reason := str(activity.get("reason", ""))
+	if reason == "requirements_missing":
+		EventBus.post("inventory_warning", "Crafting stopped because the required ingredients are no longer available.", activity)
+	elif reason != "death":
+		EventBus.post("inventory", "You stop crafting.", activity)
+	_finish_activity_ui(activity)
+
+func _refresh_after_activity_time(activity: Dictionary) -> void:
+	TimeManager.advance_time(float(activity.get("elapsed", 0.0)))
+	update_world_bubble(get_player_position())
+
+func _enter_activity_mode() -> void:
+	if InputManager.current_mode == InputManager.InputMode.MENU:
+		InputManager.pop_mode()
+	if InputManager.current_mode != InputManager.InputMode.ACTIVITY:
+		InputManager.push_mode(InputManager.InputMode.ACTIVITY)
+
+func _finish_activity_ui(activity: Dictionary) -> void:
+	if InputManager.current_mode == InputManager.InputMode.ACTIVITY:
+		InputManager.pop_mode()
+	if bool(activity.get("restore_menu", true)):
+		InputManager.toggle_menu(
+			str(activity.get("return_menu", "inventory")),
+			{"tab": str(activity.get("return_tab", "crafting"))}
+		)
+
+func _on_activity_cancel_requested() -> void:
+	request_player_activity_cancel()
+
+func _interruption_prompt(activity: Dictionary) -> String:
+	var definition = activity.get("interruption", {})
+	if definition is Dictionary:
+		return str(definition.get("prompt", "Activity interrupted."))
+	return "Activity interrupted."
+
+func _show_cancel_interruption(activity: Dictionary) -> void:
+	if not ActivityConfirmation:
+		resolve_player_activity_interruption("continue")
+		return
+	ActivityConfirmation.show_confirm(
+		_interruption_prompt(activity),
+		[
+			{"label": "Cancel craft", "callback": resolve_player_activity_interruption.bind("stop")},
+			{"label": "Keep crafting", "callback": resolve_player_activity_interruption.bind("continue")},
+		]
+	)
+
+func _show_attack_interruption(activity: Dictionary) -> void:
+	if not ActivityConfirmation:
+		resolve_player_activity_interruption("continue")
+		return
+	ActivityConfirmation.show_confirm(
+		_interruption_prompt(activity),
+		[
+			{"label": "Stop crafting", "callback": resolve_player_activity_interruption.bind("stop")},
+			{"label": "Continue", "callback": resolve_player_activity_interruption.bind("continue")},
+			{"label": "Continue and ignore attacks", "callback": resolve_player_activity_interruption.bind("ignore")},
+		]
+	)
+
+func _show_generic_interruption(activity: Dictionary) -> void:
+	if not ActivityConfirmation:
+		resolve_player_activity_interruption("continue")
+		return
+	var actions: Array = [
+		{"label": "Stop", "callback": resolve_player_activity_interruption.bind("stop")},
+		{"label": "Continue", "callback": resolve_player_activity_interruption.bind("continue")},
+	]
+	var definition = activity.get("interruption", {})
+	if definition is Dictionary and bool(definition.get("allow_ignore", false)):
+		actions.append({"label": "Continue and ignore", "callback": resolve_player_activity_interruption.bind("ignore")})
+	ActivityConfirmation.show_confirm(
+		_interruption_prompt(activity),
+		actions
+	)
 
 func _on_time_turn_passed() -> void:
 	update_city_population(TimeManager.total_turns, TimeManager.is_daytime())

@@ -21,11 +21,6 @@ func _post_inventory(message: String, metadata: Dictionary = {}) -> void:
 func _post_inventory_warning(message: String, metadata: Dictionary = {}) -> void:
 	EventBus.post("inventory_warning", message, metadata)
 
-func _finish_equipment_change() -> void:
-	TimeManager.advance_turn()
-	_GameWorld.update_world_bubble(_GameWorld.get_player_position())
-	refresh_view()
-
 func _get_display_data() -> Array:
 	var formatted = []
 	var equipment = _GameWorld.get_entity_equipment(0)
@@ -166,10 +161,9 @@ func _wear_selected_item():
 	if item_data.get("is_wielded", false):
 		return
 	var item_id = item_data["id"]
-	if _GameWorld.equip_entity_clothing_by_string(0, item_id):
-		_GameWorld.remove_entity_inventory_item(0, item_id, 1)
+	if _GameWorld.submit_player_wear(item_id):
 		_post_inventory("You wear %s." % _item_label(item_id), {"item_id": item_id})
-		_finish_equipment_change()
+		refresh_view()
 	else:
 		_post_inventory_warning("You cannot wear %s." % _item_label(item_id), {"item_id": item_id})
 
@@ -186,20 +180,15 @@ func _toggle_wield_selected_item():
 		var slot_name = str(item_data.get("slot_name", ""))
 		if slot_name == "":
 			return
-		if not _GameWorld.add_entity_inventory_item(0, item_id, 1):
-			_post_inventory_warning("You cannot stop wielding %s. Carry weight is over limit." % _item_label(item_id), {"item_id": item_id})
-			return
-		if _GameWorld.unwield_entity_weapon(0, slot_name):
+		if _GameWorld.submit_player_unwield(slot_name):
 			_post_inventory("You stop wielding %s." % _item_label(item_id), {"item_id": item_id, "slot": slot_name})
-			_finish_equipment_change()
+			refresh_view()
 		else:
-			_GameWorld.remove_entity_inventory_item(0, item_id, 1)
 			_post_inventory_warning("You cannot stop wielding %s." % _item_label(item_id), {"item_id": item_id, "slot": slot_name})
 	else:
-		if _GameWorld.wield_entity_weapon_by_string(0, item_id):
-			_GameWorld.remove_entity_inventory_item(0, item_id, 1)
+		if _GameWorld.submit_player_wield(item_id):
 			_post_inventory("You wield %s." % _item_label(item_id), {"item_id": item_id})
-			_finish_equipment_change()
+			refresh_view()
 		else:
 			_post_inventory_warning("You cannot wield %s." % _item_label(item_id), {"item_id": item_id})
 
@@ -213,10 +202,8 @@ func _drop_selected_item(all: bool):
 	var item_id = item_data["id"]
 	var amount_to_remove = item_data["amount"] if all else 1
 	
-	if _GameWorld.remove_entity_inventory_item(0, item_id, amount_to_remove):
-		InputManager.inventory_item_dropped.emit(item_id, amount_to_remove)
+	if _GameWorld.submit_player_drop(item_id, amount_to_remove):
 		_post_inventory("You drop %s." % _format_item_amount(item_id, amount_to_remove), {"item_id": item_id, "amount": amount_to_remove})
-		TimeManager.advance_turn()
 		refresh_view()
 
 func _format_item_amount(item_id: String, amount: int) -> String:
