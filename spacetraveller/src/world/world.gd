@@ -19,6 +19,7 @@ func _ready() -> void:
 
 	InputManager.activity_cancel_requested.connect(_on_activity_cancel_requested)
 	player_action_resolved.connect(_on_player_action_resolved)
+	player_action_failed.connect(_on_player_action_failed)
 	player_activity_started.connect(_on_player_activity_started)
 	player_activity_checkpoint.connect(_on_player_activity_checkpoint)
 	player_activity_interrupted.connect(_on_player_activity_interrupted)
@@ -36,6 +37,10 @@ func _process(_delta: float) -> void:
 func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: float) -> void:
 	TimeManager.advance_time(cost)
 	update_world_bubble(get_player_position())
+
+func _on_player_action_failed(failure_id: String) -> void:
+	if failure_id == "no_locomotion":
+		EventBus.post("movement", "You cannot move; your legs will not support you.")
 
 func _on_player_movement_mode_changed(mode_id: String, reason: String) -> void:
 	var message := ""

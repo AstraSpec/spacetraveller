@@ -215,6 +215,7 @@ public:
     int trade_get_item_value(const String& item_id, int amount, bool selling_to_vendor) const;
 
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
+    Dictionary get_entity_health_status(uint32_t entity_id) const;
     String get_entity_gender(uint32_t entity_id) const;
     bool entity_has_sapient(uint32_t entity_id) const;
     int get_entity_friendship(uint32_t entity_id) const;
@@ -259,6 +260,7 @@ public:
     void on_entity_died(uint32_t entity_id, const String& cause) override;
     void on_player_turn_ready(uint32_t entity_id) override;
     void on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) override;
+    void on_player_action_failed(const String& failure_id) override;
     void on_player_movement_mode_changed(const String& mode_id, const String& reason) override;
     void on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) override;
     void on_smash_event(uint32_t entity_id, const String& tile_id, const String& result) override;

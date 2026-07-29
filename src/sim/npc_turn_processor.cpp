@@ -4,7 +4,7 @@
 
 #include "components/action_resolver.h"
 #include "components/ai_controller.h"
-#include "components/effects.h"
+#include "components/anatomy.h"
 #include "components/locomotion.h"
 #include "components/perception.h"
 #include "core/faction.h"
@@ -199,16 +199,6 @@ void NpcTurnProcessor::run_turn(
     ScopedBubbleZ scoped_z(*director.d.bubble, entity->z);
     const float base_time = entity->next_turn_time;
 
-    EffectsData* effects = director.d.ledger->try_get_effects(entity_id);
-    if (effects && Effects::is_stunned(*effects)) {
-        const float wait = EffectTuning::STUN_WAIT_STEP;
-        director.advance_entity_time(entity_id, wait);
-        if (!pool.get_entity(entity_id)) return;
-        entity->next_turn_time = base_time + wait;
-        director.d.scheduler->push(entity_id, entity->next_turn_time);
-        return;
-    }
-
     LocomotionData* loco = director.d.ledger->try_get_locomotion(entity_id);
     AIData* ai = director.d.ledger->try_get_ai(entity_id);
     if (!loco || !ai) return;
@@ -240,7 +230,12 @@ void NpcTurnProcessor::run_turn(
 
     bool target_visible = false;
     if (should_scan(*ai)) {
-        const int radius = std::max(1, ai->reaction_radius);
+        int radius = std::max(1, ai->reaction_radius);
+        const AnatomyData* anatomy = director.d.ledger->try_get_anatomy(entity_id);
+        if (anatomy) {
+            radius = std::max(1, static_cast<int>(
+                std::round(radius * Anatomy::get_perception_capacity(*anatomy))));
+        }
         const bool reacting = ai->state == AIState::COMBAT || ai->state == AIState::FLEE;
         const uint32_t current_id = reacting ? ai->target_entity_id : EntityPool::INVALID_ID;
         Entity* current = current_id != EntityPool::INVALID_ID ? pool.get_entity(current_id) : nullptr;

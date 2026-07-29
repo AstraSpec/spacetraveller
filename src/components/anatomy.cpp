@@ -4,9 +4,57 @@
 #include "core/tag_registry.h"
 #include "core/string_hasher.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <algorithm>
 #include <unordered_map>
 
 namespace godot {
+
+namespace {
+
+float clamped_integrity(const BodyPart& part) {
+    return CLAMP(part.integrity, 0.0f, 1.0f);
+}
+
+bool part_has_tag(const BodyPart& part, uint16_t tag_id, BodyPartDb* db) {
+    const BodyPartInfo* info = db ? db->get_body_part_info(part.type_id) : nullptr;
+    return info && tag_id != 0 && TagRegistry::has_tag(tag_id, info->tags);
+}
+
+float chain_efficiency(const AnatomyData& data, int index, uint16_t core_tag, BodyPartDb* db) {
+    float result = 1.0f;
+    int current = index;
+    while (current >= 0 && current < static_cast<int>(data.parts.size())) {
+        const BodyPart& part = data.parts[current];
+        if (part_has_tag(part, core_tag, db)) break;
+        result *= clamped_integrity(part);
+        current = part.parent_index;
+    }
+    return result;
+}
+
+bool is_descendant_of(const AnatomyData& data, int child, int ancestor) {
+    int current = child;
+    while (current >= 0 && current < static_cast<int>(data.parts.size())) {
+        if (current == ancestor) return true;
+        current = data.parts[current].parent_index;
+    }
+    return false;
+}
+
+float descendant_digit_integrity(
+        const AnatomyData& data, int endpoint, uint16_t digit_tag, BodyPartDb* db) {
+    float sum = 0.0f;
+    int count = 0;
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        if (i == endpoint || !is_descendant_of(data, i, endpoint)) continue;
+        if (!part_has_tag(data.parts[i], digit_tag, db)) continue;
+        sum += clamped_integrity(data.parts[i]);
+        ++count;
+    }
+    return count > 0 ? sum / static_cast<float>(count) : 1.0f;
+}
+
+}
 
 void Anatomy::init(AnatomyData& data, const String& race_id) {
     data.race_id = race_id;
@@ -50,6 +98,7 @@ void Anatomy::init(AnatomyData& data, const String& race_id) {
     };
 
     build_recursive(build_recursive, "", -1);
+    refresh_capabilities(data);
 }
 
 int Anatomy::find_part(const AnatomyData& data, const String& type_id, int skip) {
@@ -102,7 +151,8 @@ float Anatomy::get_integrity(const AnatomyData& data, int index) {
 
 void Anatomy::set_integrity(AnatomyData& data, int index, float integrity) {
     if (index >= 0 && index < data.parts.size()) {
-        data.parts[index].integrity = integrity;
+        data.parts[index].integrity = CLAMP(integrity, 0.0f, 1.0f);
+        refresh_capabilities(data);
     }
 }
 
@@ -179,6 +229,100 @@ float Anatomy::min_required_integrity(const AnatomyData& data, const std::vector
     return any ? worst : 1.0f;
 }
 
+void Anatomy::refresh_capabilities(AnatomyData& data) {
+    data.capabilities = BodyCapabilities();
+
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags || data.parts.empty()) return;
+
+    const uint16_t core_tag = tags->get_tag_id("CORE");
+    const uint16_t stance_tag = tags->get_tag_id("STANCE");
+    const uint16_t grasp_tag = tags->get_tag_id("GRASP");
+    const uint16_t sight_tag = tags->get_tag_id("SIGHT");
+    const uint16_t speech_tag = tags->get_tag_id("SPEECH");
+    const uint16_t digit_tag = tags->get_tag_id("DIGIT");
+
+    float moving_sum = 0.0f;
+    int moving_count = 0;
+    float manipulation_sum = 0.0f;
+    int manipulation_count = 0;
+    std::vector<float> perception_sources;
+    float speech = 1.0f;
+    int speech_count = 0;
+
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        const BodyPart& part = data.parts[i];
+        const float chain = chain_efficiency(data, i, core_tag, db);
+
+        if (part_has_tag(part, stance_tag, db)) {
+            const float digits = descendant_digit_integrity(data, i, digit_tag, db);
+            moving_sum += chain * (0.6f + 0.4f * digits);
+            ++moving_count;
+        }
+        if (part_has_tag(part, grasp_tag, db)) {
+            const float digits = descendant_digit_integrity(data, i, digit_tag, db);
+            manipulation_sum += chain * (0.2f + 0.8f * digits);
+            ++manipulation_count;
+        }
+        if (part_has_tag(part, sight_tag, db)) {
+            perception_sources.push_back(chain);
+        }
+        if (part_has_tag(part, speech_tag, db)) {
+            speech = MIN(speech, chain);
+            ++speech_count;
+        }
+    }
+
+    if (moving_count > 0) {
+        data.capabilities.moving = moving_sum / static_cast<float>(moving_count);
+    }
+    if (manipulation_count > 0) {
+        data.capabilities.manipulation = manipulation_sum / static_cast<float>(manipulation_count);
+    }
+    if (!perception_sources.empty()) {
+        std::sort(perception_sources.begin(), perception_sources.end(), std::greater<float>());
+        if (perception_sources.size() == 1) {
+            data.capabilities.perception = perception_sources[0];
+        } else {
+            float remaining = 0.0f;
+            for (size_t i = 1; i < perception_sources.size(); ++i) {
+                remaining += perception_sources[i];
+            }
+            remaining /= static_cast<float>(perception_sources.size() - 1);
+            data.capabilities.perception = 0.75f * perception_sources[0] + 0.25f * remaining;
+        }
+    }
+    if (speech_count > 0) {
+        data.capabilities.speech = speech;
+    }
+}
+
+float Anatomy::get_moving_capacity(const AnatomyData& data) {
+    return data.capabilities.moving;
+}
+
+float Anatomy::get_manipulation_capacity(const AnatomyData& data) {
+    return data.capabilities.manipulation;
+}
+
+float Anatomy::get_perception_capacity(const AnatomyData& data) {
+    return data.capabilities.perception;
+}
+
+float Anatomy::get_speech_capacity(const AnatomyData& data) {
+    return data.capabilities.speech;
+}
+
+Dictionary Anatomy::get_capabilities(const AnatomyData& data) {
+    Dictionary result;
+    result["moving"] = data.capabilities.moving;
+    result["manipulation"] = data.capabilities.manipulation;
+    result["perception"] = data.capabilities.perception;
+    result["speech"] = data.capabilities.speech;
+    return result;
+}
+
 static int pick_hit_location_internal(const AnatomyData& data, const std::vector<String>& preferred_heights, float roll_unit) {
     BodyPartDb* db = BodyPartDb::get_singleton();
     if (!db) return -1;
@@ -196,14 +340,14 @@ static int pick_hit_location_internal(const AnatomyData& data, const std::vector
     for (int i = 0; i < data.parts.size(); i++) {
         if (!Anatomy::is_functional(data, i)) continue;
         if (!height_match(i)) continue;
-        total += db->get_body_part_size(data.parts[i].type_id);
+        total += db->get_body_part_hit_weight(data.parts[i].type_id);
     }
 
     bool use_height_filter = total > 0.0f;
     if (!use_height_filter) {
         for (int i = 0; i < data.parts.size(); i++) {
             if (!Anatomy::is_functional(data, i)) continue;
-            total += db->get_body_part_size(data.parts[i].type_id);
+            total += db->get_body_part_hit_weight(data.parts[i].type_id);
         }
     }
     if (total <= 0.0f) return -1;
@@ -212,7 +356,7 @@ static int pick_hit_location_internal(const AnatomyData& data, const std::vector
     for (int i = 0; i < data.parts.size(); i++) {
         if (!Anatomy::is_functional(data, i)) continue;
         if (use_height_filter && !height_match(i)) continue;
-        roll -= db->get_body_part_size(data.parts[i].type_id);
+        roll -= db->get_body_part_hit_weight(data.parts[i].type_id);
         if (roll <= 0.0f) return i;
     }
     return -1;
@@ -229,6 +373,7 @@ int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String
 Dictionary Anatomy::serialize(const AnatomyData& data) {
     Dictionary result;
     result["race_id"] = data.race_id;
+    result["capacities"] = get_capabilities(data);
     Array parts;
     for (const auto& part : data.parts) {
         Dictionary d;
@@ -257,6 +402,7 @@ void Anatomy::deserialize(AnatomyData& data, const Dictionary& dict) {
         part.height = d.get("height", "MID");
         data.parts.push_back(part);
     }
+    refresh_capabilities(data);
 }
 
 }

@@ -208,8 +208,7 @@ func _submit_move(dir: Vector2) -> bool:
 			]
 		)
 		return false
-	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")
-	return true
+	return World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "") > 0.0
 
 func _confirm_ledge_jump(target: Vector2i) -> void:
 	World.submit_player_intent(World.INTENT_MOVE, target.x, target.y, "")

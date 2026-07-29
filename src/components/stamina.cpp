@@ -26,12 +26,13 @@ float Stamina::get_percent(const StaminaData& data) {
     return data.current_stamina / data.max_stamina;
 }
 
-float Stamina::move_cost_multiplier(const StaminaData& data) {
+float Stamina::moving_capacity_factor(const StaminaData& data) {
     float pct = get_percent(data);
     if (pct >= StaminaTuning::MOVE_PENALTY_THRESHOLD) return 1.0f;
-    // Scale linearly from 1.0 at the threshold up to MOVE_PENALTY_MAX at 0%.
-    float t = pct / StaminaTuning::MOVE_PENALTY_THRESHOLD; // 1.0 at threshold, 0.0 at empty
-    return 1.0f + (1.0f - t) * (StaminaTuning::MOVE_PENALTY_MAX - 1.0f);
+    const float t = pct / StaminaTuning::MOVE_PENALTY_THRESHOLD;
+    const float cost_multiplier =
+        1.0f + (1.0f - t) * (StaminaTuning::MOVE_PENALTY_MAX - 1.0f);
+    return 1.0f / cost_multiplier;
 }
 
 Dictionary Stamina::serialize(const StaminaData& data) {

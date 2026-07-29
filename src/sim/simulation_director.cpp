@@ -661,13 +661,24 @@ float SimulationDirector::movement_action_cost(uint32_t entity_id, float base_co
     if (base_cost <= 0.0f) return 0.0f;
 
     const float effective_speed = (loco.speed > 0.0f ? loco.speed : 1.0f)
-        * Locomotion::movement_mode_speed_multiplier(loco.movement_mode);
-    float cost = base_cost / (effective_speed > 0.0f ? effective_speed : 1.0f);
+        * Locomotion::movement_mode_speed_multiplier(loco.movement_mode)
+        * entity_moving_capacity(entity_id);
+    return effective_speed > 0.0f ? base_cost / effective_speed : 0.0f;
+}
+
+float SimulationDirector::entity_moving_capacity(uint32_t entity_id) const {
+    if (!d.ledger) return 0.0f;
+
+    float capacity = 1.0f;
+    const AnatomyData* anatomy = d.ledger->try_get_anatomy(entity_id);
+    if (anatomy) {
+        capacity *= Anatomy::get_moving_capacity(*anatomy);
+    }
     const StaminaData* stamina = d.ledger->try_get_stamina(entity_id);
     if (stamina) {
-        cost *= Stamina::move_cost_multiplier(*stamina);
+        capacity *= Stamina::moving_capacity_factor(*stamina);
     }
-    return cost;
+    return CLAMP(capacity, 0.0f, 1.0f);
 }
 
 float SimulationDirector::get_entity_effective_movement_speed(uint32_t entity_id) const {
@@ -676,12 +687,9 @@ float SimulationDirector::get_entity_effective_movement_speed(uint32_t entity_id
     if (!loco) return 0.0f;
 
     float speed = (loco->speed > 0.0f ? loco->speed : 1.0f)
-        * Locomotion::movement_mode_speed_multiplier(loco->movement_mode);
-    const StaminaData* stamina = d.ledger->try_get_stamina(entity_id);
-    if (stamina) {
-        speed /= Stamina::move_cost_multiplier(*stamina);
-    }
-    return speed;
+        * Locomotion::movement_mode_speed_multiplier(loco->movement_mode)
+        * entity_moving_capacity(entity_id);
+    return MAX(0.0f, speed);
 }
 
 String SimulationDirector::get_player_movement_mode() const {
@@ -810,25 +818,10 @@ void SimulationDirector::apply_attack_effects(uint32_t attacker_id, uint32_t def
     if (!atk.hit) return;
     EffectsData& fx = d.ledger->ensure_effects(defender_id);
 
-    if (atk.hit_part_type == "head") {
-        bool was_stunned = Effects::is_stunned(fx);
-        Effects::add(fx, Effects::make_stun_decay(EffectTuning::STUN_PER_HEAD_HIT));
-        if (!was_stunned && Effects::is_stunned(fx)) {
-            d.sink->on_effect_event(defender_id, "stun", "onset", "");
-        }
-    }
-
     if (!atk.effect_type.is_empty() && atk.effect_magnitude > 0.0f) {
         if (atk.effect_type == "bleed" && atk.hit_part_index >= 0) {
             Effects::add(fx, Effects::make_bleed(atk.hit_part_index, atk.effect_magnitude));
             d.sink->on_effect_event(defender_id, "bleed", "onset", atk.part_name);
-        } else if (atk.effect_type == "stun") {
-            if (atk.effect_mode == "timer") {
-                Effects::add(fx, Effects::make_stun_timer(atk.effect_duration, atk.effect_magnitude));
-            } else {
-                Effects::add(fx, Effects::make_stun_decay(atk.effect_magnitude));
-            }
-            d.sink->on_effect_event(defender_id, "stun", "onset", "");
         }
     }
 }
@@ -868,23 +861,6 @@ void SimulationDirector::advance_entity_time(uint32_t entity_id, float dt) {
         }
         d.sink->on_effect_event(entity_id, "bleed", "stopped", part_name);
     }
-}
-
-float SimulationDirector::handle_player_stun(Entity& entity) {
-    EffectsData* fx = d.ledger->try_get_effects(d.player_entity_id);
-    if (!fx || !Effects::is_stunned(*fx)) {
-        return 0.0f;
-    }
-
-    float wait = EffectTuning::STUN_WAIT_STEP;
-    advance_entity_time(d.player_entity_id, wait);
-    float next_time = entity.next_turn_time + wait;
-    entity.next_turn_time = next_time;
-    d.scheduler->push(d.player_entity_id, next_time);
-    process_game_turn(next_time);
-    d.sink->on_effect_event(d.player_entity_id, "stun", "frozen", "");
-    d.sink->on_player_action_resolved(d.player_entity_id, wait, next_time);
-    return wait;
 }
 
 bool SimulationDirector::plan_player_intent(Intent& intent) {
@@ -1022,6 +998,11 @@ ActionResult SimulationDirector::resolve_player_smash(const Intent& intent, Enti
 }
 
 ActionResult SimulationDirector::resolve_player_basic_action(const Intent& intent, Entity& entity, LocomotionData& loco) {
+    if ((intent.type == IntentType::MOVE || intent.type == IntentType::CHANGE_Z) &&
+        entity_moving_capacity(d.player_entity_id) <= 0.0f) {
+        return ActionResult::make_failure(ActionFailure::NO_LOCOMOTION);
+    }
+
     if (intent.type == IntentType::MOVE && loco.movement_mode == MovementMode::RUN && !can_player_run()) {
         set_player_movement_mode("walk", "exhausted");
     }
@@ -1080,6 +1061,13 @@ ActionResult SimulationDirector::resolve_player_action(const Intent& intent, Ent
     }
 }
 
+void SimulationDirector::emit_player_action_failure(ActionFailure failure) const {
+    if (!d.sink) return;
+    if (failure == ActionFailure::NO_LOCOMOTION) {
+        d.sink->on_player_action_failed("no_locomotion");
+    }
+}
+
 bool SimulationDirector::finish_player_action(const ActionResult& result, float base_time, const Vector2i& old_pos, int old_z) {
     if (!result.success || result.cost <= 0.0f) return false;
     if (!finish_entity_action(
@@ -1117,8 +1105,6 @@ float SimulationDirector::execute_player_intent(Intent intent) {
         return 0.0f;
     }
 
-    float stun_cost = handle_player_stun(*entity);
-    if (stun_cost > 0.0f) return stun_cost;
     if (!plan_player_intent(intent)) return 0.0f;
 
     LocomotionData* loco = d.ledger->try_get_locomotion(d.player_entity_id);
@@ -1127,6 +1113,7 @@ float SimulationDirector::execute_player_intent(Intent intent) {
     Vector2i old_pos(entity->x, entity->y);
     int old_z = entity->z;
     ActionResult result = resolve_player_action(intent, *entity, *loco);
+    if (!result.success) emit_player_action_failure(result.failure);
     finish_player_action(result, player_base_time, old_pos, old_z);
 
     return result.success ? result.cost : 0.0f;
@@ -1197,15 +1184,13 @@ float SimulationDirector::submit_player_change_z(int delta) {
         return 0.0f;
     }
 
-    float stun_cost = handle_player_stun(*entity);
-    if (stun_cost > 0.0f) return stun_cost;
-
     LocomotionData* loco = d.ledger->try_get_locomotion(d.player_entity_id);
     if (!loco) return 0.0f;
     float player_base_time = entity->next_turn_time;
     Vector2i old_pos(entity->x, entity->y);
     int old_z = entity->z;
     ActionResult result = resolve_player_action(intent, *entity, *loco);
+    if (!result.success) emit_player_action_failure(result.failure);
     finish_player_action(result, player_base_time, old_pos, old_z);
 
     return result.success ? result.cost : 0.0f;
@@ -1239,7 +1224,13 @@ void SimulationDirector::notify_attack(uint32_t attacker_id, uint32_t defender_i
         const bool is_defender = observer_id == defender_id;
         if (!is_defender && get_entity_relation(observer_id, defender_id) != "friendly") continue;
         const int distance = std::max(abs(observer->x - attacker->x), abs(observer->y - attacker->y));
-        if (!is_defender && distance > ai->reaction_radius) continue;
+        int reaction_radius = ai->reaction_radius;
+        const AnatomyData* observer_anatomy = d.ledger->try_get_anatomy(observer_id);
+        if (observer_anatomy) {
+            reaction_radius = MAX(1, static_cast<int>(
+                std::round(reaction_radius * Anatomy::get_perception_capacity(*observer_anatomy))));
+        }
+        if (!is_defender && distance > reaction_radius) continue;
         if (!is_defender && tile_db &&
             (!Perception::has_line_of_sight(observer->x, observer->y, attacker->x, attacker->y, *d.bubble, *tile_db) ||
              !Perception::has_line_of_sight(observer->x, observer->y, defender->x, defender->y, *d.bubble, *tile_db))) {

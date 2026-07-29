@@ -37,6 +37,7 @@ enum class ActionFailure {
     NO_ITEMS,
     CARRY_LIMIT,
     EXHAUSTED,
+    NO_LOCOMOTION,
     UNSUPPORTED
 };
 

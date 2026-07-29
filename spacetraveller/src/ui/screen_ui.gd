@@ -163,11 +163,7 @@ func _on_effect_event(entity_id: int, effect_type: String, note: String, part: S
 	var subj_be = "are" if entity_id == 0 else "is"
 	var possessive = "your" if entity_id == 0 else "their"
 	var msg = ""
-	if effect_type == "stun" and note == "frozen":
-		msg = "[b]%s %s stunned and cannot move![/b]" % [actor, subj_be]
-	elif effect_type == "stun" and note == "onset":
-		msg = "%s %s stunned!" % [actor, subj_be]
-	elif effect_type == "bleed" and note == "onset":
+	if effect_type == "bleed" and note == "onset":
 		if part.is_empty():
 			msg = "%s %s bleeding." % [actor, subj_be]
 		else:

@@ -9,6 +9,7 @@
 #include "data/body_part_db.h"
 #include "data/item_db.h"
 #include "data/style_db.h"
+#include "core/tag_registry.h"
 #include <vector>
 
 using namespace godot;
@@ -165,7 +166,10 @@ void apply_damage_packet(const CombatContext& ctx, const DamagePacket& packet, C
     std::vector<String> target_heights;
     if (packet.style) target_heights = packet.style->target_heights;
 
-    int loc_idx = Anatomy::pick_hit_location(ctx.defender_anatomy, target_heights, ctx.rng);
+    int loc_idx = ctx.forced_body_part_index >= 0
+        ? ctx.forced_body_part_index
+        : Anatomy::pick_hit_location(ctx.defender_anatomy, target_heights, ctx.rng);
+    bool destroyed_vital_part = false;
     if (loc_idx >= 0) {
         outcome.hit_part_index = loc_idx;
         outcome.hit_part_type = Anatomy::get_type_id(ctx.defender_anatomy, loc_idx);
@@ -176,16 +180,29 @@ void apply_damage_packet(const CombatContext& ctx, const DamagePacket& packet, C
                 damage *= 10.0f / (10.0f + armor);
             }
         }
-        float part_size = body_db->get_body_part_size(outcome.hit_part_type);
-        float durability = part_size * 10.0f;
+        float durability = body_db->get_body_part_max_integrity(outcome.hit_part_type);
         float integrity_loss = (durability > 0.0f) ? (damage / durability) : 1.0f;
         float current = Anatomy::get_integrity(ctx.defender_anatomy, loc_idx);
-        Anatomy::set_integrity(ctx.defender_anatomy, loc_idx, MAX(0.0f, current - integrity_loss));
+        const float remaining = MAX(0.0f, current - integrity_loss);
+        Anatomy::set_integrity(ctx.defender_anatomy, loc_idx, remaining);
+
+        if (current > 0.0f && remaining <= 0.0f) {
+            const BodyPartInfo* part_info = body_db->get_body_part_info(outcome.hit_part_type);
+            TagRegistry* tags = TagRegistry::get_singleton();
+            const uint16_t core_tag = tags ? tags->get_tag_id("CORE") : 0;
+            const uint16_t vital_tag = tags ? tags->get_tag_id("VITAL") : 0;
+            destroyed_vital_part = part_info && (
+                (core_tag != 0 && TagRegistry::has_tag(core_tag, part_info->tags)) ||
+                (vital_tag != 0 && TagRegistry::has_tag(vital_tag, part_info->tags)));
+        }
     }
 
     outcome.damage = damage;
 
     Health::damage(ctx.defender_health, damage);
+    if (destroyed_vital_part && ctx.defender_health.alive) {
+        Health::damage(ctx.defender_health, ctx.defender_health.current_hp);
+    }
     outcome.killed = !ctx.defender_health.alive;
 
     outcome.effect_type = packet.ability->effect_type;

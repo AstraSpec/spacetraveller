@@ -24,6 +24,7 @@ struct CombatOutcome;
 struct LocomotionData;
 struct Intent;
 struct ActionResult;
+enum class ActionFailure;
 struct RaceInfo;
 class TileDb;
 class EntityTracker;
@@ -97,7 +98,6 @@ private:
         const String& ability_id = String(),
         int body_part_index = -1
     );
-    float handle_player_stun(Entity& entity);
     bool plan_player_intent(Intent& intent);
     ActionResult resolve_player_action(const Intent& intent, Entity& entity, LocomotionData& loco);
     ActionResult resolve_player_attack(const Intent& intent);
@@ -126,6 +126,8 @@ private:
     );
     void emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos);
     float movement_action_cost(uint32_t entity_id, float base_cost, const LocomotionData& loco) const;
+    float entity_moving_capacity(uint32_t entity_id) const;
+    void emit_player_action_failure(ActionFailure failure) const;
     bool can_player_run() const;
     void force_player_walk_if_exhausted();
     void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk);

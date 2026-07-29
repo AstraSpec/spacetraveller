@@ -4,6 +4,7 @@
 #include "data/structure_db.h"
 #include "data/tile_db.h"
 #include "data/quest_db.h"
+#include "data/body_part_db.h"
 #include "components/action_resolver.h"
 #include "world_spawner.h"
 #include "entity_lifecycle.h"
@@ -132,6 +133,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
 
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
+    ClassDB::bind_method(D_METHOD("get_entity_health_status", "entity_id"), &GameWorld::get_entity_health_status);
     ClassDB::bind_method(D_METHOD("get_entity_gender", "entity_id"), &GameWorld::get_entity_gender);
     ClassDB::bind_method(D_METHOD("entity_has_sapient", "entity_id"), &GameWorld::entity_has_sapient);
     ClassDB::bind_method(D_METHOD("get_entity_friendship", "entity_id"), &GameWorld::get_entity_friendship);
@@ -247,6 +249,8 @@ void GameWorld::_bind_methods() {
         PropertyInfo(Variant::INT, "entity_id"),
         PropertyInfo(Variant::FLOAT, "cost"),
         PropertyInfo(Variant::FLOAT, "next_turn_time")));
+    ADD_SIGNAL(MethodInfo("player_action_failed",
+        PropertyInfo(Variant::STRING, "failure_id")));
     ADD_SIGNAL(MethodInfo("player_movement_mode_changed",
         PropertyInfo(Variant::STRING, "mode_id"),
         PropertyInfo(Variant::STRING, "reason")));
@@ -983,6 +987,120 @@ Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
     return entity_ledger.get_anatomy(entity_id);
 }
 
+Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
+    Dictionary result;
+    const AnatomyData* anatomy = entity_ledger.try_get_anatomy(entity_id);
+    if (!anatomy) return result;
+
+    result["entity_id"] = static_cast<int64_t>(entity_id);
+    result["name"] = get_entity_name(entity_id);
+    result["race_id"] = anatomy->race_id;
+
+    const HealthData* health = entity_ledger.try_get_health(entity_id);
+    if (health) {
+        result["current_hp"] = health->current_hp;
+        result["max_hp"] = health->max_hp;
+        result["alive"] = health->alive;
+    }
+
+    const StaminaData* stamina = entity_ledger.try_get_stamina(entity_id);
+    const float stamina_percent = stamina ? Stamina::get_percent(*stamina) : 1.0f;
+    result["stamina"] = stamina_percent;
+
+    Dictionary capacities;
+    auto add_capacity = [&](const String& id, const String& label, float anatomical, float value) {
+        Dictionary capacity;
+        capacity["id"] = id;
+        capacity["label"] = label;
+        capacity["anatomical"] = CLAMP(anatomical, 0.0f, 1.0f);
+        capacity["value"] = CLAMP(value, 0.0f, 1.0f);
+        capacities[id] = capacity;
+    };
+
+    const float anatomical_moving = Anatomy::get_moving_capacity(*anatomy);
+    const float stamina_factor = stamina ? Stamina::moving_capacity_factor(*stamina) : 1.0f;
+    add_capacity("moving", "Moving", anatomical_moving, anatomical_moving * stamina_factor);
+    add_capacity(
+        "manipulation",
+        "Manipulation",
+        Anatomy::get_manipulation_capacity(*anatomy),
+        Anatomy::get_manipulation_capacity(*anatomy));
+    add_capacity(
+        "perception",
+        "Perception",
+        Anatomy::get_perception_capacity(*anatomy),
+        Anatomy::get_perception_capacity(*anatomy));
+    add_capacity(
+        "speech",
+        "Talking",
+        Anatomy::get_speech_capacity(*anatomy),
+        Anatomy::get_speech_capacity(*anatomy));
+    result["capacities"] = capacities;
+
+    const EffectsData* effects = entity_ledger.try_get_effects(entity_id);
+    BodyPartDb* body_db = BodyPartDb::get_singleton();
+    Array parts;
+    for (int i = 0; i < static_cast<int>(anatomy->parts.size()); ++i) {
+        const BodyPart& part = anatomy->parts[i];
+        const BodyPartInfo* part_info = body_db ? body_db->get_body_part_info(part.type_id) : nullptr;
+        const String base_name = part_info ? part_info->name : part.type_id.capitalize();
+
+        int occurrence = 0;
+        int total = 0;
+        for (int j = 0; j < static_cast<int>(anatomy->parts.size()); ++j) {
+            if (anatomy->parts[j].type_id != part.type_id) continue;
+            if (j < i) ++occurrence;
+            ++total;
+        }
+
+        String display_name = base_name;
+        if (total == 2) {
+            display_name = (occurrence == 0 ? String("Left ") : String("Right ")) + base_name.to_lower();
+        } else if (total > 2) {
+            display_name += " " + String::num_int64(occurrence + 1);
+        }
+
+        Dictionary part_status;
+        part_status["index"] = i;
+        part_status["parent_index"] = part.parent_index;
+        part_status["type_id"] = part.type_id;
+        part_status["display_name"] = display_name;
+        part_status["integrity"] = CLAMP(part.integrity, 0.0f, 1.0f);
+        part_status["max_integrity"] = part_info ? part_info->max_integrity : 10.0f;
+
+        Array part_effects;
+        if (effects) {
+            for (const Effect& effect : effects->effects) {
+                if (effect.scope != static_cast<int>(EffectScope::LIMB) || effect.target_part != i) continue;
+                Dictionary effect_status;
+                effect_status["type"] = effect.type;
+                effect_status["magnitude"] = effect.magnitude;
+                effect_status["mode"] = effect.mode;
+                effect_status["timer"] = effect.timer;
+                part_effects.push_back(effect_status);
+            }
+        }
+        part_status["effects"] = part_effects;
+        parts.push_back(part_status);
+    }
+    result["parts"] = parts;
+
+    Array body_effects;
+    if (effects) {
+        for (const Effect& effect : effects->effects) {
+            if (effect.scope != static_cast<int>(EffectScope::BODY)) continue;
+            Dictionary effect_status;
+            effect_status["type"] = effect.type;
+            effect_status["magnitude"] = effect.magnitude;
+            effect_status["mode"] = effect.mode;
+            effect_status["timer"] = effect.timer;
+            body_effects.push_back(effect_status);
+        }
+    }
+    result["body_effects"] = body_effects;
+    return result;
+}
+
 String GameWorld::get_entity_gender(uint32_t entity_id) const {
     const String* value = entity_ledger.try_get_gender(entity_id);
     return value ? *value : String();
@@ -1275,6 +1393,10 @@ void GameWorld::on_player_turn_ready(uint32_t entity_id) {
 
 void GameWorld::on_player_action_resolved(uint32_t entity_id, float cost, float next_turn_time) {
     emit_signal("player_action_resolved", entity_id, cost, next_turn_time);
+}
+
+void GameWorld::on_player_action_failed(const String& failure_id) {
+    emit_signal("player_action_failed", failure_id);
 }
 
 void GameWorld::on_player_movement_mode_changed(const String& mode_id, const String& reason) {

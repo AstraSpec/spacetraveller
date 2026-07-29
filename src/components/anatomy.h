@@ -17,9 +17,17 @@ struct BodyPart {
     String height = "MID";
 };
 
+struct BodyCapabilities {
+    float moving = 1.0f;
+    float manipulation = 1.0f;
+    float perception = 1.0f;
+    float speech = 1.0f;
+};
+
 struct AnatomyData {
     String race_id;
     std::vector<BodyPart> parts;
+    BodyCapabilities capabilities;
 };
 
 namespace Anatomy {
@@ -36,6 +44,12 @@ namespace Anatomy {
     bool has_functional_limbs(const AnatomyData& data, const std::vector<String>& required);
     int count_functional_parts_with_tag(const AnatomyData& data, const String& tag);
     float min_required_integrity(const AnatomyData& data, const std::vector<String>& required);
+    void refresh_capabilities(AnatomyData& data);
+    float get_moving_capacity(const AnatomyData& data);
+    float get_manipulation_capacity(const AnatomyData& data);
+    float get_perception_capacity(const AnatomyData& data);
+    float get_speech_capacity(const AnatomyData& data);
+    Dictionary get_capabilities(const AnatomyData& data);
     int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights = std::vector<String>());
     int pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights, Rng::Seeded& rng);
     Dictionary serialize(const AnatomyData& data);

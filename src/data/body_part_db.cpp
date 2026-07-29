@@ -19,7 +19,10 @@ BodyPartInfo BodyPartDb::_parse_row(const Dictionary &p_data) {
     BodyPartInfo info;
     info.name = p_data.get("name", "");
     info.tags = _parse_tags(p_data.get("tags", Array()));
-    info.size = static_cast<float>(static_cast<double>(p_data.get("size", 1.0)));
+    info.hit_weight = static_cast<float>(static_cast<double>(
+        p_data.get("hit_weight", p_data.get("size", 1.0))));
+    info.max_integrity = static_cast<float>(static_cast<double>(
+        p_data.get("max_integrity", info.hit_weight * 10.0f)));
     return info;
 }
 
@@ -32,9 +35,14 @@ String BodyPartDb::get_body_part_name(const String &p_id) const {
     return info ? info->name : p_id;
 }
 
-float BodyPartDb::get_body_part_size(const String &p_id) const {
+float BodyPartDb::get_body_part_hit_weight(const String &p_id) const {
     const BodyPartInfo* info = get_body_part_info(p_id);
-    return info ? info->size : 1.0f;
+    return info ? info->hit_weight : 1.0f;
+}
+
+float BodyPartDb::get_body_part_max_integrity(const String &p_id) const {
+    const BodyPartInfo* info = get_body_part_info(p_id);
+    return info ? info->max_integrity : 10.0f;
 }
 
 }

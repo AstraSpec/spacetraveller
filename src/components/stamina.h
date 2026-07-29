@@ -23,7 +23,7 @@ namespace Stamina {
     void regen(StaminaData& data, float amount);
     bool can_afford(const StaminaData& data, float cost);
     float get_percent(const StaminaData& data);
-    float move_cost_multiplier(const StaminaData& data);
+    float moving_capacity_factor(const StaminaData& data);
     Dictionary serialize(const StaminaData& data);
     void deserialize(StaminaData& data, const Dictionary& dict);
 }

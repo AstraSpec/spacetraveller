@@ -15,7 +15,7 @@ struct AbilityInfo {
     float accuracy = 0.8f;
     float speed = 1.0f;
     float stamina_cost = 10.0f;
-    String effect_type;       // "", "bleed", "stun"
+    String effect_type;       // "", "bleed"
     String effect_mode;       // "decay" | "timer"
     float effect_magnitude = 0.0f;
     float effect_duration = 0.0f;

@@ -6,7 +6,7 @@
 using namespace godot;
 
 void Effects::add(EffectsData& data, const Effect& e) {
-    // Bleed stacks per limb; stun stacks into a single body effect of the same mode.
+    // Effects of the same type and target stack into one record.
     for (auto& existing : data.effects) {
         if (existing.type == e.type && existing.scope == e.scope &&
             existing.target_part == e.target_part && existing.mode == e.mode) {
@@ -41,24 +41,12 @@ void Effects::tick(EffectsData& data, float dt, std::vector<int>* expired_bleed_
     }
 }
 
-float Effects::get_stun(const EffectsData& data) {
-    float total = 0.0f;
-    for (const auto& e : data.effects) {
-        if (e.type == "stun") total += e.magnitude;
-    }
-    return std::min(1.0f, total);
-}
-
 float Effects::total_bleed(const EffectsData& data) {
     float total = 0.0f;
     for (const auto& e : data.effects) {
         if (e.type == "bleed") total += e.magnitude;
     }
     return total;
-}
-
-bool Effects::is_stunned(const EffectsData& data) {
-    return get_stun(data) > EffectTuning::STUN_FREEZE_THRESHOLD;
 }
 
 Effect Effects::make_bleed(int target_part, float magnitude) {
@@ -69,28 +57,6 @@ Effect Effects::make_bleed(int target_part, float magnitude) {
     e.magnitude = magnitude;
     e.mode = (int)EffectMode::DECAY;
     e.rate = EffectTuning::BLEED_DECAY_RATE;
-    return e;
-}
-
-Effect Effects::make_stun_decay(float magnitude) {
-    Effect e;
-    e.type = "stun";
-    e.scope = (int)EffectScope::BODY;
-    e.target_part = -1;
-    e.magnitude = magnitude;
-    e.mode = (int)EffectMode::DECAY;
-    e.rate = EffectTuning::STUN_DECAY_RATE;
-    return e;
-}
-
-Effect Effects::make_stun_timer(float duration, float magnitude) {
-    Effect e;
-    e.type = "stun";
-    e.scope = (int)EffectScope::BODY;
-    e.target_part = -1;
-    e.magnitude = magnitude;
-    e.mode = (int)EffectMode::TIMER;
-    e.timer = duration;
     return e;
 }
 
@@ -119,6 +85,7 @@ void Effects::deserialize(EffectsData& data, const Dictionary& dict) {
         Dictionary ed = arr[i];
         Effect e;
         e.type = ed.get("type", "");
+        if (e.type == "stun") continue;
         e.scope = ed.get("scope", (int)EffectScope::BODY);
         e.target_part = ed.get("target_part", -1);
         e.magnitude = static_cast<float>(static_cast<double>(ed.get("magnitude", 0.0)));

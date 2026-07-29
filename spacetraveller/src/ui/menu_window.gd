@@ -5,7 +5,7 @@ extends BaseWindow
 @export var single_tab: BaseListTab
 @export var default_tab_on_open: String = ""
 
-var current_tab: BaseListTab
+var current_tab: Control
 var menu_params: Dictionary = {}
 
 func _ready() -> void:
@@ -86,7 +86,7 @@ func _on_tab_changed(_tab_index: int) -> void:
 
 func _update_active_tab(apply_params: bool = false):
 	if tabs:
-		current_tab = tabs.get_current_tab_control() as BaseListTab
+		current_tab = tabs.get_current_tab_control()
 	elif single_tab:
 		current_tab = single_tab
 	else:
@@ -94,9 +94,9 @@ func _update_active_tab(apply_params: bool = false):
 		
 	if current_tab:
 		if apply_params and current_tab.has_method("set_params"):
-			current_tab.set_params(menu_params)
-		else:
-			current_tab.refresh_view()
+			current_tab.call("set_params", menu_params)
+		elif current_tab.has_method("refresh_view"):
+			current_tab.call("refresh_view")
 
 func _notify_menu_closed() -> void:
 	if tabs:
@@ -108,23 +108,25 @@ func _notify_menu_closed() -> void:
 
 func _on_directional_input(direction: Vector2) -> void:
 	if not visible or not current_tab: return
-	current_tab.handle_directional_input(direction)
+	if current_tab.has_method("handle_directional_input"):
+		current_tab.call("handle_directional_input", direction)
 
 func _on_accept_input():
 	if not visible or not current_tab: return
-	current_tab._on_item_activated()
+	if current_tab.has_method("_on_item_activated"):
+		current_tab.call("_on_item_activated")
 
 func _on_drop_input(all: bool):
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
-		current_tab.handle_action("drop", {"all": all})
+		current_tab.call("handle_action", "drop", {"all": all})
 
 func _on_wear_input():
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
-		current_tab.handle_action("wear")
+		current_tab.call("handle_action", "wear")
 
 func _on_wield_input():
 	if not visible or not current_tab: return
 	if current_tab.has_method("handle_action"):
-		current_tab.handle_action("wield")
+		current_tab.call("handle_action", "wield")
