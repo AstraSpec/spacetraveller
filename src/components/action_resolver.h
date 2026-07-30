@@ -23,7 +23,7 @@ struct Intent {
     uint32_t entity_target_id = UINT32_MAX;
     String param;
     int amount = 0;
-    String attack_ability;
+    String attack_id;
     int attack_body_part = -1;
 };
 
@@ -37,6 +37,7 @@ enum class ActionFailure {
     NO_ITEMS,
     CARRY_LIMIT,
     EXHAUSTED,
+    DOWNED,
     NO_LOCOMOTION,
     UNSUPPORTED
 };
@@ -45,7 +46,7 @@ struct ActionResult {
     bool success = false;
     float cost = 0.0f;
     float stamina_cost = 0.0f;
-    bool suppress_stamina_recovery = false;
+    float stamina_recovery_multiplier = 1.0f;
     ActionFailure failure = ActionFailure::NONE;
     int amount = 0;
 

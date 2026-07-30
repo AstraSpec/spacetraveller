@@ -33,6 +33,7 @@ func _ready() -> void:
 	StructureDb.initialize_data()
 	StyleDb.initialize_data()
 	AbilityDb.initialize_data()
+	WeaponProfileDb.initialize_data()
 	NameDb.initialize_data()
 	FactionDb.initialize_data()
 	JobDb.initialize_data()

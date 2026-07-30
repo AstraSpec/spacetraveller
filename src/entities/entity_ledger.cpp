@@ -2,6 +2,8 @@
 #include "core/id_registry.h"
 #include "data/item_db.h"
 #include "data/race_db.h"
+#include "data/weapon_profile_db.h"
+#include "components/combat_math.h"
 
 using namespace godot;
 
@@ -16,20 +18,22 @@ uint32_t EntityLedger::spawn_entity(const Vector2i& pos, int z, uint16_t atlas_x
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
 
-    float hp = 100.0f;
+    float blood = 100.0f;
     float stam = 100.0f;
     RaceDb* race_db = RaceDb::get_singleton();
     if (race_db) {
         const RaceInfo* race = race_db->get_race_info(race_id);
         if (race) {
-            hp = race->base_hp;
+            blood = 100.0f * race->anatomy_scale;
             stam = race->base_stamina;
         }
     }
-    Health::init(health_data[id], hp);
+    Health::init(health_data[id], blood);
     Stamina::init(stamina_data[id], stam);
 
     Equipment::init(equipment_data[id]);
+    combat_state_data[id] = CombatStateData();
+    Physiology::init(physiology_data[id]);
     SocialMemory::init(social_data[id]);
     allegiance_data[id] = AllegianceData();
     return id;
@@ -41,9 +45,17 @@ uint32_t EntityLedger::spawn_player(const Vector2i& pos, uint16_t atlas_x, uint1
     Anatomy::init(anatomy_data[id], "human");
     Clothing::init(clothing_data[id]);
     Inventory::init(inventory_data[id]);
-    Health::init(health_data[id], 100.0f);
+    float blood = 100.0f;
+    if (RaceDb* race_db = RaceDb::get_singleton()) {
+        if (const RaceInfo* human = race_db->get_race_info("human")) {
+            blood *= human->anatomy_scale;
+        }
+    }
+    Health::init(health_data[id], blood);
     Stamina::init(stamina_data[id], 100.0f);
     Equipment::init(equipment_data[id]);
+    combat_state_data[id] = CombatStateData();
+    Physiology::init(physiology_data[id]);
     AllegianceData allegiance;
     allegiance.faction_id = "player";
     allegiance_data[id] = allegiance;
@@ -87,6 +99,8 @@ void EntityLedger::destroy_entity(uint32_t id) {
     vendor_state.erase(id);
     lifecycle_class.erase(id);
     activity_data.erase(id);
+    combat_state_data.erase(id);
+    physiology_data.erase(id);
     
     entity_pool.destroy_entity(id);
 }
@@ -154,6 +168,7 @@ bool EntityLedger::is_combatant(uint32_t id) const {
         && try_get_anatomy(id) != nullptr
         && try_get_health(id) != nullptr
         && try_get_stamina(id) != nullptr
+        && try_get_physiology(id) != nullptr
         && try_get_equipment(id) != nullptr;
 }
 
@@ -170,10 +185,12 @@ bool EntityLedger::has_core_components(uint32_t id) const {
         && inventory_data.find(id) != inventory_data.end()
         && health_data.find(id) != health_data.end()
         && stamina_data.find(id) != stamina_data.end()
+        && physiology_data.find(id) != physiology_data.end()
         && equipment_data.find(id) != equipment_data.end();
 }
 
 bool EntityLedger::is_schedulable_actor(uint32_t id) const {
+    if (!is_alive(id)) return false;
     if (id == EntityPool::PLAYER_ID) return validate_player(id);
     return validate_npc_actor(id);
 }
@@ -260,7 +277,27 @@ Dictionary EntityLedger::get_clothing(uint32_t id) const {
 Dictionary EntityLedger::get_equipment(uint32_t id) const {
     auto it = equipment_data.find(id);
     if (it == equipment_data.end()) return Dictionary();
-    return Equipment::serialize(it->second);
+    Dictionary result = Equipment::serialize(it->second);
+    const AnatomyData* anatomy = try_get_anatomy(id);
+    const float units = anatomy
+        ? Anatomy::get_manipulation_units(*anatomy)
+        : 0.0f;
+    for (const WeaponHandling& handling :
+        Equipment::get_weapon_handling(it->second, units)) {
+        Dictionary slot = result.get(handling.slot_name, Dictionary());
+        slot["manipulation_load"] = handling.load;
+        slot["manipulation_allocated"] = handling.allocated;
+        slot["handling_ratio"] = handling.ratio;
+        slot["accuracy_modifier"] =
+            Equipment::handling_accuracy_modifier(handling.ratio);
+        slot["speed_multiplier"] =
+            Equipment::handling_speed_multiplier(handling.ratio);
+        slot["damage_multiplier"] =
+            Equipment::handling_damage_multiplier(handling.ratio);
+        result[handling.slot_name] = slot;
+    }
+    result["manipulation_units"] = units;
+    return result;
 }
 
 Dictionary EntityLedger::get_inventory(uint32_t id) const {
@@ -273,8 +310,9 @@ Dictionary EntityLedger::get_health(uint32_t id) const {
     Dictionary d;
     auto it = health_data.find(id);
     if (it == health_data.end()) return d;
-    d["current_hp"] = it->second.current_hp;
-    d["max_hp"] = it->second.max_hp;
+    d["current_blood"] = it->second.current_blood;
+    d["max_blood"] = it->second.max_blood;
+    d["blood"] = Health::get_blood_percent(it->second);
     d["alive"] = it->second.alive;
     return d;
 }
@@ -283,6 +321,12 @@ Dictionary EntityLedger::get_stamina(uint32_t id) const {
     auto it = stamina_data.find(id);
     if (it == stamina_data.end()) return Dictionary();
     return Stamina::serialize(it->second);
+}
+
+Dictionary EntityLedger::get_physiology(uint32_t id) const {
+    auto it = physiology_data.find(id);
+    if (it == physiology_data.end()) return Dictionary();
+    return Physiology::serialize(it->second);
 }
 
 Dictionary EntityLedger::get_effects(uint32_t id) const {
@@ -301,13 +345,6 @@ float EntityLedger::get_inventory_weight(uint32_t id) const {
     auto it = inventory_data.find(id);
     if (it == inventory_data.end()) return 0.0f;
     return Inventory::get_total_weight(it->second);
-}
-
-float EntityLedger::get_armor_rating(uint32_t id) const {
-    auto anat_it = anatomy_data.find(id);
-    auto cloth_it = clothing_data.find(id);
-    if (anat_it == anatomy_data.end() || cloth_it == clothing_data.end()) return 0.0f;
-    return Clothing::get_armor(cloth_it->second, anat_it->second);
 }
 
 String EntityLedger::get_anatomy_part_name(uint32_t id, int part_index) const {
@@ -372,40 +409,40 @@ static bool is_weapon_slot(const String& slot_name) {
     return slot_name == Equipment::MAIN_HAND_SLOT || slot_name == Equipment::OFF_HAND_SLOT;
 }
 
-static int get_item_grasp_required(const String& item_id, ItemDb* db) {
-    if (!db) return 1;
-    Dictionary weapon = db->get_weapon_data(item_id);
-    if (weapon.is_empty()) return 1;
-    return MAX(1, static_cast<int>(weapon.get("grasp_required", 1)));
-}
-
 bool EntityLedger::wield_weapon(uint32_t id, const String& slot_name, const String& item_id) {
     if (!is_weapon_slot(slot_name)) return false;
+    const PhysiologyData* physiology = try_get_physiology(id);
+    if (physiology && physiology->downed) return false;
     if (get_inventory_item_amount(id, item_id) <= 0) return false;
 
     ItemDb* db = ItemDb::get_singleton();
     if (!db) return false;
     if (!db->get_item_info(item_id)) return false;
+    const Dictionary weapon = db->get_weapon_data(item_id);
+    if (weapon.is_empty()) return false;
+    WeaponProfileDb* profiles = WeaponProfileDb::get_singleton();
+    if (!profiles ||
+        !profiles->get_profile_info(weapon.get("attack_profile", ""))) {
+        return false;
+    }
 
     auto anat_it = anatomy_data.find(id);
     auto equip_it = equipment_data.find(id);
     if (anat_it == anatomy_data.end() || equip_it == equipment_data.end()) return false;
     if (Equipment::is_slot_occupied(equip_it->second, slot_name)) return false;
 
-    int total_required = get_item_grasp_required(item_id, db);
-    for (const auto& pair : equip_it->second.slots) {
-        if (!is_weapon_slot(pair.first)) continue;
-        total_required += get_item_grasp_required(pair.second.item_id, db);
-    }
-
-    int functional_grasps = Anatomy::count_functional_parts_with_tag(anat_it->second, "GRASP");
-    if (total_required > functional_grasps) return false;
-
-    return Equipment::equip(equip_it->second, slot_name, item_id);
+    EquipmentData candidate = equip_it->second;
+    if (!Equipment::equip(candidate, slot_name, item_id)) return false;
+    const float units = Anatomy::get_manipulation_units(anat_it->second);
+    if (!Equipment::can_retain_all_weapons(candidate, units)) return false;
+    equip_it->second = std::move(candidate);
+    return true;
 }
 
 bool EntityLedger::unwield_weapon(uint32_t id, const String& slot_name) {
     if (!is_weapon_slot(slot_name)) return false;
+    const PhysiologyData* physiology = try_get_physiology(id);
+    if (physiology && physiology->downed) return false;
     auto equip_it = equipment_data.find(id);
     if (equip_it == equipment_data.end()) return false;
     return Equipment::unequip(equip_it->second, slot_name);
@@ -457,6 +494,8 @@ void EntityLedger::deserialize(const Dictionary& data) {
     vendor_state.clear();
     lifecycle_class.clear();
     activity_data.clear();
+    combat_state_data.clear();
+    physiology_data.clear();
 
     Array entities = data.get("entities", Array());
     for (int i = 0; i < entities.size(); i++) {
@@ -476,6 +515,9 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
     data["atlas_x"] = static_cast<int>(e->atlas_x);
     data["atlas_y"] = static_cast<int>(e->atlas_y);
     data["next_turn_time"] = e->next_turn_time;
+    data["condition_time"] = e->condition_time;
+    data["condition_recovery_multiplier"] =
+        e->condition_recovery_multiplier;
 
     auto anat_it = anatomy_data.find(id);
     if (anat_it != anatomy_data.end()) {
@@ -510,6 +552,16 @@ Dictionary EntityLedger::serialize_entity(uint32_t id) const {
     auto eq_it = equipment_data.find(id);
     if (eq_it != equipment_data.end()) {
         data["equipment"] = Equipment::serialize(eq_it->second);
+    }
+
+    auto combat_it = combat_state_data.find(id);
+    if (combat_it != combat_state_data.end()) {
+        data["combat_state"] = CombatState::serialize(combat_it->second);
+    }
+
+    auto physiology_it = physiology_data.find(id);
+    if (physiology_it != physiology_data.end()) {
+        data["physiology"] = Physiology::serialize(physiology_it->second);
     }
 
     auto loco_it = locomotion_data.find(id);
@@ -604,6 +656,10 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
     Entity* e = entity_pool.get_entity(id);
     if (e) {
         e->next_turn_time = static_cast<float>(static_cast<double>(data.get("next_turn_time", 0.0)));
+        e->condition_time =
+            static_cast<float>(static_cast<double>(data["condition_time"]));
+        e->condition_recovery_multiplier = static_cast<float>(
+            static_cast<double>(data["condition_recovery_multiplier"]));
     }
 
     if (data.has("anatomy")) {
@@ -624,8 +680,23 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         inventory_data[id] = idata;
     }
 
+    float max_blood = 100.0f;
+    auto anatomy_it = anatomy_data.find(id);
+    if (anatomy_it != anatomy_data.end()) {
+        RaceDb* race_db = RaceDb::get_singleton();
+        const RaceInfo* race = race_db
+            ? race_db->get_race_info(anatomy_it->second.race_id)
+            : nullptr;
+        if (race) max_blood *= race->anatomy_scale;
+    }
     if (data.has("health")) {
-        Health::deserialize(health_data[id], data["health"]);
+        Health::deserialize(health_data[id], data["health"], max_blood);
+    } else {
+        Health::init(health_data[id], max_blood);
+    }
+    if (anatomy_it != anatomy_data.end() &&
+        Anatomy::has_lethal_failure(anatomy_it->second)) {
+        Health::kill(health_data[id]);
     }
 
     if (data.has("stamina")) {
@@ -642,8 +713,48 @@ uint32_t EntityLedger::deserialize_entity(const Dictionary& data) {
         equipment_data[id] = ed;
     }
 
+    CombatStateData combat_state;
+    if (data.has("combat_state")) {
+        CombatState::deserialize(combat_state, data["combat_state"]);
+    }
+    combat_state_data[id] = combat_state;
+
+    PhysiologyData physiology;
+    if (data.has("physiology")) {
+        Physiology::deserialize(physiology, data["physiology"]);
+    } else {
+        Physiology::init(physiology);
+    }
+    const auto effects_it = effects_data.find(id);
+    const float total_bleed = effects_it != effects_data.end()
+        ? Effects::total_bleed(effects_it->second)
+        : 0.0f;
+    const float pain_floor = anatomy_it != anatomy_data.end()
+        ? Anatomy::get_wound_pain_floor(
+            anatomy_it->second,
+            total_bleed)
+        : CombatMath::bleeding_pain_floor(total_bleed);
+    const PhysiologyUpdate physiology_update = Physiology::reconcile(
+        physiology,
+        Health::get_blood_percent(health_data[id]),
+        pain_floor);
+    physiology_data[id] = physiology;
+    if (physiology_update.reached_zero) {
+        Health::kill(health_data[id]);
+    }
+
     if (data.has("locomotion")) {
         Locomotion::deserialize(locomotion_data[id], data["locomotion"]);
+    }
+    if (id == EntityPool::PLAYER_ID) {
+        locomotion_data[id].speed = MovementTuning::PLAYER_BASE_SPEED;
+    }
+    if (physiology_data[id].downed) {
+        LocomotionData* locomotion = try_get_locomotion(id);
+        if (locomotion) {
+            locomotion->movement_mode = MovementMode::PRONE;
+            Locomotion::clear_path(*locomotion);
+        }
     }
 
     if (data.has("ai")) {

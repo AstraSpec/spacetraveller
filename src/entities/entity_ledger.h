@@ -16,6 +16,8 @@
 #include "components/social_profile.h"
 #include "components/allegiance.h"
 #include "components/activity.h"
+#include "components/combat_state.h"
+#include "components/physiology.h"
 
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
@@ -78,6 +80,8 @@ public:
     std::unordered_map<uint32_t, VendorState> vendor_state;
     std::unordered_map<uint32_t, EntityLifecycleClass> lifecycle_class;
     std::unordered_map<uint32_t, ActivityData> activity_data;
+    std::unordered_map<uint32_t, CombatStateData> combat_state_data;
+    std::unordered_map<uint32_t, PhysiologyData> physiology_data;
 
     static constexpr int RELATIONSHIP_SENTINEL = -1;
 
@@ -120,12 +124,18 @@ public:
     const VendorState* try_get_vendor_state(uint32_t id) const { return try_get_ptr(vendor_state, id); }
     ActivityData* try_get_activity(uint32_t id) { return try_get_ptr(activity_data, id); }
     const ActivityData* try_get_activity(uint32_t id) const { return try_get_ptr(activity_data, id); }
+    CombatStateData* try_get_combat_state(uint32_t id) { return try_get_ptr(combat_state_data, id); }
+    const CombatStateData* try_get_combat_state(uint32_t id) const { return try_get_ptr(combat_state_data, id); }
+    PhysiologyData* try_get_physiology(uint32_t id) { return try_get_ptr(physiology_data, id); }
+    const PhysiologyData* try_get_physiology(uint32_t id) const { return try_get_ptr(physiology_data, id); }
 
     InventoryData& ensure_inventory(uint32_t id);
     EffectsData& ensure_effects(uint32_t id);
     SocialMemoryData& ensure_social_memory(uint32_t id);
     VendorState& ensure_vendor_state(uint32_t id);
     ActivityData& ensure_activity(uint32_t id) { return activity_data[id]; }
+    CombatStateData& ensure_combat_state(uint32_t id) { return combat_state_data[id]; }
+    PhysiologyData& ensure_physiology(uint32_t id) { return physiology_data[id]; }
 
     bool has_inventory(uint32_t id) const;
     bool is_alive(uint32_t id) const;
@@ -165,10 +175,10 @@ public:
     Dictionary get_inventory(uint32_t id) const;
     Dictionary get_health(uint32_t id) const;
     Dictionary get_stamina(uint32_t id) const;
+    Dictionary get_physiology(uint32_t id) const;
     Dictionary get_effects(uint32_t id) const;
     Dictionary get_social_profile(uint32_t id) const;
     float get_inventory_weight(uint32_t id) const;
-    float get_armor_rating(uint32_t id) const;
     String get_anatomy_part_name(uint32_t id, int part_index) const;
 
     bool add_inventory_item(uint32_t id, const String& item_id, int amount);

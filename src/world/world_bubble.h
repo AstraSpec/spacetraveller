@@ -87,6 +87,7 @@ private:
     std::unordered_map<uint64_t, Dictionary> tile_metadata;
 
     EntityPool* entity_pool_source = nullptr;
+    const EntityLedger* entity_ledger_source = nullptr;
 
     int active_radius = 32;
     int vision_radius = 32;
@@ -193,6 +194,9 @@ public:
     void clear_active_area();
 
     void set_entity_pool(EntityPool* pool) { entity_pool_source = pool; }
+    void set_entity_ledger(const EntityLedger* ledger) {
+        entity_ledger_source = ledger;
+    }
     bool set_entity(int x, int y, uint32_t entity_id);
     void force_set_entity(int x, int y, uint32_t entity_id);
     void remove_entity(int x, int y);

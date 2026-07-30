@@ -9,9 +9,9 @@
     "weight": 0.8,
     "tags": [],
     "weapon": {
-      "style": "bash",
-      "damage": 4.0,
-      "grasp_required": 1,
+      "attack_profile": "blunt",
+      "damage": 12.0,
+      "manipulation_load": 1.0,
       "reach": 1
     }
   },
@@ -25,9 +25,9 @@
     "weight": 0.5,
     "tags": [],
     "weapon": {
-      "style": "pierce",
-      "damage": 2.0,
-      "grasp_required": 2,
+      "attack_profile": "spear",
+      "damage": 12.0,
+      "manipulation_load": 2.0,
       "reach": 2
     }
   },
@@ -41,9 +41,9 @@
     "weight": 1.4,
     "tags": [],
     "weapon": {
-      "style": "cut",
-      "damage": 4.0,
-      "grasp_required": 1,
+      "attack_profile": "short_blade",
+      "damage": 9.0,
+      "manipulation_load": 1.0,
       "reach": 1
     }
   },
@@ -57,9 +57,9 @@
     "weight": 1.4,
     "tags": [],
     "weapon": {
-      "style": "cut",
-      "damage": 8.0,
-      "grasp_required": 1,
+      "attack_profile": "sword",
+      "damage": 18.0,
+      "manipulation_load": 1.0,
       "reach": 1
     }
   },
@@ -73,9 +73,9 @@
     "weight": 1,
     "tags": [],
     "weapon": {
-      "style": "pierce",
-      "damage": 5.0,
-      "grasp_required": 2,
+      "attack_profile": "spear",
+      "damage": 15.0,
+      "manipulation_load": 2.0,
       "reach": 2
     }
   },
@@ -89,9 +89,9 @@
     "weight": 1,
     "tags": [],
     "weapon": {
-      "style": "pierce",
-      "damage": 3.0,
-      "grasp_required": 2,
+      "attack_profile": "spear",
+      "damage": 10.0,
+      "manipulation_load": 2.0,
       "reach": 2
     }
   },
@@ -105,9 +105,9 @@
     "weight": 0.8,
     "tags": [],
     "weapon": {
-      "style": "bash",
-      "damage": 4.0,
-      "grasp_required": 1,
+      "attack_profile": "flail",
+      "damage": 16.0,
+      "manipulation_load": 1.0,
       "reach": 1
     }
   },
@@ -121,9 +121,9 @@
     "weight": 0.8,
     "tags": [],
     "weapon": {
-      "style": "cut",
-      "damage": 10.0,
-      "grasp_required": 1,
+      "attack_profile": "axe",
+      "damage": 22.0,
+      "manipulation_load": 1.0,
       "reach": 1
     }
   }

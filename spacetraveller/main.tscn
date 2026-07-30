@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://da4617sbpgvwl"]
+[gd_scene load_steps=42 format=3 uid="uid://da4617sbpgvwl"]
 
 [ext_resource type="Script" uid="uid://d1fujuoah81jp" path="res://src/world/world.gd" id="1_0bwn5"]
 [ext_resource type="Script" uid="uid://b4k6lc8c5x44o" path="res://src/main.gd" id="1_14wn1"]
@@ -32,11 +32,18 @@
 [ext_resource type="PackedScene" uid="uid://c0nv7btn0answ" path="res://src/ui/conversation/conversation_button.tscn" id="28_convbtn"]
 [ext_resource type="PackedScene" uid="uid://cbl1esoxlfnbp" path="res://src/ui/confirmation_popup.tscn" id="28_htxhm"]
 [ext_resource type="Script" uid="uid://bs2gm181d30e" path="res://src/ui/conversation/barter_tab.gd" id="29_bart"]
-[ext_resource type="Script" path="res://src/ui/conversation/npc_action_tab.gd" id="30_npcact"]
-[ext_resource type="Script" path="res://src/ui/movement_mode_tab.gd" id="31_move"]
+[ext_resource type="Script" uid="uid://bv7vbmqigt2rg" path="res://src/ui/conversation/npc_action_tab.gd" id="30_npcact"]
+[ext_resource type="Script" uid="uid://cfypq421mkjo3" path="res://src/ui/movement_mode_tab.gd" id="31_move"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kjl2a"]
 viewport_path = NodePath("MapView")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_tab_unselected"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 7.0
+bg_color = Color(0.1164, 0.1164, 0.12, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_tab_selected"]
 content_margin_left = 10.0
@@ -47,21 +54,17 @@ bg_color = Color(0.16965726, 0.16965726, 0.171875, 1)
 border_width_bottom = 2
 border_color = Color(0.88, 0.9, 0.91, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_tab_unselected"]
-content_margin_left = 10.0
-content_margin_top = 5.0
-content_margin_right = 10.0
-content_margin_bottom = 7.0
-bg_color = Color(0.1164, 0.1164, 0.12, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_resource_bar_background"]
 bg_color = Color(0.078, 0.078, 0.082, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_bar_fill"]
-bg_color = Color(0.909804, 0.313725, 0.313725, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stamina_bar_fill"]
 bg_color = Color(0.298039, 0.811765, 0.415686, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_consciousness_bar_fill"]
+bg_color = Color(0.62, 0.64, 0.68, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_body_bar_fill"]
+bg_color = Color(0.48, 0.6, 0.5, 1)
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("_GameWorld", "Player", "Canvas")]
 script = ExtResource("1_14wn1")
@@ -337,7 +340,7 @@ visible = false
 layout_mode = 2
 text = "Craft Item"
 
-[node name="Clothing" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "armorLabel", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
+[node name="Clothing" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "stripContainer", "titleLabel", "descriptionLabel", "detailsContainer")]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
@@ -346,7 +349,6 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 script = ExtResource("19_clot")
 _GameWorld = NodePath("../../../../../GameWorld")
-armorLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/ArmorLabel")
 stripContainer = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemList/StripContainer")
 titleLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Title")
 descriptionLabel = NodePath("VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer/Description")
@@ -419,12 +421,6 @@ autowrap_mode = 2
 
 [node name="ModifiersContainer" type="VBoxContainer" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer/MarginContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
-
-[node name="ArmorLabel" type="RichTextLabel" parent="Canvas/Window/InventoryUI/TabContainer/Clothing/VBoxContainer/MarginContainer/HBoxContainer/ItemDetails/VBoxContainer"]
-layout_mode = 2
-bbcode_enabled = true
-text = "Total Armor: "
-fit_content = true
 
 [node name="Health" type="MarginContainer" parent="Canvas/Window/InventoryUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "container")]
 visible = false
@@ -783,6 +779,7 @@ button_scene = ExtResource("28_convbtn")
 button_separation = 8
 
 [node name="Actions" type="MarginContainer" parent="Canvas/Window/ConversationUI/TabContainer" node_paths=PackedStringArray("_GameWorld", "_ConfirmationPopup", "stripContainer", "titleLabel", "descriptionLabel")]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
@@ -1041,29 +1038,35 @@ size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI/RightPanel" node_paths=PackedStringArray("_GameWorld", "DayLabel", "TimeLabel", "SunLabel", "HealthValue", "StaminaValue", "HealthBar", "StaminaBar", "LookController")]
+[node name="ScreenUI" type="TabContainer" parent="Canvas/ScreenUI/RightPanel" node_paths=PackedStringArray("_GameWorld", "DayLabel", "TimeLabel", "SunLabel", "StaminaValue", "StaminaBar", "ConsciousnessValue", "ConsciousnessBar", "PainValue", "PainBar", "BloodValue", "BloodBar", "BodyGrid", "LookController")]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 3.0
 mouse_filter = 2
 theme_override_colors/font_selected_color = Color(0.88, 0.9, 0.91, 1)
-theme_override_colors/font_unselected_color = Color(0.54, 0.58, 0.62, 1)
 theme_override_colors/font_hovered_color = Color(0.88, 0.9, 0.91, 1)
+theme_override_colors/font_unselected_color = Color(0.54, 0.58, 0.62, 1)
 theme_override_constants/side_margin = 0
 theme_override_styles/panel = ExtResource("15_yaehf")
-theme_override_styles/tab_selected = SubResource("StyleBoxFlat_sidebar_tab_selected")
 theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_sidebar_tab_unselected")
 theme_override_styles/tab_hovered = SubResource("StyleBoxFlat_sidebar_tab_unselected")
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_sidebar_tab_selected")
 current_tab = 0
+tab_focus_mode = 0
 script = ExtResource("15_2cqfq")
 _GameWorld = NodePath("../../../../GameWorld")
 DayLabel = NodePath("Vitals/VBoxContainer/DayLabel")
 TimeLabel = NodePath("Vitals/VBoxContainer/TimeLabel")
 SunLabel = NodePath("Vitals/VBoxContainer/SunLabel")
-HealthValue = NodePath("Vitals/VBoxContainer/HealthResource/HealthValue")
 StaminaValue = NodePath("Vitals/VBoxContainer/StaminaResource/StaminaValue")
-HealthBar = NodePath("Vitals/VBoxContainer/HealthResource/HealthBar")
 StaminaBar = NodePath("Vitals/VBoxContainer/StaminaResource/StaminaBar")
+ConsciousnessValue = NodePath("Vitals/VBoxContainer/ConsciousnessResource/ConsciousnessValue")
+ConsciousnessBar = NodePath("Vitals/VBoxContainer/ConsciousnessResource/ConsciousnessBar")
+PainValue = NodePath("Vitals/VBoxContainer/BodyGrid/PainPart/Label")
+PainBar = NodePath("Vitals/VBoxContainer/BodyGrid/PainPart/Bar")
+BloodValue = NodePath("Vitals/VBoxContainer/BodyGrid/BloodPart/Label")
+BloodBar = NodePath("Vitals/VBoxContainer/BodyGrid/BloodPart/Bar")
+BodyGrid = NodePath("Vitals/VBoxContainer/BodyGrid")
 LookController = NodePath("../../../..")
 
 [node name="Vitals" type="MarginContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI"]
@@ -1118,35 +1121,37 @@ theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
 theme_override_font_sizes/font_size = 11
 text = "CONDITION"
 
-[node name="HealthResource" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+[node name="ConsciousnessResource" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="HealthLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
-custom_minimum_size = Vector2(56, 0)
+[node name="ConsciousnessLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/ConsciousnessResource"]
+custom_minimum_size = Vector2(76, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
 theme_override_font_sizes/font_size = 12
-text = "Health:"
+text = "Conscious:"
 vertical_alignment = 1
 
-[node name="HealthBar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
+[node name="ConsciousnessBar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/ConsciousnessResource"]
 visible = false
-custom_minimum_size = Vector2(84, 10)
+custom_minimum_size = Vector2(72, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
-theme_override_styles/fill = SubResource("StyleBoxFlat_health_bar_fill")
+theme_override_styles/fill = SubResource("StyleBoxFlat_consciousness_bar_fill")
 value = 100.0
 show_percentage = false
 
-[node name="HealthValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/HealthResource"]
+[node name="ConsciousnessValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/ConsciousnessResource"]
+custom_minimum_size = Vector2(54, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
 theme_override_font_sizes/font_size = 12
 text = "--"
+horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="StaminaResource" type="HBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
@@ -1154,7 +1159,7 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="StaminaLabel" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/StaminaResource"]
-custom_minimum_size = Vector2(56, 0)
+custom_minimum_size = Vector2(76, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
 theme_override_font_sizes/font_size = 12
@@ -1174,11 +1179,183 @@ value = 100.0
 show_percentage = false
 
 [node name="StaminaValue" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/StaminaResource"]
+custom_minimum_size = Vector2(54, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.9, 0.91, 1)
 theme_override_font_sizes/font_size = 12
 text = "--"
 vertical_alignment = 1
+
+[node name="BodyTitle" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54, 0.58, 0.62, 1)
+theme_override_font_sizes/font_size = 10
+text = "BODY"
+
+[node name="BodyGrid" type="GridContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="HeadPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/HeadPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "Head"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/HeadPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="TorsoPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/TorsoPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "Torso"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/TorsoPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="LeftArmPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/LeftArmPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "L Arm"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/LeftArmPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="RightArmPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/RightArmPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "R Arm"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/RightArmPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="LeftLegPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/LeftLegPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "L Leg"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/LeftLegPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="RightLegPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/RightLegPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "R Leg"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/RightLegPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_body_bar_fill")
+value = 100.0
+show_percentage = false
+
+[node name="PainPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/PainPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "Pain --"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/PainPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_consciousness_bar_fill")
+show_percentage = false
+
+[node name="BloodPart" type="VBoxContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid"]
+custom_minimum_size = Vector2(88, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Label" type="Label" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/BloodPart"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.74, 1)
+theme_override_font_sizes/font_size = 10
+text = "Blood --"
+
+[node name="Bar" type="ProgressBar" parent="Canvas/ScreenUI/RightPanel/ScreenUI/Vitals/VBoxContainer/BodyGrid/BloodPart"]
+custom_minimum_size = Vector2(88, 7)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_resource_bar_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_consciousness_bar_fill")
+value = 100.0
+show_percentage = false
 
 [node name="Look" type="MarginContainer" parent="Canvas/ScreenUI/RightPanel/ScreenUI"]
 visible = false

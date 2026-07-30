@@ -14,6 +14,11 @@ class WorldBubble;
 class PointOfInterestRegistry;
 
 namespace EntityLifecycle {
+    int reconcile_entity_handling(
+        uint32_t entity_id,
+        EntityLedger& ledger,
+        WorldBubble& bubble);
+
     bool activate_entity(
         uint32_t entity_id,
         const Vector2i& pos,

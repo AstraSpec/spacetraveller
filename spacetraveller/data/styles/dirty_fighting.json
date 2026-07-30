@@ -2,8 +2,7 @@
   "id": "dirty_fighting",
   "name": "Dirty Fighting",
   "damage_mult": 1.0,
-  "accuracy_mod": 0.05,
-  "crit_chance_mod": 0.15,
+  "accuracy_mod": 0.03,
   "requires_unarmed": false,
   "target_heights": ["LOW", "MID"],
   "abilities": [

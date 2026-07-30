@@ -12,7 +12,11 @@
       {
         "part": "torso",
         "layer": "middle",
-        "armor": 0.3
+        "coverage": 0.9,
+        "bash": 0.2,
+        "cut": 0.3,
+        "pierce": 0.1,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -29,7 +33,11 @@
       {
         "part": "leg",
         "layer": "middle",
-        "armor": 0.3
+        "coverage": 0.9,
+        "bash": 0.2,
+        "cut": 0.3,
+        "pierce": 0.1,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -46,7 +54,11 @@
       {
         "part": "torso",
         "layer": "middle",
-        "armor": 0.5
+        "coverage": 0.9,
+        "bash": 0.3,
+        "cut": 0.5,
+        "pierce": 0.2,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -63,7 +75,11 @@
       {
         "part": "leg",
         "layer": "middle",
-        "armor": 0.5
+        "coverage": 0.9,
+        "bash": 0.3,
+        "cut": 0.5,
+        "pierce": 0.2,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -80,7 +96,11 @@
       {
         "part": "torso",
         "layer": "under",
-        "armor": 0.0
+        "coverage": 0.9,
+        "bash": 0.0,
+        "cut": 0.0,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -97,7 +117,11 @@
       {
         "part": "leg",
         "layer": "under",
-        "armor": 0.0
+        "coverage": 0.9,
+        "bash": 0.0,
+        "cut": 0.0,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -114,7 +138,11 @@
       {
         "part": "torso",
         "layer": "middle",
-        "armor": 0.1
+        "coverage": 0.9,
+        "bash": 0.1,
+        "cut": 0.1,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -131,7 +159,11 @@
       {
         "part": "leg",
         "layer": "middle",
-        "armor": 0.1
+        "coverage": 0.9,
+        "bash": 0.1,
+        "cut": 0.1,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -148,7 +180,11 @@
       {
         "part": "ear",
         "layer": "outer",
-        "armor": 0.0
+        "coverage": 0.9,
+        "bash": 0.0,
+        "cut": 0.0,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -165,7 +201,11 @@
       {
         "part": "finger",
         "layer": "outer",
-        "armor": 0.0
+        "coverage": 0.9,
+        "bash": 0.0,
+        "cut": 0.0,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   },
@@ -182,7 +222,11 @@
       {
         "part": "neck",
         "layer": "outer",
-        "armor": 0.0
+        "coverage": 0.9,
+        "bash": 0.0,
+        "cut": 0.0,
+        "pierce": 0.0,
+        "bash_transmission": 0.6
       }
     ]
   }

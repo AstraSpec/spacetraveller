@@ -66,6 +66,7 @@ static bool spawn_npc_at(
     const String& p_dialogue_id,
     const String& p_faction,
     const String& p_reaction_policy,
+    const String& p_downed_target_policy,
     int p_reaction_radius,
     const String& p_ai_state,
     uint32_t p_world_seed,
@@ -83,6 +84,7 @@ static bool spawn_npc_at(
     overrides.dialogue_id = p_dialogue_id;
     overrides.faction = p_faction;
     overrides.reaction_policy = p_reaction_policy;
+    overrides.downed_target_policy = p_downed_target_policy;
     overrides.reaction_radius = p_reaction_radius;
     overrides.ai_state = p_ai_state;
 
@@ -119,6 +121,7 @@ static bool spawn_with_structure_rule(
         p_rule.dialogue_id,
         p_rule.faction,
         p_rule.reaction_policy,
+        p_rule.downed_target_policy,
         p_rule.reaction_radius,
         p_rule.ai_state,
         p_world_seed,
@@ -342,6 +345,7 @@ static bool apply_ambient_chunk_entity(
         entry->dialogue_id,
         entry->faction,
         entry->reaction_policy,
+        entry->downed_target_policy,
         entry->reaction_radius,
         entry->ai_state,
         p_world_seed,
@@ -391,6 +395,7 @@ static bool apply_dungeon_ambient_entity(
         entry->dialogue_id,
         entry->faction,
         entry->reaction_policy,
+        entry->downed_target_policy,
         entry->reaction_radius,
         entry->ai_state,
         p_world_seed,
@@ -436,6 +441,7 @@ static bool apply_webbed_floor_spider_spawn(
     return spawn_npc_at(
         pale_spider,
         "monster",
+        "",
         "",
         "",
         "",
@@ -524,6 +530,9 @@ static bool apply_structure_spawn_group_rule(
         p_rule.dialogue_id.is_empty() ? entry->dialogue_id : p_rule.dialogue_id,
         p_rule.faction.is_empty() ? entry->faction : p_rule.faction,
         p_rule.reaction_policy.is_empty() ? entry->reaction_policy : p_rule.reaction_policy,
+        p_rule.downed_target_policy.is_empty()
+            ? entry->downed_target_policy
+            : p_rule.downed_target_policy,
         p_rule.reaction_radius > 0 ? p_rule.reaction_radius : entry->reaction_radius,
         p_rule.ai_state.is_empty() ? entry->ai_state : p_rule.ai_state,
         p_world_seed,

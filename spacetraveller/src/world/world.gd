@@ -40,9 +40,13 @@ func _on_player_action_resolved(_entity_id: int, cost: float, _next_turn_time: f
 
 func _on_player_action_failed(failure_id: String) -> void:
 	if failure_id == "no_locomotion":
-		EventBus.post("movement", "You cannot move; your legs will not support you.")
+		EventBus.post("movement", "Your legs cannot support you.")
+	elif failure_id == "downed":
+		EventBus.post("movement", "You are too badly dazed to do that.")
 
 func _on_player_movement_mode_changed(mode_id: String, reason: String) -> void:
+	if reason == "downed":
+		return
 	var message := ""
 	if reason == "exhausted":
 		message = "You are too exhausted to keep running."

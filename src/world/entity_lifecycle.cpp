@@ -13,6 +13,8 @@
 #include "entities/entity_ledger.h"
 #include "entities/entity_pool.h"
 #include "entities/entity_tracker.h"
+#include "components/anatomy.h"
+#include "components/equipment.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector3i.hpp>
@@ -33,6 +35,16 @@ void drop_entity_contents(uint32_t entity_id, EntityLedger& ledger, WorldBubble&
             if (item.amount > 0) {
                 bubble.drop_item(pos, item.id, item.amount);
             }
+        }
+    }
+
+    const EquipmentData* equipment = ledger.try_get_equipment(entity_id);
+    IdRegistry* item_ids = IdRegistry::get_singleton();
+    if (equipment && item_ids) {
+        for (const String& item_id :
+            Equipment::get_wielded_weapon_ids(*equipment)) {
+            const uint16_t numeric_id = item_ids->get_id(item_id);
+            if (numeric_id != 0) bubble.drop_item(pos, numeric_id, 1);
         }
     }
 
@@ -82,6 +94,35 @@ void warn_unschedulable(uint32_t entity_id, const char* action) {
 
 }
 
+int EntityLifecycle::reconcile_entity_handling(
+    uint32_t entity_id,
+    EntityLedger& ledger,
+    WorldBubble& bubble
+) {
+    Entity* entity = ledger.get_entity_pool().get_entity(entity_id);
+    AnatomyData* anatomy = ledger.try_get_anatomy(entity_id);
+    EquipmentData* equipment = ledger.try_get_equipment(entity_id);
+    if (!entity || !anatomy || !equipment) return 0;
+
+    const std::vector<WeaponHandling> dropped =
+        Equipment::reconcile_handling(
+            *equipment,
+            Anatomy::get_manipulation_units(*anatomy));
+    IdRegistry* ids = IdRegistry::get_singleton();
+    for (const WeaponHandling& item : dropped) {
+        const uint16_t numeric_id = ids ? ids->get_id(item.item_id) : 0;
+        if (numeric_id != 0) {
+            bubble.drop_item(
+                Vector2i(entity->x, entity->y),
+                numeric_id,
+                1);
+        } else {
+            ledger.add_inventory_item(entity_id, item.item_id, 1);
+        }
+    }
+    return static_cast<int>(dropped.size());
+}
+
 bool EntityLifecycle::activate_entity(
     uint32_t entity_id,
     const Vector2i& pos,
@@ -104,8 +145,12 @@ bool EntityLifecycle::activate_entity(
         return false;
     }
 
+    reconcile_entity_handling(entity_id, ledger, bubble);
+
     if (entity->next_turn_time < initial_turn_time) {
         entity->next_turn_time = initial_turn_time;
+        entity->condition_time = initial_turn_time;
+        entity->condition_recovery_multiplier = 1.0f;
     }
 
     if (!ledger.is_schedulable_actor(entity_id)) {
@@ -158,6 +203,8 @@ uint32_t EntityLifecycle::thaw_entity(
 
     if (entity->next_turn_time < minimum_turn_time) {
         entity->next_turn_time = minimum_turn_time;
+        entity->condition_time = minimum_turn_time;
+        entity->condition_recovery_multiplier = 1.0f;
     }
 
     if (!bubble.set_entity(entity->x, entity->y, entity_id)) {
@@ -170,6 +217,7 @@ uint32_t EntityLifecycle::thaw_entity(
         return EntityPool::INVALID_ID;
     }
     archive.remove_frozen_entity(packed_pos);
+    reconcile_entity_handling(entity_id, ledger, bubble);
 
     if (ledger.is_schedulable_actor(entity_id)) {
         scheduler.push(entity_id, entity->next_turn_time);

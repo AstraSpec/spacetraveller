@@ -43,7 +43,11 @@ func _get_display_data() -> Array:
 			"separator_key": "Wielded",
 			"separator_sort": -1,
 			"is_wielded": true,
-			"slot_name": slot_name
+			"slot_name": slot_name,
+			"handling_ratio": float(slot_data.get("handling_ratio", 1.0)),
+			"accuracy_modifier": float(slot_data.get("accuracy_modifier", 0.0)),
+			"speed_multiplier": float(slot_data.get("speed_multiplier", 1.0)),
+			"damage_multiplier": float(slot_data.get("damage_multiplier", 1.0))
 		})
 
 	var inv = _GameWorld.get_entity_inventory(0)
@@ -78,6 +82,10 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	if item_data.get("is_wielded", false):
 		_add_spacer_label("State", "Wielded")
 		_add_spacer_label("Slot", _format_slot_name(str(item_data.get("slot_name", ""))))
+		_add_spacer_label("Handling", "%d%%" % roundi(float(item_data.get("handling_ratio", 1.0)) * 100.0))
+		_add_spacer_label("Accuracy", "%+.0f points" % (float(item_data.get("accuracy_modifier", 0.0)) * 100.0))
+		_add_spacer_label("Speed", "×%.2f" % float(item_data.get("speed_multiplier", 1.0)))
+		_add_spacer_label("Damage handling", "×%.2f" % float(item_data.get("damage_multiplier", 1.0)))
 	
 	var modifiers = ItemDb.get_item_modifiers(item_id)
 	
@@ -94,13 +102,18 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	if not clothing_slots.is_empty():
 		_add_spacer_label("Parts", _format_clothing_slot_parts(clothing_slots))
 		_add_spacer_label("Layers", _format_clothing_slot_layers(clothing_slots))
-		_add_spacer_label("Armor", _format_clothing_slot_armor(clothing_slots))
+		_add_spacer_label("Coverage", _format_clothing_slot_stat(clothing_slots, "coverage", true))
+		_add_spacer_label("Bash", _format_clothing_slot_stat(clothing_slots, "bash"))
+		_add_spacer_label("Cut", _format_clothing_slot_stat(clothing_slots, "cut"))
+		_add_spacer_label("Pierce", _format_clothing_slot_stat(clothing_slots, "pierce"))
+		_add_spacer_label("Bash through", _format_clothing_slot_stat(clothing_slots, "bash_transmission", true))
 
 	var weapon_data = ItemDb.get_weapon_data(item_id)
 	if not weapon_data.is_empty():
 		_add_spacer_label("Damage", str(weapon_data.get("damage", 0.0)))
-		_add_spacer_label("Style", str(weapon_data.get("style", "")).capitalize())
-		_add_spacer_label("Hands", str(weapon_data.get("grasp_required", 1)))
+		_add_spacer_label("Profile", str(weapon_data.get("attack_profile", "")).replace("_", " ").capitalize())
+		_add_spacer_label("Manipulation", "%.1f" % float(weapon_data.get("manipulation_load", weapon_data.get("grasp_required", 1.0))))
+		_add_spacer_label("Reach", str(int(weapon_data.get("reach", 1))))
 
 func _format_slot_name(slot_name: String) -> String:
 	return slot_name.replace("_", " ").capitalize()
@@ -127,11 +140,14 @@ func _format_clothing_slot_layers(slots: Array) -> String:
 				layers.append(layer)
 	return ", ".join(layers)
 
-func _format_clothing_slot_armor(slots: Array) -> String:
+func _format_clothing_slot_stat(slots: Array, key: String, as_percent := false) -> String:
 	var values: PackedStringArray = []
 	for slot in slots:
 		if slot is Dictionary:
-			values.append("%s %.1f" % [str(slot.get("part", "any")).capitalize(), float(slot.get("armor", 0.0))])
+			var part := str(slot.get("part", "any")).capitalize()
+			var amount := float(slot.get(key, 0.0))
+			var display := "%d%%" % roundi(amount * 100.0) if as_percent else "%.1f" % amount
+			values.append("%s %s" % [part, display])
 	return ", ".join(values)
 
 func refresh_view() -> void:

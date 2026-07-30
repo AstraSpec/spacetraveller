@@ -30,7 +30,7 @@ uint32_t EntityFactory::create_player(const String& race_id, const Vector2i& pos
     uint32_t id = ledger.spawn_player(pos, PLAYER_ATLAS_X, PLAYER_ATLAS_Y);
 
     LocomotionData& loco = ledger.locomotion_data[id];
-    Locomotion::init(loco, 1.0f);
+    Locomotion::init(loco, MovementTuning::PLAYER_BASE_SPEED);
 
     ledger.combat_style[id] = "default";
 
@@ -150,6 +150,22 @@ uint32_t EntityFactory::create_npc(const String& race_id, const Vector2i& pos, i
     if (overrides.reaction_radius > 0) reaction_radius = overrides.reaction_radius;
     ledger.allegiance_data[id].faction_id = faction.to_lower();
     ai.reaction_policy = AIController::reaction_policy_from_string(reaction_policy);
+    const bool has_job_attack_override = job_info &&
+        !job_info->downed_target_policy.is_empty();
+    const bool has_spawn_attack_override =
+        !overrides.downed_target_policy.is_empty();
+    ai.downed_target_policy =
+        AIController::resolve_downed_target_policy(
+            AIController::downed_target_policy_from_string(
+                race->downed_target_policy),
+            has_job_attack_override,
+            AIController::downed_target_policy_from_string(
+                has_job_attack_override
+                    ? job_info->downed_target_policy
+                    : String()),
+            has_spawn_attack_override,
+            AIController::downed_target_policy_from_string(
+                overrides.downed_target_policy));
     ai.reaction_radius = std::max(1, reaction_radius);
     ai.state = AIController::state_from_string(
         overrides.ai_state.is_empty() ? default_ai_state : overrides.ai_state

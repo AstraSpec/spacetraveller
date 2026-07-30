@@ -6,6 +6,8 @@
 #include "data/quest_db.h"
 #include "data/body_part_db.h"
 #include "components/action_resolver.h"
+#include "components/combat_math.h"
+#include "components/physiology.h"
 #include "world_spawner.h"
 #include "entity_lifecycle.h"
 #include "world_save_serializer.h"
@@ -133,6 +135,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("despawn_entity", "entity_id"), &GameWorld::despawn_entity);
 
     ClassDB::bind_method(D_METHOD("get_entity_anatomy", "entity_id"), &GameWorld::get_entity_anatomy);
+    ClassDB::bind_method(D_METHOD("get_entity_condition_status", "entity_id"), &GameWorld::get_entity_condition_status);
     ClassDB::bind_method(D_METHOD("get_entity_health_status", "entity_id"), &GameWorld::get_entity_health_status);
     ClassDB::bind_method(D_METHOD("get_entity_gender", "entity_id"), &GameWorld::get_entity_gender);
     ClassDB::bind_method(D_METHOD("entity_has_sapient", "entity_id"), &GameWorld::entity_has_sapient);
@@ -150,7 +153,6 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_anatomy_part_name", "entity_id", "part_index"), &GameWorld::get_entity_anatomy_part_name);
     ClassDB::bind_method(D_METHOD("equip_entity_clothing", "entity_id", "part_index", "item_id", "layer"), &GameWorld::equip_entity_clothing);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing);
-    ClassDB::bind_method(D_METHOD("get_entity_armor_rating", "entity_id"), &GameWorld::get_entity_armor_rating);
     ClassDB::bind_method(D_METHOD("equip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::equip_entity_clothing_by_string);
     ClassDB::bind_method(D_METHOD("unequip_entity_clothing_by_string", "entity_id", "item_id"), &GameWorld::unequip_entity_clothing_by_string);
     ClassDB::bind_method(D_METHOD("wield_entity_weapon", "entity_id", "slot_name", "item_id"), &GameWorld::wield_entity_weapon);
@@ -216,7 +218,7 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("teleport_player_to_chunk", "chunk_pos"), &GameWorld::teleport_player_to_chunk);
     ClassDB::bind_method(D_METHOD("would_player_move_fall", "target_x", "target_y"), &GameWorld::would_player_move_fall);
     ClassDB::bind_method(D_METHOD("submit_player_intent", "intent_type", "target_x", "target_y", "param"), &GameWorld::submit_player_intent);
-    ClassDB::bind_method(D_METHOD("submit_player_targeted_attack", "target_id", "ability_id", "body_part_index"), &GameWorld::submit_player_targeted_attack);
+    ClassDB::bind_method(D_METHOD("submit_player_targeted_attack", "target_id", "attack_id", "body_part_index"), &GameWorld::submit_player_targeted_attack);
     ClassDB::bind_method(D_METHOD("get_player_movement_mode"), &GameWorld::get_player_movement_mode);
     ClassDB::bind_method(D_METHOD("set_player_movement_mode", "mode_id"), &GameWorld::set_player_movement_mode);
     ClassDB::bind_method(D_METHOD("toggle_player_run"), &GameWorld::toggle_player_run);
@@ -235,6 +237,9 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_entity_behavior_target", "entity_id"), &GameWorld::get_entity_behavior_target);
     ClassDB::bind_method(D_METHOD("get_player_attack_options", "target_id"), &GameWorld::get_player_attack_options);
     ClassDB::bind_method(D_METHOD("get_entity_targetable_body_parts", "entity_id"), &GameWorld::get_entity_targetable_body_parts);
+    ClassDB::bind_method(
+        D_METHOD("get_player_targetable_body_parts", "target_id", "attack_id"),
+        &GameWorld::get_player_targetable_body_parts);
 
     ADD_SIGNAL(MethodInfo("entity_moved",
         PropertyInfo(Variant::INT, "entity_id"),
@@ -292,6 +297,7 @@ GameWorld::GameWorld() {
     pathfinder = std::make_unique<AStarGridPathfinder>();
     quest_tracker = std::make_unique<QuestTracker>();
     bubble.set_entity_pool(&entity_ledger.get_entity_pool());
+    bubble.set_entity_ledger(&entity_ledger);
     trade_system.configure(&entity_ledger, &world_seed);
 
     quest_tracker->configure(&entity_ledger, QuestDb::get_singleton(), player_entity_id, &world_seed, generator.get());
@@ -746,12 +752,20 @@ Dictionary GameWorld::inspect_cell(const Vector2i& pos) const {
             : get_entity_relation(static_cast<int>(entity_id), static_cast<int>(player_entity_id));
 
         const HealthData* health = entity_ledger.try_get_health(entity_id);
-        if (health && health->max_hp > 0.0f) {
-            const float fraction = health->current_hp / health->max_hp;
-            if (fraction >= 0.9f) entity_view["health"] = "Uninjured";
-            else if (fraction >= 0.65f) entity_view["health"] = "Lightly wounded";
-            else if (fraction >= 0.35f) entity_view["health"] = "Wounded";
-            else entity_view["health"] = "Badly wounded";
+        if (health && anatomy) {
+            const PhysiologyData* physiology =
+                entity_ledger.try_get_physiology(entity_id);
+            if (physiology && physiology->downed) {
+                entity_view["health"] = "Downed";
+            } else {
+                const float fraction = MIN(
+                    Anatomy::get_body_integrity(*anatomy),
+                    Health::get_blood_percent(*health));
+                if (fraction >= 0.9f) entity_view["health"] = "Uninjured";
+                else if (fraction >= 0.65f) entity_view["health"] = "Lightly wounded";
+                else if (fraction >= 0.35f) entity_view["health"] = "Wounded";
+                else entity_view["health"] = "Badly wounded";
+            }
         }
         if (entity_id != player_entity_id) {
             const float player_speed = sim_director.get_entity_effective_movement_speed(player_entity_id);
@@ -759,8 +773,8 @@ Dictionary GameWorld::inspect_cell(const Vector2i& pos) const {
             if (player_speed > 0.0f && entity_speed > 0.0f) {
                 const float ratio = entity_speed / player_speed;
                 if (ratio < 0.5f) entity_view["relative_speed"] = "Much slower than you";
-                else if (ratio < 0.9f) entity_view["relative_speed"] = "Slower than you";
-                else if (ratio <= 1.1f) entity_view["relative_speed"] = "About as fast as you";
+                else if (ratio < 0.98f) entity_view["relative_speed"] = "Slower than you";
+                else if (ratio <= 1.02f) entity_view["relative_speed"] = "About as fast as you";
                 else if (ratio <= 2.0f) entity_view["relative_speed"] = "Faster than you";
                 else entity_view["relative_speed"] = "Much faster than you";
             }
@@ -987,7 +1001,7 @@ Dictionary GameWorld::get_entity_anatomy(uint32_t entity_id) const {
     return entity_ledger.get_anatomy(entity_id);
 }
 
-Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
+Dictionary GameWorld::get_entity_condition_status(uint32_t entity_id) const {
     Dictionary result;
     const AnatomyData* anatomy = entity_ledger.try_get_anatomy(entity_id);
     if (!anatomy) return result;
@@ -995,17 +1009,60 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
     result["entity_id"] = static_cast<int64_t>(entity_id);
     result["name"] = get_entity_name(entity_id);
     result["race_id"] = anatomy->race_id;
+    const EffectsData* effects =
+        entity_ledger.try_get_effects(entity_id);
+    const float pain_floor = Anatomy::get_wound_pain_floor(
+        *anatomy,
+        effects ? Effects::total_bleed(*effects) : 0.0f);
+    result["pain_floor"] = pain_floor;
 
     const HealthData* health = entity_ledger.try_get_health(entity_id);
     if (health) {
-        result["current_hp"] = health->current_hp;
-        result["max_hp"] = health->max_hp;
+        result["current_blood"] = health->current_blood;
+        result["max_blood"] = health->max_blood;
+        result["blood"] = Health::get_blood_percent(*health);
         result["alive"] = health->alive;
     }
+    result["body_integrity"] = Anatomy::get_body_integrity(*anatomy);
 
     const StaminaData* stamina = entity_ledger.try_get_stamina(entity_id);
     const float stamina_percent = stamina ? Stamina::get_percent(*stamina) : 1.0f;
     result["stamina"] = stamina_percent;
+    if (stamina) {
+        result["current_stamina"] = stamina->current_stamina;
+        result["max_stamina"] = stamina->max_stamina;
+    }
+
+    const PhysiologyData* physiology =
+        entity_ledger.try_get_physiology(entity_id);
+    if (physiology) {
+        const float effective_pain =
+            MAX(physiology->pain, pain_floor);
+        const float consciousness =
+            Physiology::get_consciousness_percent(*physiology);
+        const float blood_percent =
+            health ? Health::get_blood_percent(*health) : 0.0f;
+        result["current_consciousness"] =
+            physiology->current_consciousness;
+        result["max_consciousness"] = physiology->max_consciousness;
+        result["consciousness"] = consciousness;
+        result["consciousness_ceiling"] =
+            Physiology::get_consciousness_ceiling(
+                *physiology,
+                blood_percent,
+                pain_floor) /
+            physiology->max_consciousness;
+        result["pain"] = effective_pain;
+        result["downed"] = physiology->downed;
+        result["pain_accuracy_modifier"] =
+            CombatMath::pain_accuracy_modifier(effective_pain);
+        result["pain_speed_multiplier"] =
+            CombatMath::pain_speed_multiplier(effective_pain);
+        result["consciousness_accuracy_modifier"] =
+            CombatMath::consciousness_accuracy_modifier(consciousness);
+        result["consciousness_speed_multiplier"] =
+            CombatMath::consciousness_speed_multiplier(consciousness);
+    }
 
     Dictionary capacities;
     auto add_capacity = [&](const String& id, const String& label, float anatomical, float value) {
@@ -1019,7 +1076,16 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
 
     const float anatomical_moving = Anatomy::get_moving_capacity(*anatomy);
     const float stamina_factor = stamina ? Stamina::moving_capacity_factor(*stamina) : 1.0f;
-    add_capacity("moving", "Moving", anatomical_moving, anatomical_moving * stamina_factor);
+    float moving_value = anatomical_moving * stamina_factor;
+    if (physiology) {
+        const float effective_pain =
+            MAX(physiology->pain, pain_floor);
+        moving_value *= CombatMath::pain_movement_multiplier(
+            effective_pain);
+        moving_value *= CombatMath::consciousness_movement_multiplier(
+            Physiology::get_consciousness_percent(*physiology));
+    }
+    add_capacity("moving", "Moving", anatomical_moving, moving_value);
     add_capacity(
         "manipulation",
         "Manipulation",
@@ -1037,7 +1103,6 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
         Anatomy::get_speech_capacity(*anatomy));
     result["capacities"] = capacities;
 
-    const EffectsData* effects = entity_ledger.try_get_effects(entity_id);
     BodyPartDb* body_db = BodyPartDb::get_singleton();
     Array parts;
     for (int i = 0; i < static_cast<int>(anatomy->parts.size()); ++i) {
@@ -1066,7 +1131,7 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
         part_status["type_id"] = part.type_id;
         part_status["display_name"] = display_name;
         part_status["integrity"] = CLAMP(part.integrity, 0.0f, 1.0f);
-        part_status["max_integrity"] = part_info ? part_info->max_integrity : 10.0f;
+        part_status["max_integrity"] = Anatomy::get_part_max_integrity(*anatomy, i);
 
         Array part_effects;
         if (effects) {
@@ -1085,6 +1150,43 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
     }
     result["parts"] = parts;
 
+    Array hud_anatomy;
+    auto add_hud_part = [&](
+        const String& id,
+        const String& label,
+        const String& type_id,
+        int occurrence
+    ) {
+        int found = 0;
+        for (int index = 0;
+             index < static_cast<int>(anatomy->parts.size());
+             ++index) {
+            if (anatomy->parts[index].type_id != type_id) continue;
+            if (found++ != occurrence) continue;
+            Dictionary hud_part;
+            hud_part["id"] = id;
+            hud_part["label"] = label;
+            hud_part["index"] = index;
+            hud_part["integrity"] = CLAMP(
+                anatomy->parts[index].integrity,
+                0.0f,
+                1.0f);
+            hud_part["current_integrity"] =
+                Anatomy::get_part_current_integrity(*anatomy, index);
+            hud_part["max_integrity"] =
+                Anatomy::get_part_max_integrity(*anatomy, index);
+            hud_anatomy.push_back(hud_part);
+            return;
+        }
+    };
+    add_hud_part("head", "Head", "head", 0);
+    add_hud_part("torso", "Torso", "torso", 0);
+    add_hud_part("left_arm", "L Arm", "arm", 0);
+    add_hud_part("right_arm", "R Arm", "arm", 1);
+    add_hud_part("left_leg", "L Leg", "leg", 0);
+    add_hud_part("right_leg", "R Leg", "leg", 1);
+    result["hud_anatomy"] = hud_anatomy;
+
     Array body_effects;
     if (effects) {
         for (const Effect& effect : effects->effects) {
@@ -1099,6 +1201,10 @@ Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
     }
     result["body_effects"] = body_effects;
     return result;
+}
+
+Dictionary GameWorld::get_entity_health_status(uint32_t entity_id) const {
+    return get_entity_condition_status(entity_id);
 }
 
 String GameWorld::get_entity_gender(uint32_t entity_id) const {
@@ -1173,10 +1279,6 @@ bool GameWorld::equip_entity_clothing(uint32_t entity_id, int part_index, const 
 
 bool GameWorld::unequip_entity_clothing(uint32_t entity_id, const String& item_id) {
     return entity_ledger.unequip_clothing(entity_id, item_id);
-}
-
-float GameWorld::get_entity_armor_rating(uint32_t entity_id) const {
-    return entity_ledger.get_armor_rating(entity_id);
 }
 
 bool GameWorld::equip_entity_clothing_by_string(uint32_t entity_id, const String& item_id) {
@@ -1258,11 +1360,11 @@ float GameWorld::submit_player_intent(int intent_type, int target_x, int target_
     return sim_director.submit_player_intent(intent_type, target_x, target_y, param);
 }
 
-float GameWorld::submit_player_targeted_attack(int target_id, const String& ability_id, int body_part_index) {
+float GameWorld::submit_player_targeted_attack(int target_id, const String& attack_id, int body_part_index) {
     if (target_id < 0) return 0.0f;
     return sim_director.submit_player_targeted_attack(
         static_cast<uint32_t>(target_id),
-        ability_id,
+        attack_id,
         body_part_index
     );
 }
@@ -1347,6 +1449,16 @@ Array GameWorld::get_entity_targetable_body_parts(int entity_id) const {
     return sim_director.get_entity_targetable_body_parts(static_cast<uint32_t>(entity_id));
 }
 
+Array GameWorld::get_player_targetable_body_parts(
+    int target_id,
+    const String& attack_id
+) {
+    if (target_id < 0) return Array();
+    return sim_director.get_player_targetable_body_parts(
+        static_cast<uint32_t>(target_id),
+        attack_id);
+}
+
 bool GameWorld::can_change_z(uint32_t entity_id, int delta) {
     if (delta != 1 && delta != -1) return false;
 
@@ -1404,7 +1516,7 @@ void GameWorld::on_player_movement_mode_changed(const String& mode_id, const Str
 }
 
 void GameWorld::on_combat_event(uint32_t attacker_id, uint32_t defender_id, float damage, const String& result, const String& verb, const String& part) {
-    if (result != "miss") {
+    if (damage > 0.0f) {
         Vector2i pos = get_entity_position(defender_id);
         bubble.add_overlay(pos.x, pos.y, 19, 0, Color(1, 1, 1, 1), 0.1f);
     }
@@ -1631,6 +1743,12 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
     bubble.set_active_z(loaded_player ? loaded_player->z : 0);
     bubble.rebuild_from_pool();
     entity_tracker.rebuild_from_pool(entity_ledger.get_entity_pool());
+    for (uint32_t id : entity_ledger.get_entity_pool().get_live_ids()) {
+        EntityLifecycle::reconcile_entity_handling(
+            id,
+            entity_ledger,
+            bubble);
+    }
 
     // Rebuild turn scheduler from loaded entities
     turn_scheduler.clear();
@@ -1639,6 +1757,8 @@ void GameWorld::load_save_data(const Dictionary &p_data) {
         if (!entity) continue;
         if (entity_ledger.is_schedulable_actor(id)) {
             turn_scheduler.push(id, entity->next_turn_time);
+        } else if (!entity_ledger.is_alive(id)) {
+            continue;
         } else if (id == player_entity_id || entity_ledger.try_get_ai(id) != nullptr) {
             UtilityFunctions::printerr(
                 String("[GameWorld] Loaded entity ")

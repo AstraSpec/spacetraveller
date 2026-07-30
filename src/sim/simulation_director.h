@@ -53,7 +53,7 @@ public:
     void configure(const SimulationDirectorDeps& deps);
 
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
-    float submit_player_targeted_attack(uint32_t target_id, const String& ability_id, int body_part_index);
+    float submit_player_targeted_attack(uint32_t target_id, const String& attack_id, int body_part_index);
     float submit_player_change_z(int delta);
     bool submit_pickup(uint32_t entity_id, const Vector2i& pos, const String& item_id, int amount);
     void process_game_turn(float current_time);
@@ -88,6 +88,9 @@ public:
     uint32_t get_entity_behavior_target(uint32_t entity_id) const;
     Array get_player_attack_options(uint32_t target_id);
     Array get_entity_targetable_body_parts(uint32_t entity_id) const;
+    Array get_player_targetable_body_parts(
+        uint32_t target_id,
+        const String& attack_id);
 
 private:
     Array find_path_with_flags(const Vector2i& start, const Vector2i& goal, uint32_t flags);
@@ -95,7 +98,7 @@ private:
     CombatOutcome resolve_entity_attack(
         uint32_t attacker_id,
         uint32_t defender_id,
-        const String& ability_id = String(),
+        const String& attack_id = String(),
         int body_part_index = -1
     );
     bool plan_player_intent(Intent& intent);
@@ -111,7 +114,7 @@ private:
         uint32_t attacker_id,
         uint32_t defender_id,
         bool is_player,
-        const String& ability_id = String(),
+        const String& attack_id = String(),
         int body_part_index = -1
     );
     void notify_attack(uint32_t attacker_id, uint32_t defender_id);
@@ -122,17 +125,27 @@ private:
         float cost,
         float base_time,
         float stamina_cost = 0.0f,
-        bool suppress_stamina_recovery = false
+        float stamina_recovery_multiplier = 1.0f
     );
     void emit_movement_if_needed(uint32_t entity_id, const Vector2i& old_pos);
     float movement_action_cost(uint32_t entity_id, float base_cost, const LocomotionData& loco) const;
     float entity_moving_capacity(uint32_t entity_id) const;
+    float entity_physiology_action_speed(uint32_t entity_id) const;
+    float entity_pain_floor(uint32_t entity_id) const;
+    float entity_effective_pain(uint32_t entity_id) const;
+    void reconcile_entity_physiology(uint32_t entity_id);
     void emit_player_action_failure(ActionFailure failure) const;
     bool can_player_run() const;
     void force_player_walk_if_exhausted();
     void apply_attack_effects(uint32_t attacker_id, uint32_t defender_id, const CombatOutcome& atk);
-    void advance_entity_time(uint32_t entity_id, float dt);
+    void advance_entity_time(
+        uint32_t entity_id,
+        float dt,
+        float physiology_recovery_multiplier = 1.0f);
+    bool settle_entity_time(uint32_t entity_id, float event_time);
+    void force_entity_prone(uint32_t entity_id, const String& reason);
     float entity_base_damage(uint32_t entity_id) const;
+    float entity_combat_skill(uint32_t entity_id) const;
     String entity_faction(uint32_t entity_id) const;
     Rng::Seeded combat_rng_for(uint32_t attacker_id, uint32_t defender_id) const;
     const RaceInfo* get_race_info(uint32_t entity_id) const;

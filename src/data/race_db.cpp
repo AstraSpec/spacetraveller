@@ -22,7 +22,10 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     RaceInfo info;
     info.name = p_data.get("name", "");
     info.atlas = variant_to_vector2i(p_data.get("atlas", Array()));
-    info.base_hp = static_cast<float>(static_cast<double>(p_data.get("base_hp", 100.0)));
+    info.downed_atlas_offset =
+        static_cast<int>(p_data.get("downed_atlas_offset", -1));
+    info.anatomy_scale = MAX(0.01f, static_cast<float>(static_cast<double>(
+        p_data.get("anatomy_scale", 1.0))));
     info.speed = static_cast<float>(static_cast<double>(p_data.get("speed", 1.0)));
     info.base_damage = static_cast<float>(static_cast<double>(p_data.get("base_damage", 10.0)));
     info.base_stamina = static_cast<float>(static_cast<double>(p_data.get("base_stamina", 100.0)));
@@ -34,10 +37,32 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
     info.combat_style = p_data.get("combat_style", "default");
     info.faction = String(p_data.get("faction", "unaffiliated")).to_lower();
     info.reaction_policy = String(p_data.get("reaction_policy", "defensive")).to_lower();
+    Dictionary attack_policy =
+        p_data.get("attack_policy", Dictionary());
+    info.downed_target_policy = String(
+        attack_policy.get("downed_targets", "continue")).to_lower();
     info.reaction_radius = static_cast<int>(p_data.get("reaction_radius", 12));
     info.traversal_profile = String(p_data.get("traversal_profile", "walker")).to_lower();
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.light = parse_light_emission(p_data.get("light", Variant()));
+
+    if (p_data.has("natural_armor")) {
+        Dictionary armor = p_data["natural_armor"];
+        info.natural_armor.enabled = true;
+        info.natural_armor.coverage = CLAMP(
+            static_cast<float>(static_cast<double>(armor.get("coverage", 0.0))),
+            0.0f, 1.0f);
+        info.natural_armor.bash = MAX(
+            0.0f, static_cast<float>(static_cast<double>(armor.get("bash", 0.0))));
+        info.natural_armor.cut = MAX(
+            0.0f, static_cast<float>(static_cast<double>(armor.get("cut", 0.0))));
+        info.natural_armor.pierce = MAX(
+            0.0f, static_cast<float>(static_cast<double>(armor.get("pierce", 0.0))));
+        info.natural_armor.bash_transmission = CLAMP(
+            static_cast<float>(static_cast<double>(
+                armor.get("bash_transmission", 1.0))),
+            0.0f, 1.0f);
+    }
 
     Array parts = p_data.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {
@@ -47,6 +72,8 @@ RaceInfo RaceDb::_parse_row(const Dictionary &p_data) {
         def.parent_part_id = p.get("parent", "");
         def.count = p.get("count", 1);
         def.height = p.get("height", "MID");
+        def.integrity_scale = MAX(0.01f, static_cast<float>(static_cast<double>(
+            p.get("integrity_scale", 1.0))));
         info.parts.push_back(def);
     }
 

@@ -156,6 +156,22 @@ String AIController::reaction_policy_to_string(ReactionPolicy value) {
     return "defensive";
 }
 
+DownedTargetPolicy AIController::downed_target_policy_from_string(
+    const String& value
+) {
+    return value.to_lower() == "ignore"
+        ? DownedTargetPolicy::IGNORE
+        : DownedTargetPolicy::CONTINUE;
+}
+
+String AIController::downed_target_policy_to_string(
+    DownedTargetPolicy value
+) {
+    return value == DownedTargetPolicy::IGNORE
+        ? String("ignore")
+        : String("continue");
+}
+
 Intent AIController::tick(AIData& ai, LocomotionData& loco, const AIContext& ctx) {
     const Vector2i self_pos(ctx.self.x, ctx.self.y);
 
@@ -241,6 +257,10 @@ Dictionary AIController::serialize(const AIData& data) {
     d["state"] = state_to_string(data.state);
     d["home_state"] = state_to_string(data.home_state);
     d["reaction_policy"] = reaction_policy_to_string(data.reaction_policy);
+    Dictionary attack_policy;
+    attack_policy["downed_targets"] =
+        downed_target_policy_to_string(data.downed_target_policy);
+    d["attack_policy"] = attack_policy;
     d["reaction_radius"] = data.reaction_radius;
     d["home_x"] = data.home_position.x;
     d["home_y"] = data.home_position.y;
@@ -289,6 +309,10 @@ void AIController::deserialize(AIData& data, const Dictionary& dict) {
     data.state = state_from_string(String(dict.get("state", "wander")));
     data.home_state = state_from_string(String(dict.get("home_state", "wander")));
     data.reaction_policy = reaction_policy_from_string(String(dict.get("reaction_policy", "defensive")));
+    Dictionary attack_policy =
+        dict.get("attack_policy", Dictionary());
+    data.downed_target_policy = downed_target_policy_from_string(
+        String(attack_policy.get("downed_targets", "continue")));
     data.reaction_radius = std::max(1, static_cast<int>(dict.get("reaction_radius", 12)));
     data.home_position = Vector2i(
         static_cast<int>(dict.get("home_x", 0)),

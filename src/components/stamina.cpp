@@ -1,4 +1,5 @@
 #include "stamina.h"
+#include "combat_math.h"
 #include <godot_cpp/variant/variant.hpp>
 #include <algorithm>
 
@@ -24,6 +25,20 @@ bool Stamina::can_afford(const StaminaData& data, float cost) {
 float Stamina::get_percent(const StaminaData& data) {
     if (data.max_stamina <= 0.0f) return 0.0f;
     return data.current_stamina / data.max_stamina;
+}
+
+void Stamina::recover_for_time(StaminaData& data, float elapsed, float multiplier) {
+    if (elapsed <= 0.0f || multiplier <= 0.0f) return;
+    regen(data, CombatMath::stamina_recovery(
+        data.max_stamina, elapsed, multiplier));
+}
+
+float Stamina::combat_accuracy_modifier(const StaminaData& data) {
+    return CombatMath::stamina_accuracy_modifier(get_percent(data));
+}
+
+float Stamina::combat_speed_multiplier(const StaminaData& data) {
+    return CombatMath::stamina_speed_multiplier(get_percent(data));
 }
 
 float Stamina::moving_capacity_factor(const StaminaData& data) {

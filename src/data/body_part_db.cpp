@@ -23,6 +23,10 @@ BodyPartInfo BodyPartDb::_parse_row(const Dictionary &p_data) {
         p_data.get("hit_weight", p_data.get("size", 1.0))));
     info.max_integrity = static_cast<float>(static_cast<double>(
         p_data.get("max_integrity", info.hit_weight * 10.0f)));
+    info.consciousness_multiplier = static_cast<float>(static_cast<double>(
+        p_data.get("consciousness_multiplier", 1.0)));
+    info.pain_multiplier = static_cast<float>(static_cast<double>(
+        p_data.get("pain_multiplier", 1.0)));
     return info;
 }
 
@@ -43,6 +47,18 @@ float BodyPartDb::get_body_part_hit_weight(const String &p_id) const {
 float BodyPartDb::get_body_part_max_integrity(const String &p_id) const {
     const BodyPartInfo* info = get_body_part_info(p_id);
     return info ? info->max_integrity : 10.0f;
+}
+
+float BodyPartDb::get_body_part_consciousness_multiplier(
+    const String &p_id
+) const {
+    const BodyPartInfo* info = get_body_part_info(p_id);
+    return info ? info->consciousness_multiplier : 1.0f;
+}
+
+float BodyPartDb::get_body_part_pain_multiplier(const String &p_id) const {
+    const BodyPartInfo* info = get_body_part_info(p_id);
+    return info ? info->pain_multiplier : 1.0f;
 }
 
 }

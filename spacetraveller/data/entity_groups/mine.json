@@ -2,7 +2,7 @@
   {
     "id": "mine_entities",
     "entries": [
-      { "entity": "mouse", "weight": 8, "job": "animal" },
+      { "entity": "rat", "weight": 8, "job": "animal" },
       { "entity": "deepling", "weight": 2, "job": "monster" }
     ]
   }

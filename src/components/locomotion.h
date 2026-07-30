@@ -43,6 +43,7 @@ namespace Locomotion {
 }
 
 namespace MovementTuning {
+    inline constexpr float PLAYER_BASE_SPEED = 1.0f;
     inline constexpr float RUN_STAMINA_PER_CARDINAL_STEP = 2.0f;
     inline constexpr float RUN_MIN_STAMINA_PERCENT = 0.25f;
 }

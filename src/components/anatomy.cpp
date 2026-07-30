@@ -1,4 +1,5 @@
 #include "anatomy.h"
+#include "combat_math.h"
 #include "data/race_db.h"
 #include "data/body_part_db.h"
 #include "core/tag_registry.h"
@@ -6,10 +7,15 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace godot {
 
 namespace {
+
+String canonical_race_id(const String& race_id) {
+    return race_id == "mouse" ? String("rat") : race_id;
+}
 
 float clamped_integrity(const BodyPart& part) {
     return CLAMP(part.integrity, 0.0f, 1.0f);
@@ -27,6 +33,24 @@ float chain_efficiency(const AnatomyData& data, int index, uint16_t core_tag, Bo
         const BodyPart& part = data.parts[current];
         if (part_has_tag(part, core_tag, db)) break;
         result *= clamped_integrity(part);
+        current = part.parent_index;
+    }
+    return result;
+}
+
+float natural_attack_chain_integrity(
+    const AnatomyData& data,
+    int index,
+    uint16_t core_tag,
+    BodyPartDb* db
+) {
+    float result = 1.0f;
+    int current = index;
+    while (current >= 0 &&
+           current < static_cast<int>(data.parts.size())) {
+        const BodyPart& part = data.parts[current];
+        if (part_has_tag(part, core_tag, db)) break;
+        result = MIN(result, clamped_integrity(part));
         current = part.parent_index;
     }
     return result;
@@ -54,16 +78,54 @@ float descendant_digit_integrity(
     return count > 0 ? sum / static_cast<float>(count) : 1.0f;
 }
 
+float part_pain_significance(
+    const BodyPart& part,
+    BodyPartDb* db,
+    TagRegistry* tags
+) {
+    if (!db || !tags) return 0.10f;
+    const BodyPartInfo* info = db->get_body_part_info(part.type_id);
+    if (!info) return 0.10f;
+    auto has = [&](const char* tag_name) {
+        const uint16_t tag = tags->get_tag_id(tag_name);
+        return tag != 0 && TagRegistry::has_tag(tag, info->tags);
+    };
+    if (has("CORE") || has("VITAL")) return 1.0f;
+    if (has("LIMB")) return 0.65f;
+    if (has("GRASP") || has("STANCE")) return 0.35f;
+    if (has("SENSE") || has("SPEECH") || has("EAT")) return 0.20f;
+    return 0.10f;
+}
+
+float movement_proximal_integrity(
+    const AnatomyData& data,
+    int endpoint,
+    uint16_t core_tag,
+    BodyPartDb* db
+) {
+    int current = endpoint >= 0 &&
+            endpoint < static_cast<int>(data.parts.size())
+        ? data.parts[endpoint].parent_index
+        : -1;
+    while (current >= 0 &&
+           current < static_cast<int>(data.parts.size())) {
+        const BodyPart& part = data.parts[current];
+        if (part_has_tag(part, core_tag, db)) break;
+        return clamped_integrity(part);
+    }
+    return 1.0f;
+}
+
 }
 
 void Anatomy::init(AnatomyData& data, const String& race_id) {
-    data.race_id = race_id;
+    data.race_id = canonical_race_id(race_id);
     data.parts.clear();
 
     RaceDb* db = RaceDb::get_singleton();
     if (!db) return;
 
-    const RaceInfo* race = db->get_race_info(race_id);
+    const RaceInfo* race = db->get_race_info(data.race_id);
     if (!race) return;
 
     struct Pending {
@@ -156,6 +218,123 @@ void Anatomy::set_integrity(AnatomyData& data, int index, float integrity) {
     }
 }
 
+float Anatomy::get_part_max_integrity(const AnatomyData& data, int index) {
+    if (index < 0 || index >= static_cast<int>(data.parts.size())) return 0.0f;
+
+    BodyPartDb* body_db = BodyPartDb::get_singleton();
+    RaceDb* race_db = RaceDb::get_singleton();
+    const BodyPart& part = data.parts[index];
+    const float base = body_db
+        ? body_db->get_body_part_max_integrity(part.type_id)
+        : 10.0f;
+
+    float race_scale = 1.0f;
+    float part_scale = 1.0f;
+    const RaceInfo* race = race_db
+        ? race_db->get_race_info(canonical_race_id(data.race_id))
+        : nullptr;
+    if (race) {
+        race_scale = MAX(0.01f, race->anatomy_scale);
+        for (const RacePartDefinition& def : race->parts) {
+            if (def.part_id == part.type_id) {
+                part_scale = MAX(0.01f, def.integrity_scale);
+                break;
+            }
+        }
+    }
+    return CombatMath::scaled_part_integrity(base, race_scale, part_scale);
+}
+
+float Anatomy::get_part_current_integrity(const AnatomyData& data, int index) {
+    if (index < 0 || index >= static_cast<int>(data.parts.size())) return 0.0f;
+    return get_part_max_integrity(data, index) * clamped_integrity(data.parts[index]);
+}
+
+PartDamageResult Anatomy::apply_damage(AnatomyData& data, int index, float damage) {
+    PartDamageResult result;
+    if (index < 0 || index >= static_cast<int>(data.parts.size()) || damage <= 0.0f) {
+        if (index >= 0 && index < static_cast<int>(data.parts.size())) {
+            result.remaining_integrity = clamped_integrity(data.parts[index]);
+            result.lethal = has_lethal_failure(data);
+        }
+        return result;
+    }
+
+    const float max_integrity = get_part_max_integrity(data, index);
+    if (max_integrity <= 0.0f) {
+        result.remaining_integrity = clamped_integrity(data.parts[index]);
+        result.lethal = has_lethal_failure(data);
+        return result;
+    }
+
+    const float before = clamped_integrity(data.parts[index]);
+    const float current_absolute = before * max_integrity;
+    result.applied_damage = MIN(damage, current_absolute);
+    result.remaining_integrity =
+        CLAMP(before - result.applied_damage / max_integrity, 0.0f, 1.0f);
+    result.newly_destroyed = before > 0.0f && result.remaining_integrity <= 0.0f;
+    set_integrity(data, index, result.remaining_integrity);
+    result.lethal = has_lethal_failure(data);
+    return result;
+}
+
+float Anatomy::get_body_integrity(const AnatomyData& data) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    if (!db || data.parts.empty()) return 0.0f;
+
+    float weighted = 0.0f;
+    float total_weight = 0.0f;
+    for (const BodyPart& part : data.parts) {
+        const float weight = MAX(0.0f, db->get_body_part_hit_weight(part.type_id));
+        weighted += weight * clamped_integrity(part);
+        total_weight += weight;
+    }
+    return total_weight > 0.0f ? CLAMP(weighted / total_weight, 0.0f, 1.0f) : 0.0f;
+}
+
+float Anatomy::get_wound_pain_floor(
+    const AnatomyData& data,
+    float total_bleed
+) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags) {
+        return CombatMath::combined_pain_floor({}, total_bleed);
+    }
+
+    std::vector<float> sources;
+    sources.reserve(data.parts.size());
+    for (const BodyPart& part : data.parts) {
+        const float missing = 1.0f - clamped_integrity(part);
+        const float multiplier =
+            db->get_body_part_pain_multiplier(part.type_id);
+        sources.push_back(CombatMath::wound_pain_source(
+            missing,
+            multiplier,
+            part_pain_significance(part, db, tags)));
+    }
+    return CombatMath::combined_pain_floor(sources, total_bleed);
+}
+
+bool Anatomy::has_lethal_failure(const AnatomyData& data) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags) return false;
+
+    const uint16_t core_tag = tags->get_tag_id("CORE");
+    const uint16_t vital_tag = tags->get_tag_id("VITAL");
+    for (const BodyPart& part : data.parts) {
+        if (clamped_integrity(part) > 0.0f) continue;
+        const BodyPartInfo* info = db->get_body_part_info(part.type_id);
+        if (!info) continue;
+        if ((core_tag != 0 && TagRegistry::has_tag(core_tag, info->tags)) ||
+            (vital_tag != 0 && TagRegistry::has_tag(vital_tag, info->tags))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int Anatomy::get_count(const AnatomyData& data) {
     return static_cast<int>(data.parts.size());
 }
@@ -193,6 +372,64 @@ bool Anatomy::has_functional_limbs(const AnatomyData& data, const std::vector<St
     return true;
 }
 
+NaturalLimbAllocation Anatomy::allocate_natural_attack_limbs(
+    const AnatomyData& data,
+    const std::vector<String>& required
+) {
+    NaturalLimbAllocation result;
+    if (required.empty()) {
+        result.valid = true;
+        result.raw_integrity = 1.0f;
+        result.ratio = 1.0f;
+        return result;
+    }
+
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags) return result;
+    const uint16_t core_tag = tags->get_tag_id("CORE");
+
+    result.raw_integrity = 1.0f;
+    result.part_indices.reserve(required.size());
+    for (const String& required_type : required) {
+        int best_index = -1;
+        float best_integrity = -1.0f;
+        for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+            if (data.parts[i].type_id != required_type ||
+                !is_functional(data, i) ||
+                std::find(
+                    result.part_indices.begin(),
+                    result.part_indices.end(),
+                    i) != result.part_indices.end()) {
+                continue;
+            }
+            const float integrity = natural_attack_chain_integrity(
+                data,
+                i,
+                core_tag,
+                db);
+            if (integrity > best_integrity) {
+                best_integrity = integrity;
+                best_index = i;
+            }
+        }
+        if (best_index < 0) {
+            result.part_indices.clear();
+            result.raw_integrity = 0.0f;
+            result.ratio = 0.0f;
+            return result;
+        }
+        result.part_indices.push_back(best_index);
+        result.raw_integrity = MIN(result.raw_integrity, best_integrity);
+    }
+
+    result.valid = true;
+    result.raw_integrity = CLAMP(result.raw_integrity, 0.0f, 1.0f);
+    result.ratio =
+        CombatMath::natural_limb_handling_ratio(result.raw_integrity);
+    return result;
+}
+
 int Anatomy::count_functional_parts_with_tag(const AnatomyData& data, const String& tag) {
     BodyPartDb* db = BodyPartDb::get_singleton();
     TagRegistry* tags = TagRegistry::get_singleton();
@@ -211,22 +448,9 @@ int Anatomy::count_functional_parts_with_tag(const AnatomyData& data, const Stri
 }
 
 float Anatomy::min_required_integrity(const AnatomyData& data, const std::vector<String>& required) {
-    float worst = 1.0f;
-    bool any = false;
-    for (const String& r : required) {
-        // Use the best functional instance of this type, but track the worst across required types.
-        float best_for_type = 0.0f;
-        for (int i = 0; i < data.parts.size(); i++) {
-            if (data.parts[i].type_id == r && is_functional(data, i)) {
-                best_for_type = MAX(best_for_type, get_integrity(data, i));
-            }
-        }
-        if (best_for_type > 0.0f) {
-            worst = MIN(worst, best_for_type);
-            any = true;
-        }
-    }
-    return any ? worst : 1.0f;
+    const NaturalLimbAllocation allocation =
+        allocate_natural_attack_limbs(data, required);
+    return allocation.valid ? allocation.raw_integrity : 0.0f;
 }
 
 void Anatomy::refresh_capabilities(AnatomyData& data) {
@@ -256,8 +480,19 @@ void Anatomy::refresh_capabilities(AnatomyData& data) {
         const float chain = chain_efficiency(data, i, core_tag, db);
 
         if (part_has_tag(part, stance_tag, db)) {
-            const float digits = descendant_digit_integrity(data, i, digit_tag, db);
-            moving_sum += chain * (0.6f + 0.4f * digits);
+            const float endpoint = clamped_integrity(part);
+            const float digits = endpoint > 0.0f
+                ? descendant_digit_integrity(data, i, digit_tag, db)
+                : 0.0f;
+            const float proximal = movement_proximal_integrity(
+                data,
+                i,
+                core_tag,
+                db);
+            moving_sum += CombatMath::movement_endpoint_capacity(
+                proximal,
+                endpoint,
+                digits);
             ++moving_count;
         }
         if (part_has_tag(part, grasp_tag, db)) {
@@ -306,6 +541,24 @@ float Anatomy::get_manipulation_capacity(const AnatomyData& data) {
     return data.capabilities.manipulation;
 }
 
+float Anatomy::get_manipulation_units(const AnatomyData& data) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    TagRegistry* tags = TagRegistry::get_singleton();
+    if (!db || !tags) return 0.0f;
+
+    const uint16_t core_tag = tags->get_tag_id("CORE");
+    const uint16_t grasp_tag = tags->get_tag_id("GRASP");
+    const uint16_t digit_tag = tags->get_tag_id("DIGIT");
+    float units = 0.0f;
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        if (!part_has_tag(data.parts[i], grasp_tag, db)) continue;
+        const float chain = chain_efficiency(data, i, core_tag, db);
+        const float digits = descendant_digit_integrity(data, i, digit_tag, db);
+        units += CombatMath::manipulation_endpoint_units(chain, digits);
+    }
+    return MAX(0.0f, units);
+}
+
 float Anatomy::get_perception_capacity(const AnatomyData& data) {
     return data.capabilities.perception;
 }
@@ -323,7 +576,12 @@ Dictionary Anatomy::get_capabilities(const AnatomyData& data) {
     return result;
 }
 
-static int pick_hit_location_internal(const AnatomyData& data, const std::vector<String>& preferred_heights, float roll_unit) {
+static int pick_hit_location_internal(
+    const AnatomyData& data,
+    const std::vector<String>& preferred_heights,
+    float pool_roll_unit,
+    float location_roll_unit
+) {
     BodyPartDb* db = BodyPartDb::get_singleton();
     if (!db) return -1;
 
@@ -335,24 +593,26 @@ static int pick_hit_location_internal(const AnatomyData& data, const std::vector
         return false;
     };
 
-    // First pass: only parts matching preferred heights. If none match, fall back to all.
-    float total = 0.0f;
+    float preferred_total = 0.0f;
+    float all_total = 0.0f;
     for (int i = 0; i < data.parts.size(); i++) {
         if (!Anatomy::is_functional(data, i)) continue;
-        if (!height_match(i)) continue;
-        total += db->get_body_part_hit_weight(data.parts[i].type_id);
+        const float weight =
+            db->get_body_part_hit_weight(data.parts[i].type_id);
+        all_total += weight;
+        if (height_match(i)) preferred_total += weight;
     }
 
-    bool use_height_filter = total > 0.0f;
-    if (!use_height_filter) {
-        for (int i = 0; i < data.parts.size(); i++) {
-            if (!Anatomy::is_functional(data, i)) continue;
-            total += db->get_body_part_hit_weight(data.parts[i].type_id);
-        }
-    }
+    const bool use_height_filter =
+        !preferred_heights.empty() &&
+        CombatMath::use_preferred_height_pool(
+            preferred_total > 0.0f,
+            pool_roll_unit);
+    const float total =
+        use_height_filter ? preferred_total : all_total;
     if (total <= 0.0f) return -1;
 
-    float roll = roll_unit * total;
+    float roll = location_roll_unit * total;
     for (int i = 0; i < data.parts.size(); i++) {
         if (!Anatomy::is_functional(data, i)) continue;
         if (use_height_filter && !height_match(i)) continue;
@@ -363,11 +623,113 @@ static int pick_hit_location_internal(const AnatomyData& data, const std::vector
 }
 
 int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights) {
-    return pick_hit_location_internal(data, preferred_heights, static_cast<float>(UtilityFunctions::randf()));
+    return pick_hit_location_internal(
+        data,
+        preferred_heights,
+        static_cast<float>(UtilityFunctions::randf()),
+        static_cast<float>(UtilityFunctions::randf()));
 }
 
 int Anatomy::pick_hit_location(const AnatomyData& data, const std::vector<String>& preferred_heights, Rng::Seeded& rng) {
-    return pick_hit_location_internal(data, preferred_heights, rng.unit());
+    return pick_hit_location_internal(
+        data,
+        preferred_heights,
+        rng.unit(),
+        rng.unit());
+}
+
+float Anatomy::get_targeting_penalty(
+    const AnatomyData& data,
+    int target_index
+) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    if (!db || !is_functional(data, target_index)) return 0.35f;
+    float total = 0.0f;
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        if (!is_functional(data, i)) continue;
+        total += MAX(
+            0.0f,
+            db->get_body_part_hit_weight(data.parts[i].type_id));
+    }
+    const float target_weight = MAX(
+        0.0f,
+        db->get_body_part_hit_weight(data.parts[target_index].type_id));
+    return CombatMath::targeted_location_penalty(target_weight, total);
+}
+
+int Anatomy::pick_deviation_location(
+    const AnatomyData& data,
+    int target_index,
+    Rng::Seeded& rng
+) {
+    BodyPartDb* db = BodyPartDb::get_singleton();
+    if (!db || target_index < 0 ||
+        target_index >= static_cast<int>(data.parts.size())) {
+        return -1;
+    }
+
+    auto weighted_pick = [&](const std::vector<int>& candidates) -> int {
+        float total = 0.0f;
+        for (int index : candidates) {
+            total += MAX(
+                0.0f,
+                db->get_body_part_hit_weight(data.parts[index].type_id));
+        }
+        if (total <= 0.0f) return -1;
+        float roll = rng.unit() * total;
+        for (int index : candidates) {
+            roll -= MAX(
+                0.0f,
+                db->get_body_part_hit_weight(data.parts[index].type_id));
+            if (roll <= 0.0f) return index;
+        }
+        return candidates.empty() ? -1 : candidates.back();
+    };
+
+    auto append_candidate = [&](
+        std::vector<int>& candidates,
+        std::unordered_set<int>& seen,
+        int index
+    ) {
+        if (index < 0 || index == target_index ||
+            index >= static_cast<int>(data.parts.size()) ||
+            !is_functional(data, index) || seen.count(index) != 0) {
+            return;
+        }
+        seen.insert(index);
+        candidates.push_back(index);
+    };
+
+    std::vector<int> candidates;
+    std::unordered_set<int> seen;
+    const int parent = data.parts[target_index].parent_index;
+    append_candidate(candidates, seen, parent);
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        if (data.parts[i].parent_index == target_index ||
+            (parent >= 0 && data.parts[i].parent_index == parent)) {
+            append_candidate(candidates, seen, i);
+        }
+    }
+    int selected = weighted_pick(candidates);
+    if (selected >= 0) return selected;
+
+    candidates.clear();
+    seen.clear();
+    const String height = data.parts[target_index].height;
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        if (data.parts[i].height == height) {
+            append_candidate(candidates, seen, i);
+        }
+    }
+    selected = weighted_pick(candidates);
+    if (selected >= 0) return selected;
+
+    candidates.clear();
+    seen.clear();
+    for (int i = 0; i < static_cast<int>(data.parts.size()); ++i) {
+        append_candidate(candidates, seen, i);
+    }
+    return weighted_pick(candidates);
 }
 
 Dictionary Anatomy::serialize(const AnatomyData& data) {
@@ -389,7 +751,7 @@ Dictionary Anatomy::serialize(const AnatomyData& data) {
 }
 
 void Anatomy::deserialize(AnatomyData& data, const Dictionary& dict) {
-    data.race_id = dict.get("race_id", "");
+    data.race_id = canonical_race_id(dict.get("race_id", ""));
     data.parts.clear();
     Array parts = dict.get("parts", Array());
     for (int i = 0; i < parts.size(); i++) {

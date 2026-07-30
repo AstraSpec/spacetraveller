@@ -2,7 +2,7 @@
   {
     "id": "forest_animals",
     "entries": [
-      { "entity": "mouse", "weight": 5, "job": "animal" },
+      { "entity": "rat", "weight": 5, "job": "animal" },
       { "entity": "bear", "weight": 1, "job": "animal" }
     ]
   },

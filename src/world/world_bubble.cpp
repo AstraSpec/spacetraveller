@@ -1,4 +1,5 @@
 #include "world_bubble.h"
+#include "components/entity_visuals.h"
 #include "components/equipment.h"
 #include "entities/entity_pool.h"
 #include "entities/entity_ledger.h"
@@ -16,6 +17,37 @@
 using namespace godot;
 
 static constexpr int VERTICAL_AIR_VISIBILITY_DEPTH = 4;
+
+namespace {
+
+EntityVisualAtlas resolve_entity_visual_atlas(
+    uint32_t entity_id,
+    const Entity& entity,
+    const EntityLedger* ledger
+) {
+    if (!ledger) {
+        return EntityVisualAtlas{entity.atlas_x, entity.atlas_y};
+    }
+
+    const AnatomyData* anatomy = ledger->try_get_anatomy(entity_id);
+    const PhysiologyData* physiology = ledger->try_get_physiology(entity_id);
+    RaceDb* race_db = RaceDb::get_singleton();
+    const RaceInfo* race = anatomy && race_db
+        ? race_db->get_race_info(anatomy->race_id)
+        : nullptr;
+    if (!race || !physiology) {
+        return EntityVisualAtlas{entity.atlas_x, entity.atlas_y};
+    }
+
+    return EntityVisuals::resolve_atlas(
+        entity.atlas_x,
+        entity.atlas_y,
+        race->atlas.x,
+        race->downed_atlas_offset,
+        physiology->downed);
+}
+
+}
 
 uint64_t WorldBubble::make_cell_key(int world_x, int world_y) const {
     return make_cell_key_at_z(world_x, world_y, active_z);
@@ -1049,8 +1081,13 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                         if (entity_pool_source) {
                             const Entity* entity = entity_pool_source->get_entity(ent_it->second.entity_id);
                             if (entity) {
-                                visual.entity_atlas_x = entity->atlas_x;
-                                visual.entity_atlas_y = entity->atlas_y;
+                                const EntityVisualAtlas atlas =
+                                    resolve_entity_visual_atlas(
+                                        ent_it->second.entity_id,
+                                        *entity,
+                                        entity_ledger_source);
+                                visual.entity_atlas_x = atlas.x;
+                                visual.entity_atlas_y = atlas.y;
                             }
                         }
                     }
@@ -1066,8 +1103,13 @@ WorldBubble::BubbleSnapshot WorldBubble::build_snapshot(
                 if (entity_pool_source) {
                     const Entity* entity = entity_pool_source->get_entity(ent_it->second.entity_id);
                     if (entity) {
-                        visual.entity_atlas_x = entity->atlas_x;
-                        visual.entity_atlas_y = entity->atlas_y;
+                        const EntityVisualAtlas atlas =
+                            resolve_entity_visual_atlas(
+                                ent_it->second.entity_id,
+                                *entity,
+                                entity_ledger_source);
+                        visual.entity_atlas_x = atlas.x;
+                        visual.entity_atlas_y = atlas.y;
                     }
                 }
             }

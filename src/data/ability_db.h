@@ -2,6 +2,7 @@
 #define SPACETRAVELLER_ABILITY_DB_H
 
 #include <godot_cpp/classes/object.hpp>
+#include "components/damage.h"
 #include "database.h"
 
 namespace godot {
@@ -15,6 +16,8 @@ struct AbilityInfo {
     float accuracy = 0.8f;
     float speed = 1.0f;
     float stamina_cost = 10.0f;
+    bool allow_exhausted = false;
+    DamageType damage_type = DamageType::BASH;
     String effect_type;       // "", "bleed"
     String effect_mode;       // "decay" | "timer"
     float effect_magnitude = 0.0f;

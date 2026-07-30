@@ -19,6 +19,7 @@ namespace EntityFactory {
         String dialogue_id;
         String faction;
         String reaction_policy;
+        String downed_target_policy;
         int reaction_radius = 0;
         String ai_state;
         Array traits;

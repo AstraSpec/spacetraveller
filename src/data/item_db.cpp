@@ -1,5 +1,6 @@
 #include "item_db.h"
 #include "core/id_registry.h"
+#include <algorithm>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -13,7 +14,11 @@ Dictionary clothing_slot_to_dictionary(const ClothingSlotInfo& slot) {
     Dictionary d;
     d["part"] = slot.part;
     d["layer"] = slot.layer;
-    d["armor"] = slot.armor;
+    d["coverage"] = slot.coverage;
+    d["bash"] = slot.bash;
+    d["cut"] = slot.cut;
+    d["pierce"] = slot.pierce;
+    d["bash_transmission"] = slot.bash_transmission;
     return d;
 }
 
@@ -24,7 +29,29 @@ bool parse_clothing_slot(const Dictionary& p_data, ClothingSlotInfo& r_slot) {
     r_slot.part = part;
     r_slot.layer = String(p_data.get("layer", "middle")).strip_edges();
     if (r_slot.layer.is_empty()) r_slot.layer = "middle";
-    r_slot.armor = static_cast<float>(static_cast<double>(p_data.get("armor", 0.0)));
+
+    r_slot.coverage = std::clamp(
+        static_cast<float>(static_cast<double>(p_data.get("coverage", 1.0))),
+        0.0f,
+        1.0f
+    );
+    r_slot.bash = std::max(
+        0.0f,
+        static_cast<float>(static_cast<double>(p_data.get("bash", 0.0)))
+    );
+    r_slot.cut = std::max(
+        0.0f,
+        static_cast<float>(static_cast<double>(p_data.get("cut", 0.0)))
+    );
+    r_slot.pierce = std::max(
+        0.0f,
+        static_cast<float>(static_cast<double>(p_data.get("pierce", 0.0)))
+    );
+    r_slot.bash_transmission = std::clamp(
+        static_cast<float>(static_cast<double>(p_data.get("bash_transmission", 0.0))),
+        0.0f,
+        1.0f
+    );
     return true;
 }
 

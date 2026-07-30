@@ -3,7 +3,6 @@
   "name": "Default",
   "damage_mult": 1.0,
   "accuracy_mod": 0.0,
-  "crit_chance_mod": 0.0,
   "requires_unarmed": false,
   "target_heights": [],
   "abilities": [

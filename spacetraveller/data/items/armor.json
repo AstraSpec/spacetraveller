@@ -12,12 +12,20 @@
       {
         "part": "torso",
         "layer": "armor",
-        "armor": 10.0
+        "coverage": 0.95,
+        "bash": 6.0,
+        "cut": 14.0,
+        "pierce": 12.0,
+        "bash_transmission": 0.15
       },
       {
         "part": "leg",
         "layer": "armor",
-        "armor": 8.0
+        "coverage": 0.95,
+        "bash": 4.8,
+        "cut": 11.2,
+        "pierce": 9.6,
+        "bash_transmission": 0.15
       }
     ]
   },
@@ -34,7 +42,11 @@
       {
         "part": "head",
         "layer": "armor",
-        "armor": 8.0
+        "coverage": 0.95,
+        "bash": 4.8,
+        "cut": 11.2,
+        "pierce": 9.6,
+        "bash_transmission": 0.15
       }
     ]
   },
@@ -51,7 +63,11 @@
       {
         "part": "foot",
         "layer": "armor",
-        "armor": 6.0
+        "coverage": 0.95,
+        "bash": 3.6,
+        "cut": 8.4,
+        "pierce": 7.2,
+        "bash_transmission": 0.15
       }
     ]
   },
@@ -68,7 +84,11 @@
       {
         "part": "arm",
         "layer": "armor",
-        "armor": 7.0
+        "coverage": 0.95,
+        "bash": 4.2,
+        "cut": 9.8,
+        "pierce": 8.4,
+        "bash_transmission": 0.15
       }
     ]
   },
@@ -85,12 +105,20 @@
       {
         "part": "torso",
         "layer": "armor",
-        "armor": 4.0
+        "coverage": 0.85,
+        "bash": 2.0,
+        "cut": 5.0,
+        "pierce": 3.0,
+        "bash_transmission": 0.35
       },
       {
         "part": "leg",
         "layer": "armor",
-        "armor": 3.0
+        "coverage": 0.85,
+        "bash": 1.5,
+        "cut": 3.8,
+        "pierce": 2.3,
+        "bash_transmission": 0.35
       }
     ]
   },
@@ -107,7 +135,11 @@
       {
         "part": "head",
         "layer": "armor",
-        "armor": 3.0
+        "coverage": 0.85,
+        "bash": 1.5,
+        "cut": 3.8,
+        "pierce": 2.3,
+        "bash_transmission": 0.35
       }
     ]
   },
@@ -124,7 +156,11 @@
       {
         "part": "foot",
         "layer": "armor",
-        "armor": 2.0
+        "coverage": 0.85,
+        "bash": 1.0,
+        "cut": 2.5,
+        "pierce": 1.5,
+        "bash_transmission": 0.35
       }
     ]
   },
@@ -141,7 +177,11 @@
       {
         "part": "arm",
         "layer": "armor",
-        "armor": 2.5
+        "coverage": 0.85,
+        "bash": 1.3,
+        "cut": 3.1,
+        "pierce": 1.9,
+        "bash_transmission": 0.35
       }
     ]
   }

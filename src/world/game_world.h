@@ -176,7 +176,7 @@ public:
     bool teleport_player_to_chunk(const Vector2i& chunk_pos);
     bool would_player_move_fall(int target_x, int target_y);
     float submit_player_intent(int intent_type, int target_x, int target_y, const String& param);
-    float submit_player_targeted_attack(int target_id, const String& ability_id, int body_part_index);
+    float submit_player_targeted_attack(int target_id, const String& attack_id, int body_part_index);
     String get_player_movement_mode() const;
     bool set_player_movement_mode(const String& mode_id);
     bool toggle_player_run();
@@ -195,6 +195,9 @@ public:
     int get_entity_behavior_target(int entity_id) const;
     Array get_player_attack_options(int target_id);
     Array get_entity_targetable_body_parts(int entity_id) const;
+    Array get_player_targetable_body_parts(
+        int target_id,
+        const String& attack_id);
 
     bool add_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
     bool remove_entity_inventory_item(uint32_t entity_id, const String& item_id, int amount);
@@ -215,6 +218,7 @@ public:
     int trade_get_item_value(const String& item_id, int amount, bool selling_to_vendor) const;
 
     Dictionary get_entity_anatomy(uint32_t entity_id) const;
+    Dictionary get_entity_condition_status(uint32_t entity_id) const;
     Dictionary get_entity_health_status(uint32_t entity_id) const;
     String get_entity_gender(uint32_t entity_id) const;
     bool entity_has_sapient(uint32_t entity_id) const;
@@ -232,7 +236,6 @@ public:
     String get_entity_anatomy_part_name(uint32_t entity_id, int part_index) const;
     bool equip_entity_clothing(uint32_t entity_id, int part_index, const String& item_id, const String& layer);
     bool unequip_entity_clothing(uint32_t entity_id, const String& item_id);
-    float get_entity_armor_rating(uint32_t entity_id) const;
     bool equip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
     bool unequip_entity_clothing_by_string(uint32_t entity_id, const String& item_id);
     bool wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id);

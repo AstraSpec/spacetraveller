@@ -18,12 +18,15 @@ struct Entity;
 
 enum class AIState { WANDER, COMBAT, IDLE, FOLLOW, FLEE, GUARD };
 enum class ReactionPolicy { PASSIVE, TIMID, DEFENSIVE, AGGRESSIVE, PREDATORY };
+enum class DownedTargetPolicy { IGNORE, CONTINUE };
 enum class RoutinePhase { SEEKING, TRAVELLING, DWELLING };
 
 struct AIData {
     AIState state = AIState::WANDER;
     AIState home_state = AIState::WANDER;
     ReactionPolicy reaction_policy = ReactionPolicy::DEFENSIVE;
+    DownedTargetPolicy downed_target_policy =
+        DownedTargetPolicy::CONTINUE;
     int reaction_radius = 12;
     Vector2i home_position;
     uint32_t target_entity_id = std::numeric_limits<uint32_t>::max();
@@ -73,6 +76,36 @@ namespace AIController {
     bool is_valid_state_name(const String& value);
     ReactionPolicy reaction_policy_from_string(const String& value);
     String reaction_policy_to_string(ReactionPolicy value);
+    DownedTargetPolicy downed_target_policy_from_string(
+        const String& value);
+    String downed_target_policy_to_string(
+        DownedTargetPolicy value);
+    inline bool attack_policy_allows_target(
+        DownedTargetPolicy policy,
+        bool target_downed
+    ) {
+        return !target_downed ||
+            policy == DownedTargetPolicy::CONTINUE;
+    }
+    inline bool downed_attack_policy_applies(
+        AIState state,
+        ReactionPolicy reaction_policy
+    ) {
+        if (state == AIState::FLEE) return false;
+        return state == AIState::COMBAT ||
+            reaction_policy != ReactionPolicy::TIMID;
+    }
+    inline DownedTargetPolicy resolve_downed_target_policy(
+        DownedTargetPolicy race_default,
+        bool has_job_override,
+        DownedTargetPolicy job_override,
+        bool has_spawn_override,
+        DownedTargetPolicy spawn_override
+    ) {
+        if (has_spawn_override) return spawn_override;
+        if (has_job_override) return job_override;
+        return race_default;
+    }
     Dictionary serialize(const AIData& data);
     void deserialize(AIData& data, const Dictionary& dict);
 }

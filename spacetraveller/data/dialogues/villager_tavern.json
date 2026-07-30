@@ -9,21 +9,7 @@
     "start": {
       "npc": [
         "A warm room and a full cup can mend most moods.",
-        "I came in for one drink. That was some time ago.",
-        "The stew smells better than it looks, which is the right way around.",
-        "I have walked enough for one day. Let the road wait.",
-        "Nothing settles the nerves like a cup of ale.",
-        "I was hoping to hear a good story before I leave.",
-        "A quiet cup is pleasant, but a noisy one is memorable.",
-        "The cook has been generous with the pepper tonight.",
-        "Someone near the hearth keeps winning every argument.",
-        "I am resting my feet before the next long stretch.",
-        "It is easy to lose an evening in a place like this.",
-        "The first cup is for thirst. The second is for conversation.",
-        "I do not know half the people here, but that rarely lasts.",
-        "A table by the fire would be worth defending.",
-        "I have heard three versions of the same tale already.",
-        "I should head home soon. I have said that twice already."
+        "Nothing settles the nerves like a cup of ale."
       ],
       "options": []
     }

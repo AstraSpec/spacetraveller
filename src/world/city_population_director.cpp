@@ -863,6 +863,8 @@ uint32_t CityPopulationDirector::create_ambient_at(
     overrides.dialogue_id = entry->dialogue_id;
     overrides.faction = entry->faction;
     overrides.reaction_policy = entry->reaction_policy;
+    overrides.downed_target_policy =
+        entry->downed_target_policy;
     overrides.reaction_radius = entry->reaction_radius;
     overrides.ai_state = entry->ai_state;
     overrides.identity_salt = p_salt;

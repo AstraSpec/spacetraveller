@@ -7,23 +7,19 @@
 namespace godot {
 
 struct HealthData {
-    float current_hp = 100.0f;
-    float max_hp = 100.0f;
+    float current_blood = 100.0f;
+    float max_blood = 100.0f;
     bool alive = true;
 };
 
-namespace HealthTuning {
-    constexpr float REGEN_PER_TIME = 0.003f;
-}
-
 namespace Health {
-    void init(HealthData& data, float max_hp);
-    void damage(HealthData& data, float amount);
-    void heal(HealthData& data, float amount);
-    inline bool is_alive(const HealthData& data);
-    inline float get_percent(const HealthData& data);
+    void init(HealthData& data, float max_blood);
+    void drain_blood(HealthData& data, float amount);
+    void kill(HealthData& data);
+    bool is_alive(const HealthData& data);
+    float get_blood_percent(const HealthData& data);
     Dictionary serialize(const HealthData& data);
-    void deserialize(HealthData& data, const Dictionary& dict);
+    void deserialize(HealthData& data, const Dictionary& dict, float default_max_blood = 100.0f);
 }
 
 }

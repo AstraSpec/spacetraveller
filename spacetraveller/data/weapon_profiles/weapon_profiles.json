@@ -1,0 +1,52 @@
+[
+  {
+    "id": "blunt",
+    "name": "Blunt",
+    "packets": [
+      { "id": "swing", "name": "Swing", "verb": "bash", "damage_type": "bash", "damage_mult": 1.0, "accuracy": 0.75, "speed": 0.9, "stamina_cost": 10, "weight": 3, "allow_exhausted": true, "target_heights": ["HIGH", "MID"] },
+      { "id": "heavy_swing", "name": "Heavy Swing", "verb": "smash", "damage_type": "bash", "damage_mult": 1.25, "accuracy": 0.60, "speed": 0.75, "stamina_cost": 16, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"] }
+    ]
+  },
+  {
+    "id": "spear",
+    "name": "Spear",
+    "packets": [
+      { "id": "thrust", "name": "Thrust", "verb": "thrust", "damage_type": "pierce", "damage_mult": 1.05, "accuracy": 0.78, "speed": 1.0, "stamina_cost": 10, "weight": 3, "allow_exhausted": true, "target_heights": ["HIGH", "MID"] },
+      { "id": "precise_thrust", "name": "Precise Thrust", "verb": "stab", "damage_type": "pierce", "damage_mult": 1.20, "accuracy": 0.70, "speed": 0.9, "stamina_cost": 14, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"] }
+    ]
+  },
+  {
+    "id": "short_blade",
+    "name": "Short Blade",
+    "packets": [
+      { "id": "quick_slash", "name": "Quick Slash", "verb": "slash", "damage_type": "cut", "damage_mult": 0.90, "accuracy": 0.78, "speed": 1.15, "stamina_cost": 8, "weight": 2, "allow_exhausted": true, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.35 } },
+      { "id": "stab", "name": "Stab", "verb": "stab", "damage_type": "pierce", "damage_mult": 1.05, "accuracy": 0.76, "speed": 1.05, "stamina_cost": 10, "weight": 2, "allow_exhausted": false, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.30 } },
+      { "id": "deep_stab", "name": "Deep Stab", "verb": "impale", "damage_type": "pierce", "damage_mult": 1.20, "accuracy": 0.65, "speed": 0.85, "stamina_cost": 14, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.50 } }
+    ]
+  },
+  {
+    "id": "sword",
+    "name": "Sword",
+    "packets": [
+      { "id": "slash", "name": "Slash", "verb": "slash", "damage_type": "cut", "damage_mult": 1.05, "accuracy": 0.76, "speed": 1.0, "stamina_cost": 10, "weight": 3, "allow_exhausted": true, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.45 } },
+      { "id": "thrust", "name": "Thrust", "verb": "thrust", "damage_type": "pierce", "damage_mult": 0.95, "accuracy": 0.74, "speed": 0.95, "stamina_cost": 10, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.30 } },
+      { "id": "deep_cut", "name": "Deep Cut", "verb": "cleave", "damage_type": "cut", "damage_mult": 1.30, "accuracy": 0.60, "speed": 0.75, "stamina_cost": 16, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.70 } }
+    ]
+  },
+  {
+    "id": "flail",
+    "name": "Flail",
+    "packets": [
+      { "id": "flail_swing", "name": "Flail Swing", "verb": "flail", "damage_type": "bash", "damage_mult": 1.0, "accuracy": 0.70, "speed": 0.85, "stamina_cost": 12, "weight": 3, "allow_exhausted": true, "target_heights": ["HIGH", "MID"] },
+      { "id": "crushing_swing", "name": "Crushing Swing", "verb": "crush", "damage_type": "bash", "damage_mult": 1.35, "accuracy": 0.55, "speed": 0.65, "stamina_cost": 18, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"] }
+    ]
+  },
+  {
+    "id": "axe",
+    "name": "Axe",
+    "packets": [
+      { "id": "chop", "name": "Chop", "verb": "chop", "damage_type": "cut", "damage_mult": 1.05, "accuracy": 0.70, "speed": 0.85, "stamina_cost": 12, "weight": 3, "allow_exhausted": true, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.40 } },
+      { "id": "cleave", "name": "Cleave", "verb": "cleave", "damage_type": "cut", "damage_mult": 1.40, "accuracy": 0.55, "speed": 0.65, "stamina_cost": 18, "weight": 1, "allow_exhausted": false, "target_heights": ["HIGH", "MID"], "effect": { "type": "bleed", "mode": "decay", "magnitude": 0.75 } }
+    ]
+  }
+]

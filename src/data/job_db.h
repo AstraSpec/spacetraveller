@@ -15,6 +15,7 @@ struct JobInfo {
     String display_name;
     std::vector<String> dialogues;
     String reaction_policy;
+    String downed_target_policy;
     int reaction_radius = 0;
     String default_ai_state;
     String faction;

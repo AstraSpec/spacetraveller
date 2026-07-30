@@ -13,12 +13,23 @@ struct RacePartDefinition {
     String parent_part_id;
     int count;
     String height = "MID";
+    float integrity_scale = 1.0f;
+};
+
+struct NaturalArmorInfo {
+    bool enabled = false;
+    float coverage = 0.0f;
+    float bash = 0.0f;
+    float cut = 0.0f;
+    float pierce = 0.0f;
+    float bash_transmission = 1.0f;
 };
 
 struct RaceInfo {
     String name;
     Vector2i atlas;
-    float base_hp = 100.0f;
+    int downed_atlas_offset = -1;
+    float anatomy_scale = 1.0f;
     float speed = 1.0f;
     float base_damage = 10.0f;
     float base_stamina = 100.0f;
@@ -27,10 +38,12 @@ struct RaceInfo {
     String combat_style = "default";
     String faction;
     String reaction_policy = "defensive";
+    String downed_target_policy = "continue";
     int reaction_radius = 12;
     String traversal_profile = "walker";
     std::vector<uint16_t> tags;
     std::vector<RacePartDefinition> parts;
+    NaturalArmorInfo natural_armor;
     LightEmissionInfo light;
 };
 

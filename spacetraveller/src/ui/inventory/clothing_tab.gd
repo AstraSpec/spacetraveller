@@ -3,7 +3,6 @@ extends BaseListTab
 @onready var SpacerLabelScene = preload("res://src/ui/spacer_label.tscn")
 
 @export var _GameWorld :GameWorld
-@export var armorLabel :RichTextLabel
 
 func _get_display_data() -> Array:
 	var clothing = _GameWorld.get_entity_clothing(0)
@@ -46,7 +45,11 @@ func _update_details_ui(item_data: Dictionary) -> void:
 	if not slots.is_empty():
 		_add_detail("Parts", _format_clothing_slot_parts(slots))
 		_add_detail("Layers", _format_clothing_slot_layers(slots))
-		_add_detail("Armor", _format_clothing_slot_armor(slots))
+		_add_detail("Coverage", _format_clothing_slot_stat(slots, "coverage", true))
+		_add_detail("Bash", _format_clothing_slot_stat(slots, "bash"))
+		_add_detail("Cut", _format_clothing_slot_stat(slots, "cut"))
+		_add_detail("Pierce", _format_clothing_slot_stat(slots, "pierce"))
+		_add_detail("Bash through", _format_clothing_slot_stat(slots, "bash_transmission", true))
 
 func _add_detail(label: String, value: String):
 	var inst = SpacerLabelScene.instantiate()
@@ -72,23 +75,18 @@ func _format_clothing_slot_layers(slots: Array) -> String:
 				layers.append(layer)
 	return ", ".join(layers)
 
-func _format_clothing_slot_armor(slots: Array) -> String:
+func _format_clothing_slot_stat(slots: Array, key: String, as_percent := false) -> String:
 	var values: PackedStringArray = []
 	for slot in slots:
 		if slot is Dictionary:
-			values.append("%s %.1f" % [str(slot.get("part", "any")).capitalize(), float(slot.get("armor", 0.0))])
+			var part := str(slot.get("part", "any")).capitalize()
+			var amount := float(slot.get(key, 0.0))
+			var display := "%d%%" % roundi(amount * 100.0) if as_percent else "%.1f" % amount
+			values.append("%s %s" % [part, display])
 	return ", ".join(values)
 
 func refresh_view() -> void:
 	super.refresh_view()
-
-func _on_refresh() -> void:
-	_update_armor_display()
-
-func _update_armor_display() -> void:
-	if armorLabel:
-		var total_armor = _GameWorld.get_entity_armor_rating(0)
-		armorLabel.text = "Total Armor: [color=#66ff66]%.1f[/color]" % total_armor
 
 func _item_label(item_id: String) -> String:
 	var item_name := String(ItemDb.get_item_name(item_id))

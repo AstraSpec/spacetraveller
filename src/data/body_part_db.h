@@ -11,6 +11,8 @@ struct BodyPartInfo {
     std::vector<uint16_t> tags;
     float hit_weight = 1.0f;
     float max_integrity = 10.0f;
+    float consciousness_multiplier = 1.0f;
+    float pain_multiplier = 1.0f;
 };
 
 class BodyPartDb : public Object, public DataBase<BodyPartInfo, BodyPartDb> {
@@ -31,6 +33,8 @@ public:
     String get_body_part_name(const String &p_id) const;
     float get_body_part_hit_weight(const String &p_id) const;
     float get_body_part_max_integrity(const String &p_id) const;
+    float get_body_part_consciousness_multiplier(const String &p_id) const;
+    float get_body_part_pain_multiplier(const String &p_id) const;
 };
 
 }

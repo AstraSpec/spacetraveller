@@ -25,15 +25,16 @@ struct EffectsData {
 };
 
 namespace EffectTuning {
-    inline constexpr float BLEED_DECAY_RATE = 0.003f;
     inline constexpr float BLEED_PER_HIT = 0.3f;
-    inline constexpr float BLEED_HP_PER_MAG = 0.125f;
+    inline constexpr float BLEED_BLOOD_PER_MAG = 0.125f;
 }
 
 namespace Effects {
     void add(EffectsData& data, const Effect& e);
     void tick(EffectsData& data, float dt, std::vector<int>* expired_bleed_parts = nullptr);
     float total_bleed(const EffectsData& data);
+    float bleeding_pain_floor(const EffectsData& data);
+    float bleed_blood_loss(const EffectsData& data, float elapsed);
 
     Effect make_bleed(int target_part, float magnitude);
 

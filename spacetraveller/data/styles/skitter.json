@@ -2,8 +2,7 @@
   "id": "skitter",
   "name": "Skitter",
   "damage_mult": 0.9,
-  "accuracy_mod": 0.1,
-  "crit_chance_mod": 0.05,
+  "accuracy_mod": 0.02,
   "requires_unarmed": false,
   "target_heights": ["LOW"],
   "abilities": [

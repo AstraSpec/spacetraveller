@@ -15,7 +15,6 @@ struct StyleInfo {
     String name;
     float damage_mult = 1.0f;
     float accuracy_mod = 0.0f;
-    float crit_chance_mod = 0.0f;
     bool requires_unarmed = false;
     std::vector<String> target_heights;
     std::vector<StyleAbilityEntry> abilities;

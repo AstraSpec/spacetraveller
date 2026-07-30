@@ -71,7 +71,7 @@
     "giver_jobs": ["guild_master"],
     "failure_policy": "cooldown",
     "failure_cooldown_turns": 86400,
-    "target_races": ["bear", "mouse"],
+    "target_races": ["bear", "rat"],
     "location_context": "forest",
     "target_range": [3, 6],
     "label_template": "Hunt {count} {race_name} in the forest",

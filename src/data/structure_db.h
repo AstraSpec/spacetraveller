@@ -41,6 +41,7 @@ struct StructureRuleInfo {
     String dialogue_id;
     String faction;
     String reaction_policy;
+    String downed_target_policy;
     int reaction_radius = 0;
     String ai_state;
     uint16_t loot_table = 0;

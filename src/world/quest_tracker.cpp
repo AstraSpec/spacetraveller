@@ -25,7 +25,7 @@ static inline int _randi_index(int p_size) {
 static String quest_race_name(const String& p_race_id, int p_count) {
     String name = p_race_id.replace("_", " ").capitalize();
     if (p_count == 1) return name;
-    if (p_race_id == "mouse") return "Mice";
+    if (p_race_id == "rat") return "Rats";
     if (!name.ends_with("s")) name += "s";
     return name;
 }
@@ -834,7 +834,6 @@ bool QuestTracker::can_offer(uint32_t p_giver_entity_id, const String& p_kind) {
 
 Dictionary QuestTracker::serialize() const {
     Dictionary data;
-    data["version"] = 1;
     Array arr;
     for (const auto& pair : instances) {
         arr.push_back(_view(pair.first, pair.second));

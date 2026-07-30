@@ -13,6 +13,8 @@ struct Entity {
     int x, y, z;
     uint32_t component_mask;
     float next_turn_time;
+    float condition_time;
+    float condition_recovery_multiplier;
     uint16_t atlas_x;
     uint16_t atlas_y;
 };

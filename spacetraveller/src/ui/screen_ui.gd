@@ -4,10 +4,15 @@ extends TabContainer
 @export var DayLabel :HBoxContainer
 @export var TimeLabel :HBoxContainer
 @export var SunLabel :HBoxContainer
-@export var HealthValue :Label
 @export var StaminaValue :Label
-@export var HealthBar :ProgressBar
 @export var StaminaBar :ProgressBar
+@export var ConsciousnessValue :Label
+@export var ConsciousnessBar :ProgressBar
+@export var PainValue :Label
+@export var PainBar :ProgressBar
+@export var BloodValue :Label
+@export var BloodBar :ProgressBar
+@export var BodyGrid :GridContainer
 @export var LookController :Node
 
 var _inspection_pos := Vector2i.ZERO
@@ -20,6 +25,13 @@ const COLOR_MUTED := Color(0.54, 0.58, 0.62, 1.0)
 const COLOR_POSITIVE := Color(0.47, 0.78, 0.49, 1.0)
 const COLOR_ATTENTION := Color(0.85, 0.72, 0.36, 1.0)
 const COLOR_DANGER := Color(0.89, 0.43, 0.43, 1.0)
+const COLOR_CONSCIOUSNESS := Color(0.62, 0.64, 0.68, 1.0)
+const COLOR_BODY_HEALTHY := Color(0.48, 0.60, 0.50, 1.0)
+const COLOR_BODY_WOUNDED := Color(0.77, 0.60, 0.35, 1.0)
+const COLOR_BODY_CRITICAL := Color(0.78, 0.36, 0.36, 1.0)
+const COLOR_BODY_LABEL := Color(0.70, 0.72, 0.74, 1.0)
+const COLOR_WARNING_ORANGE := Color(0.90, 0.55, 0.28, 1.0)
+const COLOR_CONDITION_RED := Color(0.78, 0.24, 0.24, 1.0)
 
 @onready var LookTitle: Label = $Look/VBoxContainer/Header/Title
 @onready var LookCoordinates: Label = $Look/VBoxContainer/Header/Coordinates
@@ -42,6 +54,14 @@ const COLOR_DANGER := Color(0.89, 0.43, 0.43, 1.0)
 @onready var ItemsList: VBoxContainer = $Look/VBoxContainer/ItemsSection/ItemsList
 @onready var TextSection: VBoxContainer = $Look/VBoxContainer/TextSection
 @onready var WorldText: Label = $Look/VBoxContainer/TextSection/Text
+@onready var _body_cells := {
+	"head": BodyGrid.get_node("HeadPart") as Control,
+	"torso": BodyGrid.get_node("TorsoPart") as Control,
+	"left_arm": BodyGrid.get_node("LeftArmPart") as Control,
+	"right_arm": BodyGrid.get_node("RightArmPart") as Control,
+	"left_leg": BodyGrid.get_node("LeftLegPart") as Control,
+	"right_leg": BodyGrid.get_node("RightLegPart") as Control,
+}
 
 func _ready() -> void:
 	TimeManager.turn_passed.connect(_update_display)
@@ -94,8 +114,11 @@ func _on_combat_event(attacker_id: int, defender_id: int, damage: float, result:
 	var verb_conj = verb if attacker_id == 0 else verb + "s"
 	var target = _possessive(defender_id, part)
 	var dmg_str = str(int(round(damage)))
-	var is_crit = result == "crit" or result == "crit_kill"
-	var is_kill = result == "kill" or result == "crit_kill"
+	var is_kill = result.ends_with("_kill")
+	var is_down = result.ends_with("_down")
+	var quality := result.trim_suffix("_kill").trim_suffix("_down")
+	var is_crit = quality == "critical"
+	var quality_prefix := "[b]%s[/b] " % quality.capitalize()
 	var msg = ""
 
 	if result == "exhausted":
@@ -104,18 +127,51 @@ func _on_combat_event(attacker_id: int, defender_id: int, damage: float, result:
 	elif result == "no_limbs":
 		msg = "%s %s no functional limbs to strike with." % [attacker_name, "have" if attacker_id == 0 else "has"]
 		category = "combat_player"
+	elif result == "downed":
+		msg = "%s %s too incapacitated to attack." % [attacker_name, "are" if attacker_id == 0 else "is"]
 	elif result == "miss":
 		msg = "%s %s at %s and misses." % [attacker_name, verb_conj, defender_name]
+	elif result == "dodge":
+		msg = "%s %s %s attack." % [
+			"You" if defender_id == 0 else defender_name,
+			"dodge" if defender_id == 0 else "dodges",
+			"your" if attacker_id == 0 else "%s's" % attacker_name,
+		]
 	elif is_kill:
 		if defender_id == 0:
-			msg = "[b]%s %s your %s for %s and kills you![/b]" % [attacker_name, verb_conj, part, dmg_str]
+			msg = "%s%s %s %s for %s damage and kills you!" % [
+				quality_prefix,
+				attacker_name,
+				verb_conj,
+				target,
+				dmg_str,
+			]
 		else:
-			msg = "%s %s %s for %s. %s dies." % [attacker_name, verb_conj, target, dmg_str, defender_name]
+			msg = "%s%s %s %s for %s damage. %s dies." % [
+				quality_prefix,
+				attacker_name,
+				verb_conj,
+				target,
+				dmg_str,
+				defender_name,
+			]
+	elif is_down:
+		msg = "%s%s %s %s for %s damage and knocks %s down." % [
+			quality_prefix,
+			attacker_name,
+			verb_conj,
+			target,
+			dmg_str,
+			"you" if defender_id == 0 else defender_name,
+		]
 	else:
-		msg = "%s %s %s for %s damage." % [attacker_name, verb_conj, target, dmg_str]
-
-	if is_crit:
-		msg = "[b]CRITICAL HIT! %s[/b]" % msg
+		msg = "%s%s %s %s for %s damage." % [
+			quality_prefix,
+			attacker_name,
+			verb_conj,
+			target,
+			dmg_str,
+		]
 
 	EventBus.post(category, msg, {"attacker": attacker_id, "defender": defender_id, "damage": damage, "part": part, "crit": is_crit})
 
@@ -173,6 +229,22 @@ func _on_effect_event(entity_id: int, effect_type: String, note: String, part: S
 			msg = "%s %s stopped bleeding." % [actor, "have" if entity_id == 0 else "has"]
 		else:
 			msg = "%s %s %s stopped bleeding." % [possessive.capitalize(), part, "has"]
+	elif effect_type == "drop_weapon":
+		var item_name := str(ItemDb.get_item_name(note))
+		if item_name.is_empty():
+			item_name = note
+		msg = "%s drop%s %s." % [
+			actor,
+			"" if entity_id == 0 else "s",
+			item_name,
+		]
+	elif effect_type == "downed":
+		msg = "%s collapse%s." % [actor, "" if entity_id == 0 else "s"]
+	elif effect_type == "recovered":
+		msg = "%s regain%s enough consciousness to act." % [
+			actor,
+			"" if entity_id == 0 else "s",
+		]
 	else:
 		return
 	EventBus.post("effect", msg, {"entity": entity_id, "effect": effect_type, "part": part})
@@ -217,40 +289,16 @@ func _update_display() -> void:
 	_refresh_inspection()
 
 func _update_vitals() -> void:
-	_update_health()
-	_update_stamina()
+	var status: Dictionary = _GameWorld.get_entity_condition_status(0)
+	_update_consciousness(status)
+	_update_stamina(status)
+	_update_body(status)
+	_update_pain(status)
+	_update_blood(status)
 
-func _update_health() -> void:
-	if not HealthValue or not HealthBar or not _GameWorld:
-		return
-	var hp = _GameWorld.get_player_health()
-	if hp.is_empty():
-		HealthValue.text = "--"
-		HealthValue.add_theme_color_override("font_color", COLOR_MUTED)
-		HealthBar.hide()
-		return
-	var current = int(round(hp.get("current_hp", 0)))
-	var maximum = int(round(hp.get("max_hp", 0)))
-	if maximum <= 0:
-		HealthValue.text = "--"
-		HealthValue.add_theme_color_override("font_color", COLOR_MUTED)
-		HealthBar.hide()
-		return
-	HealthValue.text = "%d / %d" % [current, maximum]
-	HealthValue.add_theme_color_override("font_color", COLOR_TEXT)
-	_update_resource_bar(HealthBar, current, maximum)
-
-func _update_stamina() -> void:
-	if not StaminaValue or not StaminaBar or not _GameWorld:
-		return
-	var st = _GameWorld.get_player_stamina()
-	if st.is_empty():
-		StaminaValue.text = "--"
-		StaminaValue.add_theme_color_override("font_color", COLOR_MUTED)
-		StaminaBar.hide()
-		return
-	var current = int(round(st.get("current_stamina", 0)))
-	var maximum = int(round(st.get("max_stamina", 0)))
+func _update_stamina(status: Dictionary) -> void:
+	var current := int(round(float(status.get("current_stamina", 0.0))))
+	var maximum := int(round(float(status.get("max_stamina", 0.0))))
 	if maximum <= 0:
 		StaminaValue.text = "--"
 		StaminaValue.add_theme_color_override("font_color", COLOR_MUTED)
@@ -259,6 +307,146 @@ func _update_stamina() -> void:
 	StaminaValue.text = "%d / %d" % [current, maximum]
 	StaminaValue.add_theme_color_override("font_color", COLOR_TEXT)
 	_update_resource_bar(StaminaBar, current, maximum)
+	StaminaBar.tooltip_text = "Stamina: %d of %d" % [current, maximum]
+
+func _update_consciousness(status: Dictionary) -> void:
+	var current := float(status.get("current_consciousness", 0.0))
+	var maximum := maxf(1.0, float(status.get("max_consciousness", 100.0)))
+	var percent := clampf(float(status.get("consciousness", 0.0)), 0.0, 1.0)
+	var ceiling := clampf(float(status.get("consciousness_ceiling", 1.0)), 0.0, 1.0)
+	var downed := bool(status.get("downed", false))
+	if downed:
+		ConsciousnessValue.text = "DOWNED %d%%" % roundi(percent * 100.0)
+	else:
+		ConsciousnessValue.text = "%d%%" % roundi(percent * 100.0)
+	var color := COLOR_DANGER if percent <= 0.20 else (COLOR_ATTENTION if percent < 0.35 else COLOR_TEXT)
+	ConsciousnessValue.add_theme_color_override("font_color", color)
+	_update_resource_bar(ConsciousnessBar, roundi(current), roundi(maximum))
+	_set_bar_fill(ConsciousnessBar, COLOR_CONSCIOUSNESS)
+	ConsciousnessBar.tooltip_text = "Consciousness: %.1f of %.1f\nCurrent ceiling: %d%%\nAccuracy: %+.0f points\nAction speed: %d%%" % [
+		current,
+		maximum,
+		roundi(ceiling * 100.0),
+		float(status.get("consciousness_accuracy_modifier", 0.0)) * 100.0,
+		roundi(float(status.get("consciousness_speed_multiplier", 1.0)) * 100.0),
+	]
+
+func _update_pain(status: Dictionary) -> void:
+	var pain := clampf(float(status.get("pain", 0.0)), 0.0, 1.0)
+	PainValue.text = "Pain %d%%" % roundi(pain * 100.0)
+	var color := COLOR_BODY_LABEL
+	if pain > 0.80:
+		color = COLOR_DANGER
+	elif pain > 0.50:
+		color = COLOR_WARNING_ORANGE
+	elif pain > 0.20:
+		color = COLOR_ATTENTION
+	PainValue.add_theme_color_override("font_color", color)
+	PainBar.max_value = 100.0
+	PainBar.value = pain * 100.0
+	_set_bar_fill(PainBar, _pain_bar_color(pain))
+	PainBar.show()
+	var tooltip := "Pain: %d%%\nUntreated floor: %d%%\nAccuracy: %+.0f points\nAction speed: %d%%" % [
+		roundi(pain * 100.0),
+		roundi(float(status.get("pain_floor", 0.0)) * 100.0),
+		float(status.get("pain_accuracy_modifier", 0.0)) * 100.0,
+		roundi(float(status.get("pain_speed_multiplier", 1.0)) * 100.0),
+	]
+	PainValue.tooltip_text = tooltip
+	PainBar.tooltip_text = tooltip
+	var pain_cell := PainValue.get_parent() as Control
+	pain_cell.tooltip_text = tooltip
+	pain_cell.show()
+
+func _update_body(status: Dictionary) -> void:
+	for cell in _body_cells.values():
+		cell.hide()
+	for part_value in status.get("hud_anatomy", []):
+		var part: Dictionary = part_value
+		var cell: Control = _body_cells[str(part.get("id", ""))]
+		var bar := cell.get_node("Bar") as ProgressBar
+		var integrity := clampf(float(part.get("integrity", 0.0)), 0.0, 1.0)
+		bar.max_value = 100.0
+		bar.value = integrity * 100.0
+		_set_bar_fill(bar, _body_bar_color(integrity))
+		var label := cell.get_node("Label") as Label
+		label.add_theme_color_override(
+			"font_color",
+			_body_label_color(integrity))
+		var current := float(part.get("current_integrity", 0.0))
+		var maximum := float(part.get("max_integrity", 0.0))
+		cell.tooltip_text = "%s: %d%%\nIntegrity: %.1f of %.1f" % [
+			str(part.get("label", "Body part")),
+			roundi(integrity * 100.0),
+			current,
+			maximum,
+		]
+		cell.show()
+
+func _update_blood(status: Dictionary) -> void:
+	var blood := clampf(float(status.get("blood", 0.0)), 0.0, 1.0)
+	BloodValue.text = "Blood %d%%" % roundi(blood * 100.0)
+	var color := COLOR_BODY_LABEL
+	if blood < 0.10:
+		color = COLOR_DANGER
+	elif blood < 0.25:
+		color = COLOR_DANGER
+	elif blood < 0.50:
+		color = COLOR_ATTENTION
+	BloodValue.add_theme_color_override("font_color", color)
+	BloodValue.add_theme_font_size_override("font_size", 10)
+	BloodBar.max_value = 100.0
+	BloodBar.value = blood * 100.0
+	_set_bar_fill(BloodBar, _blood_bar_color(blood))
+	BloodBar.show()
+	var tooltip := "Blood: %.1f of %.1f" % [
+		float(status.get("current_blood", 0.0)),
+		float(status.get("max_blood", 0.0)),
+	]
+	BloodValue.tooltip_text = tooltip
+	BloodBar.tooltip_text = tooltip
+	var blood_cell := BloodValue.get_parent() as Control
+	blood_cell.tooltip_text = tooltip
+	blood_cell.show()
+
+func _body_bar_color(integrity: float) -> Color:
+	if integrity > 0.70:
+		return COLOR_BODY_HEALTHY
+	if integrity >= 0.40:
+		return COLOR_BODY_WOUNDED
+	return COLOR_BODY_CRITICAL
+
+func _body_label_color(integrity: float) -> Color:
+	if integrity > 0.70:
+		return COLOR_BODY_LABEL
+	if integrity >= 0.40:
+		return COLOR_ATTENTION
+	return COLOR_DANGER
+
+func _pain_bar_color(pain: float) -> Color:
+	if pain <= 0.20:
+		return COLOR_CONSCIOUSNESS
+	if pain >= 0.80:
+		return COLOR_CONDITION_RED
+	var danger := (pain - 0.20) / 0.60
+	return COLOR_CONSCIOUSNESS.lerp(COLOR_CONDITION_RED, danger)
+
+func _blood_bar_color(blood: float) -> Color:
+	if blood >= 0.50:
+		return COLOR_CONSCIOUSNESS
+	if blood <= 0.10:
+		return COLOR_CONDITION_RED
+	var danger := (0.50 - blood) / 0.40
+	return COLOR_CONSCIOUSNESS.lerp(COLOR_CONDITION_RED, danger)
+
+func _set_bar_fill(bar: ProgressBar, color: Color) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.corner_radius_top_left = 2
+	style.corner_radius_top_right = 2
+	style.corner_radius_bottom_left = 2
+	style.corner_radius_bottom_right = 2
+	bar.add_theme_stylebox_override("fill", style)
 
 func _update_resource_bar(bar: ProgressBar, current: int, maximum: int) -> void:
 	bar.max_value = maximum
@@ -334,7 +522,7 @@ func _render_inspection(inspection: Dictionary) -> void:
 		VisibilityLabel.visible = true
 		return
 	if visibility == "remembered":
-		VisibilityLabel.text = "Remembered terrain — current details are unknown."
+		VisibilityLabel.text = "Remembered terrain."
 		VisibilityLabel.visible = true
 
 	var terrain: Dictionary = inspection.get("terrain", {})

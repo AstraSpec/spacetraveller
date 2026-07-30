@@ -23,9 +23,9 @@ func refresh_view() -> void:
 		container.remove_child(child)
 		child.queue_free()
 
-	var status := _GameWorld.get_entity_health_status(0)
+	var status := _GameWorld.get_entity_condition_status(0)
 	if status.is_empty():
-		_add_empty_message("Health information is unavailable.")
+		_add_empty_message("Condition information is unavailable.")
 		return
 
 	_build_summary(status)
@@ -44,34 +44,54 @@ func _build_summary(status: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 
-	var health_label := Label.new()
-	var current_hp := float(status.get("current_hp", 0.0))
-	var max_hp := float(status.get("max_hp", 0.0))
-	var health_percent := current_hp / max_hp if max_hp > 0.0 else 0.0
-	health_label.text = "Health"
-	health_label.add_theme_color_override("font_color", Color.WHITE)
-	row.add_child(health_label)
-
-	var health_value := Label.new()
-	health_value.text = "%d%%" % roundi(health_percent * 100.0)
-	health_value.add_theme_color_override("font_color", _percentage_color(health_percent))
-	row.add_child(health_value)
-
-	var summary_gap := Control.new()
-	summary_gap.custom_minimum_size.x = 18.0
-	row.add_child(summary_gap)
-
-	var stamina := float(status.get("stamina", 0.0))
-	var stamina_label := Label.new()
-	stamina_label.text = "Stamina"
-	stamina_label.add_theme_color_override("font_color", Color.WHITE)
-	row.add_child(stamina_label)
-
-	var stamina_value := Label.new()
-	stamina_value.text = "%d%%" % roundi(stamina * 100.0)
-	stamina_value.add_theme_color_override("font_color", _percentage_color(stamina))
-	row.add_child(stamina_value)
+	_add_summary_value(row, "Body", float(status.get("body_integrity", 0.0)))
+	_add_summary_gap(row)
+	_add_summary_value(row, "Blood", float(status.get("blood", 0.0)))
+	_add_summary_gap(row)
+	_add_summary_value(row, "Stamina", float(status.get("stamina", 0.0)))
 	container.add_child(row)
+
+	var physiology_row := HBoxContainer.new()
+	physiology_row.add_theme_constant_override("separation", 8)
+	_add_summary_value(
+		physiology_row,
+		"Consciousness",
+		float(status.get("consciousness", 0.0)))
+	_add_summary_gap(physiology_row)
+	_add_summary_value(
+		physiology_row,
+		"Pain",
+		float(status.get("pain", 0.0)))
+	if bool(status.get("downed", false)):
+		_add_summary_gap(physiology_row)
+		var downed := Label.new()
+		downed.text = "DOWNED"
+		downed.add_theme_color_override("font_color", COLOR_DANGER)
+		physiology_row.add_child(downed)
+	physiology_row.tooltip_text = "Consciousness ceiling: %d%%\nUntreated pain floor: %d%%\nPain accuracy: %+.0f points\nConsciousness accuracy: %+.0f points" % [
+		roundi(float(status.get("consciousness_ceiling", 1.0)) * 100.0),
+		roundi(float(status.get("pain_floor", 0.0)) * 100.0),
+		float(status.get("pain_accuracy_modifier", 0.0)) * 100.0,
+		float(status.get("consciousness_accuracy_modifier", 0.0)) * 100.0,
+	]
+	container.add_child(physiology_row)
+
+
+func _add_summary_gap(row: HBoxContainer) -> void:
+	var gap := Control.new()
+	gap.custom_minimum_size.x = 18.0
+	row.add_child(gap)
+
+
+func _add_summary_value(row: HBoxContainer, label_text: String, value: float) -> void:
+	var label := Label.new()
+	label.text = label_text
+	label.add_theme_color_override("font_color", Color.WHITE)
+	row.add_child(label)
+	var value_label := Label.new()
+	value_label.text = "%d%%" % roundi(clampf(value, 0.0, 1.0) * 100.0)
+	value_label.add_theme_color_override("font_color", _percentage_color(value))
+	row.add_child(value_label)
 
 
 func _build_capacities(parent: HBoxContainer, capacities: Dictionary) -> void:

@@ -44,6 +44,10 @@ EntityGroupInfo EntityGroupDb::_parse_row(const Dictionary &p_data) {
         entry.dialogue_id = String(entry_data.get("dialogue_id", ""));
         entry.faction = String(entry_data.get("faction", "")).to_lower();
         entry.reaction_policy = String(entry_data.get("reaction_policy", "")).to_lower();
+        Dictionary attack_policy =
+            entry_data.get("attack_policy", Dictionary());
+        entry.downed_target_policy = String(
+            attack_policy.get("downed_targets", "")).to_lower();
         entry.reaction_radius = static_cast<int>(entry_data.get("reaction_radius", 0));
         entry.ai_state = String(entry_data.get("ai_state", ""));
 

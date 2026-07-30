@@ -55,7 +55,15 @@ func load_save_to_memory(slot_name: String) -> bool:
 	if error != OK:
 		printerr("JSON Parse Error: ", json.get_error_message(), " at line ", json.get_error_line())
 		return false
-		
+
+	if not json.data is Dictionary:
+		printerr("Invalid save data: expected a dictionary")
+		return false
+	var world_data: Variant = json.data.get("world")
+	if not world_data is Dictionary:
+		printerr("Invalid save data: missing world data")
+		return false
+
 	loaded_save_data = json.data
 	new_game_options = {}
 	return true

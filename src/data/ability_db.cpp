@@ -23,6 +23,11 @@ AbilityInfo AbilityDb::_parse_row(const Dictionary &p_data) {
     info.accuracy = static_cast<float>(static_cast<double>(p_data.get("accuracy", 0.8)));
     info.speed = static_cast<float>(static_cast<double>(p_data.get("speed", 1.0)));
     info.stamina_cost = static_cast<float>(static_cast<double>(p_data.get("stamina_cost", 10.0)));
+    info.allow_exhausted = p_data.get("allow_exhausted", false);
+    const String damage_type = String(p_data.get("damage_type", "bash")).to_lower();
+    if (damage_type == "cut") info.damage_type = DamageType::CUT;
+    else if (damage_type == "pierce") info.damage_type = DamageType::PIERCE;
+    else info.damage_type = DamageType::BASH;
 
     Array limbs = p_data.get("required_limbs", Array());
     for (int i = 0; i < limbs.size(); i++) {

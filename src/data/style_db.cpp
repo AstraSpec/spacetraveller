@@ -29,7 +29,6 @@ StyleInfo StyleDb::_parse_row(const Dictionary &p_data) {
     info.name = p_data.get("name", "");
     info.damage_mult = static_cast<float>(static_cast<double>(p_data.get("damage_mult", 1.0)));
     info.accuracy_mod = static_cast<float>(static_cast<double>(p_data.get("accuracy_mod", 0.0)));
-    info.crit_chance_mod = static_cast<float>(static_cast<double>(p_data.get("crit_chance_mod", 0.0)));
     info.requires_unarmed = p_data.get("requires_unarmed", false);
     info.target_heights = parse_string_list(p_data.get("target_heights", Array()));
 

@@ -1,6 +1,8 @@
 #include "clothing.h"
 #include "anatomy.h"
+#include "combat_math.h"
 #include "data/item_db.h"
+#include <algorithm>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <vector>
 
@@ -50,6 +52,29 @@ bool assignment_slot_is_free(const ClothingData& data, const ClothingAssignment&
 
     auto layer_it = part_it->second.find(assignment.layer);
     return layer_it == part_it->second.end();
+}
+
+int protection_layer_order(const String& layer) {
+    if (layer == "outer") return 0;
+    if (layer == "armor") return 1;
+    if (layer == "middle") return 2;
+    if (layer == "under") return 3;
+    return 4;
+}
+
+ProtectionLayer to_protection_layer(
+    const String& item_id,
+    const ClothingSlotInfo& slot
+) {
+    ProtectionLayer layer;
+    layer.item_id = item_id;
+    layer.layer = slot.layer;
+    layer.coverage = slot.coverage;
+    layer.bash = slot.bash;
+    layer.cut = slot.cut;
+    layer.pierce = slot.pierce;
+    layer.bash_transmission = slot.bash_transmission;
+    return layer;
 }
 
 }
@@ -121,33 +146,65 @@ bool Clothing::is_equipped(const ClothingData& data, const String& item_id) {
     return false;
 }
 
-float Clothing::get_armor(const ClothingData& data, const AnatomyData& anatomy) {
-    float total = 0.0f;
-    for (const auto& part_pair : data.equipped) {
-        if (!Anatomy::is_functional(anatomy, part_pair.first)) continue;
-        total += get_armor_for_part(data, anatomy, part_pair.first);
-    }
-    return total;
-}
-
-float Clothing::get_armor_for_part(const ClothingData& data, const AnatomyData& anatomy, int part_index) {
-    if (!Anatomy::is_functional(anatomy, part_index)) return 0.0f;
+std::vector<ProtectionLayer> Clothing::get_protection_layers_for_part(
+    const ClothingData& data,
+    const AnatomyData& anatomy,
+    int part_index
+) {
+    std::vector<ProtectionLayer> layers;
+    if (!Anatomy::is_functional(anatomy, part_index)) return layers;
 
     ItemDb* db = ItemDb::get_singleton();
-    if (!db) return 0.0f;
+    if (!db) return layers;
 
     auto part_it = data.equipped.find(part_index);
-    if (part_it == data.equipped.end()) return 0.0f;
+    if (part_it == data.equipped.end()) return layers;
 
-    float total = 0.0f;
     for (const auto& layer_pair : part_it->second) {
-        const std::vector<ClothingSlotInfo>* slots = db->get_clothing_slots_info(layer_pair.second);
-        const ClothingSlotInfo* slot = find_matching_slot(slots, anatomy, part_index, layer_pair.first);
+        const std::vector<ClothingSlotInfo>* slots =
+            db->get_clothing_slots_info(layer_pair.second);
+        const ClothingSlotInfo* slot =
+            find_matching_slot(slots, anatomy, part_index, layer_pair.first);
         if (slot) {
-            total += slot->armor;
+            layers.push_back(to_protection_layer(layer_pair.second, *slot));
         }
     }
-    return total;
+
+    std::stable_sort(
+        layers.begin(),
+        layers.end(),
+        [](const ProtectionLayer& lhs, const ProtectionLayer& rhs) {
+            const int lhs_order = protection_layer_order(lhs.layer);
+            const int rhs_order = protection_layer_order(rhs.layer);
+            if (lhs_order != rhs_order) return lhs_order < rhs_order;
+            return lhs.layer < rhs.layer;
+        }
+    );
+    return layers;
+}
+
+float Clothing::get_resistance(const ProtectionLayer& layer, DamageType damage_type) {
+    switch (damage_type) {
+        case DamageType::BASH:
+            return std::max(0.0f, layer.bash);
+        case DamageType::CUT:
+            return std::max(0.0f, layer.cut);
+        case DamageType::PIERCE:
+            return std::max(0.0f, layer.pierce);
+    }
+    return 0.0f;
+}
+
+float Clothing::apply_covered_layer(
+    float incoming_damage,
+    DamageType damage_type,
+    const ProtectionLayer& layer
+) {
+    return CombatMath::armor_damage_after_covered_layer(
+        incoming_damage,
+        damage_type,
+        get_resistance(layer, damage_type),
+        layer.bash_transmission);
 }
 
 Dictionary Clothing::get_list(const ClothingData& data, const AnatomyData& anatomy) {

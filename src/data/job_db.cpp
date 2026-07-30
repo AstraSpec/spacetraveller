@@ -51,6 +51,10 @@ JobInfo JobDb::_parse_row(const Dictionary &p_data) {
     info.display_name = String(p_data.get("display_name", info.id.capitalize()));
     info.dialogues = parse_string_list(p_data.get("dialogues", Array()));
     info.reaction_policy = String(p_data.get("reaction_policy", "")).to_lower();
+    Dictionary attack_policy =
+        p_data.get("attack_policy", Dictionary());
+    info.downed_target_policy = String(
+        attack_policy.get("downed_targets", "")).to_lower();
     info.reaction_radius = static_cast<int>(p_data.get("reaction_radius", 0));
     info.default_ai_state = String(p_data.get("default_ai_state", "")).to_lower();
     info.faction = String(p_data.get("faction", "")).to_lower();

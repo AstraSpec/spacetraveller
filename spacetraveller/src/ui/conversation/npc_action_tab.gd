@@ -56,12 +56,21 @@ func _build_attack_actions(world: GameWorld, npc_id: int) -> Array:
 		if ability_id.is_empty():
 			continue
 		var ability_name := str(option.get("display_name", ability_id.capitalize()))
+		var weapon_name := str(option.get("weapon_name", ""))
+		if not weapon_name.is_empty():
+			ability_name = "%s — %s" % [weapon_name, ability_name]
 		var verb := str(option.get("verb", "attack"))
 		var disabled := bool(option.get("disabled", false))
+		var description := "Use %s against this NPC." % verb
+		if bool(option.get("armed", false)):
+			description += " Handling %d%%; %.0f%% base accuracy." % [
+				roundi(float(option.get("handling_ratio", 1.0)) * 100.0),
+				float(option.get("accuracy", 0.0)) * 100.0,
+			]
 		result.append(NpcAction.new(
 			ability_id,
 			ability_name,
-			"Use %s against this NPC." % verb,
+			description,
 			"attack",
 			{"verb": verb},
 			disabled
@@ -89,7 +98,8 @@ func _build_follow_action(world: GameWorld, npc_id: int) -> Array:
 
 func _get_body_part_data() -> Array:
 	var result: Array = []
-	for part_value in _GameWorld.get_entity_targetable_body_parts(target_id):
+	var attack_id := str(_selected_attack.get("id", ""))
+	for part_value in _GameWorld.get_player_targetable_body_parts(target_id, attack_id):
 		if not part_value is Dictionary:
 			continue
 		var part: Dictionary = part_value
@@ -97,12 +107,19 @@ func _get_body_part_data() -> Array:
 		if part_index < 0:
 			continue
 		var part_name := str(part.get("name", "Body part"))
+		var penalty := float(part.get("aim_penalty", 0.0))
+		var targeted_accuracy := float(part.get("targeted_accuracy", 0.0))
+		var time_multiplier := float(part.get("time_multiplier", 1.0))
 		result.append({
 			"id": part_index,
 			"kind": "body_part",
 			"body_part_index": part_index,
 			"display_name": part_name,
-			"description": "Select %s as the target." % part_name
+			"description": "Aim penalty −%.0f points; %.0f%% exact accuracy; ×%.2f time." % [
+				penalty * 100.0,
+				targeted_accuracy * 100.0,
+				time_multiplier,
+			]
 		})
 	return result
 
@@ -142,7 +159,15 @@ func _show_attack_confirmation(body_part: Dictionary) -> void:
 	var ability_name := str(_selected_attack.get("display_name", "Attack"))
 	var part_name := str(body_part.get("display_name", "body part"))
 	var target_name := _GameWorld.get_entity_name(target_id)
-	var message := "Attack %s with %s at %s?" % [target_name, ability_name, part_name]
+	var penalty := float(body_part.get("aim_penalty", 0.0))
+	var time_multiplier := float(body_part.get("time_multiplier", 1.0))
+	var message := "Attack %s with %s at %s?\nAim penalty −%.0f points, time ×%.2f. Near misses may strike a neighboring part." % [
+		target_name,
+		ability_name,
+		part_name,
+		penalty * 100.0,
+		time_multiplier,
+	]
 	_ConfirmationPopup.show_confirm(
 		message,
 		[

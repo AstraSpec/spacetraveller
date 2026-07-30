@@ -1,7 +1,7 @@
 {
-  "forest_mouse": {
+  "forest_rat": {
     "chunk_ids": ["forest"],
-    "race_id": "mouse",
+    "race_id": "rat",
     "spawn_weight": 5,
     "chance": 0.0006,
     "spawn_mode": "free_cell",
@@ -15,9 +15,9 @@
     "spawn_mode": "free_cell",
     "tile_tags": ["GROUND"]
   },
-  "plains_mouse": {
+  "plains_rat": {
     "chunk_ids": ["plains"],
-    "race_id": "mouse",
+    "race_id": "rat",
     "spawn_weight": 1,
     "chance": 0.0004,
     "spawn_mode": "free_cell",

@@ -10,9 +10,9 @@
     "tags": ["ALWAYS_TOP"]
   },
   {
-    "id": "corpse_mouse",
-    "name": "Mouse Corpse",
-    "description": "A tiny dead mouse.",
+    "id": "corpse_rat",
+    "name": "Rat Corpse",
+    "description": "A small dead rat.",
     "type": "misc",
     "price": 5,
     "atlas": [ 4, 14 ],

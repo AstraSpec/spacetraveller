@@ -10,7 +10,11 @@ namespace godot {
 struct ClothingSlotInfo {
     String part;
     String layer = "middle";
-    float armor = 0.0f;
+    float coverage = 1.0f;
+    float bash = 0.0f;
+    float cut = 0.0f;
+    float pierce = 0.0f;
+    float bash_transmission = 0.0f;
 };
 
 struct ItemInfo {

@@ -45,6 +45,10 @@ SpawnRuleInfo SpawnDb::_parse_row(const Dictionary &p_data) {
     info.dialogue_id = String(p_data.get("dialogue_id", ""));
     info.faction = String(p_data.get("faction", ""));
     info.reaction_policy = String(p_data.get("reaction_policy", ""));
+    Dictionary attack_policy =
+        p_data.get("attack_policy", Dictionary());
+    info.downed_target_policy = String(
+        attack_policy.get("downed_targets", "")).to_lower();
     info.reaction_radius = static_cast<int>(p_data.get("reaction_radius", 0));
     info.ai_state = String(p_data.get("ai_state", ""));
     return info;

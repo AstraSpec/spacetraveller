@@ -99,6 +99,31 @@ bool target_is_eligible(uint32_t self_id, uint32_t other_id, const AIData& ai, c
     return false;
 }
 
+bool attack_policy_allows_target(
+    uint32_t target_id,
+    const AIData& ai,
+    const EntityLedger& ledger
+) {
+    const PhysiologyData* physiology =
+        ledger.try_get_physiology(target_id);
+    return AIController::attack_policy_allows_target(
+        ai.downed_target_policy,
+        physiology && physiology->downed);
+}
+
+bool reaction_condition_allows_target(
+    uint32_t target_id,
+    const AIData& ai,
+    const EntityLedger& ledger
+) {
+    if (!AIController::downed_attack_policy_applies(
+            ai.state,
+            ai.reaction_policy)) {
+        return true;
+    }
+    return attack_policy_allows_target(target_id, ai, ledger);
+}
+
 bool should_scan(AIData& ai) {
     if (ai.state == AIState::COMBAT || ai.state == AIState::FLEE) return true;
     if (ai.reaction_policy == ReactionPolicy::PASSIVE) return false;
@@ -202,6 +227,21 @@ void NpcTurnProcessor::run_turn(
     LocomotionData* loco = director.d.ledger->try_get_locomotion(entity_id);
     AIData* ai = director.d.ledger->try_get_ai(entity_id);
     if (!loco || !ai) return;
+    const PhysiologyData* physiology =
+        director.d.ledger->try_get_physiology(entity_id);
+    if (physiology && physiology->downed) {
+        loco->movement_mode = MovementMode::PRONE;
+        Locomotion::clear_path(*loco);
+        const float actor_speed =
+            loco->speed > 0.0f ? loco->speed : 1.0f;
+        director.finish_entity_action(
+            entity_id,
+            ActionCost::WAIT / actor_speed,
+            base_time,
+            0.0f,
+            1.0f);
+        return;
+    }
 
     auto cancel_routine = [&](bool p_retry) {
         if (director.d.poi_registry) {
@@ -239,8 +279,20 @@ void NpcTurnProcessor::run_turn(
         const bool reacting = ai->state == AIState::COMBAT || ai->state == AIState::FLEE;
         const uint32_t current_id = reacting ? ai->target_entity_id : EntityPool::INVALID_ID;
         Entity* current = current_id != EntityPool::INVALID_ID ? pool.get_entity(current_id) : nullptr;
+        const bool current_rejected_by_attack_policy =
+            current &&
+            director.d.ledger->is_alive(current_id) &&
+            ai->state == AIState::COMBAT &&
+            !attack_policy_allows_target(
+                current_id,
+                *ai,
+                *director.d.ledger);
         int current_distance = 0;
         if (current && director.d.ledger->is_alive(current_id) &&
+            reaction_condition_allows_target(
+                current_id,
+                *ai,
+                *director.d.ledger) &&
             (ai->forced_reaction || target_is_eligible(entity_id, current_id, *ai, *director.d.ledger)) &&
             can_see(*entity, *current, radius, *director.d.bubble, tile_db)) {
             target_visible = true;
@@ -263,9 +315,16 @@ void NpcTurnProcessor::run_turn(
         std::vector<Candidate> candidates;
         candidates.reserve(nearby.size());
         for (uint32_t candidate_id : nearby) {
-            if (ai->forced_reaction) break;
+            if (ai->forced_reaction &&
+                !current_rejected_by_attack_policy) {
+                break;
+            }
             if (candidate_id == entity_id || candidate_id == current_id ||
                 !director.d.ledger->is_alive(candidate_id) ||
+                !reaction_condition_allows_target(
+                    candidate_id,
+                    *ai,
+                    *director.d.ledger) ||
                 !target_is_eligible(entity_id, candidate_id, *ai, *director.d.ledger)) {
                 continue;
             }
@@ -297,7 +356,9 @@ void NpcTurnProcessor::run_turn(
             const bool target_changed = ai->target_entity_id != selected_id ||
                 (ai->state != AIState::COMBAT && ai->state != AIState::FLEE);
             ai->state = ai->reaction_policy == ReactionPolicy::TIMID ? AIState::FLEE : AIState::COMBAT;
-            if (!reacting) ai->forced_reaction = false;
+            if (!reacting || selected_id != current_id) {
+                ai->forced_reaction = false;
+            }
             ai->target_entity_id = selected_id;
             ai->last_known_target_position = Vector2i(selected->x, selected->y);
             ai->has_last_known_target_position = true;
@@ -308,6 +369,8 @@ void NpcTurnProcessor::run_turn(
                 ai->path_retry_countdown = 0;
                 Locomotion::clear_path(*loco);
             }
+        } else if (current_rejected_by_attack_policy) {
+            restore_home_order();
         } else if (reacting) {
             Entity* remembered = pool.get_entity(ai->target_entity_id);
             if (!remembered || !director.d.ledger->is_alive(ai->target_entity_id) ||
@@ -1062,5 +1125,13 @@ void NpcTurnProcessor::run_turn(
         director.d.city_population->release_road_reservation(entity_id);
     }
     if (cost <= 0.0f) cost = ActionCost::WAIT / actor_speed;
-    director.finish_entity_action(entity_id, cost, base_time);
+    float stamina_recovery_multiplier = 1.0f;
+    if (intent.type == IntentType::ATTACK) {
+        stamina_recovery_multiplier = 0.0f;
+    } else if (intent.type == IntentType::MOVE) {
+        stamina_recovery_multiplier =
+            loco->movement_mode == MovementMode::PRONE ? 0.25f : 0.5f;
+    }
+    director.finish_entity_action(
+        entity_id, cost, base_time, 0.0f, stamina_recovery_multiplier);
 }
