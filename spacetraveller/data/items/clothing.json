@@ -3,11 +3,11 @@
     "id": "fiber_tunic",
     "name": "Fiber Tunic",
     "description": "A simple fiber tunic. Uncomfortable but warm.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 120,
     "atlas": [ 3, 26 ],
     "weight": 0.5,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -24,11 +24,11 @@
     "id": "fiber_pants",
     "name": "Fiber Pants",
     "description": "Simple fiber pants.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 100,
     "atlas": [ 0, 28 ],
     "weight": 0.4,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "leg",
@@ -45,11 +45,11 @@
     "id": "tunic_wool",
     "name": "Wool Tunic",
     "description": "A simple wool tunic. Comfortable and warm.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 240,
     "atlas": [ 3, 26 ],
     "weight": 0.5,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -66,11 +66,11 @@
     "id": "pants_wool",
     "name": "Wool Pants",
     "description": "Simple wool pants.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 200,
     "atlas": [ 0, 28 ],
     "weight": 0.4,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "leg",
@@ -87,11 +87,11 @@
     "id": "bra_wool",
     "name": "Wool Bra",
     "description": "Simple wool undergarment for the torso.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 80,
     "atlas": [ 14, 26 ],
     "weight": 0.1,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -108,11 +108,11 @@
     "id": "panties_wool",
     "name": "Wool Panties",
     "description": "Simple wool undergarment for the lower body.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 80,
     "atlas": [ 29, 10 ],
     "weight": 0.1,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "leg",
@@ -129,11 +129,11 @@
     "id": "linen_shirt",
     "name": "Linen Shirt",
     "description": "A light linen shirt.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 180,
     "atlas": [ 3, 26 ],
     "weight": 0.3,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -150,11 +150,11 @@
     "id": "linen_trousers",
     "name": "Linen Trousers",
     "description": "Light linen trousers.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 160,
     "atlas": [ 0, 28 ],
     "weight": 0.4,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "leg",
@@ -171,11 +171,11 @@
     "id": "silver_earrings",
     "name": "Silver Earrings",
     "description": "A pair of silver earrings.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 1600,
     "atlas": [ 48, 10 ],
     "weight": 0.02,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "ear",
@@ -192,11 +192,11 @@
     "id": "gold_ring",
     "name": "Gold Ring",
     "description": "A shiny gold ring.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 6000,
     "atlas": [ 12, 43 ],
     "weight": 0.01,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "finger",
@@ -213,11 +213,11 @@
     "id": "faith_necklace",
     "name": "Faith Necklace",
     "description": "A shiny necklace that shows your faith.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 500,
     "atlas": [ 37, 23 ],
     "weight": 0.02,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "neck",

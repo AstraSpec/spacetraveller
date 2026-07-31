@@ -24,6 +24,23 @@ protected:
     std::unordered_map<String, T, StringHasher> cache;
 
     virtual T _parse_row(const Dictionary &p_data) = 0;
+    virtual bool _validate_row(const Dictionary &p_data, String &r_error) const {
+        return true;
+    }
+
+    bool validate_row(const Dictionary &p_data) const {
+        String error;
+        if (_validate_row(p_data, error)) return true;
+
+        UtilityFunctions::push_error(
+            Derived::get_class_static(),
+            " rejected '",
+            String(p_data.get("id", "<missing id>")),
+            "': ",
+            error
+        );
+        return false;
+    }
 
     void load_json_file(const String &p_path) {
         String json_text = FileAccess::get_file_as_string(p_path);
@@ -38,14 +55,16 @@ protected:
             Array arr = data;
             for (int i = 0; i < arr.size(); i++) {
                 Dictionary item = arr[i];
-                if (item.has("id")) {
+                if (item.has("id") && validate_row(item)) {
                     cache[item["id"]] = _parse_row(item);
                 }
             }
         } else if (data.get_type() == Variant::DICTIONARY) {
             Dictionary dict = data;
             if (dict.has("id")) {
-                cache[dict["id"]] = _parse_row(dict);
+                if (validate_row(dict)) {
+                    cache[dict["id"]] = _parse_row(dict);
+                }
             } else {
                 Array keys = dict.keys();
                 for (int i = 0; i < keys.size(); i++) {
@@ -53,7 +72,9 @@ protected:
                     if (val.get_type() == Variant::DICTIONARY) {
                         Dictionary item = val;
                         if (!item.has("id")) item["id"] = keys[i];
-                        cache[keys[i]] = _parse_row(item);
+                        if (validate_row(item)) {
+                            cache[keys[i]] = _parse_row(item);
+                        }
                     }
                 }
             }

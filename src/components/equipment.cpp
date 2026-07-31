@@ -50,12 +50,9 @@ int Equipment::get_wielded_weapon_count(const EquipmentData& data) {
 
 float Equipment::get_weapon_load(const String& item_id) {
     ItemDb* db = ItemDb::get_singleton();
-    const Dictionary weapon = db ? db->get_weapon_data(item_id) : Dictionary();
-    if (weapon.is_empty()) return 1.0f;
-    const float legacy = static_cast<float>(static_cast<double>(
-        weapon.get("grasp_required", 1.0)));
-    return std::max(0.01f, static_cast<float>(static_cast<double>(
-        weapon.get("manipulation_load", legacy))));
+    const WeaponItemInfo* weapon =
+        db ? db->get_weapon_info(item_id) : nullptr;
+    return weapon ? weapon->manipulation_load : 1.0f;
 }
 
 std::vector<WeaponHandling> Equipment::get_weapon_handling(

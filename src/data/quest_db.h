@@ -32,7 +32,6 @@ struct QuestTemplate {
     String next_quest;          // stable story quest kind unlocked after completion
     String next_giver;          // authored handoff text / character identifier
     String giver_dialogue_id;   // optional dialogue identity allowed to offer this story quest
-    std::vector<String> item_type_filter; // gather
     std::vector<uint16_t> target_item_pool; // gather target items
     std::vector<uint16_t> target_item_tags; // gather target item tags
     uint16_t target_loot_table = 0;
@@ -78,7 +77,6 @@ public:
     String get_label_template(const String &p_kind) const;
     String get_description_template(const String &p_kind) const;
     Array  get_target_range(const String &p_kind) const;
-    Array  get_item_type_filter(const String &p_kind) const;
     Array  get_target_item_pool(const String &p_kind) const;
     Array  get_target_item_tags(const String &p_kind) const;
     String get_target_loot_table(const String &p_kind) const;

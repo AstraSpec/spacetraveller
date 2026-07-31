@@ -3,7 +3,7 @@
     "id": "faith_book",
     "name": "Book of Faith",
     "description": "A worn scripture filled with prayers and passages.",
-    "type": "book",
+    "category": "book",
     "price": 10,
     "atlas": [ 29, 16 ],
     "weight": 0.2,

@@ -214,11 +214,11 @@ bool add_weapon_candidates(
             pool.limb_blocked = true;
             continue;
         }
-        const Dictionary weapon =
-            item_db->get_weapon_data(held.item_id);
-        if (weapon.is_empty()) continue;
+        const WeaponItemInfo* weapon =
+            item_db->get_weapon_info(held.item_id);
+        if (!weapon) continue;
         found_weapon = true;
-        const String profile_id = weapon.get("attack_profile", "");
+        const String& profile_id = weapon->attack_profile;
         const WeaponProfileInfo* profile =
             profile_db->get_profile_info(profile_id);
         if (!profile) {
@@ -258,12 +258,9 @@ bool add_weapon_candidates(
             candidate.armed = true;
             candidate.weapon_slot = held.slot_name;
             candidate.weapon_item_id = held.item_id;
-            candidate.weapon_damage = static_cast<float>(
-                static_cast<double>(weapon.get("damage", 0.0)));
+            candidate.weapon_damage = weapon->damage;
             candidate.handling_ratio = held.ratio;
-            candidate.reach = MAX(
-                1,
-                static_cast<int>(weapon.get("reach", 1)));
+            candidate.reach = weapon->reach;
             pool.total_weight += candidate.weight;
             pool.candidates.push_back(candidate);
         }

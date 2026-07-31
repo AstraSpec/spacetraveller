@@ -21,6 +21,14 @@ func _post_inventory(message: String, metadata: Dictionary = {}) -> void:
 func _post_inventory_warning(message: String, metadata: Dictionary = {}) -> void:
 	EventBus.post("inventory_warning", message, metadata)
 
+func _category_fields(item_id: String) -> Dictionary:
+	var category_id := str(ItemDb.get_item_category(item_id))
+	return {
+		"category_id": category_id,
+		"category_label": str(ItemCategoryDb.get_display_name(category_id)),
+		"category_sort": int(ItemCategoryDb.get_sort_rank(category_id))
+	}
+
 func _get_display_data() -> Array:
 	var formatted = []
 	var equipment = _GameWorld.get_entity_equipment(0)
@@ -33,15 +41,20 @@ func _get_display_data() -> Array:
 		var item_id = slot_data.get("item_id", "")
 		if item_id == "":
 			continue
+		var wielded_category := _category_fields(item_id)
 		formatted.append({
 			"id": item_id,
 			"amount": 1,
 			"display_name": ItemDb.get_item_name(item_id),
 			"description": ItemDb.get_item_description(item_id),
 			"quantity_text": "Wielded",
-			"type": ItemDb.get_item_type(item_id),
+			"category_id": wielded_category.category_id,
+			"category_label": wielded_category.category_label,
+			"category_sort": wielded_category.category_sort,
 			"separator_key": "Wielded",
+			"separator_label": "Wielded",
 			"separator_sort": -1,
+			"item_sort": EQUIPMENT_SLOT_ORDER.find(slot_name),
 			"is_wielded": true,
 			"slot_name": slot_name,
 			"handling_ratio": float(slot_data.get("handling_ratio", 1.0)),
@@ -56,16 +69,19 @@ func _get_display_data() -> Array:
 	var keys = items.keys()
 	for item_id in keys:
 		var amount = items[item_id]
-		var item_type = ItemDb.get_item_type(item_id)
+		var category := _category_fields(item_id)
 		formatted.append({
 			"id": item_id,
 			"amount": amount,
 			"display_name": ItemDb.get_item_name(item_id),
 			"description": ItemDb.get_item_description(item_id),
 			"quantity_text": "x" + str(amount),
-			"type": item_type,
-			"separator_key": item_type,
-			"separator_sort": TYPE_ORDER.find(item_type) if TYPE_ORDER.find(item_type) >= 0 else TYPE_ORDER.size(),
+			"category_id": category.category_id,
+			"category_label": category.category_label,
+			"category_sort": category.category_sort,
+			"separator_key": category.category_id,
+			"separator_label": category.category_label,
+			"separator_sort": category.category_sort,
 			"is_wielded": false
 		})
 	return formatted

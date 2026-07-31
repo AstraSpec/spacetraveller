@@ -23,7 +23,6 @@ void QuestDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_label_template", "kind"), &QuestDb::get_label_template);
     ClassDB::bind_method(D_METHOD("get_description_template", "kind"), &QuestDb::get_description_template);
     ClassDB::bind_method(D_METHOD("get_target_range", "kind"), &QuestDb::get_target_range);
-    ClassDB::bind_method(D_METHOD("get_item_type_filter", "kind"), &QuestDb::get_item_type_filter);
     ClassDB::bind_method(D_METHOD("get_target_item_pool", "kind"), &QuestDb::get_target_item_pool);
     ClassDB::bind_method(D_METHOD("get_target_item_tags", "kind"), &QuestDb::get_target_item_tags);
     ClassDB::bind_method(D_METHOD("get_target_loot_table", "kind"), &QuestDb::get_target_loot_table);
@@ -79,12 +78,6 @@ QuestTemplate QuestDb::_parse_row(const Dictionary &p_data) {
         t.target_range.push_back(int(tr[i]));
     }
     if (t.target_range.empty()) t.target_range.push_back(1);
-
-    // gather-only filter
-    Array itf = p_data.get("item_type_filter", Array());
-    for (int i = 0; i < itf.size(); i++) {
-        t.item_type_filter.emplace_back(String(itf[i]));
-    }
 
     Array target_pool = p_data.get("target_item_pool", Array());
     t.target_item_pool = resolve_item_ids(target_pool);
@@ -214,13 +207,6 @@ Array QuestDb::get_target_range(const String &p_kind) const {
     Array arr;
     const QuestTemplate* t = get_info(p_kind);
     if (t) for (int v : t->target_range) arr.push_back(v);
-    return arr;
-}
-
-Array QuestDb::get_item_type_filter(const String &p_kind) const {
-    Array arr;
-    const QuestTemplate* t = get_info(p_kind);
-    if (t) for (const String& v : t->item_type_filter) arr.push_back(v);
     return arr;
 }
 

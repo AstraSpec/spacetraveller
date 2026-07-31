@@ -3,7 +3,7 @@
     "id": "royal_stew",
     "name": "Royal Stew",
     "description": "A rich, carefully seasoned stew fit for a noble banquet.",
-    "type": "food",
+    "category": "food",
     "price": 1800,
     "atlas": [ 12, 19 ],
     "weight": 0.8,

@@ -264,7 +264,6 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
     int romance_delta    = db->get_tier_romance(p_kind, tier) * scale;
 
     if (_is_gather_kind(p_kind)) {
-        Array type_filter = db->get_item_type_filter(p_kind);
         std::vector<String> candidates;
         ItemDb* idb = ItemDb::get_singleton();
         std::vector<uint16_t> target_pool;
@@ -283,30 +282,22 @@ QuestInstance QuestTracker::_sample_one(const String& p_kind, uint32_t p_giver_e
                 }
             }
         }
-        if (candidates.empty() && idb) {
-            IdRegistry* reg = IdRegistry::get_singleton();
-            if (!target_pool.empty() && reg) {
-                for (uint16_t item_id : target_pool) {
-                    String id = reg->get_string(item_id);
-                    if (!id.is_empty()) candidates.push_back(id);
+        if (candidates.empty() && !target_pool.empty() && reg) {
+            for (uint16_t item_id : target_pool) {
+                String id = reg->get_string(item_id);
+                if (!id.is_empty()) candidates.push_back(id);
+            }
+        }
+        if (candidates.empty() && !target_tags.empty() && idb) {
+            Array ids = idb->get_ids();
+            for (int i = 0; i < ids.size(); i++) {
+                String id = String(ids[i]);
+                const ItemInfo* info = idb->get_item_info(id);
+                if (!info ||
+                    !TagRegistry::has_tag_any(info->tags, target_tags)) {
+                    continue;
                 }
-            } else {
-                Array ids = idb->get_ids();
-                for (int i = 0; i < ids.size(); i++) {
-                    String id = String(ids[i]);
-                    const ItemInfo* info = idb->get_item_info(id);
-                    if (!info) continue;
-                    bool type_ok = type_filter.is_empty();
-                    if (!type_ok) {
-                        String t = idb->get_item_type(id);
-                        for (int j = 0; j < type_filter.size(); j++) {
-                            if (t == String(type_filter[j])) { type_ok = true; break; }
-                        }
-                    }
-                    if (!type_ok) continue;
-                    if (!target_tags.empty() && !TagRegistry::has_tag_any(info->tags, target_tags)) continue;
-                    candidates.push_back(id);
-                }
+                candidates.push_back(id);
             }
         }
         if (!candidates.empty()) {

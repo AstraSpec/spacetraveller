@@ -16,6 +16,8 @@ func _ready() -> void:
 	TileGroupDb.initialize_data()
 	ChunkDb.initialize_data()
 	StructureDb.initialize_data()
+	ItemCategoryDb.initialize_data()
+	WeaponProfileDb.initialize_data()
 	ItemDb.initialize_data()
 	LootDb.initialize_data()
 	OreDb.initialize_data()

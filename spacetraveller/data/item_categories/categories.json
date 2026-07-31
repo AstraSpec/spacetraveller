@@ -1,0 +1,42 @@
+[
+  {
+    "id": "weapon",
+    "name": "Weapons",
+    "sort_rank": 10
+  },
+  {
+    "id": "consumable",
+    "name": "Consumables",
+    "sort_rank": 20
+  },
+  {
+    "id": "food",
+    "name": "Food",
+    "sort_rank": 25
+  },
+  {
+    "id": "material",
+    "name": "Materials",
+    "sort_rank": 30
+  },
+  {
+    "id": "tool",
+    "name": "Tools",
+    "sort_rank": 40
+  },
+  {
+    "id": "clothing",
+    "name": "Clothing",
+    "sort_rank": 50
+  },
+  {
+    "id": "book",
+    "name": "Books",
+    "sort_rank": 60
+  },
+  {
+    "id": "misc",
+    "name": "Miscellaneous",
+    "sort_rank": 100
+  }
+]

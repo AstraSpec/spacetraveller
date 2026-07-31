@@ -116,13 +116,15 @@ static void append_light_emitter(std::vector<LightEmitter>& r_emitters, const Ve
 }
 
 static LightStrength item_light_strength_by_id(ItemDb* p_item_db, uint16_t p_item_id) {
-    const ItemInfo* item = p_item_db ? p_item_db->get_item_info(p_item_id) : nullptr;
-    return item ? item->light.strength : LIGHT_STRENGTH_BLANK;
+    const LightEmissionInfo* light =
+        p_item_db ? p_item_db->get_light_info(p_item_id) : nullptr;
+    return light ? light->strength : LIGHT_STRENGTH_BLANK;
 }
 
 static LightStrength item_light_strength_by_string(ItemDb* p_item_db, const String& p_item_id) {
-    const ItemInfo* item = p_item_db ? p_item_db->get_item_info(p_item_id) : nullptr;
-    return item ? item->light.strength : LIGHT_STRENGTH_BLANK;
+    const LightEmissionInfo* light =
+        p_item_db ? p_item_db->get_light_info(p_item_id) : nullptr;
+    return light ? light->strength : LIGHT_STRENGTH_BLANK;
 }
 
 static bool player_minimum_light_contains_offset(int p_ox, int p_oy, int p_radius) {

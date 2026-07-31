@@ -26,7 +26,6 @@ func _get_display_data() -> Array:
 				"part_name": part_name,
 				"layer": layer,
 				"quantity_text": "",
-				"type": ItemDb.get_item_type(item_id),
 				"separator_key": part_name
 			})
 	return formatted

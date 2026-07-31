@@ -8,6 +8,7 @@
 #include "data/chunk_db.h"
 #include "data/tile_group_db.h"
 #include "data/item_db.h"
+#include "data/item_category_db.h"
 #include "data/recipe_db.h"
 #include "data/structure_db.h"
 #include "core/id_registry.h"
@@ -50,6 +51,7 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(ChunkDb);
 	GDREGISTER_CLASS(TileGroupDb);
 	GDREGISTER_CLASS(ItemDb);
+	GDREGISTER_CLASS(ItemCategoryDb);
 	GDREGISTER_CLASS(RecipeDb);
 	GDREGISTER_CLASS(StructureDb);
 	GDREGISTER_CLASS(IdRegistry);
@@ -80,6 +82,9 @@ void initialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	TileGroupDb::create_singleton();
 	Engine::get_singleton()->register_singleton("TileGroupDb", TileGroupDb::get_singleton());
+
+	ItemCategoryDb::create_singleton();
+	Engine::get_singleton()->register_singleton("ItemCategoryDb", ItemCategoryDb::get_singleton());
 
 	ItemDb::create_singleton();
 	Engine::get_singleton()->register_singleton("ItemDb", ItemDb::get_singleton());
@@ -161,6 +166,9 @@ void uninitialize_game_world_module(ModuleInitializationLevel p_level) {
 
 	Engine::get_singleton()->unregister_singleton("TileGroupDb");
 	TileGroupDb::delete_singleton();
+
+	Engine::get_singleton()->unregister_singleton("ItemCategoryDb");
+	ItemCategoryDb::delete_singleton();
 
 	Engine::get_singleton()->unregister_singleton("ItemDb");
 	ItemDb::delete_singleton();

@@ -229,19 +229,25 @@ func _item_strip_data(items: Dictionary, incoming: Array = [], outgoing: Array =
 		var amount := int(effective[display_item_id])
 		if amount <= 0:
 			continue
-		var type := str(ItemDb.get_item_type(display_item_id))
+		var category_id := str(ItemDb.get_item_category(display_item_id))
+		var category_label := str(ItemCategoryDb.get_display_name(category_id))
+		var category_sort := int(ItemCategoryDb.get_sort_rank(category_id))
 		var row := {
 			"id": display_item_id,
 			"amount": amount,
 			"display_name": _item_label(display_item_id),
 			"left": _item_label(display_item_id),
 			"right": _item_right_label(display_item_id, amount, side),
-			"type": type,
-			"separator_sort": TYPE_ORDER.find(type) if TYPE_ORDER.find(type) >= 0 else TYPE_ORDER.size(),
+			"category_id": category_id,
+			"category_label": category_label,
+			"category_sort": category_sort,
+			"separator_key": category_id,
+			"separator_label": category_label,
+			"separator_sort": category_sort,
 		}
 		data.append(row)
 	_append_pending_rows(data, incoming, pending_key)
-	return data
+	return _prepare_grouped_data(data)
 
 func _append_pending_rows(data: Array, incoming: Array, pending_key: String) -> void:
 	if pending_key.is_empty():
@@ -253,15 +259,21 @@ func _append_pending_rows(data: Array, incoming: Array, pending_key: String) -> 
 		var amount := int(entry.get("amount", 0))
 		if item_id.is_empty() or amount <= 0:
 			continue
-		var type := str(ItemDb.get_item_type(item_id))
+		var category_id := str(ItemDb.get_item_category(item_id))
+		var category_label := str(ItemCategoryDb.get_display_name(category_id))
+		var category_sort := int(ItemCategoryDb.get_sort_rank(category_id))
 		var row := {
 			"id": item_id,
 			"amount": amount,
 			"display_name": _item_label(item_id),
 			"left": _yellow_text(_item_label(item_id)),
 			"right": _yellow_text(_item_right_label_with_price(item_id, amount, int(entry.get("unit_value", 0)))),
-			"type": type,
-			"separator_sort": TYPE_ORDER.find(type) if TYPE_ORDER.find(type) >= 0 else TYPE_ORDER.size(),
+			"category_id": category_id,
+			"category_label": category_label,
+			"category_sort": category_sort,
+			"separator_key": category_id,
+			"separator_label": category_label,
+			"separator_sort": category_sort,
 		}
 		row[pending_key] = amount
 		data.append(row)

@@ -4,8 +4,23 @@
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
 #include "light_emission.h"
+#include <cstdint>
 
 namespace godot {
+
+enum class ItemCapability : uint8_t {
+    NONE = 0,
+    WEAPON = 1 << 0,
+    CLOTHING = 1 << 1,
+    LIGHT = 1 << 2,
+};
+
+struct WeaponItemInfo {
+    String attack_profile;
+    float damage = 0.0f;
+    float manipulation_load = 1.0f;
+    int reach = 1;
+};
 
 struct ClothingSlotInfo {
     String part;
@@ -25,8 +40,9 @@ struct ItemInfo {
     int price = 0;
     std::vector<uint16_t> tags;
     std::vector<ClothingSlotInfo> clothing_slots;
-    Dictionary weapon_data;
-    String type = "misc";
+    WeaponItemInfo weapon;
+    String category_id;
+    uint8_t capabilities = 0;
     LightEmissionInfo light;
 };
 
@@ -36,6 +52,7 @@ class ItemDb : public Object, public DataBase<ItemInfo, ItemDb> {
 protected:
     static void _bind_methods();
     virtual ItemInfo _parse_row(const Dictionary &p_data) override;
+    bool _validate_row(const Dictionary& p_data, String& r_error) const override;
 
     std::vector<ItemInfo> fast_cache;
 
@@ -57,11 +74,16 @@ public:
     int get_item_price(const String &p_id) const;
     Dictionary get_item_modifiers(const String &p_id) const;
     bool has_tag(const String &p_id, const String &p_tag) const;
+    bool has_capability(const String& p_id, const String& p_capability) const;
+    Array get_capabilities(const String& p_id) const;
     Dictionary get_clothing_data(const String &p_id) const;
     Array get_clothing_slots(const String &p_id) const;
     const std::vector<ClothingSlotInfo>* get_clothing_slots_info(const String &p_id) const;
     Dictionary get_weapon_data(const String &p_id) const;
-    String get_item_type(const String &p_id) const;
+    const WeaponItemInfo* get_weapon_info(const String& p_id) const;
+    const LightEmissionInfo* get_light_info(const String& p_id) const;
+    const LightEmissionInfo* get_light_info(uint16_t p_id) const;
+    String get_item_category(const String& p_id) const;
 };
 
 }

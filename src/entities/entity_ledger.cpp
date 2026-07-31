@@ -418,11 +418,11 @@ bool EntityLedger::wield_weapon(uint32_t id, const String& slot_name, const Stri
     ItemDb* db = ItemDb::get_singleton();
     if (!db) return false;
     if (!db->get_item_info(item_id)) return false;
-    const Dictionary weapon = db->get_weapon_data(item_id);
-    if (weapon.is_empty()) return false;
+    const WeaponItemInfo* weapon = db->get_weapon_info(item_id);
+    if (!weapon) return false;
     WeaponProfileDb* profiles = WeaponProfileDb::get_singleton();
     if (!profiles ||
-        !profiles->get_profile_info(weapon.get("attack_profile", ""))) {
+        !profiles->get_profile_info(weapon->attack_profile)) {
         return false;
     }
 

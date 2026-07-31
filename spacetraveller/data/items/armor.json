@@ -3,11 +3,11 @@
     "id": "steel_armor",
     "name": "Steel Armor",
     "description": "Heavy steel armor.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 4200,
     "atlas": [ 26, 11 ],
     "weight": 10.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -33,11 +33,11 @@
     "id": "steel_helmet",
     "name": "Steel Helmet",
     "description": "A sturdy steel helmet.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 1800,
     "atlas": [ 38, 12 ],
     "weight": 2.5,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "head",
@@ -54,11 +54,11 @@
     "id": "steel_boots",
     "name": "Steel Boots",
     "description": "Heavy steel boots.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 1400,
     "atlas": [ 14, 29 ],
     "weight": 3.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "foot",
@@ -75,11 +75,11 @@
     "id": "steel_arm_guards",
     "name": "Steel Arm Guards",
     "description": "Heavy steel arm guards.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 1600,
     "atlas": [ 15, 29 ],
     "weight": 3.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "arm",
@@ -96,11 +96,11 @@
     "id": "leather_armor",
     "name": "Leather Armor",
     "description": "Flexible leather armor.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 2100,
     "atlas": [ 29, 11 ],
     "weight": 3.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "torso",
@@ -126,11 +126,11 @@
     "id": "leather_helmet",
     "name": "Leather Helmet",
     "description": "Sturdy leather helmet.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 900,
     "atlas": [ 1, 30 ],
     "weight": 0.8,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "head",
@@ -147,11 +147,11 @@
     "id": "leather_boots",
     "name": "Leather Boots",
     "description": "Sturdy leather boots.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 700,
     "atlas": [ 13, 29 ],
     "weight": 1.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "foot",
@@ -168,11 +168,11 @@
     "id": "leather_arm_guards",
     "name": "Leather Arm Guards",
     "description": "Reinforced leather guards for the arms.",
-    "type": "clothing",
+    "category": "clothing",
     "price": 800,
     "atlas": [ 8, 29 ],
     "weight": 1.0,
-    "tags": ["WEARABLE"],
+    "tags": [],
     "clothing": [
       {
         "part": "arm",
