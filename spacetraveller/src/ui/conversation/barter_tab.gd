@@ -289,7 +289,14 @@ func _item_right_label(item_id: String, amount: int, side: String) -> String:
 func _item_right_label_with_price(item_id: String, amount: int, price: int) -> String:
 	var modifiers: Dictionary = ItemDb.get_item_modifiers(item_id)
 	var weight := float(modifiers.get("weight", 0.0))
-	return "%sw       %d       x%d" % [_format_decimal(weight), price, amount]
+	var item_details := str(ItemDb.get_item_rarity(item_id)).capitalize()
+	var tool_data: Dictionary = ItemDb.get_tool_data(item_id)
+	if not tool_data.is_empty():
+		var quality_names: PackedStringArray = []
+		for quality in tool_data["qualities"]:
+			quality_names.append(str(quality["name"]))
+		item_details += " (%s)" % ", ".join(quality_names)
+	return "%s       %sw       %d       x%d" % [item_details, _format_decimal(weight), price, amount]
 
 func _yellow_text(text: String) -> String:
 	return "[color=yellow]%s[/color]" % text

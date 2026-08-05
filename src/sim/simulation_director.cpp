@@ -31,6 +31,7 @@
 #include "data/body_part_db.h"
 #include "data/recipe_db.h"
 #include "data/item_db.h"
+#include "data/tool_quality_db.h"
 #include "components/inventory.h"
 #include "components/activity.h"
 #include "core/string_hasher.h"
@@ -461,26 +462,150 @@ Dictionary SimulationDirector::get_player_activity() const {
     return activity ? Activity::to_dictionary(*activity) : Dictionary();
 }
 
-bool SimulationDirector::validate_crafting_requirements(const String& recipe_id) const {
-    if (!d.ledger) return false;
+Dictionary SimulationDirector::get_player_crafting_status(
+    const String& recipe_id,
+    const Dictionary& context
+) const {
+    Dictionary status;
+    status["craftable"] = false;
+    status["station_requested"] = context.has("station_pos");
+    status["station_valid"] = !context.has("station_pos");
+    status["station_relevant"] = false;
+    status["components"] = Array();
+    status["tools"] = Array();
+    status["missing_components"] = Array();
+    status["missing_tools"] = Array();
+    if (!d.ledger || !d.bubble) return status;
+
     RecipeDb* recipes = RecipeDb::get_singleton();
     ItemDb* items = ItemDb::get_singleton();
+    TileDb* tiles = TileDb::get_singleton();
+    IdRegistry* registry = IdRegistry::get_singleton();
+    ToolQualityDb* quality_db = ToolQualityDb::get_singleton();
     const RecipeInfo* recipe = recipes ? recipes->get_info(recipe_id) : nullptr;
     const InventoryData* inventory = d.ledger->try_get_inventory(d.player_entity_id);
-    if (!recipe || !items || !inventory || recipe->time_seconds <= 0.0f || recipe->results.empty()) return false;
+    const Entity* player = d.ledger->get_entity_pool().get_entity(d.player_entity_id);
+    if (!recipe || !items || !tiles || !registry || !inventory || !player) {
+        return status;
+    }
 
     std::unordered_map<String, int, StringHasher> required;
-    for (const RecipeRequirement& entry : recipe->requirements) {
-        if (entry.amount <= 0 || !items->get_item_info(entry.item_id)) return false;
+    std::vector<String> component_order;
+    Array component_statuses;
+    Array missing_components;
+    for (const RecipeComponent& entry : recipe->components) {
+        if (required.find(entry.item_id) == required.end()) {
+            component_order.push_back(entry.item_id);
+        }
         required[entry.item_id] += entry.amount;
     }
-    for (const RecipeResult& entry : recipe->results) {
-        if (entry.amount <= 0 || !items->get_item_info(entry.item_id)) return false;
+    for (const String& item_id : component_order) {
+        const int amount = required[item_id];
+        const int available = Inventory::get_item_amount(
+            *inventory, registry->get_id(item_id));
+        Dictionary entry;
+        entry["item_id"] = item_id;
+        entry["required"] = amount;
+        entry["available"] = available;
+        entry["satisfied"] = available >= amount;
+        component_statuses.push_back(entry);
+        if (available < amount) missing_components.push_back(entry);
     }
-    for (const auto& pair : required) {
-        if (!Inventory::has_item_by_string(*inventory, pair.first, pair.second)) return false;
+
+    std::unordered_map<uint16_t, RarityTier> available_qualities;
+    for (const InventoryItem& carried : inventory->items) {
+        const ItemInfo* item = items->get_item_info(carried.id);
+        const ToolProviderInfo* tool = items->get_tool_info(carried.id);
+        if (!item || !tool || carried.amount <= 0) continue;
+        for (uint16_t quality : tool->qualities) {
+            auto found = available_qualities.find(quality);
+            if (found == available_qualities.end() ||
+                !rarity_meets(found->second, item->rarity)) {
+                available_qualities[quality] = item->rarity;
+            }
+        }
     }
-    return true;
+
+    std::vector<uint16_t> station_qualities;
+    bool station_valid = !context.has("station_pos");
+    if (context.has("station_pos") &&
+        context["station_pos"].get_type() == Variant::VECTOR2I) {
+        const Vector2i station_pos = context["station_pos"];
+        const int distance = MAX(
+            std::abs(station_pos.x - player->x),
+            std::abs(station_pos.y - player->y));
+        const uint16_t station_id = distance <= 1
+            ? d.bubble->query_tile_id_at_z(
+                station_pos.x, station_pos.y, player->z)
+            : 0;
+        const TileInfo* station = tiles->get_tile_info(station_id);
+        const ToolProviderInfo* station_tool =
+            tiles->get_tool_info(station_id);
+        station_valid = station_id != 0 && station && station_tool;
+        if (station_valid) {
+            const String station_name = registry->get_string(station_id);
+            status["station_id"] = station_name;
+            status["station_name"] = tiles->get_tile_name(station_name);
+            status["station_pos"] = station_pos;
+            status["station_rarity"] = rarity_to_string(station->rarity);
+            station_qualities = station_tool->qualities;
+            for (uint16_t quality : station_tool->qualities) {
+                auto found = available_qualities.find(quality);
+                if (found == available_qualities.end() ||
+                    !rarity_meets(found->second, station->rarity)) {
+                    available_qualities[quality] = station->rarity;
+                }
+            }
+        }
+    }
+
+    Array tool_statuses;
+    Array missing_tools;
+    bool station_relevant = false;
+    for (const RecipeToolRequirement& requirement :
+         recipe->tool_requirements) {
+        const String quality = registry->get_string(requirement.quality_id);
+        const auto available = available_qualities.find(requirement.quality_id);
+        const bool satisfied = available != available_qualities.end() &&
+            rarity_meets(available->second, requirement.minimum_rarity);
+        const bool station_provides = std::find(
+            station_qualities.begin(), station_qualities.end(),
+            requirement.quality_id) != station_qualities.end();
+        station_relevant = station_relevant || station_provides;
+
+        Dictionary entry;
+        entry["quality"] = quality;
+        entry["quality_name"] = quality_db
+            ? quality_db->get_display_name(quality)
+            : quality.capitalize();
+        entry["required_rarity"] =
+            rarity_to_string(requirement.minimum_rarity);
+        entry["best_rarity"] = available != available_qualities.end()
+            ? rarity_to_string(available->second)
+            : String();
+        entry["satisfied"] = satisfied;
+        entry["station_provided"] = station_provides;
+        tool_statuses.push_back(entry);
+        if (!satisfied) missing_tools.push_back(entry);
+    }
+
+    status["station_valid"] = station_valid;
+    status["station_relevant"] = station_relevant;
+    status["components"] = component_statuses;
+    status["tools"] = tool_statuses;
+    status["missing_components"] = missing_components;
+    status["missing_tools"] = missing_tools;
+    status["craftable"] = station_valid && missing_components.is_empty() &&
+        missing_tools.is_empty();
+    return status;
+}
+
+bool SimulationDirector::validate_crafting_requirements(
+    const String& recipe_id,
+    const Dictionary& context
+) const {
+    return bool(get_player_crafting_status(recipe_id, context).get(
+        "craftable", false));
 }
 
 void SimulationDirector::schedule_next_activity_work(ActivityData& activity) {
@@ -494,9 +619,12 @@ void SimulationDirector::schedule_next_activity_work(ActivityData& activity) {
     d.scheduler->push(d.player_entity_id, player->next_turn_time);
 }
 
-bool SimulationDirector::start_player_crafting(const String& recipe_id) {
+bool SimulationDirector::start_player_crafting(
+    const String& recipe_id,
+    const Dictionary& context
+) {
     if (!d.ledger || !d.scheduler || !d.sink || has_player_activity() ||
-        !validate_crafting_requirements(recipe_id)) {
+        !validate_crafting_requirements(recipe_id, context)) {
         return false;
     }
     const PhysiologyData* physiology =
@@ -522,6 +650,14 @@ bool SimulationDirector::start_player_crafting(const String& recipe_id) {
     activity.simulation_time = player->next_turn_time;
     activity.last_refresh_time = activity.simulation_time;
     activity.next_refresh_time = activity.simulation_time + MIN(30.0f, activity.total_time);
+    if (context.has("station_pos")) {
+        const Dictionary status = get_player_crafting_status(recipe_id, context);
+        activity.has_crafting_station = true;
+        const Vector2i station_pos = status["station_pos"];
+        activity.crafting_station_position = Vector3i(
+            station_pos.x, station_pos.y, player->z);
+        activity.crafting_station_tile_id = status["station_id"];
+    }
 
     d.scheduler->remove(d.player_entity_id);
     schedule_next_activity_work(activity);
@@ -574,8 +710,38 @@ void SimulationDirector::cancel_player_activity(const String& reason, bool resto
     d.sink->on_player_activity_cancelled(payload);
 }
 
-bool SimulationDirector::complete_crafting(const String& recipe_id, Dictionary& completion) {
-    if (!validate_crafting_requirements(recipe_id)) return false;
+Dictionary SimulationDirector::crafting_context_from_activity(
+    const ActivityData& activity
+) const {
+    Dictionary context;
+    if (activity.has_crafting_station) {
+        context["station_pos"] = Vector2i(
+            activity.crafting_station_position.x,
+            activity.crafting_station_position.y);
+    }
+    return context;
+}
+
+bool SimulationDirector::crafting_station_matches(
+    const ActivityData& activity
+) const {
+    if (!activity.has_crafting_station) return true;
+    if (!d.bubble) return false;
+    IdRegistry* registry = IdRegistry::get_singleton();
+    const uint16_t tile_id = d.bubble->query_tile_id_at_z(
+        activity.crafting_station_position.x,
+        activity.crafting_station_position.y,
+        activity.crafting_station_position.z);
+    return registry && registry->get_string(tile_id) ==
+        activity.crafting_station_tile_id;
+}
+
+bool SimulationDirector::complete_crafting(
+    const String& recipe_id,
+    const Dictionary& context,
+    Dictionary& completion
+) {
+    if (!validate_crafting_requirements(recipe_id, context)) return false;
     RecipeDb* recipes = RecipeDb::get_singleton();
     const RecipeInfo* recipe = recipes ? recipes->get_info(recipe_id) : nullptr;
     InventoryData* inventory = d.ledger->try_get_inventory(d.player_entity_id);
@@ -583,7 +749,7 @@ bool SimulationDirector::complete_crafting(const String& recipe_id, Dictionary& 
     if (!recipe || !inventory || !player) return false;
 
     std::unordered_map<String, int, StringHasher> required;
-    for (const RecipeRequirement& entry : recipe->requirements) required[entry.item_id] += entry.amount;
+    for (const RecipeComponent& entry : recipe->components) required[entry.item_id] += entry.amount;
     for (const auto& pair : required) {
         if (!Inventory::remove_item_by_string(*inventory, pair.first, pair.second)) return false;
     }
@@ -614,7 +780,13 @@ void SimulationDirector::complete_player_activity() {
     if (!activity || !Activity::is_active(*activity)) return;
 
     Dictionary completion;
-    bool success = activity->type == "crafting" && complete_crafting(activity->subject_id, completion);
+    if (activity->type == "crafting" && !crafting_station_matches(*activity)) {
+        cancel_player_activity("environment_changed");
+        return;
+    }
+    const Dictionary context = crafting_context_from_activity(*activity);
+    bool success = activity->type == "crafting" && complete_crafting(
+        activity->subject_id, context, completion);
     if (!success) {
         cancel_player_activity("requirements_missing");
         return;
@@ -725,9 +897,17 @@ bool SimulationDirector::resolve_player_activity_interruption(const String& reso
 void SimulationDirector::restore_player_activity() {
     ActivityData* activity = d.ledger ? d.ledger->try_get_activity(d.player_entity_id) : nullptr;
     if (!activity || !Activity::is_active(*activity)) return;
-    if (activity->type == "crafting" && !validate_crafting_requirements(activity->subject_id)) {
-        cancel_player_activity("requirements_missing");
-        return;
+    if (activity->type == "crafting") {
+        if (!crafting_station_matches(*activity)) {
+            cancel_player_activity("environment_changed");
+            return;
+        }
+        if (!validate_crafting_requirements(
+                activity->subject_id,
+                crafting_context_from_activity(*activity))) {
+            cancel_player_activity("requirements_missing");
+            return;
+        }
     }
     Dictionary restored = Activity::to_dictionary(*activity);
     restored["restored"] = true;

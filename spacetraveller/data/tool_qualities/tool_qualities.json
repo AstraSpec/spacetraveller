@@ -1,0 +1,19 @@
+[
+  { "id": "cutting", "name": "Cutting" },
+  { "id": "wood_chopping", "name": "Wood Chopping" },
+  { "id": "hammering", "name": "Hammering" },
+  { "id": "sewing", "name": "Sewing" },
+  { "id": "wood_sawing", "name": "Wood Sawing" },
+  { "id": "bone_sawing", "name": "Bone Sawing" },
+  { "id": "firestarting", "name": "Firestarting" },
+  { "id": "heat", "name": "Heat" },
+  { "id": "cooking", "name": "Cooking" },
+  { "id": "forging", "name": "Forging" },
+  { "id": "mining", "name": "Mining" },
+  { "id": "digging", "name": "Digging" },
+  { "id": "tilling", "name": "Tilling" },
+  { "id": "watering", "name": "Watering" },
+  { "id": "cleaning", "name": "Cleaning" },
+  { "id": "liquid_handling", "name": "Liquid Handling" },
+  { "id": "lockpicking", "name": "Lockpicking" }
+]

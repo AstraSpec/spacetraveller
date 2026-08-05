@@ -6,12 +6,18 @@
 #include <godot_cpp/variant/array.hpp>
 #include <vector>
 #include "database.h"
+#include "rarity.h"
 
 namespace godot {
 
-struct RecipeRequirement {
+struct RecipeComponent {
     String item_id;
     int amount;
+};
+
+struct RecipeToolRequirement {
+    uint16_t quality_id = 0;
+    RarityTier minimum_rarity = RarityTier::COMMON;
 };
 
 struct RecipeResult {
@@ -22,7 +28,8 @@ struct RecipeResult {
 struct RecipeInfo {
     String name;
     String description;
-    std::vector<RecipeRequirement> requirements;
+    std::vector<RecipeComponent> components;
+    std::vector<RecipeToolRequirement> tool_requirements;
     std::vector<RecipeResult> results;
     float time_seconds = 0.0f;
 };
@@ -33,6 +40,7 @@ class RecipeDb : public Object, public DataBase<RecipeInfo, RecipeDb> {
 protected:
     static void _bind_methods();
     virtual RecipeInfo _parse_row(const Dictionary &p_data) override;
+    bool _validate_row(const Dictionary& p_data, String& r_error) const override;
 
 public:
     RecipeDb();
@@ -43,7 +51,8 @@ public:
 
     String get_recipe_name(const String &p_id) const;
     String get_recipe_description(const String &p_id) const;
-    Array get_recipe_requirements(const String &p_id) const;
+    Array get_recipe_components(const String &p_id) const;
+    Array get_recipe_tool_requirements(const String& p_id) const;
     Array get_recipe_results(const String &p_id) const;
     float get_recipe_time(const String &p_id) const;
 };

@@ -241,7 +241,12 @@ public:
     bool wield_entity_weapon(uint32_t entity_id, const String& slot_name, const String& item_id);
     bool unwield_entity_weapon(uint32_t entity_id, const String& slot_name);
     bool wield_entity_weapon_by_string(uint32_t entity_id, const String& item_id);
-    bool start_player_crafting(const String& recipe_id);
+    Dictionary get_player_crafting_status(
+        const String& recipe_id,
+        const Dictionary& context = Dictionary()) const;
+    bool start_player_crafting(
+        const String& recipe_id,
+        const Dictionary& context = Dictionary());
     void process_player_activity_batch();
     bool request_player_activity_cancel();
     bool request_activity_interruption(const String& interruption_id, int source_entity = -1);

@@ -40,6 +40,8 @@
     "atlas": [44, 6],
     "weight": 1.4,
     "tags": [],
+    "rarity": "rare",
+    "tool": { "qualities": ["cutting"] },
     "weapon": {
       "attack_profile": "short_blade",
       "damage": 9.0,
@@ -56,6 +58,8 @@
     "atlas": [26, 6],
     "weight": 1.4,
     "tags": [],
+    "rarity": "epic",
+    "tool": { "qualities": ["cutting"] },
     "weapon": {
       "attack_profile": "sword",
       "damage": 18.0,
@@ -72,6 +76,7 @@
     "atlas": [37, 8],
     "weight": 1,
     "tags": [],
+    "rarity": "rare",
     "weapon": {
       "attack_profile": "spear",
       "damage": 15.0,
@@ -88,6 +93,7 @@
     "atlas": [9, 31],
     "weight": 1,
     "tags": [],
+    "tool": { "qualities": ["tilling"] },
     "weapon": {
       "attack_profile": "spear",
       "damage": 10.0,
@@ -104,6 +110,7 @@
     "atlas": [35, 9],
     "weight": 0.8,
     "tags": [],
+    "rarity": "epic",
     "weapon": {
       "attack_profile": "flail",
       "damage": 16.0,
@@ -120,6 +127,8 @@
     "atlas": [26, 9],
     "weight": 0.8,
     "tags": [],
+    "rarity": "epic",
+    "tool": { "qualities": ["cutting", "wood_chopping"] },
     "weapon": {
       "attack_profile": "axe",
       "damage": 22.0,

@@ -97,7 +97,9 @@ func _on_player_activity_cancelled(activity: Dictionary) -> void:
 	_refresh_after_activity_time(activity)
 	var reason := str(activity.get("reason", ""))
 	if reason == "requirements_missing":
-		EventBus.post("inventory_warning", "Crafting stopped because the required ingredients are no longer available.", activity)
+		EventBus.post("inventory_warning", "Crafting stopped because required components or tools are no longer available.", activity)
+	elif reason == "environment_changed":
+		EventBus.post("inventory_warning", "Crafting stopped because the selected station changed or disappeared.", activity)
 	elif reason != "death":
 		EventBus.post("inventory", "You stop crafting.", activity)
 	_finish_activity_ui(activity)
@@ -128,9 +130,14 @@ func _finish_activity_ui(activity: Dictionary) -> void:
 	if InputManager.current_mode == InputManager.InputMode.ACTIVITY:
 		InputManager.pop_mode()
 	if bool(activity.get("restore_menu", true)):
+		var params := {"tab": str(activity.get("return_tab", "crafting"))}
+		if bool(activity.get("has_crafting_station", false)) and str(activity.get("reason", "")) != "environment_changed":
+			var station_position: Vector3i = activity["crafting_station_position"]
+			params["station_pos"] = Vector2i(station_position.x, station_position.y)
+			params["station_id"] = str(activity["crafting_station_tile_id"])
 		InputManager.toggle_menu(
 			str(activity.get("return_menu", "inventory")),
-			{"tab": str(activity.get("return_tab", "crafting"))}
+			params
 		)
 
 func _on_activity_cancel_requested() -> void:

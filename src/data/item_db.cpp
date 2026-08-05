@@ -2,6 +2,7 @@
 #include "core/id_registry.h"
 #include "item_category_db.h"
 #include "weapon_profile_db.h"
+#include "tool_quality_db.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -30,6 +31,7 @@ ItemCapability capability_from_string(const String& p_capability) {
     if (capability == "weapon") return ItemCapability::WEAPON;
     if (capability == "clothing") return ItemCapability::CLOTHING;
     if (capability == "light") return ItemCapability::LIGHT;
+    if (capability == "tool") return ItemCapability::TOOL;
     return ItemCapability::NONE;
 }
 
@@ -148,6 +150,15 @@ void ItemDb::_bind_methods() {
     ClassDB::bind_method(
         D_METHOD("get_item_category", "id"),
         &ItemDb::get_item_category);
+    ClassDB::bind_method(
+        D_METHOD("get_tool_data", "id"),
+        &ItemDb::get_tool_data);
+    ClassDB::bind_method(
+        D_METHOD("has_tool_quality", "id", "quality"),
+        &ItemDb::has_tool_quality);
+    ClassDB::bind_method(
+        D_METHOD("get_item_rarity", "id"),
+        &ItemDb::get_item_rarity);
     ClassDB::bind_method(D_METHOD("get_ids"), &ItemDb::get_ids);
 }
 
@@ -164,6 +175,18 @@ bool ItemDb::_validate_row(
     if (p_data.has("type")) {
         r_error = "field 'type' is unsupported; use presentation field 'category'";
         return false;
+    }
+
+    if (p_data.has("rarity")) {
+        if (p_data["rarity"].get_type() != Variant::STRING) {
+            r_error = "field 'rarity' must be a string";
+            return false;
+        }
+        RarityTier rarity;
+        if (!rarity_from_string(String(p_data["rarity"]), rarity)) {
+            r_error = "field 'rarity' must be common, rare, epic, or legendary";
+            return false;
+        }
     }
 
     if (!p_data.has("category") ||
@@ -304,6 +327,38 @@ bool ItemDb::_validate_row(
             return false;
         }
     }
+
+    if (p_data.has("tool")) {
+        if (p_data["tool"].get_type() != Variant::DICTIONARY) {
+            r_error = "capability 'tool' must be an object";
+            return false;
+        }
+        const Dictionary tool = p_data["tool"];
+        if (!tool.has("qualities") ||
+            tool["qualities"].get_type() != Variant::ARRAY) {
+            r_error = "capability 'tool.qualities' must be a non-empty array";
+            return false;
+        }
+        const Array qualities = tool["qualities"];
+        if (qualities.is_empty()) {
+            r_error = "capability 'tool.qualities' must be a non-empty array";
+            return false;
+        }
+        ToolQualityDb* quality_db = ToolQualityDb::get_singleton();
+        for (int i = 0; i < qualities.size(); ++i) {
+            if (qualities[i].get_type() != Variant::STRING) {
+                r_error = "capability 'tool.qualities' entries must be strings";
+                return false;
+            }
+            const String quality = String(qualities[i]).strip_edges();
+            if (quality.is_empty() || !quality_db ||
+                !quality_db->get_quality_info(quality)) {
+                r_error = "capability 'tool.qualities' references unknown quality '" +
+                    quality + "'";
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -317,6 +372,9 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     if (info.price < 0) info.price = 0;
     info.tags = _parse_tags(p_data.get("tags", Array()));
     info.category_id = String(p_data["category"]).strip_edges();
+    if (p_data.has("rarity")) {
+        rarity_from_string(String(p_data["rarity"]), info.rarity);
+    }
 
     if (p_data.has("clothing")) {
         info.clothing_slots = parse_clothing_slots(p_data["clothing"]);
@@ -337,6 +395,17 @@ ItemInfo ItemDb::_parse_row(const Dictionary &p_data) {
     if (p_data.has("light")) {
         info.light = parse_light_emission(p_data["light"]);
         info.capabilities |= capability_bit(ItemCapability::LIGHT);
+    }
+    if (p_data.has("tool")) {
+        const Dictionary tool = p_data["tool"];
+        const Array qualities = tool["qualities"];
+        IdRegistry* registry = IdRegistry::get_singleton();
+        for (int i = 0; registry && i < qualities.size(); ++i) {
+            const uint16_t id = registry->register_string(
+                String(qualities[i]).strip_edges());
+            if (id != 0) info.tool.qualities.push_back(id);
+        }
+        info.capabilities |= capability_bit(ItemCapability::TOOL);
     }
     
     if (IdRegistry::get_singleton()) {
@@ -428,6 +497,9 @@ Array ItemDb::get_capabilities(const String& p_id) const {
     if (item_has_capability(*info, ItemCapability::LIGHT)) {
         result.push_back("light");
     }
+    if (item_has_capability(*info, ItemCapability::TOOL)) {
+        result.push_back("tool");
+    }
     return result;
 }
 
@@ -491,6 +563,61 @@ const LightEmissionInfo* ItemDb::get_light_info(uint16_t p_id) const {
         return nullptr;
     }
     return &info->light;
+}
+
+Dictionary ItemDb::get_tool_data(const String& p_id) const {
+    Dictionary result;
+    const ItemInfo* info = get_item_info(p_id);
+    const ToolProviderInfo* tool = get_tool_info(p_id);
+    if (!info || !tool) return result;
+
+    Array qualities;
+    IdRegistry* registry = IdRegistry::get_singleton();
+    ToolQualityDb* quality_db = ToolQualityDb::get_singleton();
+    for (uint16_t id : tool->qualities) {
+        const String quality = registry ? registry->get_string(id) : String();
+        if (quality.is_empty()) continue;
+        Dictionary entry;
+        entry["id"] = quality;
+        entry["name"] = quality_db
+            ? quality_db->get_display_name(quality)
+            : quality.capitalize();
+        qualities.push_back(entry);
+    }
+    result["rarity"] = rarity_to_string(info->rarity);
+    result["qualities"] = qualities;
+    return result;
+}
+
+const ToolProviderInfo* ItemDb::get_tool_info(const String& p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    return info && item_has_capability(*info, ItemCapability::TOOL)
+        ? &info->tool
+        : nullptr;
+}
+
+const ToolProviderInfo* ItemDb::get_tool_info(uint16_t p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    return info && item_has_capability(*info, ItemCapability::TOOL)
+        ? &info->tool
+        : nullptr;
+}
+
+bool ItemDb::has_tool_quality(
+    const String& p_id,
+    const String& p_quality
+) const {
+    const ToolProviderInfo* tool = get_tool_info(p_id);
+    IdRegistry* registry = IdRegistry::get_singleton();
+    const uint16_t quality = registry ? registry->get_id(p_quality) : 0;
+    return tool && quality != 0 && std::find(
+        tool->qualities.begin(), tool->qualities.end(), quality) !=
+        tool->qualities.end();
+}
+
+String ItemDb::get_item_rarity(const String& p_id) const {
+    const ItemInfo* info = get_item_info(p_id);
+    return info ? rarity_to_string(info->rarity) : String();
 }
 
 String ItemDb::get_item_category(const String &p_id) const {

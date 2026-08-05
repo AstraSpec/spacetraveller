@@ -7,7 +7,8 @@
 	"price": 90,
 	"atlas": [ 44, 6 ],
 	"weight": 0.4,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["cutting"] }
   },
   {
 	"id": "stone_axe",
@@ -17,7 +18,8 @@
 	"price": 140,
 	"atlas": [ 28, 9 ],
 	"weight": 0.4,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["cutting", "wood_chopping"] }
   },
   {
 	"id": "crude_hammer",
@@ -27,7 +29,8 @@
 	"price": 260,
 	"atlas": [ 5, 31 ],
 	"weight": 0.4,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["hammering"] }
   },
   {
 	"id": "pickaxe",
@@ -37,7 +40,9 @@
 	"price": 850,
 	"atlas": [ 1, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["mining"] }
   },
   {
 	"id": "shovel",
@@ -47,7 +52,9 @@
 	"price": 850,
 	"atlas": [ 0, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["digging"] }
   },
   {
 	"id": "saw",
@@ -57,7 +64,9 @@
 	"price": 1000,
 	"atlas": [ 11, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["wood_sawing"] }
   },
   {
 	"id": "bonesaw",
@@ -67,7 +76,9 @@
 	"price": 1550,
 	"atlas": [ 11, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["bone_sawing"] }
   },
   {
 	"id": "iron_hatchet",
@@ -77,7 +88,9 @@
 	"price": 800,
 	"atlas": [ 28, 9 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["cutting", "wood_chopping"] }
   },
   {
 	"id": "watering_can",
@@ -87,7 +100,8 @@
 	"price": 400,
 	"atlas": [ 12, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["watering"] }
   },
   {
 	"id": "bucket",
@@ -97,7 +111,8 @@
 	"price": 250,
 	"atlas": [ 7, 47 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["liquid_handling"] }
   },
   {
 	"id": "hoe",
@@ -107,7 +122,8 @@
 	"price": 500,
 	"atlas": [ 7, 31 ],
 	"weight": 1.6,
-	"tags": []
+	"tags": [],
+	"tool": { "qualities": ["tilling"] }
   },
   {
 	"id": "broom",
@@ -117,6 +133,65 @@
 	"price": 400,
 	"atlas": [ 10, 31 ],
 	"weight": 1.6,
-	"tags": []
-  }
+	"tags": [],
+	"tool": { "qualities": ["cleaning"] }
+	},
+	{
+	"id": "bone_needle",
+	"name": "Bone Needle",
+	"description": "A polished bone needle suitable for simple sewing.",
+	"category": "tool",
+	"price": 35,
+	"atlas": [ 0, 38 ],
+	"weight": 0.02,
+	"tags": [],
+	"tool": { "qualities": ["sewing"] }
+	},
+	{
+	"id": "fire_drill",
+	"name": "Fire Drill",
+	"description": "A primitive wooden firestarting set.",
+	"category": "tool",
+	"price": 45,
+	"atlas": [ 22, 31 ],
+	"weight": 0.2,
+	"tags": [],
+	"tool": { "qualities": ["firestarting"] }
+	},
+	{
+	"id": "iron_needle",
+	"name": "Iron Needle",
+	"description": "A fine iron needle for reliable stitching.",
+	"category": "tool",
+	"price": 300,
+	"atlas": [ 4, 31 ],
+	"weight": 0.02,
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["sewing"] }
+	},
+	{
+	"id": "iron_hammer",
+	"name": "Iron Hammer",
+	"description": "A sturdy iron-headed hammer.",
+	"category": "tool",
+	"price": 700,
+	"atlas": [ 5, 31 ],
+	"weight": 1.1,
+	"tags": [],
+	"rarity": "rare",
+	"tool": { "qualities": ["hammering"] }
+	},
+	{
+	"id": "smithing_hammer",
+	"name": "Smithing Hammer",
+	"description": "A balanced hammer made for demanding smithing work.",
+	"category": "tool",
+	"price": 1800,
+	"atlas": [ 5, 31 ],
+	"weight": 1.4,
+	"tags": [],
+	"rarity": "epic",
+	"tool": { "qualities": ["hammering"] }
+	}
 ]

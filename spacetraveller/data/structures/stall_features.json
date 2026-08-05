@@ -292,7 +292,7 @@
         "id": "stall_weapon",
         "levels": {
             "0": {
-                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x4, 1x5, 3x1, 1x0, 1x3, 7x0, 1x6, 8x3)",
+                "blueprint": "(1x0, 4x1, 1x2, 1x0, 1x3, 1x0, 1x4, 1x5, 3x1, 1x0, 1x3, 4x0, 1x7, 1x8, 1x0, 1x6, 8x3)",
                 "palette": [
                     {"tile": "bar"},
                     {"tile": "w_floor"},
@@ -300,7 +300,9 @@
                     {"tile": "void"},
                     {"tile": "w_crate"},
                     {"tile": "chair"},
-                    {"tile": "hanging_sign"}
+                    {"tile": "hanging_sign"},
+                    {"tile": "furnace"},
+                    {"tile": "anvil"}
                 ],
                 "rules": [
                     {

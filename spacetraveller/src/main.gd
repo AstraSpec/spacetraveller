@@ -18,6 +18,7 @@ var _look_mode_active: bool = false
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
 
+	ToolQualityDb.initialize_data()
 	TileDb.initialize_data()
 	TileGroupDb.initialize_data()
 	BodyPartDb.initialize_data()

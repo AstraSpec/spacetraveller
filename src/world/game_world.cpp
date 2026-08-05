@@ -158,7 +158,14 @@ void GameWorld::_bind_methods() {
     ClassDB::bind_method(D_METHOD("wield_entity_weapon", "entity_id", "slot_name", "item_id"), &GameWorld::wield_entity_weapon);
     ClassDB::bind_method(D_METHOD("unwield_entity_weapon", "entity_id", "slot_name"), &GameWorld::unwield_entity_weapon);
     ClassDB::bind_method(D_METHOD("wield_entity_weapon_by_string", "entity_id", "item_id"), &GameWorld::wield_entity_weapon_by_string);
-    ClassDB::bind_method(D_METHOD("start_player_crafting", "recipe_id"), &GameWorld::start_player_crafting);
+    ClassDB::bind_method(
+        D_METHOD("get_player_crafting_status", "recipe_id", "context"),
+        &GameWorld::get_player_crafting_status,
+        DEFVAL(Dictionary()));
+    ClassDB::bind_method(
+        D_METHOD("start_player_crafting", "recipe_id", "context"),
+        &GameWorld::start_player_crafting,
+        DEFVAL(Dictionary()));
     ClassDB::bind_method(D_METHOD("process_player_activity_batch"), &GameWorld::process_player_activity_batch);
     ClassDB::bind_method(D_METHOD("request_player_activity_cancel"), &GameWorld::request_player_activity_cancel);
     ClassDB::bind_method(D_METHOD("request_activity_interruption", "interruption_id", "source_entity"), &GameWorld::request_activity_interruption, DEFVAL(-1));
@@ -1301,8 +1308,18 @@ bool GameWorld::wield_entity_weapon_by_string(uint32_t entity_id, const String& 
     return entity_ledger.wield_weapon_by_string(entity_id, item_id);
 }
 
-bool GameWorld::start_player_crafting(const String& recipe_id) {
-    return sim_director.start_player_crafting(recipe_id);
+Dictionary GameWorld::get_player_crafting_status(
+    const String& recipe_id,
+    const Dictionary& context
+) const {
+    return sim_director.get_player_crafting_status(recipe_id, context);
+}
+
+bool GameWorld::start_player_crafting(
+    const String& recipe_id,
+    const Dictionary& context
+) {
+    return sim_director.start_player_crafting(recipe_id, context);
 }
 
 void GameWorld::process_player_activity_batch() {

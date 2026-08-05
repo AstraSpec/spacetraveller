@@ -4,6 +4,8 @@
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
 #include "light_emission.h"
+#include "rarity.h"
+#include "tool_provider.h"
 #include <cstdint>
 
 namespace godot {
@@ -13,6 +15,7 @@ enum class ItemCapability : uint8_t {
     WEAPON = 1 << 0,
     CLOTHING = 1 << 1,
     LIGHT = 1 << 2,
+    TOOL = 1 << 3,
 };
 
 struct WeaponItemInfo {
@@ -44,6 +47,8 @@ struct ItemInfo {
     String category_id;
     uint8_t capabilities = 0;
     LightEmissionInfo light;
+    ToolProviderInfo tool;
+    RarityTier rarity = RarityTier::COMMON;
 };
 
 class ItemDb : public Object, public DataBase<ItemInfo, ItemDb> {
@@ -83,6 +88,11 @@ public:
     const WeaponItemInfo* get_weapon_info(const String& p_id) const;
     const LightEmissionInfo* get_light_info(const String& p_id) const;
     const LightEmissionInfo* get_light_info(uint16_t p_id) const;
+    Dictionary get_tool_data(const String& p_id) const;
+    const ToolProviderInfo* get_tool_info(const String& p_id) const;
+    const ToolProviderInfo* get_tool_info(uint16_t p_id) const;
+    bool has_tool_quality(const String& p_id, const String& p_quality) const;
+    String get_item_rarity(const String& p_id) const;
     String get_item_category(const String& p_id) const;
 };
 

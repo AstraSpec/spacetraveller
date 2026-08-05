@@ -148,6 +148,18 @@
     "name": "Anvil",
     "atlas": [ 28, 25 ],
     "solid": false,
+    "rarity": "epic",
+    "tool": { "qualities": ["forging"] },
+    "tags": []
+  },
+  {
+    "id": "furnace",
+    "name": "Furnace",
+    "atlas": [ 30, 25 ],
+    "solid": false,
+    "rarity": "epic",
+    "light": { "strength": 13 },
+    "tool": { "qualities": ["heat"] },
     "tags": []
   },
   {

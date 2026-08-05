@@ -1,5 +1,7 @@
 #include "tile_db.h"
 #include "core/id_registry.h"
+#include "tool_quality_db.h"
+#include <algorithm>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -16,6 +18,9 @@ void TileDb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_tile_name", "id"), &TileDb::get_tile_name);
     ClassDB::bind_method(D_METHOD("get_smash_loot_table", "id"), &TileDb::get_smash_loot_table);
     ClassDB::bind_method(D_METHOD("get_spawn_loot_table", "id"), &TileDb::get_spawn_loot_table);
+    ClassDB::bind_method(D_METHOD("get_tool_data", "id"), &TileDb::get_tool_data);
+    ClassDB::bind_method(D_METHOD("has_tool_quality", "id", "quality"), &TileDb::has_tool_quality);
+    ClassDB::bind_method(D_METHOD("get_tile_rarity", "id"), &TileDb::get_tile_rarity);
     ClassDB::bind_method(D_METHOD("get_ids"), &TileDb::get_ids);
 }
 
@@ -25,10 +30,61 @@ TileDb::TileDb() {
 TileDb::~TileDb() {
 }
 
+bool TileDb::_validate_row(
+    const Dictionary& p_data,
+    String& r_error
+) const {
+    if (p_data.has("rarity")) {
+        if (p_data["rarity"].get_type() != Variant::STRING) {
+            r_error = "field 'rarity' must be a string";
+            return false;
+        }
+        RarityTier rarity;
+        if (!rarity_from_string(String(p_data["rarity"]), rarity)) {
+            r_error = "field 'rarity' must be common, rare, epic, or legendary";
+            return false;
+        }
+    }
+    if (!p_data.has("tool")) return true;
+    if (p_data["tool"].get_type() != Variant::DICTIONARY) {
+        r_error = "capability 'tool' must be an object";
+        return false;
+    }
+    const Dictionary tool = p_data["tool"];
+    if (!tool.has("qualities") ||
+        tool["qualities"].get_type() != Variant::ARRAY) {
+        r_error = "capability 'tool.qualities' must be a non-empty array";
+        return false;
+    }
+    const Array qualities = tool["qualities"];
+    if (qualities.is_empty()) {
+        r_error = "capability 'tool.qualities' must be a non-empty array";
+        return false;
+    }
+    ToolQualityDb* quality_db = ToolQualityDb::get_singleton();
+    for (int i = 0; i < qualities.size(); ++i) {
+        if (qualities[i].get_type() != Variant::STRING) {
+            r_error = "capability 'tool.qualities' entries must be strings";
+            return false;
+        }
+        const String quality = String(qualities[i]).strip_edges();
+        if (quality.is_empty() || !quality_db ||
+            !quality_db->get_quality_info(quality)) {
+            r_error = "capability 'tool.qualities' references unknown quality '" +
+                quality + "'";
+            return false;
+        }
+    }
+    return true;
+}
+
 TileInfo TileDb::_parse_row(const Dictionary &p_data) {
     TileInfo info;
 
     info.name = p_data.get("name", "");
+    if (p_data.has("rarity")) {
+        rarity_from_string(String(p_data["rarity"]), info.rarity);
+    }
 
     Variant atlas_data = p_data.get("atlas", Array());
     if (atlas_data.get_type() == Variant::ARRAY) {
@@ -54,6 +110,16 @@ TileInfo TileDb::_parse_row(const Dictionary &p_data) {
         info.transparent = TagRegistry::has_tag(transparent_tag, info.tags);
     }
     info.light = parse_light_emission(p_data.get("light", Variant()));
+    if (p_data.has("tool")) {
+        const Dictionary tool = p_data["tool"];
+        const Array qualities = tool["qualities"];
+        IdRegistry* registry = IdRegistry::get_singleton();
+        for (int i = 0; registry && i < qualities.size(); ++i) {
+            const uint16_t id = registry->register_string(
+                String(qualities[i]).strip_edges());
+            if (id != 0) info.tool.qualities.push_back(id);
+        }
+    }
     String smash_loot_table = String(p_data.get("smash_loot_table", ""));
     if (!smash_loot_table.is_empty() && IdRegistry::get_singleton()) {
         info.smash_loot_table = IdRegistry::get_singleton()->register_string(smash_loot_table);
@@ -144,6 +210,56 @@ String TileDb::get_spawn_loot_table(const String &p_id) const {
     const TileInfo* info = get_tile_info(p_id);
     IdRegistry* reg = IdRegistry::get_singleton();
     return (info && reg && info->spawn_loot_table != 0) ? reg->get_string(info->spawn_loot_table) : String();
+}
+
+Dictionary TileDb::get_tool_data(const String& p_id) const {
+    Dictionary result;
+    const TileInfo* info = get_tile_info(p_id);
+    if (!info || info->tool.qualities.empty()) return result;
+
+    Array qualities;
+    IdRegistry* registry = IdRegistry::get_singleton();
+    ToolQualityDb* quality_db = ToolQualityDb::get_singleton();
+    for (uint16_t id : info->tool.qualities) {
+        const String quality = registry ? registry->get_string(id) : String();
+        if (quality.is_empty()) continue;
+        Dictionary entry;
+        entry["id"] = quality;
+        entry["name"] = quality_db
+            ? quality_db->get_display_name(quality)
+            : quality.capitalize();
+        qualities.push_back(entry);
+    }
+    result["rarity"] = rarity_to_string(info->rarity);
+    result["qualities"] = qualities;
+    return result;
+}
+
+const ToolProviderInfo* TileDb::get_tool_info(const String& p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return info && !info->tool.qualities.empty() ? &info->tool : nullptr;
+}
+
+const ToolProviderInfo* TileDb::get_tool_info(uint16_t p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return info && !info->tool.qualities.empty() ? &info->tool : nullptr;
+}
+
+bool TileDb::has_tool_quality(
+    const String& p_id,
+    const String& p_quality
+) const {
+    const ToolProviderInfo* tool = get_tool_info(p_id);
+    IdRegistry* registry = IdRegistry::get_singleton();
+    const uint16_t quality = registry ? registry->get_id(p_quality) : 0;
+    return tool && quality != 0 && std::find(
+        tool->qualities.begin(), tool->qualities.end(), quality) !=
+        tool->qualities.end();
+}
+
+String TileDb::get_tile_rarity(const String& p_id) const {
+    const TileInfo* info = get_tile_info(p_id);
+    return info ? rarity_to_string(info->rarity) : String();
 }
 
 }

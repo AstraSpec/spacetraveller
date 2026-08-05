@@ -3,7 +3,7 @@
     "id": "rope",
     "name": "Rope",
     "time": 200.0,
-    "requirements": [
+    "components": [
       { "id": "fiber", "amount": 3 }
     ],
     "results": [
@@ -11,23 +11,69 @@
     ]
   },
   {
-    "id": "iron_ingot",
-    "name": "Iron Ingot",
-    "time": 600.0,
-    "requirements": [
-      { "id": "iron_ore", "amount": 2 }
+    "id": "stone_knife",
+    "name": "Stone Knife",
+    "time": 120.0,
+    "components": [
+      { "id": "flint", "amount": 1 },
+      { "id": "fiber", "amount": 1 }
     ],
     "results": [
-      { "id": "iron_ingot", "amount": 1 }
+      { "id": "stone_knife", "amount": 1 }
+    ]
+  },
+  {
+    "id": "crude_hammer",
+    "name": "Crude Hammer",
+    "time": 240.0,
+    "components": [
+      { "id": "stone", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "rope", "amount": 1 }
+    ],
+    "results": [
+      { "id": "crude_hammer", "amount": 1 }
+    ]
+  },
+  {
+    "id": "bone_needle",
+    "name": "Bone Needle",
+    "time": 180.0,
+    "components": [
+      { "id": "bone", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "cutting", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "bone_needle", "amount": 1 }
+    ]
+  },
+  {
+    "id": "fire_drill",
+    "name": "Fire Drill",
+    "time": 180.0,
+    "components": [
+      { "id": "stick", "amount": 2 },
+      { "id": "fiber", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "cutting", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "fire_drill", "amount": 1 }
     ]
   },
   {
     "id": "wooden_club",
     "name": "Wooden Club",
     "time": 400.0,
-    "requirements": [
+    "components": [
       { "id": "stick", "amount": 3 },
       { "id": "rope", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "cutting", "minimum_rarity": "common" }
     ],
     "results": [
       { "id": "wooden_club", "amount": 1 }
@@ -37,35 +83,29 @@
     "id": "wooden_spear",
     "name": "Wooden Spear",
     "time": 350.0,
-    "requirements": [
+    "components": [
       { "id": "stick", "amount": 2 },
       { "id": "flint", "amount": 1 },
       { "id": "rope", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "cutting", "minimum_rarity": "common" }
     ],
     "results": [
       { "id": "wooden_spear", "amount": 1 }
     ]
   },
   {
-    "id": "iron_dagger",
-    "name": "Iron Dagger",
-    "time": 650.0,
-    "requirements": [
-      { "id": "iron_ingot", "amount": 1 },
-      { "id": "stick", "amount": 1 },
-      { "id": "leather_scrap", "amount": 1 }
-    ],
-    "results": [
-      { "id": "iron_dagger", "amount": 1 }
-    ]
-  },
-  {
     "id": "torch",
     "name": "Torch",
     "time": 300.0,
-    "requirements": [
+    "components": [
       { "id": "stick", "amount": 1 },
       { "id": "spider_silk", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "cutting", "minimum_rarity": "common" },
+      { "quality": "firestarting", "minimum_rarity": "common" }
     ],
     "results": [
       { "id": "torch", "amount": 1 }
@@ -75,9 +115,12 @@
     "id": "fiber_tunic",
     "name": "Fiber Tunic",
     "time": 500.0,
-    "requirements": [
+    "components": [
       { "id": "fiber", "amount": 6 },
       { "id": "rope", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "sewing", "minimum_rarity": "common" }
     ],
     "results": [
       { "id": "fiber_tunic", "amount": 1 }
@@ -87,12 +130,352 @@
     "id": "fiber_pants",
     "name": "Fiber Pants",
     "time": 450.0,
-    "requirements": [
+    "components": [
       { "id": "fiber", "amount": 5 },
       { "id": "rope", "amount": 1 }
     ],
+    "tool_requirements": [
+      { "quality": "sewing", "minimum_rarity": "common" }
+    ],
     "results": [
       { "id": "fiber_pants", "amount": 1 }
+    ]
+  },
+  {
+    "id": "wooden_planks",
+    "name": "Wooden Planks",
+    "time": 300.0,
+    "components": [
+      { "id": "wooden_log", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "wood_sawing", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "wooden_plank", "amount": 2 }
+    ]
+  },
+  {
+    "id": "iron_ingot",
+    "name": "Iron Ingot",
+    "time": 600.0,
+    "components": [
+      { "id": "iron_ore", "amount": 2 },
+      { "id": "coal", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "heat", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "iron_ingot", "amount": 1 }
+    ]
+  },
+  {
+    "id": "copper_ingot",
+    "name": "Copper Ingot",
+    "time": 500.0,
+    "components": [
+      { "id": "copper_ore", "amount": 2 },
+      { "id": "coal", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "heat", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "copper_ingot", "amount": 1 }
+    ]
+  },
+  {
+    "id": "gold_ingot",
+    "name": "Gold Ingot",
+    "time": 600.0,
+    "components": [
+      { "id": "gold_ore", "amount": 2 },
+      { "id": "coal", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "heat", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "gold_ingot", "amount": 1 }
+    ]
+  },
+  {
+    "id": "steel_ingot",
+    "name": "Steel Ingot",
+    "time": 900.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "coal", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "heat", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "steel_ingot", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_dagger",
+    "name": "Iron Dagger",
+    "time": 650.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "iron_dagger", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_hammer",
+    "name": "Iron Hammer",
+    "time": 600.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "iron_hammer", "amount": 1 }
+    ]
+  },
+  {
+    "id": "smithing_hammer",
+    "name": "Smithing Hammer",
+    "time": 900.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 2 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "smithing_hammer", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_hatchet",
+    "name": "Iron Hatchet",
+    "time": 700.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "iron_hatchet", "amount": 1 }
+    ]
+  },
+  {
+    "id": "pickaxe",
+    "name": "Pickaxe",
+    "time": 900.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 2 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "pickaxe", "amount": 1 }
+    ]
+  },
+  {
+    "id": "shovel",
+    "name": "Shovel",
+    "time": 700.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "shovel", "amount": 1 }
+    ]
+  },
+  {
+    "id": "saw",
+    "name": "Saw",
+    "time": 900.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "saw", "amount": 1 }
+    ]
+  },
+  {
+    "id": "bonesaw",
+    "name": "Bonesaw",
+    "time": 1000.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "bonesaw", "amount": 1 }
+    ]
+  },
+  {
+    "id": "hoe",
+    "name": "Hoe",
+    "time": 700.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "hoe", "amount": 1 }
+    ]
+  },
+  {
+    "id": "pitchfork",
+    "name": "Pitchfork",
+    "time": 800.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "pitchfork", "amount": 1 }
+    ]
+  },
+  {
+    "id": "flint_and_steel",
+    "name": "Flint and Steel",
+    "time": 300.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "flint", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "flint_and_steel", "amount": 1 }
+    ]
+  },
+  {
+    "id": "lockpick",
+    "name": "Lockpick",
+    "time": 300.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "lockpick", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_needle",
+    "name": "Iron Needle",
+    "time": 300.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "iron_needle", "amount": 1 }
+    ]
+  },
+  {
+    "id": "forged_chain",
+    "name": "Forged Chain",
+    "time": 1200.0,
+    "components": [
+      { "id": "steel_ingot", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "epic" }
+    ],
+    "results": [
+      { "id": "forged_chain", "amount": 1 }
+    ]
+  },
+  {
+    "id": "iron_spear",
+    "name": "Iron Spear",
+    "time": 800.0,
+    "components": [
+      { "id": "iron_ingot", "amount": 1 },
+      { "id": "stick", "amount": 2 },
+      { "id": "leather_scrap", "amount": 1 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "rare" },
+      { "quality": "cutting", "minimum_rarity": "common" }
+    ],
+    "results": [
+      { "id": "iron_spear", "amount": 1 }
+    ]
+  },
+  {
+    "id": "steel_flail",
+    "name": "Steel Flail",
+    "time": 1500.0,
+    "components": [
+      { "id": "forged_chain", "amount": 1 },
+      { "id": "stick", "amount": 1 },
+      { "id": "leather_scrap", "amount": 2 }
+    ],
+    "tool_requirements": [
+      { "quality": "forging", "minimum_rarity": "epic" },
+      { "quality": "hammering", "minimum_rarity": "epic" },
+      { "quality": "cutting", "minimum_rarity": "rare" }
+    ],
+    "results": [
+      { "id": "steel_flail", "amount": 1 }
     ]
   }
 ]

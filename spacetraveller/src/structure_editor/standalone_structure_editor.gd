@@ -12,6 +12,7 @@ var editor_offset :Vector2i
 var configured_editor_area_size := Vector2i.ZERO
 
 func _ready() -> void:
+	ToolQualityDb.initialize_data()
 	TileDb.initialize_data()
 	TileGroupDb.initialize_data()
 	ChunkDb.initialize_data()

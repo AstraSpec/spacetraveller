@@ -14,8 +14,8 @@
     "target_item_tags": ["JOB_BLACKSMITH"],
     "target_loot_table": "blacksmith_quest_targets",
     "target_range": [2, 5],
-    "label_template": "Bring {count} {item_name} to the forge",
-    "description_template": "Bring me {count} {item_name}. I need them for forge work.",
+    "label_template": "Bring {count} {item_name} to the smithy",
+    "description_template": "Bring me {count} {item_name}. I need them for smithing work.",
     "tiers": {
       "small":  { "reward_loot_table": "blacksmith_quest_rewards", "item_pool": ["iron_shard", "bone_needle", "fire_starter"], "amount_range": [1, 2], "friendship": 4, "romance": 0 },
       "medium": { "reward_loot_table": "blacksmith_quest_rewards", "item_pool": ["wooden_sword", "torch"],                    "amount_range": [1, 2], "friendship": 6, "romance": 1 }

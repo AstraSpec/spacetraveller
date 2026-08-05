@@ -71,6 +71,11 @@ Dictionary Activity::to_dictionary(const ActivityData& data, float elapsed) {
         : static_cast<int64_t>(data.pending_source_entity);
     out["return_menu"] = data.return_menu;
     out["return_tab"] = data.return_tab;
+    out["has_crafting_station"] = data.has_crafting_station;
+    if (data.has_crafting_station) {
+        out["crafting_station_position"] = data.crafting_station_position;
+        out["crafting_station_tile_id"] = data.crafting_station_tile_id;
+    }
     out["elapsed"] = MAX(0.0f, elapsed);
     if (!data.pending_interruption.is_empty()) {
         out["interruption"] = interruption_definition(data.pending_interruption);
@@ -96,6 +101,12 @@ Dictionary Activity::serialize(const ActivityData& data) {
     out["last_refresh_time"] = data.last_refresh_time;
     out["next_refresh_time"] = data.next_refresh_time;
     out["scheduled_work"] = data.scheduled_work;
+    if (data.has_crafting_station) {
+        out.erase("crafting_station_position");
+        out["crafting_station_x"] = data.crafting_station_position.x;
+        out["crafting_station_y"] = data.crafting_station_position.y;
+        out["crafting_station_z"] = data.crafting_station_position.z;
+    }
     return out;
 }
 
@@ -121,6 +132,15 @@ void Activity::deserialize(ActivityData& data, const Dictionary& value) {
     data.pending_source_entity = source < 0 ? UINT32_MAX : static_cast<uint32_t>(source);
     data.return_menu = value.get("return_menu", String("inventory"));
     data.return_tab = value.get("return_tab", String("crafting"));
+    data.has_crafting_station = value.get("has_crafting_station", false);
+    if (data.has_crafting_station) {
+        data.crafting_station_position = Vector3i(
+            static_cast<int>(value.get("crafting_station_x", 0)),
+            static_cast<int>(value.get("crafting_station_y", 0)),
+            static_cast<int>(value.get("crafting_station_z", 0)));
+        data.crafting_station_tile_id =
+            value.get("crafting_station_tile_id", String());
+    }
     data.simulation_time = static_cast<float>(static_cast<double>(value.get("simulation_time", 0.0)));
     data.last_refresh_time = static_cast<float>(static_cast<double>(value.get("last_refresh_time", data.simulation_time)));
     data.next_refresh_time = static_cast<float>(static_cast<double>(value.get("next_refresh_time", data.last_refresh_time + 30.0f)));

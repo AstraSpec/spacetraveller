@@ -4,6 +4,8 @@
 #include <godot_cpp/classes/object.hpp>
 #include "database.h"
 #include "light_emission.h"
+#include "rarity.h"
+#include "tool_provider.h"
 
 namespace godot {
 
@@ -20,6 +22,8 @@ struct TileInfo {
     bool hides_items = false;
     bool transparent = false;
     LightEmissionInfo light;
+    ToolProviderInfo tool;
+    RarityTier rarity = RarityTier::COMMON;
 };
 
 class TileDb : public Object, public DataBase<TileInfo, TileDb> {
@@ -28,6 +32,7 @@ class TileDb : public Object, public DataBase<TileInfo, TileDb> {
 protected:
     static void _bind_methods();
     virtual TileInfo _parse_row(const Dictionary &p_data) override;
+    bool _validate_row(const Dictionary& p_data, String& r_error) const override;
 
     std::vector<TileInfo> fast_cache;
 
@@ -51,6 +56,11 @@ public:
     String get_tile_name(const String &p_id) const;
     String get_smash_loot_table(const String &p_id) const;
     String get_spawn_loot_table(const String &p_id) const;
+    Dictionary get_tool_data(const String& p_id) const;
+    const ToolProviderInfo* get_tool_info(const String& p_id) const;
+    const ToolProviderInfo* get_tool_info(uint16_t p_id) const;
+    bool has_tool_quality(const String& p_id, const String& p_quality) const;
+    String get_tile_rarity(const String& p_id) const;
 };
 
 }

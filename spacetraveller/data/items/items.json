@@ -120,6 +120,26 @@
     "tags": []
   },
   {
+    "id": "copper_ingot",
+    "name": "Copper Ingot",
+    "description": "A refined copper ingot.",
+    "category": "material",
+    "price": 225,
+    "atlas": [ 13, 23 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
+    "id": "steel_ingot",
+    "name": "Steel Ingot",
+    "description": "A hardened steel ingot refined from iron and coal.",
+    "category": "material",
+    "price": 600,
+    "atlas": [ 5, 23 ],
+    "weight": 0.4,
+    "tags": []
+  },
+  {
     "id": "gold_ingot",
     "name": "Gold Ingot",
     "description": "",
@@ -157,6 +177,16 @@
     "price": 80,
     "atlas": [ 8, 48 ],
     "weight": 0.5,
+    "tags": []
+  },
+  {
+    "id": "forged_chain",
+    "name": "Forged Chain",
+    "description": "Lengths of carefully forged and joined steel chain.",
+    "category": "material",
+    "price": 800,
+    "atlas": [ 8, 48 ],
+    "weight": 1.2,
     "tags": []
   },
   {
@@ -449,7 +479,9 @@
     "price": 280,
     "atlas": [ 22, 31 ],
     "weight": 0.15,
-    "tags": []
+    "tags": [],
+    "rarity": "rare",
+    "tool": { "qualities": ["firestarting"] }
   },
   {
     "id": "medical_herbs",
@@ -499,7 +531,9 @@
     "price": 150,
     "atlas": [ 62, 18 ],
     "weight": 0.03,
-    "tags": []
+    "tags": [],
+    "rarity": "rare",
+    "tool": { "qualities": ["lockpicking"] }
   },
   {
     "id": "gold_ore",

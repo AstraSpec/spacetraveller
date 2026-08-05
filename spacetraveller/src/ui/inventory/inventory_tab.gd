@@ -102,6 +102,14 @@ func _update_details_ui(item_data: Dictionary) -> void:
 		_add_spacer_label("Accuracy", "%+.0f points" % (float(item_data.get("accuracy_modifier", 0.0)) * 100.0))
 		_add_spacer_label("Speed", "×%.2f" % float(item_data.get("speed_multiplier", 1.0)))
 		_add_spacer_label("Damage handling", "×%.2f" % float(item_data.get("damage_multiplier", 1.0)))
+
+	_add_spacer_label("Rarity", str(ItemDb.get_item_rarity(item_id)).capitalize())
+	var tool_data: Dictionary = ItemDb.get_tool_data(item_id)
+	if not tool_data.is_empty():
+		var quality_names: PackedStringArray = []
+		for quality in tool_data.get("qualities", []):
+			quality_names.append(str(quality.get("name", quality.get("id", ""))))
+		_add_spacer_label("Tool qualities", ", ".join(quality_names))
 	
 	var modifiers = ItemDb.get_item_modifiers(item_id)
 	

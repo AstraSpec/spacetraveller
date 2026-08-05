@@ -57,7 +57,12 @@ public:
     float submit_player_change_z(int delta);
     bool submit_pickup(uint32_t entity_id, const Vector2i& pos, const String& item_id, int amount);
     void process_game_turn(float current_time);
-    bool start_player_crafting(const String& recipe_id);
+    Dictionary get_player_crafting_status(
+        const String& recipe_id,
+        const Dictionary& context = Dictionary()) const;
+    bool start_player_crafting(
+        const String& recipe_id,
+        const Dictionary& context = Dictionary());
     void process_player_activity_batch();
     bool request_activity_interruption(const String& interruption_id, uint32_t source_entity = UINT32_MAX);
     bool resolve_player_activity_interruption(const String& resolution);
@@ -155,8 +160,15 @@ private:
     void emit_activity_interrupted(ActivityData& activity);
     void cancel_player_activity(const String& reason, bool restore_menu = true);
     void complete_player_activity();
-    bool validate_crafting_requirements(const String& recipe_id) const;
-    bool complete_crafting(const String& recipe_id, Dictionary& completion);
+    Dictionary crafting_context_from_activity(const ActivityData& activity) const;
+    bool crafting_station_matches(const ActivityData& activity) const;
+    bool validate_crafting_requirements(
+        const String& recipe_id,
+        const Dictionary& context = Dictionary()) const;
+    bool complete_crafting(
+        const String& recipe_id,
+        const Dictionary& context,
+        Dictionary& completion);
     bool finish_short_player_action();
     bool processing_activity_batch = false;
 

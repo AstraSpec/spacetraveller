@@ -21,6 +21,9 @@ struct ActivityData {
     uint32_t pending_source_entity = UINT32_MAX;
     String return_menu = "inventory";
     String return_tab = "crafting";
+    bool has_crafting_station = false;
+    Vector3i crafting_station_position;
+    String crafting_station_tile_id;
 
     // Scheduler bookkeeping is persisted so an activity can continue exactly.
     float simulation_time = 0.0f;

@@ -331,6 +331,7 @@
     "atlas": [ 0, 42 ],
     "solid": false,
     "light": { "strength": 13 },
+    "tool": { "qualities": ["heat", "cooking", "firestarting"] },
     "tags": []
   },
   {

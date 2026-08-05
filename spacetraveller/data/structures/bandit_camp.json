@@ -295,7 +295,7 @@
         "id": "bandit_camp_workshop",
         "levels": {
             "0": {
-                "blueprint": "(13x0, 10x1, 2x0, 1x1, 3x2, 1x1, 1x3, 3x2, 1x1, 2x0, 1x1, 1x2, 6x1, 1x3, 1x1, 2x0, 6x1, 1x4, 3x1, 2x0, 2x1, 1x5, 4x6, 1x5, 2x1, 2x0, 4x1, 1x7, 5x1, 2x0, 10x1, 2x0, 8x1, 1x3, 1x1, 2x0, 7x1, 2x3, 1x1, 2x0, 10x1, 6x0, 3x8, 4x0)",
+                "blueprint": "(13x0, 10x1, 2x0, 1x1, 3x2, 1x1, 1x3, 3x2, 1x1, 2x0, 1x1, 1x2, 6x1, 1x3, 1x1, 2x0, 6x1, 1x4, 3x1, 2x0, 2x1, 1x5, 4x6, 1x5, 2x1, 2x0, 4x1, 1x7, 5x1, 2x0, 10x1, 2x0, 8x1, 1x3, 1x1, 2x0, 7x1, 2x3, 1x1, 2x0, 4x1, 1x9, 1x10, 4x1, 6x0, 3x8, 4x0)",
                 "palette": [
                     {"tile": "void"},
                     {"tile": "w_floor"},
@@ -305,7 +305,9 @@
                     {"tile": "w_wall"},
                     {"tile": "bar"},
                     {"tile": "chair"},
-                    {"tile": "dirt"}
+                    {"tile": "dirt"},
+                    {"tile": "furnace"},
+                    {"tile": "anvil"}
                 ],
                 "rules": [
                     {
